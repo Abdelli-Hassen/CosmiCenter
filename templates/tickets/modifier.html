@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Modifier {{ ticket.numero }} - {{ super() }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-edit"></i> Modifier le Ticket</h1>
+</div>
+<form method="POST" class="form-card">
+    <div class="form-group">
+        <label>Titre *</label>
+        <input type="text" name="titre" value="{{ ticket.titre }}" required class="form-input">
+    </div>
+    <div class="form-group">
+        <label>Description *</label>
+        <textarea name="description" required class="form-input" rows="5">{{ ticket.description }}</textarea>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Statut</label>
+            <select name="statut" class="form-input">
+                <option value="ouvert" {% if ticket.statut == 'ouvert' %}selected{% endif %}>Ouvert</option>
+                <option value="en_cours" {% if ticket.statut == 'en_cours' %}selected{% endif %}>En cours</option>
+                <option value="resolu" {% if ticket.statut == 'resolu' %}selected{% endif %}>Résolu</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Priorité</label>
+            <select name="priorite" class="form-input">
+                <option value="basse" {% if ticket.priorite == 'basse' %}selected{% endif %}>Basse</option>
+                <option value="normale" {% if ticket.priorite == 'normale' %}selected{% endif %}>Normale</option>
+                <option value="haute" {% if ticket.priorite == 'haute' %}selected{% endif %}>Haute</option>
+                <option value="urgente" {% if ticket.priorite == 'urgente' %}selected{% endif %}>Urgente</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-actions">
+        <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+</form>
+{% endblock %}

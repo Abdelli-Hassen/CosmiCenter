@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Administration - {{ super() }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-cogs"></i> Administration</h1>
+</div>
+<div class="stats-grid">
+    <div class="stat-card"><h3>{{ stats.utilisateurs }}</h3><p>Utilisateurs</p></div>
+    <div class="stat-card"><h3>{{ stats.departements }}</h3><p>Départements</p></div>
+    <div class="stat-card"><h3>{{ stats.tickets_total }}</h3><p>Tickets Total</p></div>
+    <div class="stat-card"><h3>{{ stats.tickets_ouverts }}</h3><p>Tickets Ouverts</p></div>
+</div>
+{% endblock %}

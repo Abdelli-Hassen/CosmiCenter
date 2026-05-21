@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Mon Profil - {{ super() }}{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Mon Profil</h1></div>
+<div class="profile-card">
+    <h2>{{ utilisateur.prenom }} {{ utilisateur.nom }}</h2>
+    <p>Email: {{ utilisateur.email }}</p>
+    <p>Rôle: {{ utilisateur.role }}</p>
+</div>
+{% endblock %}

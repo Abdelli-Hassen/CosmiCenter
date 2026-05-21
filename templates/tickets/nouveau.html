@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Nouveau Ticket - {{ super() }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-plus"></i> Nouveau Ticket</h1>
+</div>
+<form method="POST" class="form-card">
+    <div class="form-group">
+        <label>Titre *</label>
+        <input type="text" name="titre" required class="form-input">
+    </div>
+    <div class="form-group">
+        <label>Description *</label>
+        <textarea name="description" required class="form-input" rows="5"></textarea>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Priorité</label>
+            <select name="priorite" class="form-input">
+                <option value="basse">Basse</option>
+                <option value="normale" selected>Normale</option>
+                <option value="haute">Haute</option>
+                <option value="urgente">Urgente</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Département</label>
+            <select name="departement_id" class="form-input">
+                {% for dept in departements %}
+                <option value="{{ dept.id }}">{{ dept.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="form-actions">
+        <a href="{{ url_for('tickets.liste') }}" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">Créer</button>
+    </div>
+</form>
+{% endblock %}

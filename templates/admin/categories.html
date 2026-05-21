@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Catégories - {{ super() }}{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Catégories de Tickets</h1></div>
+<table class="data-table">
+    <thead><tr><th>Nom</th><th>Description</th><th>Actif</th></tr></thead>
+    <tbody>
+        {% for cat in categories %}
+        <tr><td>{{ cat.nom }}</td><td>{{ cat.description }}</td><td>{% if cat.actif %}Oui{% else %}Non{% endif %}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

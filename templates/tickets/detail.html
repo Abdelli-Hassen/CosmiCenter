@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ ticket.numero }} - {{ super() }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-ticket-alt"></i> {{ ticket.numero }}</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" class="btn btn-outline"><i class="fas fa-edit"></i> Modifier</a>
+        <form method="POST" action="{{ url_for('tickets.fermer', ticket_id=ticket.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-danger"><i class="fas fa-times"></i> Fermer</button>
+        </form>
+    </div>
+</div>
+<div class="ticket-detail">
+    <h2>{{ ticket.titre }}</h2>
+    <p>{{ ticket.description }}</p>
+    <div class="ticket-meta">
+        <span class="badge badge-{{ ticket.statut }}">{{ ticket.statut }}</span>
+        <span class="badge badge-{{ ticket.priorite }}">{{ ticket.priorite }}</span>
+    </div>
+</div>
+<div class="comments-section">
+    <h3>Commentaires</h3>
+    {% for comment in commentaires %}
+    <div class="comment">
+        <strong>{{ comment.auteur.prenom }} {{ comment.auteur.nom }}</strong>
+        <p>{{ comment.contenu }}</p>
+        <small>{{ comment.date_creation.strftime('%d/%m/%Y %H:%M') }}</small>
+    </div>
+    {% endfor %}
+    <form method="POST" action="{{ url_for('tickets.commenter', ticket_id=ticket.id') }}">
+        <textarea name="contenu" placeholder="Ajouter un commentaire..." class="form-input"></textarea>
+        <button type="submit" class="btn btn-primary">Envoyer</button>
+    </form>
+</div>
+{% endblock %}
