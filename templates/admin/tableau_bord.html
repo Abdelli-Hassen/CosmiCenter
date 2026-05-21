@@ -20,7 +20,7 @@
   </div>
 
   <!-- KPI Grid -->
-  <div class="dashboard-grid-4" style="margin-bottom:28px;">
+  <div class="stats-grid-4" style="margin-bottom:28px;">
 
     <div class="kpi-card" style="--kpi-color: var(--brand);">
       <div class="kpi-card-label">
@@ -28,9 +28,7 @@
         Users
       </div>
       <div class="kpi-card-value">{{ stats.utilisateurs }}</div>
-      <div class="kpi-card-meta">
-        <span class="kpi-trend flat">Total registered</span>
-      </div>
+      <div class="kpi-trend">Total registered</div>
     </div>
 
     <div class="kpi-card" style="--kpi-color: var(--info);">
@@ -39,9 +37,7 @@
         Total Tickets
       </div>
       <div class="kpi-card-value">{{ stats.tickets }}</div>
-      <div class="kpi-card-meta">
-        <span class="kpi-trend flat">All time</span>
-      </div>
+      <div class="kpi-trend">All time</div>
     </div>
 
     <div class="kpi-card" style="--kpi-color: var(--success);">
@@ -50,9 +46,7 @@
         Departments
       </div>
       <div class="kpi-card-value">{{ stats.departements }}</div>
-      <div class="kpi-card-meta">
-        <span class="kpi-trend flat">Active units</span>
-      </div>
+      <div class="kpi-trend">Active units</div>
     </div>
 
     <div class="kpi-card" style="--kpi-color: var(--warning);">
@@ -61,12 +55,12 @@
         Open Tickets
       </div>
       <div class="kpi-card-value">{{ stats.tickets_ouverts }}</div>
-      <div class="kpi-card-meta">
-        <span class="kpi-trend {% if stats.tickets_ouverts > 0 %}up{% else %}flat{% endif %}">Needs attention</span>
+      <div class="kpi-trend" style="{% if stats.tickets_ouverts > 0 %}color:var(--warning);{% endif %}">
+        {% if stats.tickets_ouverts > 0 %}Needs attention{% else %}All clear{% endif %}
       </div>
     </div>
 
-  </div><!-- /dashboard-grid-4 -->
+  </div><!-- /stats-grid-4 -->
 
   <!-- Quick Actions -->
   <div class="card card-raised" style="margin-bottom:24px;">
@@ -94,7 +88,7 @@
   </div>
 
   <!-- Split: Tickets by Status / Tickets by Priority -->
-  <div class="dashboard-grid-2-1" style="margin-bottom:24px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
 
     <!-- Tickets by Status -->
     <div class="card card-raised">
@@ -118,7 +112,7 @@
               <tr>
                 <td>
                   {% if row.statut in ['nouveau', 'ouvert'] %}
-                    <span class="badge badge-new">{{ row.statut|capitalize }}</span>
+                    <span class="badge badge-new">{{ 'Open' if row.statut == 'ouvert' else 'New' }}</span>
                   {% elif row.statut == 'en_cours' %}
                     <span class="badge badge-progress">In Progress</span>
                   {% elif row.statut == 'en_attente' %}
@@ -172,25 +166,38 @@
               <tr>
                 <th>Priority</th>
                 <th style="width:80px;text-align:right;">Count</th>
+                <th style="width:160px;">Distribution</th>
               </tr>
             </thead>
             <tbody>
+              {% set total_p = tickets_par_priorite | sum(attribute='count') %}
               {% for row in tickets_par_priorite %}
               <tr>
                 <td>
                   {% if row.priorite == 'critique' %}
-                    <span class="badge badge-critical">Critical</span>
+                    <span class="badge badge-error">Critical</span>
                   {% elif row.priorite == 'urgente' %}
-                    <span class="badge badge-urgent">Urgent</span>
+                    <span class="badge badge-error">Urgent</span>
                   {% elif row.priorite == 'haute' %}
-                    <span class="badge badge-high">High</span>
+                    <span class="badge badge-warning">High</span>
                   {% elif row.priorite == 'moyenne' %}
-                    <span class="badge badge-medium">Medium</span>
+                    <span class="badge badge-neutral">Medium</span>
                   {% else %}
-                    <span class="badge badge-low">Low</span>
+                    <span class="badge badge-neutral">Low</span>
                   {% endif %}
                 </td>
                 <td style="text-align:right;font-weight:600;color:var(--text-primary);">{{ row.count }}</td>
+                <td>
+                  {% if total_p > 0 %}
+                  {% set pct = (row.count / total_p * 100)|round(0)|int %}
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="flex:1;height:6px;background:var(--surface-4);border-radius:var(--radius-full);overflow:hidden;">
+                      <div style="height:100%;width:{{ pct }}%;background:var(--warning);border-radius:var(--radius-full);"></div>
+                    </div>
+                    <span style="font-size:11px;color:var(--text-muted);width:32px;text-align:right;">{{ pct }}%</span>
+                  </div>
+                  {% endif %}
+                </td>
               </tr>
               {% endfor %}
             </tbody>
@@ -205,7 +212,7 @@
       </div>
     </div>
 
-  </div><!-- /dashboard-grid-2-1 -->
+  </div><!-- /grid -->
 
   <!-- System Health Strip -->
   <div class="card" style="border-color:var(--border-subtle);">

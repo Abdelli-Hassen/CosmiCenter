@@ -1,2 +1,215 @@
 {% extends "base.html" %}
-{% block content %}<h1>Utilisateurs</h1>{% endblock %}
+
+{% block title %}Team Directory{% endblock %}
+
+{% block content %}
+<div class="page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1 class="page-title">Team Directory</h1>
+      <span class="page-subtitle">
+        {{ utilisateurs.total }} member{{ 's' if utilisateurs.total != 1 else '' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Search + Filter Bar -->
+  <form method="GET" action="{{ url_for('utilisateurs.liste') }}" id="filterForm">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:24px;">
+
+      <!-- Search -->
+      <div style="position:relative;flex:1;min-width:200px;max-width:320px;">
+        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input
+          type="text"
+          name="search"
+          class="input"
+          style="padding-left:32px;"
+          placeholder="Search by name or email..."
+          value="{{ search or '' }}"
+          autocomplete="off"
+        >
+      </div>
+
+      <!-- Role filter -->
+      <div class="select-wrap" style="min-width:150px;">
+        <select name="role" class="select select-sm" onchange="this.form.submit()">
+          <option value="">All Roles</option>
+          {% for role in roles %}
+          <option value="{{ role.nom }}" {% if role_filter == role.nom %}selected{% endif %}>{{ role.nom }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Department filter -->
+      <div class="select-wrap" style="min-width:170px;">
+        <select name="departement" class="select select-sm" onchange="this.form.submit()">
+          <option value="">All Departments</option>
+          {% for dept in departements %}
+          <option value="{{ dept.id }}" {% if departement_filter|string == dept.id|string %}selected{% endif %}>{{ dept.nom }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Active/Inactive toggle -->
+      <div class="select-wrap" style="min-width:140px;">
+        <select name="actif" class="select select-sm" onchange="this.form.submit()">
+          <option value="">All Status</option>
+          <option value="1" {% if actif_filter == '1' %}selected{% endif %}>Active</option>
+          <option value="0" {% if actif_filter == '0' %}selected{% endif %}>Inactive</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-secondary btn-sm">Search</button>
+
+      {% if search or role_filter or departement_filter or actif_filter %}
+      <a href="{{ url_for('utilisateurs.liste') }}" class="btn btn-ghost btn-sm">Clear</a>
+      {% endif %}
+
+    </div>
+  </form>
+
+  <!-- User Cards Grid -->
+  {% if utilisateurs.items %}
+  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;margin-bottom:24px;">
+
+    {% for u in utilisateurs.items %}
+    <a href="{{ url_for('utilisateurs.detail', user_id=u.id) }}" style="text-decoration:none;" class="card card-raised" style="display:block;transition:transform .15s,box-shadow .15s;">
+
+      <div class="card-body" style="padding:24px;text-align:center;">
+
+        <!-- Status indicator + avatar -->
+        <div style="position:relative;display:inline-block;margin-bottom:14px;">
+          <div class="avatar avatar-lg" style="width:64px;height:64px;border-radius:50%;background:var(--surface-raised);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--text-primary);overflow:hidden;margin:0 auto;">
+            {% if u.photo %}
+              <img src="{{ url_for('static', filename='uploads/' + u.photo) }}" alt="{{ u.prenom }} {{ u.nom }}" style="width:100%;height:100%;object-fit:cover;">
+            {% else %}
+              {{ u.prenom[0]|upper }}{{ u.nom[0]|upper }}
+            {% endif %}
+          </div>
+          <!-- Online/offline dot -->
+          <span style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;border:2px solid var(--surface-base);background:{% if u.actif %}var(--success){% else %}var(--surface-4){% endif %};"></span>
+        </div>
+
+        <!-- Name -->
+        <div style="font-weight:700;font-size:15px;color:var(--text-primary);margin-bottom:6px;line-height:1.2;">
+          {{ u.prenom }} {{ u.nom }}
+        </div>
+
+        <!-- Role badge -->
+        <div style="margin-bottom:8px;">
+          {% if u.role %}
+            {% if u.role.nom in ['Administrateur', 'Admin'] %}
+              <span class="badge badge-error">{{ u.role.nom }}</span>
+            {% elif u.role.nom in ['Manager', 'Responsable'] %}
+              <span class="badge badge-warning">{{ u.role.nom }}</span>
+            {% elif u.role.nom == 'Agent' %}
+              <span class="badge badge-success">{{ u.role.nom }}</span>
+            {% else %}
+              <span class="badge badge-neutral">{{ u.role.nom }}</span>
+            {% endif %}
+          {% else %}
+            <span class="badge badge-neutral">No role</span>
+          {% endif %}
+        </div>
+
+        <!-- Department -->
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">
+          {% if u.departement %}
+            <svg style="vertical-align:middle;margin-right:4px;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            {{ u.departement.nom }}
+          {% else %}
+            <span style="color:var(--text-muted);">No department</span>
+          {% endif %}
+        </div>
+
+        <!-- Email (truncated) -->
+        <div style="font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;" title="{{ u.email }}">
+          <svg style="vertical-align:middle;margin-right:4px;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          {{ u.email }}
+        </div>
+
+      </div>
+
+      <!-- Card footer: status -->
+      <div class="card-footer" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-top:1px solid var(--border-subtle);">
+        {% if u.actif %}
+          <span style="width:6px;height:6px;background:var(--success);border-radius:50%;display:inline-block;"></span>
+          <span style="font-size:11px;color:var(--text-muted);">Active</span>
+        {% else %}
+          <span style="width:6px;height:6px;background:var(--surface-4);border-radius:50%;display:inline-block;"></span>
+          <span style="font-size:11px;color:var(--text-muted);">Inactive</span>
+        {% endif %}
+        {% if u.poste %}
+        <span style="font-size:11px;color:var(--text-muted);">&mdash; {{ u.poste }}</span>
+        {% endif %}
+      </div>
+
+    </a>
+    {% endfor %}
+
+  </div>
+
+  <!-- Pagination -->
+  {% if utilisateurs.pages > 1 %}
+  <div class="pagination" style="margin-top:8px;">
+    {% if utilisateurs.has_prev %}
+    <a href="{{ url_for('utilisateurs.liste', page=utilisateurs.prev_num, search=search or '', role=role_filter or '', departement=departement_filter or '', actif=actif_filter or '') }}"
+       class="page-btn" aria-label="Previous page">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+    {% else %}
+    <span class="page-btn page-btn-disabled" aria-disabled="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </span>
+    {% endif %}
+
+    {% for p in range(1, utilisateurs.pages + 1) %}
+      {% if p == utilisateurs.page %}
+        <span class="page-btn page-btn-active" aria-current="page">{{ p }}</span>
+      {% elif p == 1 or p == utilisateurs.pages or (p >= utilisateurs.page - 2 and p <= utilisateurs.page + 2) %}
+        <a href="{{ url_for('utilisateurs.liste', page=p, search=search or '', role=role_filter or '', departement=departement_filter or '', actif=actif_filter or '') }}"
+           class="page-btn">{{ p }}</a>
+      {% elif p == utilisateurs.page - 3 or p == utilisateurs.page + 3 %}
+        <span class="page-btn page-btn-ellipsis">…</span>
+      {% endif %}
+    {% endfor %}
+
+    {% if utilisateurs.has_next %}
+    <a href="{{ url_for('utilisateurs.liste', page=utilisateurs.next_num, search=search or '', role=role_filter or '', departement=departement_filter or '', actif=actif_filter or '') }}"
+       class="page-btn" aria-label="Next page">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    {% else %}
+    <span class="page-btn page-btn-disabled" aria-disabled="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </span>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- Empty State -->
+  <div class="empty-state" style="padding:80px 32px;">
+    <svg class="empty-icon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    <p class="empty-title">No members found</p>
+    <p class="empty-desc">
+      {% if search or role_filter or departement_filter or actif_filter %}
+        No users match the current filters.
+      {% else %}
+        The team directory is empty.
+      {% endif %}
+    </p>
+    {% if search or role_filter or departement_filter or actif_filter %}
+    <a href="{{ url_for('utilisateurs.liste') }}" class="btn btn-ghost btn-sm" style="margin-top:16px;">Clear filters</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div><!-- /page -->
+{% endblock %}

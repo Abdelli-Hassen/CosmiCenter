@@ -1,40 +1,165 @@
 {% extends "base.html" %}
-{% block title %}Modifier {{ ticket.numero }} - {{ super() }}{% endblock %}
+
+{% block title %}Edit {{ ticket.numero }}{% endblock %}
+
+{% block body_class %}page-ticket-edit{% endblock %}
+
 {% block content %}
-<div class="page-header">
-    <h1><i class="fas fa-edit"></i> Modifier le Ticket</h1>
-</div>
-<form method="POST" class="form-card">
-    <div class="form-group">
-        <label>Titre *</label>
-        <input type="text" name="titre" value="{{ ticket.titre }}" required class="form-input">
+<div class="page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ url_for('tickets.liste') }}" class="breadcrumb-link">All Tickets</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="breadcrumb-link"
+           style="font-family:var(--font-mono);font-size:12px;">{{ ticket.numero }}</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Edit</span>
+      </nav>
+      <h1 class="page-title" style="margin-top:4px;">Edit {{ ticket.numero }}</h1>
     </div>
-    <div class="form-group">
-        <label>Description *</label>
-        <textarea name="description" required class="form-input" rows="5">{{ ticket.description }}</textarea>
+    <div class="page-header-actions">
+      <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-ghost btn-sm">Cancel</a>
+      <button type="submit" form="editForm" class="btn btn-primary btn-sm">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Save Changes
+      </button>
     </div>
-    <div class="form-row">
-        <div class="form-group">
-            <label>Statut</label>
-            <select name="statut" class="form-input">
-                <option value="ouvert" {% if ticket.statut == 'ouvert' %}selected{% endif %}>Ouvert</option>
-                <option value="en_cours" {% if ticket.statut == 'en_cours' %}selected{% endif %}>En cours</option>
-                <option value="resolu" {% if ticket.statut == 'resolu' %}selected{% endif %}>Résolu</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Priorité</label>
-            <select name="priorite" class="form-input">
-                <option value="basse" {% if ticket.priorite == 'basse' %}selected{% endif %}>Basse</option>
-                <option value="normale" {% if ticket.priorite == 'normale' %}selected{% endif %}>Normale</option>
-                <option value="haute" {% if ticket.priorite == 'haute' %}selected{% endif %}>Haute</option>
-                <option value="urgente" {% if ticket.priorite == 'urgente' %}selected{% endif %}>Urgente</option>
-            </select>
-        </div>
-    </div>
-    <div class="form-actions">
-        <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-outline">Annuler</a>
-        <button type="submit" class="btn btn-primary">Enregistrer</button>
-    </div>
-</form>
+  </div>
+
+  <!-- Form Card -->
+  <div style="max-width:720px;margin:0 auto;">
+    <div class="card card-raised">
+      <div class="card-body" style="padding:32px;">
+
+        <form method="POST" action="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" id="editForm">
+
+          <!-- Title -->
+          <div class="form-group" style="margin-bottom:24px;">
+            <label class="form-label" for="titre">
+              Title <span style="color:var(--color-brand,#dc2626);">*</span>
+            </label>
+            <input
+              type="text"
+              id="titre"
+              name="titre"
+              class="input"
+              value="{{ ticket.titre }}"
+              required
+              autofocus
+              style="font-size:15px;font-weight:500;padding:13px 16px;"
+            >
+          </div>
+
+          <!-- Description -->
+          <div class="form-group" style="margin-bottom:24px;">
+            <label class="form-label" for="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              class="textarea"
+              rows="7"
+              placeholder="Describe the issue in detail..."
+              style="resize:vertical;min-height:140px;"
+            >{{ ticket.description or '' }}</textarea>
+          </div>
+
+          <!-- Status + Priority (2 cols) -->
+          <div class="form-row" style="margin-bottom:24px;">
+            <div class="form-group">
+              <label class="form-label" for="statut">Status</label>
+              <div class="select-wrap">
+                <select id="statut" name="statut" class="select">
+                  <option value="nouveau"    {% if ticket.statut == 'nouveau' %}selected{% endif %}>New</option>
+                  <option value="ouvert"     {% if ticket.statut == 'ouvert' %}selected{% endif %}>Open</option>
+                  <option value="en_cours"   {% if ticket.statut == 'en_cours' %}selected{% endif %}>In Progress</option>
+                  <option value="en_attente" {% if ticket.statut == 'en_attente' %}selected{% endif %}>Waiting</option>
+                  <option value="resolu"     {% if ticket.statut == 'resolu' %}selected{% endif %}>Resolved</option>
+                  <option value="ferme"      {% if ticket.statut == 'ferme' %}selected{% endif %}>Closed</option>
+                  <option value="annule"     {% if ticket.statut == 'annule' %}selected{% endif %}>Cancelled</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="priorite">Priority</label>
+              <div class="select-wrap">
+                <select id="priorite" name="priorite" class="select">
+                  <option value="basse"    {% if ticket.priorite == 'basse' %}selected{% endif %}>Low</option>
+                  <option value="moyenne"  {% if ticket.priorite == 'moyenne' %}selected{% endif %}>Medium</option>
+                  <option value="haute"    {% if ticket.priorite == 'haute' %}selected{% endif %}>High</option>
+                  <option value="urgente"  {% if ticket.priorite == 'urgente' %}selected{% endif %}>Urgent</option>
+                  <option value="critique" {% if ticket.priorite == 'critique' %}selected{% endif %}>Critical</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Department + Assignee (2 cols) -->
+          <div class="form-row" style="margin-bottom:24px;">
+            <div class="form-group">
+              <label class="form-label" for="departement_id">Department</label>
+              <div class="select-wrap">
+                <select id="departement_id" name="departement_id" class="select">
+                  <option value="">No department</option>
+                  {% for dept in departements %}
+                  <option value="{{ dept.id }}"
+                    {% if ticket.departement and ticket.departement.id == dept.id %}selected{% endif %}>
+                    {{ dept.nom }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="assigne_a_id">Assignee</label>
+              <div class="select-wrap">
+                <select id="assigne_a_id" name="assigne_a_id" class="select">
+                  <option value="">Unassigned</option>
+                  {% for u in utilisateurs %}
+                  <option value="{{ u.id }}"
+                    {% if ticket.assigne_a_id is defined and ticket.assigne_a_id == u.id %}selected
+                    {% elif ticket.assigne_a and ticket.assigne_a.id == u.id %}selected{% endif %}>
+                    {{ u.prenom }} {{ u.nom }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group" style="margin-bottom:32px;">
+            <label class="form-label" for="categorie_id">Category</label>
+            <div class="select-wrap">
+              <select id="categorie_id" name="categorie_id" class="select">
+                <option value="">No category</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}"
+                  {% if ticket.categorie and ticket.categorie.id == cat.id %}selected{% endif %}>
+                  {{ cat.nom }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-actions" style="display:flex;align-items:center;gap:12px;justify-content:flex-end;padding-top:16px;border-top:1px solid var(--border-subtle);">
+            <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Save Changes
+            </button>
+          </div>
+
+        </form>
+      </div><!-- /card-body -->
+    </div><!-- /card -->
+  </div>
+
+</div><!-- /page -->
 {% endblock %}

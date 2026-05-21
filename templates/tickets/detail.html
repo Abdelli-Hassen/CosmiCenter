@@ -1,35 +1,464 @@
 {% extends "base.html" %}
-{% block title %}{{ ticket.numero }} - {{ super() }}{% endblock %}
+
+{% block title %}{{ ticket.numero }} — {{ ticket.titre }}{% endblock %}
+
+{% block body_class %}page-ticket-detail{% endblock %}
+
 {% block content %}
-<div class="page-header">
-    <h1><i class="fas fa-ticket-alt"></i> {{ ticket.numero }}</h1>
-    <div class="page-actions">
-        <a href="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" class="btn btn-outline"><i class="fas fa-edit"></i> Modifier</a>
-        <form method="POST" action="{{ url_for('tickets.fermer', ticket_id=ticket.id) }}" style="display:inline;">
-            <button type="submit" class="btn btn-danger"><i class="fas fa-times"></i> Fermer</button>
+<div class="page" style="padding-bottom:0;">
+
+  <!-- Ticket Detail Header -->
+  <div class="ticket-detail-header" style="display:flex;align-items:center;gap:12px;padding:16px 0 12px;border-bottom:1px solid var(--border-subtle);margin-bottom:0;flex-wrap:wrap;">
+    <a href="{{ url_for('tickets.liste') }}"
+       class="btn btn-ghost btn-sm" style="flex-shrink:0;padding:6px 10px;" aria-label="Back to ticket list">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+
+    <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0;">{{ ticket.numero }}</span>
+
+    <h1 style="font-size:15px;font-weight:600;color:var(--text-primary);flex:1;margin:0;line-height:1.3;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+      {{ ticket.titre }}
+    </h1>
+
+    <!-- Status badge -->
+    {% if ticket.statut in ['nouveau', 'ouvert'] %}
+      <span class="badge badge-new" style="flex-shrink:0;">{{ 'Open' if ticket.statut == 'ouvert' else 'New' }}</span>
+    {% elif ticket.statut == 'en_cours' %}
+      <span class="badge badge-progress" style="flex-shrink:0;">In Progress</span>
+    {% elif ticket.statut == 'en_attente' %}
+      <span class="badge badge-waiting" style="flex-shrink:0;">Waiting</span>
+    {% elif ticket.statut == 'resolu' %}
+      <span class="badge badge-resolved" style="flex-shrink:0;">Resolved</span>
+    {% elif ticket.statut == 'ferme' %}
+      <span class="badge badge-closed" style="flex-shrink:0;">Closed</span>
+    {% elif ticket.statut == 'annule' %}
+      <span class="badge badge-cancelled" style="flex-shrink:0;">Cancelled</span>
+    {% endif %}
+
+    <!-- Actions -->
+    <div style="display:flex;gap:6px;flex-shrink:0;">
+      <a href="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" class="btn btn-secondary btn-sm">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </a>
+      <div style="position:relative;">
+        <button class="btn btn-ghost btn-sm" id="moreActionsBtn" data-dropdown="moreActionsMenu" aria-haspopup="true" aria-expanded="false">
+          ⋯ More
+        </button>
+        <div class="dropdown" id="moreActionsMenu" style="right:0;top:calc(100% + 4px);display:none;position:absolute;min-width:180px;">
+          {% if ticket.statut not in ['ferme', 'annule', 'resolu'] %}
+          <form method="POST" action="{{ url_for('tickets.fermer', ticket_id=ticket.id) }}" style="margin:0;">
+            <button type="submit" class="dropdown-item danger" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;">
+              <svg class="item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              Close Ticket
+            </button>
+          </form>
+          {% endif %}
+          <a href="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" class="dropdown-item">
+            <svg class="item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Details
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLA Warning Banner (shown by JS if needed) -->
+  <div id="slaWarning" style="display:none;padding:10px 16px;background:rgba(245,158,11,.12);border-bottom:1px solid rgba(245,158,11,.25);border-radius:0;font-size:13px;color:var(--text-primary);display:none;align-items:center;gap:8px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(245,158,11)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span>SLA breach approaching — respond within <strong id="slaCountdown">—</strong></span>
+  </div>
+
+  <!-- 3-Panel Layout -->
+  <div class="ticket-detail" style="display:grid;grid-template-columns:220px 1fr 240px;gap:0;min-height:calc(100vh - 160px);align-items:start;">
+
+    <!-- ═══════════ LEFT PANEL ═══════════ -->
+    <aside class="ticket-detail-left" style="padding:20px 16px;border-right:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:20px;position:sticky;top:0;max-height:calc(100vh - 160px);overflow-y:auto;">
+
+      <!-- Status Change -->
+      <div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px;">Status</div>
+        <form method="POST" action="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" id="statusForm">
+          <input type="hidden" name="_field" value="statut">
+          <div class="select-wrap">
+            <select name="statut" class="select select-sm" onchange="this.form.submit()">
+              <option value="nouveau"    {% if ticket.statut == 'nouveau' %}selected{% endif %}>New</option>
+              <option value="ouvert"     {% if ticket.statut == 'ouvert' %}selected{% endif %}>Open</option>
+              <option value="en_cours"   {% if ticket.statut == 'en_cours' %}selected{% endif %}>In Progress</option>
+              <option value="en_attente" {% if ticket.statut == 'en_attente' %}selected{% endif %}>Waiting</option>
+              <option value="resolu"     {% if ticket.statut == 'resolu' %}selected{% endif %}>Resolved</option>
+              <option value="ferme"      {% if ticket.statut == 'ferme' %}selected{% endif %}>Closed</option>
+              <option value="annule"     {% if ticket.statut == 'annule' %}selected{% endif %}>Cancelled</option>
+            </select>
+          </div>
         </form>
-    </div>
-</div>
-<div class="ticket-detail">
-    <h2>{{ ticket.titre }}</h2>
-    <p>{{ ticket.description }}</p>
-    <div class="ticket-meta">
-        <span class="badge badge-{{ ticket.statut }}">{{ ticket.statut }}</span>
-        <span class="badge badge-{{ ticket.priorite }}">{{ ticket.priorite }}</span>
-    </div>
-</div>
-<div class="comments-section">
-    <h3>Commentaires</h3>
-    {% for comment in commentaires %}
-    <div class="comment">
-        <strong>{{ comment.auteur.prenom }} {{ comment.auteur.nom }}</strong>
-        <p>{{ comment.contenu }}</p>
-        <small>{{ comment.date_creation.strftime('%d/%m/%Y %H:%M') }}</small>
-    </div>
-    {% endfor %}
-    <form method="POST" action="{{ url_for('tickets.commenter', ticket_id=ticket.id') }}">
-        <textarea name="contenu" placeholder="Ajouter un commentaire..." class="form-input"></textarea>
-        <button type="submit" class="btn btn-primary">Envoyer</button>
-    </form>
-</div>
+      </div>
+
+      <!-- Priority -->
+      <div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px;">Priority</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="priority-dot dot-{{ ticket.priorite }}"></span>
+          {% if ticket.priorite == 'critique' %}
+            <span class="badge badge-critical">Critical</span>
+          {% elif ticket.priorite in ['urgente', 'urgent'] %}
+            <span class="badge badge-urgent">Urgent</span>
+          {% elif ticket.priorite in ['haute', 'high'] %}
+            <span class="badge badge-high">High</span>
+          {% elif ticket.priorite in ['moyenne', 'medium'] %}
+            <span class="badge badge-medium">Medium</span>
+          {% else %}
+            <span class="badge badge-low">Low</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Details -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Details</div>
+
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Assignee</div>
+          {% if ticket.assigne_a %}
+          <div style="display:flex;align-items:center;gap:7px;">
+            <div class="user-avatar avatar-xs">
+              {% if ticket.assigne_a.photo %}<img src="{{ url_for('static', filename='uploads/' + ticket.assigne_a.photo) }}" alt="">{% else %}{{ ticket.assigne_a.prenom[0]|upper }}{% endif %}
+            </div>
+            <span style="font-size:13px;color:var(--text-primary);font-weight:500;">{{ ticket.assigne_a.prenom }} {{ ticket.assigne_a.nom }}</span>
+          </div>
+          {% else %}
+          <span style="font-size:13px;color:var(--text-muted);">Unassigned</span>
+          {% endif %}
+        </div>
+
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Department</div>
+          <span style="font-size:13px;color:var(--text-primary);">{{ ticket.departement.nom if ticket.departement else '—' }}</span>
+        </div>
+
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Category</div>
+          <span style="font-size:13px;color:var(--text-primary);">{{ ticket.categorie.nom if ticket.categorie else '—' }}</span>
+        </div>
+
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Type</div>
+          <span style="font-size:13px;color:var(--text-primary);">{{ ticket.type_ticket or '—' }}</span>
+        </div>
+
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Created</div>
+          <span style="font-size:13px;color:var(--text-primary);">{{ ticket.date_creation.strftime('%d %b %Y, %H:%M') }}</span>
+        </div>
+
+        {% if ticket.date_modification %}
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Last updated</div>
+          <span style="font-size:13px;color:var(--text-primary);">{{ ticket.date_modification.strftime('%d %b %Y, %H:%M') }}</span>
+        </div>
+        {% endif %}
+
+        {% if ticket.date_resolution %}
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Resolved</div>
+          <span style="font-size:13px;color:var(--text-primary);">{{ ticket.date_resolution.strftime('%d %b %Y, %H:%M') }}</span>
+        </div>
+        {% endif %}
+
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Reporter</div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <div class="user-avatar avatar-xs">
+              {% if ticket.createur.photo %}<img src="{{ url_for('static', filename='uploads/' + ticket.createur.photo) }}" alt="">{% else %}{{ ticket.createur.prenom[0]|upper }}{% endif %}
+            </div>
+            <span style="font-size:13px;color:var(--text-primary);">{{ ticket.createur.prenom }} {{ ticket.createur.nom }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLA Ring placeholder -->
+      <div style="padding:12px;border:1px solid var(--border-subtle);border-radius:8px;text-align:center;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">SLA</div>
+        <div style="width:60px;height:60px;margin:0 auto;border-radius:50%;border:4px solid var(--border-subtle);position:relative;display:flex;align-items:center;justify-content:center;">
+          <svg width="60" height="60" viewBox="0 0 60 60" style="position:absolute;top:0;left:0;transform:rotate(-90deg);">
+            <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-brand,#dc2626)" stroke-width="4"
+                    stroke-dasharray="163" stroke-dashoffset="60" stroke-linecap="round" opacity=".7"/>
+          </svg>
+          <span style="font-size:11px;font-weight:700;color:var(--text-primary);z-index:1;">63%</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Within SLA</div>
+      </div>
+
+      <!-- Tags -->
+      {% if ticket.tags is defined and ticket.tags %}
+      <div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px;">Tags</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;">
+          {% for tag in ticket.tags %}
+          <span style="padding:3px 9px;border-radius:20px;background:var(--surface-raised);border:1px solid var(--border-subtle);font-size:11px;color:var(--text-secondary);">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </aside>
+
+    <!-- ═══════════ CENTER PANEL ═══════════ -->
+    <section class="ticket-detail-center" style="display:flex;flex-direction:column;min-height:calc(100vh - 160px);">
+
+      <!-- Thread -->
+      <div class="thread-scroll" style="flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px;">
+
+        <!-- Original description as first message -->
+        <div class="thread-message" style="display:flex;gap:12px;">
+          <div class="user-avatar avatar-sm" style="flex-shrink:0;margin-top:2px;">
+            {% if ticket.createur.photo %}<img src="{{ url_for('static', filename='uploads/' + ticket.createur.photo) }}" alt="">{% else %}{{ ticket.createur.prenom[0]|upper }}{% endif %}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;">
+              <span style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ ticket.createur.prenom }} {{ ticket.createur.nom }}</span>
+              <span style="font-size:11px;color:var(--text-muted);">Reporter</span>
+              <span style="font-size:11px;color:var(--text-muted);margin-left:auto;">{{ ticket.date_creation.strftime('%d %b %Y, %H:%M') }}</span>
+            </div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;white-space:pre-wrap;background:var(--surface-raised);padding:14px 16px;border-radius:8px;border:1px solid var(--border-subtle);">{{ ticket.description or 'No description provided.' }}</div>
+          </div>
+        </div>
+
+        <!-- Comments -->
+        {% for commentaire in commentaires %}
+        <div class="thread-message {% if commentaire.interne %}internal{% elif commentaire.auteur.id == ticket.createur.id %}{% else %}agent{% endif %}"
+             style="display:flex;gap:12px;{% if commentaire.interne %}padding:12px 14px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;{% endif %}">
+          <div class="user-avatar avatar-sm" style="flex-shrink:0;margin-top:2px;">
+            {% if commentaire.auteur.photo %}<img src="{{ url_for('static', filename='uploads/' + commentaire.auteur.photo) }}" alt="">{% else %}{{ commentaire.auteur.prenom[0]|upper }}{% endif %}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;">
+              <span style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ commentaire.auteur.prenom }} {{ commentaire.auteur.nom }}</span>
+              {% if commentaire.interne %}
+              <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:rgb(245,158,11);padding:1px 6px;border-radius:3px;background:rgba(245,158,11,.12);">Internal Note</span>
+              {% endif %}
+              <span style="font-size:11px;color:var(--text-muted);margin-left:auto;">{{ commentaire.date_creation.strftime('%d %b %Y, %H:%M') }}</span>
+            </div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;white-space:pre-wrap;">{{ commentaire.contenu }}</div>
+          </div>
+        </div>
+        {% endfor %}
+
+        {% if not commentaires %}
+        <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">
+          No replies yet — be the first to respond.
+        </div>
+        {% endif %}
+
+      </div><!-- /thread-scroll -->
+
+      <!-- Reply Composer -->
+      <div class="reply-composer" style="border-top:1px solid var(--border-subtle);padding:16px 24px;background:var(--surface-base);">
+
+        <!-- Composer Tabs -->
+        <div class="tabs" style="margin-bottom:12px;">
+          <button type="button" class="tab-btn tab-btn-active" id="tabReply" onclick="switchTab('reply')">Reply</button>
+          <button type="button" class="tab-btn" id="tabInternal" onclick="switchTab('internal')">Internal Note</button>
+          <button type="button" class="tab-btn" id="tabLog" onclick="switchTab('log')">Log Call</button>
+        </div>
+
+        <!-- AI Draft Area (hidden, shown by JS) -->
+        <div id="aiDraftArea" class="ai-draft-area" style="display:none;margin-bottom:12px;padding:12px 14px;border-radius:8px;background:var(--surface-raised);border:1px solid var(--border-accent,rgba(220,38,38,.25));">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand,#dc2626)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span style="font-size:12px;font-weight:600;color:var(--text-primary);">AI Draft</span>
+            <span style="font-size:11px;color:var(--text-muted);">Based on ticket context</span>
+            <button type="button" onclick="useDraft()" class="btn btn-primary btn-sm" style="margin-left:auto;">Use Draft</button>
+            <button type="button" onclick="document.getElementById('aiDraftArea').style.display='none'" class="btn btn-ghost btn-sm">Dismiss</button>
+          </div>
+          <div id="aiDraftContent" style="font-size:13px;color:var(--text-secondary);line-height:1.5;"></div>
+        </div>
+
+        <form method="POST" action="{{ url_for('tickets.commenter', ticket_id=ticket.id) }}" id="replyForm">
+          <input type="hidden" id="interneField" name="interne" value="0">
+
+          <textarea
+            id="replyContent"
+            name="contenu"
+            class="textarea"
+            rows="4"
+            placeholder="Type a response… (Tab for AI draft)"
+            style="resize:none;margin-bottom:10px;"
+            required
+          ></textarea>
+
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="display:flex;gap:4px;">
+              <button type="button" title="Bold" class="btn btn-ghost btn-sm" style="padding:5px 8px;font-weight:700;font-size:13px;">B</button>
+              <button type="button" title="Italic" class="btn btn-ghost btn-sm" style="padding:5px 8px;font-style:italic;font-size:13px;">I</button>
+              <button type="button" title="Code" class="btn btn-ghost btn-sm" style="padding:5px 8px;font-family:var(--font-mono);font-size:12px;">`_`</button>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted);">Markdown supported</span>
+            <button type="submit" class="btn btn-primary btn-sm" style="margin-left:auto;">
+              Send Reply
+              <kbd style="margin-left:6px;font-size:10px;opacity:.7;">⌘↵</kbd>
+            </button>
+          </div>
+        </form>
+      </div><!-- /reply-composer -->
+
+    </section><!-- /ticket-detail-center -->
+
+    <!-- ═══════════ RIGHT PANEL ═══════════ -->
+    <aside class="ticket-detail-right" style="padding:20px 16px;border-left:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:20px;position:sticky;top:0;max-height:calc(100vh - 160px);overflow-y:auto;">
+
+      <!-- Reporter Card -->
+      <div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">Reporter</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div class="user-avatar avatar-md">
+            {% if ticket.createur.photo %}<img src="{{ url_for('static', filename='uploads/' + ticket.createur.photo) }}" alt="">{% else %}{{ ticket.createur.prenom[0]|upper }}{{ ticket.createur.nom[0]|upper }}{% endif %}
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ ticket.createur.prenom }} {{ ticket.createur.nom }}</div>
+            <div style="font-size:11px;color:var(--text-muted);">{{ ticket.createur.email }}</div>
+          </div>
+        </div>
+        {% if ticket.createur.departement %}
+        <div style="font-size:12px;color:var(--text-secondary);">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          {{ ticket.createur.departement.nom }}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- AI Insights Card -->
+      <div class="ai-card" style="border:1px solid var(--border-accent,rgba(220,38,38,.2));border-radius:8px;padding:14px;background:var(--surface-raised);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand,#dc2626)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span style="font-size:12px;font-weight:600;color:var(--text-primary);">AI Insights</span>
+          <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:var(--color-brand,#dc2626);color:#fff;font-weight:600;letter-spacing:.04em;">BETA</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:10px;">
+          AI analysis available for this ticket. Click below to generate insights.
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;" onclick="this.textContent='Analysing…';this.disabled=true;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Generate Analysis
+        </button>
+      </div>
+
+      <!-- Related Tickets placeholder -->
+      <div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">Related Tickets</div>
+        <div style="font-size:12px;color:var(--text-muted);padding:16px;text-align:center;border:1px dashed var(--border-subtle);border-radius:6px;">
+          No related tickets found.
+        </div>
+      </div>
+
+      <!-- Ticket History -->
+      <div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">History</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <!-- Static history entries — replace with real data when model supports it -->
+          <div style="display:flex;gap:8px;font-size:11px;color:var(--text-muted);">
+            <div style="width:6px;height:6px;border-radius:50%;background:var(--text-muted);margin-top:4px;flex-shrink:0;"></div>
+            <div>
+              <span style="color:var(--text-secondary);font-weight:500;">Ticket created</span><br>
+              {{ ticket.date_creation.strftime('%d %b %Y, %H:%M') }} by {{ ticket.createur.prenom }}
+            </div>
+          </div>
+          {% if ticket.date_modification and ticket.date_modification != ticket.date_creation %}
+          <div style="display:flex;gap:8px;font-size:11px;color:var(--text-muted);">
+            <div style="width:6px;height:6px;border-radius:50%;background:var(--text-muted);margin-top:4px;flex-shrink:0;"></div>
+            <div>
+              <span style="color:var(--text-secondary);font-weight:500;">Last modified</span><br>
+              {{ ticket.date_modification.strftime('%d %b %Y, %H:%M') }}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </aside><!-- /ticket-detail-right -->
+
+  </div><!-- /ticket-detail -->
+
+</div><!-- /page -->
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  // Composer tab switching
+  window.switchTab = function (tab) {
+    var tabs = ['reply', 'internal', 'log'];
+    tabs.forEach(function (t) {
+      var btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+      if (btn) btn.classList.toggle('tab-btn-active', t === tab);
+    });
+    var interneField = document.getElementById('interneField');
+    var placeholder = document.getElementById('replyContent');
+    if (tab === 'internal') {
+      interneField.value = '1';
+      placeholder.placeholder = 'Write an internal note (not visible to reporter)…';
+    } else if (tab === 'log') {
+      interneField.value = '1';
+      placeholder.placeholder = 'Log call details — date, duration, summary…';
+    } else {
+      interneField.value = '0';
+      placeholder.placeholder = 'Type a response… (Tab for AI draft)';
+    }
+  };
+
+  // Tab key in reply textarea → show AI draft placeholder
+  var replyArea = document.getElementById('replyContent');
+  if (replyArea) {
+    replyArea.addEventListener('keydown', function (e) {
+      if (e.key === 'Tab' && !e.shiftKey && this.value.length === 0) {
+        e.preventDefault();
+        var aiArea = document.getElementById('aiDraftArea');
+        var aiContent = document.getElementById('aiDraftContent');
+        if (aiArea && aiContent) {
+          aiContent.textContent = 'Thank you for contacting us. I have reviewed your ticket and will investigate this issue. I will provide an update within the next hour. In the meantime, please let us know if there is any additional information we should be aware of.';
+          aiArea.style.display = 'block';
+        }
+      }
+    });
+  }
+
+  // Use AI draft
+  window.useDraft = function () {
+    var content = document.getElementById('aiDraftContent');
+    var area = document.getElementById('replyContent');
+    if (content && area) {
+      area.value = content.textContent;
+      document.getElementById('aiDraftArea').style.display = 'none';
+      area.focus();
+    }
+  };
+
+  // Cmd+Enter to submit reply
+  if (replyArea) {
+    replyArea.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        var form = document.getElementById('replyForm');
+        if (form && replyArea.value.trim()) form.submit();
+      }
+    });
+  }
+
+  // More actions dropdown
+  var moreBtn = document.getElementById('moreActionsBtn');
+  var moreMenu = document.getElementById('moreActionsMenu');
+  if (moreBtn && moreMenu) {
+    moreBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var visible = moreMenu.style.display !== 'none';
+      moreMenu.style.display = visible ? 'none' : 'block';
+      moreBtn.setAttribute('aria-expanded', !visible);
+    });
+    document.addEventListener('click', function () {
+      moreMenu.style.display = 'none';
+      moreBtn.setAttribute('aria-expanded', 'false');
+    });
+  }
+})();
+</script>
 {% endblock %}
