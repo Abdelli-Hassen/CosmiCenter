@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Edit {{ utilisateur.prenom }} {{ utilisateur.nom }}{% endblock %}
+{% block title %}Modifier {{ utilisateur.prenom }} {{ utilisateur.nom }}{% endblock %}
 
 {% block content %}
 <div class="page">
@@ -8,19 +8,19 @@
   <!-- Page Header -->
   <div class="page-header">
     <div class="page-header-left">
-      <nav class="breadcrumb" aria-label="Breadcrumb">
+      <nav class="breadcrumb" aria-label="Fil d'Ariane">
         <a href="{{ url_for('admin.tableau_bord') }}" class="breadcrumb-link">Admin</a>
         <span class="breadcrumb-sep">/</span>
-        <a href="{{ url_for('admin.utilisateurs') }}" class="breadcrumb-link">Users</a>
+        <a href="{{ url_for('admin.utilisateurs') }}" class="breadcrumb-link">Utilisateurs</a>
         <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">Edit User</span>
+        <span class="breadcrumb-current">Modifier l'utilisateur</span>
       </nav>
-      <h1 class="page-title" style="margin-top:4px;">Edit {{ utilisateur.prenom }} {{ utilisateur.nom }}</h1>
+      <h1 class="page-title" style="margin-top:4px;">Modifier {{ utilisateur.prenom }} {{ utilisateur.nom }}</h1>
     </div>
     <div class="page-header-actions">
       <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost btn-sm">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-        Back to Users
+        Retour aux utilisateurs
       </a>
     </div>
   </div>
@@ -32,14 +32,14 @@
 
       <div class="card card-raised" style="margin-bottom:20px;">
         <div class="card-header">
-          <div class="card-title">User Information</div>
+          <div class="card-title">Informations de l'utilisateur</div>
         </div>
         <div class="card-body" style="padding:24px;">
 
           <!-- First name + Last name -->
           <div class="form-row" style="margin-bottom:16px;">
             <div class="form-group">
-              <label class="form-label" for="prenom">First Name <span style="color:var(--error);">*</span></label>
+              <label class="form-label" for="prenom">Prénom <span style="color:var(--error);">*</span></label>
               <input
                 type="text"
                 id="prenom"
@@ -51,7 +51,7 @@
               >
             </div>
             <div class="form-group">
-              <label class="form-label" for="nom">Last Name <span style="color:var(--error);">*</span></label>
+              <label class="form-label" for="nom">Nom <span style="color:var(--error);">*</span></label>
               <input
                 type="text"
                 id="nom"
@@ -66,7 +66,7 @@
 
           <!-- Email -->
           <div class="form-group" style="margin-bottom:16px;">
-            <label class="form-label" for="email">Email Address <span style="color:var(--error);">*</span></label>
+            <label class="form-label" for="email">Adresse e-mail <span style="color:var(--error);">*</span></label>
             <input
               type="email"
               id="email"
@@ -81,23 +81,23 @@
           <!-- Role + Department -->
           <div class="form-row" style="margin-bottom:16px;">
             <div class="form-group">
-              <label class="form-label" for="role">Role <span style="color:var(--error);">*</span></label>
+              <label class="form-label" for="role">Rôle <span style="color:var(--error);">*</span></label>
               <div class="select-wrap">
                 <select id="role" name="role" class="select" required>
-                  <option value="">Select a role...</option>
+                  <option value="">Sélectionner un rôle...</option>
                   {% set current_role = request.form.get('role', utilisateur.role.nom if utilisateur.role else '') %}
-                  <option value="Administrateur" {% if current_role == 'Administrateur' %}selected{% endif %}>Administrator</option>
+                  <option value="Administrateur" {% if current_role == 'Administrateur' %}selected{% endif %}>Administrateur</option>
                   <option value="Manager" {% if current_role == 'Manager' %}selected{% endif %}>Manager</option>
                   <option value="Agent" {% if current_role == 'Agent' %}selected{% endif %}>Agent</option>
-                  <option value="Utilisateur" {% if current_role == 'Utilisateur' %}selected{% endif %}>User</option>
+                  <option value="Utilisateur" {% if current_role == 'Utilisateur' %}selected{% endif %}>Utilisateur</option>
                 </select>
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label" for="departement_id">Department</label>
+              <label class="form-label" for="departement_id">Département</label>
               <div class="select-wrap">
                 <select id="departement_id" name="departement_id" class="select">
-                  <option value="">No department</option>
+                  <option value="">Aucun département</option>
                   {% for dept in departements %}
                   {% set sel_dept = request.form.get('departement_id', utilisateur.departement.id|string if utilisateur.departement else '') %}
                   <option value="{{ dept.id }}" {% if sel_dept == dept.id|string %}selected{% endif %}>
@@ -112,24 +112,24 @@
           <!-- Job Title + Matricule -->
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="poste">Job Title</label>
+              <label class="form-label" for="poste">Intitulé du poste</label>
               <input
                 type="text"
                 id="poste"
                 name="poste"
                 class="input"
-                placeholder="e.g. Support Engineer"
+                placeholder="ex. Ingénieur support"
                 value="{{ request.form.get('poste', utilisateur.poste or '') }}"
               >
             </div>
             <div class="form-group">
-              <label class="form-label" for="matricule">Employee ID</label>
+              <label class="form-label" for="matricule">Identifiant employé</label>
               <input
                 type="text"
                 id="matricule"
                 name="matricule"
                 class="input"
-                placeholder="e.g. EMP-0042"
+                placeholder="ex. EMP-0042"
                 value="{{ request.form.get('matricule', utilisateur.matricule or '') }}"
               >
             </div>
@@ -141,28 +141,28 @@
       <!-- Security Card -->
       <div class="card card-raised" style="margin-bottom:20px;">
         <div class="card-header">
-          <div class="card-title">Security</div>
+          <div class="card-title">Sécurité</div>
         </div>
         <div class="card-body" style="padding:24px;">
 
           <!-- New password (optional) -->
           <div class="form-group" style="margin-bottom:20px;">
-            <label class="form-label" for="nouveau_password">New Password</label>
+            <label class="form-label" for="nouveau_password">Nouveau mot de passe</label>
             <input
               type="password"
               id="nouveau_password"
               name="nouveau_password"
               class="input"
-              placeholder="Leave blank to keep current password"
+              placeholder="Laisser vide pour conserver le mot de passe actuel"
               autocomplete="new-password"
               minlength="8"
             >
-            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Only fill this in if you want to change the user's password.</p>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Ne remplissez ce champ que si vous souhaitez modifier le mot de passe de l'utilisateur.</p>
           </div>
 
           <!-- Active toggle -->
           <div class="form-group">
-            <label class="form-label">Account Status</label>
+            <label class="form-label">Statut du compte</label>
             <div style="display:flex;align-items:center;gap:12px;margin-top:6px;">
               <label class="toggle" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
                 <input type="checkbox" name="actif" value="1" {% if utilisateur.actif %}checked{% endif %} style="display:none;" id="actifToggle">
@@ -170,7 +170,7 @@
                   <div class="toggle-thumb" id="toggleThumb" style="position:absolute;top:3px;{% if utilisateur.actif %}left:23px{% else %}left:3px{% endif %};width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
                 </div>
                 <span style="font-size:13px;color:var(--text-secondary);" id="toggleLabel">
-                  {% if utilisateur.actif %}Account active{% else %}Account inactive{% endif %}
+                  {% if utilisateur.actif %}Compte actif{% else %}Compte inactif{% endif %}
                 </span>
               </label>
             </div>
@@ -181,10 +181,10 @@
 
       <!-- Form Actions -->
       <div class="form-actions" style="display:flex;align-items:center;gap:12px;justify-content:flex-end;margin-bottom:24px;">
-        <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost">Cancel</a>
+        <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost">Annuler</a>
         <button type="submit" class="btn btn-primary btn-lg">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          Save Changes
+          Enregistrer les modifications
         </button>
       </div>
 
@@ -193,28 +193,28 @@
     <!-- Danger Zone -->
     <div class="card" style="border-color:var(--error);border-width:1px;">
       <div class="card-header" style="border-bottom-color:var(--error);border-bottom-width:1px;">
-        <div class="card-title" style="color:var(--error);">Danger Zone</div>
+        <div class="card-title" style="color:var(--error);">Zone de danger</div>
       </div>
       <div class="card-body" style="padding:20px 24px;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
           <div>
             <p style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">
-              {% if utilisateur.actif %}Deactivate this account{% else %}This account is already deactivated{% endif %}
+              {% if utilisateur.actif %}Désactiver ce compte{% else %}Ce compte est déjà désactivé{% endif %}
             </p>
             <p style="font-size:12px;color:var(--text-muted);">
               {% if utilisateur.actif %}
-                The user will no longer be able to log in. Their data and tickets will be preserved.
+                L'utilisateur ne pourra plus se connecter. Ses données et tickets seront conservés.
               {% else %}
-                This user is currently inactive and cannot log in.
+                Cet utilisateur est actuellement inactif et ne peut pas se connecter.
               {% endif %}
             </p>
           </div>
           {% if utilisateur.actif %}
           <form method="POST" action="{{ url_for('admin.desactiver_utilisateur', user_id=utilisateur.id) }}"
-                onsubmit="return confirm('Deactivate {{ utilisateur.prenom }} {{ utilisateur.nom }}? They will no longer be able to log in.');">
+                onsubmit="return confirm('Désactiver {{ utilisateur.prenom }} {{ utilisateur.nom }} ? Cette personne ne pourra plus se connecter.');">
             <button type="submit" class="btn btn-danger">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-              Deactivate Account
+              Désactiver le compte
             </button>
           </form>
           {% endif %}
@@ -241,11 +241,11 @@
     if (checkbox.checked) {
       track.style.background = 'var(--success)';
       thumb.style.left = '23px';
-      label.textContent = 'Account active';
+      label.textContent = 'Compte actif';
     } else {
       track.style.background = 'var(--surface-4)';
       thumb.style.left = '3px';
-      label.textContent = 'Account inactive';
+      label.textContent = 'Compte inactif';
     }
   };
 })();

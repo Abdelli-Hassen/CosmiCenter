@@ -9,12 +9,12 @@
   <div class="page-header">
     <div class="page-header-left">
       <h1 class="page-title">Administration</h1>
-      <span class="page-subtitle">System overview and configuration</span>
+      <span class="page-subtitle">Vue d'ensemble du système et configuration</span>
     </div>
     <div class="page-header-actions">
       <a href="{{ url_for('admin.parametres') }}" class="btn btn-ghost btn-sm">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
-        System Settings
+        Paramètres système
       </a>
     </div>
   </div>
@@ -25,38 +25,38 @@
     <div class="kpi-card" style="--kpi-color: var(--brand);">
       <div class="kpi-card-label">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Users
+        Utilisateurs
       </div>
       <div class="kpi-card-value">{{ stats.utilisateurs }}</div>
-      <div class="kpi-trend">Total registered</div>
+      <div class="kpi-trend">Total enregistrés</div>
     </div>
 
     <div class="kpi-card" style="--kpi-color: var(--info);">
       <div class="kpi-card-label">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        Total Tickets
+        Total tickets
       </div>
       <div class="kpi-card-value">{{ stats.tickets }}</div>
-      <div class="kpi-trend">All time</div>
+      <div class="kpi-trend">Depuis le début</div>
     </div>
 
     <div class="kpi-card" style="--kpi-color: var(--success);">
       <div class="kpi-card-label">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Departments
+        Départements
       </div>
       <div class="kpi-card-value">{{ stats.departements }}</div>
-      <div class="kpi-trend">Active units</div>
+      <div class="kpi-trend">Unités actives</div>
     </div>
 
     <div class="kpi-card" style="--kpi-color: var(--warning);">
       <div class="kpi-card-label">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        Open Tickets
+        Tickets ouverts
       </div>
       <div class="kpi-card-value">{{ stats.tickets_ouverts }}</div>
       <div class="kpi-trend" style="{% if stats.tickets_ouverts > 0 %}color:var(--warning);{% endif %}">
-        {% if stats.tickets_ouverts > 0 %}Needs attention{% else %}All clear{% endif %}
+        {% if stats.tickets_ouverts > 0 %}Attention requise{% else %}Tout est en ordre{% endif %}
       </div>
     </div>
 
@@ -65,24 +65,24 @@
   <!-- Quick Actions -->
   <div class="card card-raised" style="margin-bottom:24px;">
     <div class="card-header">
-      <div class="card-title">Quick Actions</div>
+      <div class="card-title">Actions rapides</div>
     </div>
     <div class="card-body-sm" style="display:flex;gap:10px;flex-wrap:wrap;">
       <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-secondary">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-        Manage Users
+        Gérer les utilisateurs
       </a>
       <a href="{{ url_for('admin.nouvel_utilisateur') }}" class="btn btn-primary">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        New User
+        Nouvel utilisateur
       </a>
       <a href="{{ url_for('admin.categories') }}" class="btn btn-secondary">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Categories
+        Catégories
       </a>
       <a href="{{ url_for('admin.logs') }}" class="btn btn-secondary">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        System Logs
+        Journaux système
       </a>
     </div>
   </div>
@@ -93,7 +93,7 @@
     <!-- Tickets by Status -->
     <div class="card card-raised">
       <div class="card-header">
-        <div class="card-title">Tickets by Status</div>
+        <div class="card-title">Tickets par statut</div>
       </div>
       <div class="card-body" style="padding:0;">
         {% if tickets_par_statut %}
@@ -101,9 +101,9 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Status</th>
-                <th style="width:100px;text-align:right;">Count</th>
-                <th style="width:160px;">Distribution</th>
+                <th>Statut</th>
+                <th style="width:100px;text-align:right;">Nombre</th>
+                <th style="width:160px;">Répartition</th>
               </tr>
             </thead>
             <tbody>
@@ -112,17 +112,17 @@
               <tr>
                 <td>
                   {% if row.statut in ['nouveau', 'ouvert'] %}
-                    <span class="badge badge-new">{{ 'Open' if row.statut == 'ouvert' else 'New' }}</span>
+                    <span class="badge badge-new">{{ 'Ouvert' if row.statut == 'ouvert' else 'Nouveau' }}</span>
                   {% elif row.statut == 'en_cours' %}
-                    <span class="badge badge-progress">In Progress</span>
+                    <span class="badge badge-progress">En cours</span>
                   {% elif row.statut == 'en_attente' %}
-                    <span class="badge badge-waiting">Waiting</span>
+                    <span class="badge badge-waiting">En attente</span>
                   {% elif row.statut == 'resolu' %}
-                    <span class="badge badge-resolved">Resolved</span>
+                    <span class="badge badge-resolved">Résolu</span>
                   {% elif row.statut == 'ferme' %}
-                    <span class="badge badge-closed">Closed</span>
+                    <span class="badge badge-closed">Fermé</span>
                   {% elif row.statut == 'annule' %}
-                    <span class="badge badge-cancelled">Cancelled</span>
+                    <span class="badge badge-cancelled">Annulé</span>
                   {% else %}
                     <span class="badge badge-neutral">{{ row.statut }}</span>
                   {% endif %}
@@ -146,8 +146,8 @@
         </div>
         {% else %}
         <div class="empty-state" style="padding:40px 24px;">
-          <p class="empty-title">No data yet</p>
-          <p class="empty-desc">Ticket status data will appear here.</p>
+          <p class="empty-title">Aucune donnée</p>
+          <p class="empty-desc">Les données de statut des tickets apparaîtront ici.</p>
         </div>
         {% endif %}
       </div>
@@ -156,7 +156,7 @@
     <!-- Tickets by Priority -->
     <div class="card card-raised">
       <div class="card-header">
-        <div class="card-title">Tickets by Priority</div>
+        <div class="card-title">Tickets par priorité</div>
       </div>
       <div class="card-body" style="padding:0;">
         {% if tickets_par_priorite %}
@@ -164,9 +164,9 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Priority</th>
-                <th style="width:80px;text-align:right;">Count</th>
-                <th style="width:160px;">Distribution</th>
+                <th>Priorité</th>
+                <th style="width:80px;text-align:right;">Nombre</th>
+                <th style="width:160px;">Répartition</th>
               </tr>
             </thead>
             <tbody>
@@ -175,15 +175,15 @@
               <tr>
                 <td>
                   {% if row.priorite == 'critique' %}
-                    <span class="badge badge-error">Critical</span>
+                    <span class="badge badge-error">Critique</span>
                   {% elif row.priorite == 'urgente' %}
-                    <span class="badge badge-error">Urgent</span>
+                    <span class="badge badge-error">Urgente</span>
                   {% elif row.priorite == 'haute' %}
-                    <span class="badge badge-warning">High</span>
+                    <span class="badge badge-warning">Haute</span>
                   {% elif row.priorite == 'moyenne' %}
-                    <span class="badge badge-neutral">Medium</span>
+                    <span class="badge badge-neutral">Moyenne</span>
                   {% else %}
-                    <span class="badge badge-neutral">Low</span>
+                    <span class="badge badge-neutral">Basse</span>
                   {% endif %}
                 </td>
                 <td style="text-align:right;font-weight:600;color:var(--text-primary);">{{ row.count }}</td>
@@ -205,8 +205,8 @@
         </div>
         {% else %}
         <div class="empty-state" style="padding:40px 24px;">
-          <p class="empty-title">No data yet</p>
-          <p class="empty-desc">Priority data will appear here.</p>
+          <p class="empty-title">Aucune donnée</p>
+          <p class="empty-desc">Les données de priorité apparaîtront ici.</p>
         </div>
         {% endif %}
       </div>
@@ -219,26 +219,26 @@
     <div class="card-body-sm" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:8px;">
         <span style="width:8px;height:8px;background:var(--success);border-radius:50%;display:inline-block;box-shadow:0 0 6px var(--success);"></span>
-        <span style="font-size:12px;font-weight:600;color:var(--text-primary);">System Operational</span>
+        <span style="font-size:12px;font-weight:600;color:var(--text-primary);">Système opérationnel</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;">
         <span style="font-size:11px;color:var(--text-muted);">Version</span>
         <span class="badge badge-neutral">v1.0.0</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:11px;color:var(--text-muted);">Last check</span>
-        <span style="font-size:12px;color:var(--text-secondary);">Just now</span>
+        <span style="font-size:11px;color:var(--text-muted);">Dernière vérification</span>
+        <span style="font-size:12px;color:var(--text-secondary);">À l'instant</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:11px;color:var(--text-muted);">Database</span>
-        <span class="badge badge-success">Connected</span>
+        <span style="font-size:11px;color:var(--text-muted);">Base de données</span>
+        <span class="badge badge-success">Connectée</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:11px;color:var(--text-muted);">Mail</span>
+        <span style="font-size:11px;color:var(--text-muted);">Messagerie</span>
         <span class="badge badge-success">Active</span>
       </div>
       <div style="margin-left:auto;">
-        <a href="{{ url_for('admin.logs') }}" class="btn btn-ghost btn-sm">View logs</a>
+        <a href="{{ url_for('admin.logs') }}" class="btn btn-ghost btn-sm">Voir les journaux</a>
       </div>
     </div>
   </div>

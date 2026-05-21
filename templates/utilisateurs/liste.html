@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Team Directory{% endblock %}
+{% block title %}Annuaire de l'équipe{% endblock %}
 
 {% block content %}
 <div class="page">
@@ -8,9 +8,9 @@
   <!-- Page Header -->
   <div class="page-header">
     <div class="page-header-left">
-      <h1 class="page-title">Team Directory</h1>
+      <h1 class="page-title">Annuaire de l'équipe</h1>
       <span class="page-subtitle">
-        {{ utilisateurs.total }} member{{ 's' if utilisateurs.total != 1 else '' }}
+        {{ utilisateurs.total }} membre{{ 's' if utilisateurs.total != 1 else '' }}
       </span>
     </div>
   </div>
@@ -27,7 +27,7 @@
           name="search"
           class="input"
           style="padding-left:32px;"
-          placeholder="Search by name or email..."
+          placeholder="Rechercher par nom ou e-mail..."
           value="{{ search or '' }}"
           autocomplete="off"
         >
@@ -36,7 +36,7 @@
       <!-- Role filter -->
       <div class="select-wrap" style="min-width:150px;">
         <select name="role" class="select select-sm" onchange="this.form.submit()">
-          <option value="">All Roles</option>
+          <option value="">Tous les rôles</option>
           {% for role in roles %}
           <option value="{{ role.nom }}" {% if role_filter == role.nom %}selected{% endif %}>{{ role.nom }}</option>
           {% endfor %}
@@ -46,7 +46,7 @@
       <!-- Department filter -->
       <div class="select-wrap" style="min-width:170px;">
         <select name="departement" class="select select-sm" onchange="this.form.submit()">
-          <option value="">All Departments</option>
+          <option value="">Tous les départements</option>
           {% for dept in departements %}
           <option value="{{ dept.id }}" {% if departement_filter|string == dept.id|string %}selected{% endif %}>{{ dept.nom }}</option>
           {% endfor %}
@@ -56,16 +56,16 @@
       <!-- Active/Inactive toggle -->
       <div class="select-wrap" style="min-width:140px;">
         <select name="actif" class="select select-sm" onchange="this.form.submit()">
-          <option value="">All Status</option>
-          <option value="1" {% if actif_filter == '1' %}selected{% endif %}>Active</option>
-          <option value="0" {% if actif_filter == '0' %}selected{% endif %}>Inactive</option>
+          <option value="">Tous les statuts</option>
+          <option value="1" {% if actif_filter == '1' %}selected{% endif %}>Actif</option>
+          <option value="0" {% if actif_filter == '0' %}selected{% endif %}>Inactif</option>
         </select>
       </div>
 
-      <button type="submit" class="btn btn-secondary btn-sm">Search</button>
+      <button type="submit" class="btn btn-secondary btn-sm">Rechercher</button>
 
       {% if search or role_filter or departement_filter or actif_filter %}
-      <a href="{{ url_for('utilisateurs.liste') }}" class="btn btn-ghost btn-sm">Clear</a>
+      <a href="{{ url_for('utilisateurs.liste') }}" class="btn btn-ghost btn-sm">Effacer</a>
       {% endif %}
 
     </div>
@@ -111,7 +111,7 @@
               <span class="badge badge-neutral">{{ u.role.nom }}</span>
             {% endif %}
           {% else %}
-            <span class="badge badge-neutral">No role</span>
+            <span class="badge badge-neutral">Aucun rôle</span>
           {% endif %}
         </div>
 
@@ -121,7 +121,7 @@
             <svg style="vertical-align:middle;margin-right:4px;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             {{ u.departement.nom }}
           {% else %}
-            <span style="color:var(--text-muted);">No department</span>
+            <span style="color:var(--text-muted);">Aucun département</span>
           {% endif %}
         </div>
 
@@ -137,10 +137,10 @@
       <div class="card-footer" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-top:1px solid var(--border-subtle);">
         {% if u.actif %}
           <span style="width:6px;height:6px;background:var(--success);border-radius:50%;display:inline-block;"></span>
-          <span style="font-size:11px;color:var(--text-muted);">Active</span>
+          <span style="font-size:11px;color:var(--text-muted);">Actif</span>
         {% else %}
           <span style="width:6px;height:6px;background:var(--surface-4);border-radius:50%;display:inline-block;"></span>
-          <span style="font-size:11px;color:var(--text-muted);">Inactive</span>
+          <span style="font-size:11px;color:var(--text-muted);">Inactif</span>
         {% endif %}
         {% if u.poste %}
         <span style="font-size:11px;color:var(--text-muted);">&mdash; {{ u.poste }}</span>
@@ -157,7 +157,7 @@
   <div class="pagination" style="margin-top:8px;">
     {% if utilisateurs.has_prev %}
     <a href="{{ url_for('utilisateurs.liste', page=utilisateurs.prev_num, search=search or '', role=role_filter or '', departement=departement_filter or '', actif=actif_filter or '') }}"
-       class="page-btn" aria-label="Previous page">
+       class="page-btn" aria-label="Page précédente">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     </a>
     {% else %}
@@ -179,7 +179,7 @@
 
     {% if utilisateurs.has_next %}
     <a href="{{ url_for('utilisateurs.liste', page=utilisateurs.next_num, search=search or '', role=role_filter or '', departement=departement_filter or '', actif=actif_filter or '') }}"
-       class="page-btn" aria-label="Next page">
+       class="page-btn" aria-label="Page suivante">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     {% else %}
@@ -197,16 +197,16 @@
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
       <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
     </svg>
-    <p class="empty-title">No members found</p>
+    <p class="empty-title">Aucun membre trouvé</p>
     <p class="empty-desc">
       {% if search or role_filter or departement_filter or actif_filter %}
-        No users match the current filters.
+        Aucun utilisateur ne correspond aux filtres actuels.
       {% else %}
-        The team directory is empty.
+        L'annuaire de l'équipe est vide.
       {% endif %}
     </p>
     {% if search or role_filter or departement_filter or actif_filter %}
-    <a href="{{ url_for('utilisateurs.liste') }}" class="btn btn-ghost btn-sm" style="margin-top:16px;">Clear filters</a>
+    <a href="{{ url_for('utilisateurs.liste') }}" class="btn btn-ghost btn-sm" style="margin-top:16px;">Effacer les filtres</a>
     {% endif %}
   </div>
   {% endif %}

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}User Management{% endblock %}
+{% block title %}Gestion des utilisateurs{% endblock %}
 
 {% block content %}
 <div class="page">
@@ -8,15 +8,15 @@
   <!-- Page Header -->
   <div class="page-header">
     <div class="page-header-left">
-      <h1 class="page-title">User Management</h1>
+      <h1 class="page-title">Gestion des utilisateurs</h1>
       <span class="page-subtitle">
-        {{ utilisateurs.total }} user{{ 's' if utilisateurs.total != 1 else '' }} total
+        {{ utilisateurs.total }} utilisateur{{ 's' if utilisateurs.total != 1 else '' }} au total
       </span>
     </div>
     <div class="page-header-actions">
       <a href="{{ url_for('admin.nouvel_utilisateur') }}" class="btn btn-primary btn-sm">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        New User
+        Nouvel utilisateur
       </a>
     </div>
   </div>
@@ -33,7 +33,7 @@
           name="search"
           class="input"
           style="padding-left:32px;"
-          placeholder="Search by name or email..."
+          placeholder="Rechercher par nom ou e-mail..."
           value="{{ request.args.get('search', '') }}"
           autocomplete="off"
         >
@@ -42,28 +42,28 @@
       <!-- Role filter -->
       <div class="select-wrap" style="min-width:150px;">
         <select name="role" class="select select-sm" onchange="this.form.submit()">
-          <option value="">All Roles</option>
-          <option value="Administrateur" {% if request.args.get('role') == 'Administrateur' %}selected{% endif %}>Administrator</option>
+          <option value="">Tous les rôles</option>
+          <option value="Administrateur" {% if request.args.get('role') == 'Administrateur' %}selected{% endif %}>Administrateur</option>
           <option value="Manager" {% if request.args.get('role') == 'Manager' %}selected{% endif %}>Manager</option>
           <option value="Agent" {% if request.args.get('role') == 'Agent' %}selected{% endif %}>Agent</option>
-          <option value="Utilisateur" {% if request.args.get('role') == 'Utilisateur' %}selected{% endif %}>User</option>
+          <option value="Utilisateur" {% if request.args.get('role') == 'Utilisateur' %}selected{% endif %}>Utilisateur</option>
         </select>
       </div>
 
       <!-- Status filter -->
       <div class="select-wrap" style="min-width:140px;">
         <select name="actif" class="select select-sm" onchange="this.form.submit()">
-          <option value="">All Status</option>
-          <option value="1" {% if request.args.get('actif') == '1' %}selected{% endif %}>Active</option>
-          <option value="0" {% if request.args.get('actif') == '0' %}selected{% endif %}>Inactive</option>
+          <option value="">Tous les statuts</option>
+          <option value="1" {% if request.args.get('actif') == '1' %}selected{% endif %}>Actif</option>
+          <option value="0" {% if request.args.get('actif') == '0' %}selected{% endif %}>Inactif</option>
         </select>
       </div>
 
       <!-- Search submit -->
-      <button type="submit" class="btn btn-secondary btn-sm">Search</button>
+      <button type="submit" class="btn btn-secondary btn-sm">Rechercher</button>
 
       {% if request.args.get('search') or request.args.get('role') or request.args.get('actif') %}
-      <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost btn-sm">Clear</a>
+      <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost btn-sm">Effacer</a>
       {% endif %}
 
     </div>
@@ -76,12 +76,12 @@
       <table class="table">
         <thead>
           <tr>
-            <th style="min-width:200px;">User</th>
-            <th style="min-width:200px;">Email</th>
-            <th style="width:130px;">Role</th>
-            <th style="width:150px;">Department</th>
-            <th style="width:110px;">Status</th>
-            <th style="width:140px;">Last Login</th>
+            <th style="min-width:200px;">Utilisateur</th>
+            <th style="min-width:200px;">E-mail</th>
+            <th style="width:130px;">Rôle</th>
+            <th style="width:150px;">Département</th>
+            <th style="width:110px;">Statut</th>
+            <th style="width:140px;">Dernière connexion</th>
             <th style="width:100px;">Actions</th>
           </tr>
         </thead>
@@ -129,9 +129,9 @@
             <!-- Status -->
             <td>
               {% if u.actif %}
-                <span class="badge badge-success">Active</span>
+                <span class="badge badge-success">Actif</span>
               {% else %}
-                <span class="badge badge-error">Inactive</span>
+                <span class="badge badge-error">Inactif</span>
               {% endif %}
             </td>
             <!-- Last Login -->
@@ -139,18 +139,18 @@
               {% if u.last_login %}
                 {{ u.last_login.strftime('%d %b %Y') }}
               {% else %}
-                Never
+                Jamais
               {% endif %}
             </td>
             <!-- Actions -->
             <td>
               <div style="display:flex;align-items:center;gap:6px;">
-                <a href="{{ url_for('admin.modifier_utilisateur', user_id=u.id) }}" class="btn btn-ghost btn-sm" title="Edit user">
+                <a href="{{ url_for('admin.modifier_utilisateur', user_id=u.id) }}" class="btn btn-ghost btn-sm" title="Modifier l'utilisateur">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </a>
                 {% if u.actif %}
-                <form method="POST" action="{{ url_for('admin.desactiver_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm('Deactivate {{ u.prenom }} {{ u.nom }}? They will no longer be able to log in.');">
-                  <button type="submit" class="btn btn-ghost btn-sm" title="Deactivate user" style="color:var(--error);">
+                <form method="POST" action="{{ url_for('admin.desactiver_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm('Désactiver {{ u.prenom }} {{ u.nom }} ? Cette personne ne pourra plus se connecter.');">
+                  <button type="submit" class="btn btn-ghost btn-sm" title="Désactiver l'utilisateur" style="color:var(--error);">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
                 </form>
@@ -169,7 +169,7 @@
   <div class="pagination" style="margin-top:20px;">
     {% if utilisateurs.has_prev %}
     <a href="{{ url_for('admin.utilisateurs', page=utilisateurs.prev_num, search=request.args.get('search',''), role=request.args.get('role',''), actif=request.args.get('actif','')) }}"
-       class="page-btn" aria-label="Previous page">
+       class="page-btn" aria-label="Page précédente">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     </a>
     {% else %}
@@ -191,7 +191,7 @@
 
     {% if utilisateurs.has_next %}
     <a href="{{ url_for('admin.utilisateurs', page=utilisateurs.next_num, search=request.args.get('search',''), role=request.args.get('role',''), actif=request.args.get('actif','')) }}"
-       class="page-btn" aria-label="Next page">
+       class="page-btn" aria-label="Page suivante">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     {% else %}
@@ -209,19 +209,19 @@
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
       <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
     </svg>
-    <p class="empty-title">No users found</p>
+    <p class="empty-title">Aucun utilisateur trouvé</p>
     <p class="empty-desc">
       {% if request.args.get('search') or request.args.get('role') or request.args.get('actif') %}
-        No users match the current filters. Try adjusting your search.
+        Aucun utilisateur ne correspond aux filtres actuels. Essayez d'affiner votre recherche.
       {% else %}
-        Get started by creating the first user account.
+        Commencez par créer le premier compte utilisateur.
       {% endif %}
     </p>
     <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;">
       {% if request.args.get('search') or request.args.get('role') or request.args.get('actif') %}
-      <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost btn-sm">Clear filters</a>
+      <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost btn-sm">Effacer les filtres</a>
       {% endif %}
-      <a href="{{ url_for('admin.nouvel_utilisateur') }}" class="btn btn-primary btn-sm">New User</a>
+      <a href="{{ url_for('admin.nouvel_utilisateur') }}" class="btn btn-primary btn-sm">Nouvel utilisateur</a>
     </div>
   </div>
   {% endif %}

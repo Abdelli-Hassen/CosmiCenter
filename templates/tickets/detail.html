@@ -10,7 +10,7 @@
   <!-- Ticket Detail Header -->
   <div class="ticket-detail-header" style="display:flex;align-items:center;gap:12px;padding:16px 0 12px;border-bottom:1px solid var(--border-subtle);margin-bottom:0;flex-wrap:wrap;">
     <a href="{{ url_for('tickets.liste') }}"
-       class="btn btn-ghost btn-sm" style="flex-shrink:0;padding:6px 10px;" aria-label="Back to ticket list">
+       class="btn btn-ghost btn-sm" style="flex-shrink:0;padding:6px 10px;" aria-label="Retour à la liste des tickets">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     </a>
 
@@ -22,41 +22,41 @@
 
     <!-- Status badge -->
     {% if ticket.statut in ['nouveau', 'ouvert'] %}
-      <span class="badge badge-new" style="flex-shrink:0;">{{ 'Open' if ticket.statut == 'ouvert' else 'New' }}</span>
+      <span class="badge badge-new" style="flex-shrink:0;">{{ 'Ouvert' if ticket.statut == 'ouvert' else 'Nouveau' }}</span>
     {% elif ticket.statut == 'en_cours' %}
-      <span class="badge badge-progress" style="flex-shrink:0;">In Progress</span>
+      <span class="badge badge-progress" style="flex-shrink:0;">En cours</span>
     {% elif ticket.statut == 'en_attente' %}
-      <span class="badge badge-waiting" style="flex-shrink:0;">Waiting</span>
+      <span class="badge badge-waiting" style="flex-shrink:0;">En attente</span>
     {% elif ticket.statut == 'resolu' %}
-      <span class="badge badge-resolved" style="flex-shrink:0;">Resolved</span>
+      <span class="badge badge-resolved" style="flex-shrink:0;">Résolu</span>
     {% elif ticket.statut == 'ferme' %}
-      <span class="badge badge-closed" style="flex-shrink:0;">Closed</span>
+      <span class="badge badge-closed" style="flex-shrink:0;">Fermé</span>
     {% elif ticket.statut == 'annule' %}
-      <span class="badge badge-cancelled" style="flex-shrink:0;">Cancelled</span>
+      <span class="badge badge-cancelled" style="flex-shrink:0;">Annulé</span>
     {% endif %}
 
     <!-- Actions -->
     <div style="display:flex;gap:6px;flex-shrink:0;">
       <a href="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" class="btn btn-secondary btn-sm">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        Edit
+        Modifier
       </a>
       <div style="position:relative;">
         <button class="btn btn-ghost btn-sm" id="moreActionsBtn" data-dropdown="moreActionsMenu" aria-haspopup="true" aria-expanded="false">
-          ⋯ More
+          ⋯ Plus
         </button>
         <div class="dropdown" id="moreActionsMenu" style="right:0;top:calc(100% + 4px);display:none;position:absolute;min-width:180px;">
           {% if ticket.statut not in ['ferme', 'annule', 'resolu'] %}
           <form method="POST" action="{{ url_for('tickets.fermer', ticket_id=ticket.id) }}" style="margin:0;">
             <button type="submit" class="dropdown-item danger" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;">
               <svg class="item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-              Close Ticket
+              Fermer le ticket
             </button>
           </form>
           {% endif %}
           <a href="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" class="dropdown-item">
             <svg class="item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Edit Details
+            Modifier les détails
           </a>
         </div>
       </div>
@@ -66,7 +66,7 @@
   <!-- SLA Warning Banner (shown by JS if needed) -->
   <div id="slaWarning" style="display:none;padding:10px 16px;background:rgba(245,158,11,.12);border-bottom:1px solid rgba(245,158,11,.25);border-radius:0;font-size:13px;color:var(--text-primary);display:none;align-items:center;gap:8px;">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(245,158,11)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    <span>SLA breach approaching — respond within <strong id="slaCountdown">—</strong></span>
+    <span>Dépassement de SLA imminent — répondez dans <strong id="slaCountdown">—</strong></span>
   </div>
 
   <!-- 3-Panel Layout -->
@@ -77,18 +77,18 @@
 
       <!-- Status Change -->
       <div>
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px;">Status</div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px;">Statut</div>
         <form method="POST" action="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" id="statusForm">
           <input type="hidden" name="_field" value="statut">
           <div class="select-wrap">
             <select name="statut" class="select select-sm" onchange="this.form.submit()">
-              <option value="nouveau"    {% if ticket.statut == 'nouveau' %}selected{% endif %}>New</option>
-              <option value="ouvert"     {% if ticket.statut == 'ouvert' %}selected{% endif %}>Open</option>
-              <option value="en_cours"   {% if ticket.statut == 'en_cours' %}selected{% endif %}>In Progress</option>
-              <option value="en_attente" {% if ticket.statut == 'en_attente' %}selected{% endif %}>Waiting</option>
-              <option value="resolu"     {% if ticket.statut == 'resolu' %}selected{% endif %}>Resolved</option>
-              <option value="ferme"      {% if ticket.statut == 'ferme' %}selected{% endif %}>Closed</option>
-              <option value="annule"     {% if ticket.statut == 'annule' %}selected{% endif %}>Cancelled</option>
+              <option value="nouveau"    {% if ticket.statut == 'nouveau' %}selected{% endif %}>Nouveau</option>
+              <option value="ouvert"     {% if ticket.statut == 'ouvert' %}selected{% endif %}>Ouvert</option>
+              <option value="en_cours"   {% if ticket.statut == 'en_cours' %}selected{% endif %}>En cours</option>
+              <option value="en_attente" {% if ticket.statut == 'en_attente' %}selected{% endif %}>En attente</option>
+              <option value="resolu"     {% if ticket.statut == 'resolu' %}selected{% endif %}>Résolu</option>
+              <option value="ferme"      {% if ticket.statut == 'ferme' %}selected{% endif %}>Fermé</option>
+              <option value="annule"     {% if ticket.statut == 'annule' %}selected{% endif %}>Annulé</option>
             </select>
           </div>
         </form>
@@ -96,29 +96,29 @@
 
       <!-- Priority -->
       <div>
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px;">Priority</div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px;">Priorité</div>
         <div style="display:flex;align-items:center;gap:8px;">
           <span class="priority-dot dot-{{ ticket.priorite }}"></span>
           {% if ticket.priorite == 'critique' %}
-            <span class="badge badge-critical">Critical</span>
+            <span class="badge badge-critical">Critique</span>
           {% elif ticket.priorite in ['urgente', 'urgent'] %}
-            <span class="badge badge-urgent">Urgent</span>
+            <span class="badge badge-urgent">Urgente</span>
           {% elif ticket.priorite in ['haute', 'high'] %}
-            <span class="badge badge-high">High</span>
+            <span class="badge badge-high">Haute</span>
           {% elif ticket.priorite in ['moyenne', 'medium'] %}
-            <span class="badge badge-medium">Medium</span>
+            <span class="badge badge-medium">Moyenne</span>
           {% else %}
-            <span class="badge badge-low">Low</span>
+            <span class="badge badge-low">Basse</span>
           {% endif %}
         </div>
       </div>
 
       <!-- Details -->
       <div style="display:flex;flex-direction:column;gap:12px;">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Details</div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Détails</div>
 
         <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Assignee</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Assigné</div>
           {% if ticket.assigne_a %}
           <div style="display:flex;align-items:center;gap:7px;">
             <div class="user-avatar avatar-xs">
@@ -127,17 +127,17 @@
             <span style="font-size:13px;color:var(--text-primary);font-weight:500;">{{ ticket.assigne_a.prenom }} {{ ticket.assigne_a.nom }}</span>
           </div>
           {% else %}
-          <span style="font-size:13px;color:var(--text-muted);">Unassigned</span>
+          <span style="font-size:13px;color:var(--text-muted);">Non assigné</span>
           {% endif %}
         </div>
 
         <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Department</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Département</div>
           <span style="font-size:13px;color:var(--text-primary);">{{ ticket.departement.nom if ticket.departement else '—' }}</span>
         </div>
 
         <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Category</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Catégorie</div>
           <span style="font-size:13px;color:var(--text-primary);">{{ ticket.categorie.nom if ticket.categorie else '—' }}</span>
         </div>
 
@@ -147,26 +147,26 @@
         </div>
 
         <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Created</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Créé le</div>
           <span style="font-size:13px;color:var(--text-primary);">{{ ticket.date_creation.strftime('%d %b %Y, %H:%M') }}</span>
         </div>
 
         {% if ticket.date_modification %}
         <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Last updated</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Dernière mise à jour</div>
           <span style="font-size:13px;color:var(--text-primary);">{{ ticket.date_modification.strftime('%d %b %Y, %H:%M') }}</span>
         </div>
         {% endif %}
 
         {% if ticket.date_resolution %}
         <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Resolved</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Résolu le</div>
           <span style="font-size:13px;color:var(--text-primary);">{{ ticket.date_resolution.strftime('%d %b %Y, %H:%M') }}</span>
         </div>
         {% endif %}
 
         <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Reporter</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Demandeur</div>
           <div style="display:flex;align-items:center;gap:7px;">
             <div class="user-avatar avatar-xs">
               {% if ticket.createur.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + ticket.createur.photo_profil) }}" alt="">{% else %}{{ ticket.createur.prenom[0]|upper }}{% endif %}
@@ -186,13 +186,13 @@
           </svg>
           <span style="font-size:11px;font-weight:700;color:var(--text-primary);z-index:1;">63%</span>
         </div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Within SLA</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Dans les délais SLA</div>
       </div>
 
       <!-- Tags -->
       {% if ticket.tags is defined and ticket.tags %}
       <div>
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px;">Tags</div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px;">Étiquettes</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;">
           {% for tag in ticket.tags %}
           <span style="padding:3px 9px;border-radius:20px;background:var(--surface-raised);border:1px solid var(--border-subtle);font-size:11px;color:var(--text-secondary);">{{ tag }}</span>
@@ -217,10 +217,10 @@
           <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;">
               <span style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ ticket.createur.prenom }} {{ ticket.createur.nom }}</span>
-              <span style="font-size:11px;color:var(--text-muted);">Reporter</span>
+              <span style="font-size:11px;color:var(--text-muted);">Demandeur</span>
               <span style="font-size:11px;color:var(--text-muted);margin-left:auto;">{{ ticket.date_creation.strftime('%d %b %Y, %H:%M') }}</span>
             </div>
-            <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;white-space:pre-wrap;background:var(--surface-raised);padding:14px 16px;border-radius:8px;border:1px solid var(--border-subtle);">{{ ticket.description or 'No description provided.' }}</div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;white-space:pre-wrap;background:var(--surface-raised);padding:14px 16px;border-radius:8px;border:1px solid var(--border-subtle);">{{ ticket.description or 'Aucune description fournie.' }}</div>
           </div>
         </div>
 
@@ -235,7 +235,7 @@
             <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;">
               <span style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ commentaire.auteur.prenom }} {{ commentaire.auteur.nom }}</span>
               {% if commentaire.interne %}
-              <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:rgb(245,158,11);padding:1px 6px;border-radius:3px;background:rgba(245,158,11,.12);">Internal Note</span>
+              <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:rgb(245,158,11);padding:1px 6px;border-radius:3px;background:rgba(245,158,11,.12);">Note interne</span>
               {% endif %}
               <span style="font-size:11px;color:var(--text-muted);margin-left:auto;">{{ commentaire.date_creation.strftime('%d %b %Y, %H:%M') }}</span>
             </div>
@@ -246,7 +246,7 @@
 
         {% if not commentaires %}
         <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">
-          No replies yet — be the first to respond.
+          Aucune réponse pour l'instant — soyez le premier à répondre.
         </div>
         {% endif %}
 
@@ -257,19 +257,19 @@
 
         <!-- Composer Tabs -->
         <div class="tabs" style="margin-bottom:12px;">
-          <button type="button" class="tab-btn tab-btn-active" id="tabReply" onclick="switchTab('reply')">Reply</button>
-          <button type="button" class="tab-btn" id="tabInternal" onclick="switchTab('internal')">Internal Note</button>
-          <button type="button" class="tab-btn" id="tabLog" onclick="switchTab('log')">Log Call</button>
+          <button type="button" class="tab-btn tab-btn-active" id="tabReply" onclick="switchTab('reply')">Répondre</button>
+          <button type="button" class="tab-btn" id="tabInternal" onclick="switchTab('internal')">Note interne</button>
+          <button type="button" class="tab-btn" id="tabLog" onclick="switchTab('log')">Journaliser l'appel</button>
         </div>
 
         <!-- AI Draft Area (hidden, shown by JS) -->
         <div id="aiDraftArea" class="ai-draft-area" style="display:none;margin-bottom:12px;padding:12px 14px;border-radius:8px;background:var(--surface-raised);border:1px solid var(--border-accent,rgba(220,38,38,.25));">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand,#dc2626)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span style="font-size:12px;font-weight:600;color:var(--text-primary);">AI Draft</span>
-            <span style="font-size:11px;color:var(--text-muted);">Based on ticket context</span>
-            <button type="button" onclick="useDraft()" class="btn btn-primary btn-sm" style="margin-left:auto;">Use Draft</button>
-            <button type="button" onclick="document.getElementById('aiDraftArea').style.display='none'" class="btn btn-ghost btn-sm">Dismiss</button>
+            <span style="font-size:12px;font-weight:600;color:var(--text-primary);">Brouillon IA</span>
+            <span style="font-size:11px;color:var(--text-muted);">Basé sur le contexte du ticket</span>
+            <button type="button" onclick="useDraft()" class="btn btn-primary btn-sm" style="margin-left:auto;">Utiliser le brouillon</button>
+            <button type="button" onclick="document.getElementById('aiDraftArea').style.display='none'" class="btn btn-ghost btn-sm">Ignorer</button>
           </div>
           <div id="aiDraftContent" style="font-size:13px;color:var(--text-secondary);line-height:1.5;"></div>
         </div>
@@ -282,20 +282,20 @@
             name="contenu"
             class="textarea"
             rows="4"
-            placeholder="Type a response… (Tab for AI draft)"
+            placeholder="Saisir une réponse… (Tab pour un brouillon IA)"
             style="resize:none;margin-bottom:10px;"
             required
           ></textarea>
 
           <div style="display:flex;align-items:center;gap:8px;">
             <div style="display:flex;gap:4px;">
-              <button type="button" title="Bold" class="btn btn-ghost btn-sm" style="padding:5px 8px;font-weight:700;font-size:13px;">B</button>
-              <button type="button" title="Italic" class="btn btn-ghost btn-sm" style="padding:5px 8px;font-style:italic;font-size:13px;">I</button>
+              <button type="button" title="Gras" class="btn btn-ghost btn-sm" style="padding:5px 8px;font-weight:700;font-size:13px;">B</button>
+              <button type="button" title="Italique" class="btn btn-ghost btn-sm" style="padding:5px 8px;font-style:italic;font-size:13px;">I</button>
               <button type="button" title="Code" class="btn btn-ghost btn-sm" style="padding:5px 8px;font-family:var(--font-mono);font-size:12px;">`_`</button>
             </div>
-            <span style="font-size:11px;color:var(--text-muted);">Markdown supported</span>
+            <span style="font-size:11px;color:var(--text-muted);">Markdown pris en charge</span>
             <button type="submit" class="btn btn-primary btn-sm" style="margin-left:auto;">
-              Send Reply
+              Envoyer la réponse
               <kbd style="margin-left:6px;font-size:10px;opacity:.7;">⌘↵</kbd>
             </button>
           </div>
@@ -309,7 +309,7 @@
 
       <!-- Reporter Card -->
       <div>
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">Reporter</div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">Demandeur</div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
           <div class="user-avatar avatar-md">
             {% if ticket.createur.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + ticket.createur.photo_profil) }}" alt="">{% else %}{{ ticket.createur.prenom[0]|upper }}{{ ticket.createur.nom[0]|upper }}{% endif %}
@@ -331,43 +331,42 @@
       <div class="ai-card" style="border:1px solid var(--border-accent,rgba(220,38,38,.2));border-radius:8px;padding:14px;background:var(--surface-raised);">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand,#dc2626)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          <span style="font-size:12px;font-weight:600;color:var(--text-primary);">AI Insights</span>
-          <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:var(--color-brand,#dc2626);color:#fff;font-weight:600;letter-spacing:.04em;">BETA</span>
+          <span style="font-size:12px;font-weight:600;color:var(--text-primary);">Analyse IA</span>
+          <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:var(--color-brand,#dc2626);color:#fff;font-weight:600;letter-spacing:.04em;">BÊTA</span>
         </div>
         <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:10px;">
-          AI analysis available for this ticket. Click below to generate insights.
+          Analyse IA disponible pour ce ticket. Cliquez ci-dessous pour générer des insights.
         </div>
-        <button type="button" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;" onclick="this.textContent='Analysing…';this.disabled=true;">
+        <button type="button" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;" onclick="this.textContent='Analyse en cours…';this.disabled=true;">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          Generate Analysis
+          Générer l'analyse
         </button>
       </div>
 
       <!-- Related Tickets placeholder -->
       <div>
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">Related Tickets</div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">Tickets liés</div>
         <div style="font-size:12px;color:var(--text-muted);padding:16px;text-align:center;border:1px dashed var(--border-subtle);border-radius:6px;">
-          No related tickets found.
+          Aucun ticket lié trouvé.
         </div>
       </div>
 
       <!-- Ticket History -->
       <div>
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">History</div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">Historique</div>
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <!-- Static history entries — replace with real data when model supports it -->
           <div style="display:flex;gap:8px;font-size:11px;color:var(--text-muted);">
             <div style="width:6px;height:6px;border-radius:50%;background:var(--text-muted);margin-top:4px;flex-shrink:0;"></div>
             <div>
-              <span style="color:var(--text-secondary);font-weight:500;">Ticket created</span><br>
-              {{ ticket.date_creation.strftime('%d %b %Y, %H:%M') }} by {{ ticket.createur.prenom }}
+              <span style="color:var(--text-secondary);font-weight:500;">Ticket créé</span><br>
+              {{ ticket.date_creation.strftime('%d %b %Y, %H:%M') }} par {{ ticket.createur.prenom }}
             </div>
           </div>
           {% if ticket.date_modification and ticket.date_modification != ticket.date_creation %}
           <div style="display:flex;gap:8px;font-size:11px;color:var(--text-muted);">
             <div style="width:6px;height:6px;border-radius:50%;background:var(--text-muted);margin-top:4px;flex-shrink:0;"></div>
             <div>
-              <span style="color:var(--text-secondary);font-weight:500;">Last modified</span><br>
+              <span style="color:var(--text-secondary);font-weight:500;">Dernière modification</span><br>
               {{ ticket.date_modification.strftime('%d %b %Y, %H:%M') }}
             </div>
           </div>
@@ -396,13 +395,13 @@
     var placeholder = document.getElementById('replyContent');
     if (tab === 'internal') {
       interneField.value = '1';
-      placeholder.placeholder = 'Write an internal note (not visible to reporter)…';
+      placeholder.placeholder = 'Écrire une note interne (non visible par le demandeur)…';
     } else if (tab === 'log') {
       interneField.value = '1';
-      placeholder.placeholder = 'Log call details — date, duration, summary…';
+      placeholder.placeholder = 'Détails de l\'appel — date, durée, résumé…';
     } else {
       interneField.value = '0';
-      placeholder.placeholder = 'Type a response… (Tab for AI draft)';
+      placeholder.placeholder = 'Saisir une réponse… (Tab pour un brouillon IA)';
     }
   };
 
@@ -415,7 +414,7 @@
         var aiArea = document.getElementById('aiDraftArea');
         var aiContent = document.getElementById('aiDraftContent');
         if (aiArea && aiContent) {
-          aiContent.textContent = 'Thank you for contacting us. I have reviewed your ticket and will investigate this issue. I will provide an update within the next hour. In the meantime, please let us know if there is any additional information we should be aware of.';
+          aiContent.textContent = 'Merci de nous avoir contactés. J\'ai examiné votre ticket et vais me pencher sur ce problème. Je vous fournirai une mise à jour dans l\'heure. En attendant, n\'hésitez pas à nous faire part de toute information supplémentaire.';
           aiArea.style.display = 'block';
         }
       }

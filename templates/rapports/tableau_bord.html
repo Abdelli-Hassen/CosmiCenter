@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Reports{% endblock %}
+{% block title %}Rapports{% endblock %}
 
 {% block body_class %}page-reports-dashboard{% endblock %}
 
@@ -10,18 +10,18 @@
   <!-- Page Header -->
   <div class="page-header">
     <div class="page-header-left">
-      <h1 class="page-title">Reports &amp; Analytics</h1>
+      <h1 class="page-title">Rapports &amp; Analytique</h1>
       <span class="page-subtitle">
-        {% if period == '7j' %}Last 7 days
-        {% elif period == '90j' %}Last 90 days
-        {% elif period == '1a' %}Last 12 months
-        {% else %}Last 30 days{% endif %}
+        {% if period == '7j' %}7 derniers jours
+        {% elif period == '90j' %}90 derniers jours
+        {% elif period == '1a' %}12 derniers mois
+        {% else %}30 derniers jours{% endif %}
       </span>
     </div>
     <div class="page-header-actions">
       <!-- Period selector -->
       <div style="display:flex;gap:4px;background:var(--surface-raised);border-radius:8px;padding:3px;border:1px solid var(--border-subtle);">
-        {% for p, label in [('7j','7d'), ('30j','30d'), ('90j','90d'), ('1a','1y')] %}
+        {% for p, label in [('7j','7j'), ('30j','30j'), ('90j','90j'), ('1a','1an')] %}
         <a href="{{ url_for('rapports.tableau_bord', period=p) }}"
            class="btn btn-sm {% if (period == p) or (not period and p == '30j') %}btn-primary{% else %}btn-ghost{% endif %}"
            style="padding:5px 12px;border-radius:5px;">{{ label }}</a>
@@ -36,22 +36,22 @@
     <div class="kpi-card">
       <div class="kpi-card-label">Total Tickets</div>
       <div class="kpi-card-value">{{ stats_globales.total if stats_globales and stats_globales.total is defined else '—' }}</div>
-      <div class="kpi-card-meta"><span class="kpi-trend kpi-trend-neutral">this period</span></div>
+      <div class="kpi-card-meta"><span class="kpi-trend kpi-trend-neutral">cette période</span></div>
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-card-label">Avg. Resolution</div>
+      <div class="kpi-card-label">Rés. moyenne</div>
       <div class="kpi-card-value">
         {% if temps_moyen_resolution is not none and temps_moyen_resolution %}
           {% if temps_moyen_resolution < 1 %}{{ (temps_moyen_resolution * 60)|round(0)|int }}m
           {% else %}{{ temps_moyen_resolution|round(1) }}h{% endif %}
         {% else %}—{% endif %}
       </div>
-      <div class="kpi-card-meta"><span class="kpi-trend kpi-trend-neutral">avg. resolution time</span></div>
+      <div class="kpi-card-meta"><span class="kpi-trend kpi-trend-neutral">temps de résolution moy.</span></div>
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-card-label">SLA Compliance</div>
+      <div class="kpi-card-label">Conformité SLA</div>
       <div class="kpi-card-value">
         {% if taux_sla is not none %}{{ (taux_sla * 100)|round(1) }}%{% else %}—{% endif %}
       </div>
@@ -59,12 +59,12 @@
         {% if taux_sla is not none and taux_sla >= 0.9 %}
         <span class="kpi-trend kpi-trend-up">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-          On target
+          Objectif atteint
         </span>
         {% elif taux_sla is not none %}
-        <span class="kpi-trend kpi-trend-down">Below target</span>
+        <span class="kpi-trend kpi-trend-down">En dessous de l'objectif</span>
         {% else %}
-        <span class="kpi-trend kpi-trend-neutral">no data</span>
+        <span class="kpi-trend kpi-trend-neutral">aucune donnée</span>
         {% endif %}
       </div>
     </div>
@@ -74,7 +74,7 @@
       <div class="kpi-card-value">
         {% if satisfaction_moyenne is not none %}{{ satisfaction_moyenne|round(1) }}/5{% else %}—{% endif %}
       </div>
-      <div class="kpi-card-meta"><span class="kpi-trend kpi-trend-neutral">avg. CSAT score</span></div>
+      <div class="kpi-card-meta"><span class="kpi-trend kpi-trend-neutral">score CSAT moy.</span></div>
     </div>
 
   </div><!-- /dashboard-grid-4 -->
@@ -85,7 +85,7 @@
     <!-- Status Distribution Donut -->
     <div class="card card-raised">
       <div class="card-header">
-        <div class="card-title">Tickets by Status</div>
+        <div class="card-title">Tickets par statut</div>
       </div>
       <div class="card-body" style="display:flex;align-items:center;gap:24px;padding:24px;">
         {% set total_s = namespace(n=0) %}
@@ -97,7 +97,7 @@
         <div class="donut-wrap" style="flex-shrink:0;">
           {% if tickets_par_statut and total_s.n > 0 %}
           {% set colors = {'nouveau':'#3b82f6','ouvert':'#3b82f6','en_cours':'#f59e0b','en_attente':'#8b5cf6','resolu':'#10b981','ferme':'#6b7280','annule':'#ef4444'} %}
-          {% set labels = {'nouveau':'New','ouvert':'Open','en_cours':'In Progress','en_attente':'Waiting','resolu':'Resolved','ferme':'Closed','annule':'Cancelled'} %}
+          {% set labels = {'nouveau':'Nouveau','ouvert':'Ouvert','en_cours':'En cours','en_attente':'En attente','resolu':'Résolu','ferme':'Fermé','annule':'Annulé'} %}
           {% set offset = namespace(val=0) %}
           {% set circumference = 188.5 %}
           <svg width="120" height="120" viewBox="0 0 120 120">
@@ -121,7 +121,7 @@
           {% else %}
           <svg width="120" height="120" viewBox="0 0 120 120">
             <circle cx="60" cy="60" r="30" fill="none" stroke="var(--border-subtle)" stroke-width="20"/>
-            <text x="60" y="65" text-anchor="middle" font-size="11" fill="var(--text-muted)" font-family="IBM Plex Sans, sans-serif">No data</text>
+            <text x="60" y="65" text-anchor="middle" font-size="11" fill="var(--text-muted)" font-family="IBM Plex Sans, sans-serif">Aucune donnée</text>
           </svg>
           {% endif %}
         </div>
@@ -130,7 +130,7 @@
         <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
           {% if tickets_par_statut %}
           {% set colors = {'nouveau':'#3b82f6','ouvert':'#3b82f6','en_cours':'#f59e0b','en_attente':'#8b5cf6','resolu':'#10b981','ferme':'#6b7280','annule':'#ef4444'} %}
-          {% set labels = {'nouveau':'New','ouvert':'Open','en_cours':'In Progress','en_attente':'Waiting','resolu':'Resolved','ferme':'Closed','annule':'Cancelled'} %}
+          {% set labels = {'nouveau':'Nouveau','ouvert':'Ouvert','en_cours':'En cours','en_attente':'En attente','resolu':'Résolu','ferme':'Fermé','annule':'Annulé'} %}
           {% for row in tickets_par_statut %}
           <div style="display:flex;align-items:center;gap:8px;">
             <div style="width:8px;height:8px;border-radius:50%;background:{{ colors.get(row.statut,'#6b7280') }};flex-shrink:0;"></div>
@@ -142,7 +142,7 @@
           </div>
           {% endfor %}
           {% else %}
-          <span style="font-size:13px;color:var(--text-muted);">No data available.</span>
+          <span style="font-size:13px;color:var(--text-muted);">Aucune donnée disponible.</span>
           {% endif %}
         </div>
       </div>
@@ -151,7 +151,7 @@
     <!-- Department Breakdown Bar Chart -->
     <div class="card card-raised">
       <div class="card-header">
-        <div class="card-title">Tickets by Department</div>
+        <div class="card-title">Tickets par département</div>
       </div>
       <div class="card-body" style="padding:20px 24px;">
         {% if tickets_par_departement %}
@@ -161,7 +161,7 @@
           {% for row in tickets_par_departement %}
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-              <span style="font-size:12px;color:var(--text-secondary);font-weight:500;">{{ row.nom or row.departement or 'No Department' }}</span>
+              <span style="font-size:12px;color:var(--text-secondary);font-weight:500;">{{ row.nom or row.departement or 'Aucun département' }}</span>
               <span style="font-size:12px;font-weight:600;color:var(--text-primary);">{{ row.count }}</span>
             </div>
             <div style="height:6px;border-radius:3px;background:var(--surface-raised);overflow:hidden;">
@@ -172,7 +172,7 @@
         </div>
         {% else %}
         <div class="empty-state" style="padding:32px 16px;">
-          <p class="empty-title" style="font-size:13px;">No department data</p>
+          <p class="empty-title" style="font-size:13px;">Aucune donnée par département</p>
         </div>
         {% endif %}
       </div>
@@ -186,14 +186,14 @@
     <!-- Priority distribution -->
     <div class="card card-raised">
       <div class="card-header">
-        <div class="card-title">Tickets by Priority</div>
+        <div class="card-title">Tickets par priorité</div>
       </div>
       <div class="card-body" style="padding:20px 24px;">
         {% if tickets_par_priorite %}
         {% set total_p = namespace(n=0) %}
         {% for row in tickets_par_priorite %}{% set total_p.n = total_p.n + row.count %}{% endfor %}
         {% set pcolors = {'critique':'var(--badge-critical-color,#ef4444)','urgente':'var(--badge-urgent-color,#f97316)','haute':'var(--badge-high-color,#eab308)','moyenne':'var(--badge-medium-color,#3b82f6)','basse':'var(--badge-low-color,#6b7280)'} %}
-        {% set plabels = {'critique':'Critical','urgente':'Urgent','haute':'High','moyenne':'Medium','basse':'Low'} %}
+        {% set plabels = {'critique':'Critique','urgente':'Urgente','haute':'Haute','moyenne':'Moyenne','basse':'Basse'} %}
         <div style="display:flex;flex-direction:column;gap:10px;">
           {% for row in tickets_par_priorite %}
           <div style="display:flex;align-items:center;gap:10px;">
@@ -208,7 +208,7 @@
         </div>
         {% else %}
         <div class="empty-state" style="padding:32px 16px;">
-          <p class="empty-title" style="font-size:13px;">No priority data</p>
+          <p class="empty-title" style="font-size:13px;">Aucune donnée par priorité</p>
         </div>
         {% endif %}
       </div>
@@ -217,7 +217,7 @@
     <!-- Response time card -->
     <div class="card card-raised">
       <div class="card-header">
-        <div class="card-title">Response Metrics</div>
+        <div class="card-title">Métriques de réponse</div>
       </div>
       <div class="card-body" style="padding:24px;display:flex;flex-direction:column;gap:20px;">
         <div style="display:flex;align-items:center;gap:16px;padding:16px;border:1px solid var(--border-subtle);border-radius:8px;">
@@ -225,7 +225,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
           <div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Avg. First Response</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">1ère réponse moy.</div>
             <div style="font-size:20px;font-weight:700;color:var(--text-primary);">
               {% if temps_moyen_premiere_reponse is not none %}
                 {% if temps_moyen_premiere_reponse < 1 %}{{ (temps_moyen_premiere_reponse * 60)|round(0)|int }}m
@@ -239,7 +239,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Avg. Resolution Time</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Temps de résolution moy.</div>
             <div style="font-size:20px;font-weight:700;color:var(--text-primary);">
               {% if temps_moyen_resolution is not none %}
                 {% if temps_moyen_resolution < 1 %}{{ (temps_moyen_resolution * 60)|round(0)|int }}m
@@ -257,8 +257,8 @@
   {% if top_agents %}
   <div class="card card-raised" style="margin-bottom:28px;">
     <div class="card-header">
-      <div class="card-title">Top Agents</div>
-      <span style="font-size:12px;color:var(--text-muted);">by tickets resolved</span>
+      <div class="card-title">Meilleurs agents</div>
+      <span style="font-size:12px;color:var(--text-muted);">par tickets résolus</span>
     </div>
     <div class="card-body" style="padding:0;">
       {% for agent in top_agents %}
@@ -275,7 +275,7 @@
         </div>
         <div style="text-align:right;">
           <div style="font-size:16px;font-weight:700;color:var(--text-primary);">{{ agent.tickets_resolus }}</div>
-          <div style="font-size:11px;color:var(--text-muted);">resolved</div>
+          <div style="font-size:11px;color:var(--text-muted);">résolus</div>
         </div>
         {% if agent.satisfaction_moyenne is defined and agent.satisfaction_moyenne %}
         <div style="text-align:right;min-width:48px;">
@@ -293,7 +293,7 @@
   {% if tickets_par_type %}
   <div class="card card-raised">
     <div class="card-header">
-      <div class="card-title">Tickets by Type</div>
+      <div class="card-title">Tickets par type</div>
     </div>
     <div class="card-body" style="padding:20px 24px;">
       {% set total_t = namespace(n=0) %}
@@ -302,7 +302,7 @@
         {% for row in tickets_par_type %}
         <div style="padding:14px 16px;border:1px solid var(--border-subtle);border-radius:8px;text-align:center;">
           <div style="font-size:22px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">{{ row.count }}</div>
-          <div style="font-size:12px;color:var(--text-muted);">{{ row.type_ticket or 'Other' }}</div>
+          <div style="font-size:12px;color:var(--text-muted);">{{ row.type_ticket or 'Autre' }}</div>
           {% if total_t.n > 0 %}
           <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">{{ ((row.count / total_t.n)*100)|round(0)|int }}%</div>
           {% endif %}
