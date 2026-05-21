@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}All Tickets{% endblock %}
+{% block title %}Tous les tickets{% endblock %}
 
 {% block body_class %}page-tickets-list{% endblock %}
 
@@ -10,7 +10,7 @@
   <!-- Page Header -->
   <div class="page-header">
     <div class="page-header-left">
-      <h1 class="page-title">All Tickets</h1>
+      <h1 class="page-title">Tous les tickets</h1>
       <span class="page-subtitle">
         {% if tickets.total is defined %}{{ tickets.total }} ticket{{ 's' if tickets.total != 1 else '' }}{% endif %}
       </span>
@@ -18,7 +18,7 @@
     <div class="page-header-actions">
       <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        New Ticket
+        Nouveau ticket
       </a>
     </div>
   </div>
