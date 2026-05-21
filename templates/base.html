@@ -33,7 +33,7 @@
     <header class="chrome-bar" role="banner">
       <div class="chrome-left">
         <button class="workspace-trigger" id="workspaceTrigger" aria-label="Workspace">
-          <div class="workspace-logo-fallback" aria-hidden="true">C</div>
+          <img src="{{ url_for('static', filename='images/logo-cosmitto.png') }}" alt="CosmittoHUB" style="height:26px;width:auto;object-fit:contain;border-radius:4px;">
           <span class="workspace-name">{{ app_name }}</span>
           <svg class="workspace-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>

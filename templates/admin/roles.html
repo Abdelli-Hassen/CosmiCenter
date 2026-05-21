@@ -16,6 +16,12 @@
       <h1 class="page-title" style="margin-top:4px;">Gestion des Rôles</h1>
       <span class="page-subtitle">{{ roles|length }} rôle{{ 's' if roles|length != 1 else '' }} configuré{{ 's' if roles|length != 1 else '' }}</span>
     </div>
+    <div class="page-header-actions">
+      <button class="btn btn-primary btn-sm" onclick="openModal('createRoleModal')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouveau rôle
+      </button>
+    </div>
   </div>
 
   <!-- Layout principal : liste des rôles + panneau permissions -->
@@ -68,6 +74,15 @@
                 </div>
               </div>
             </div>
+            {% if not role.systeme %}
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border-subtle);display:flex;justify-content:flex-end;">
+              <button type="button" class="btn btn-ghost btn-sm"
+                onclick="event.stopPropagation();openEditModal('{{ role.id }}','{{ role.nom|e }}','{{ role.description|e }}','{{ role.couleur }}',{{ role.niveau }})">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Modifier
+              </button>
+            </div>
+            {% endif %}
           </div>
         </div>
         {% else %}
@@ -169,6 +184,78 @@
 
   </div>
 
+<!-- Modal: Créer un rôle -->
+<div id="createRoleModal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div class="card card-raised" style="width:100%;max-width:440px;margin:24px;">
+    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="card-title">Nouveau rôle</div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('createRoleModal')">✕</button>
+    </div>
+    <form method="POST" action="{{ url_for('admin.creer_role') }}">
+      <div class="card-body" style="display:flex;flex-direction:column;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">Nom <span style="color:var(--brand)">*</span></label>
+          <input type="text" name="nom" class="input" required placeholder="Ex: Superviseur">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <input type="text" name="description" class="input" placeholder="Rôle pour...">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Couleur</label>
+            <input type="color" name="couleur" value="#3B82F6" class="input" style="height:38px;padding:4px 8px;cursor:pointer;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Niveau (0–100)</label>
+            <input type="number" name="niveau" class="input" value="0" min="0" max="100">
+          </div>
+        </div>
+      </div>
+      <div class="card-body" style="border-top:1px solid var(--border-subtle);display:flex;justify-content:flex-end;gap:10px;padding-top:16px;">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('createRoleModal')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Créer le rôle</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Modifier un rôle -->
+<div id="editRoleModal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div class="card card-raised" style="width:100%;max-width:440px;margin:24px;">
+    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="card-title">Modifier le rôle</div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('editRoleModal')">✕</button>
+    </div>
+    <form method="POST" id="editRoleForm" action="">
+      <div class="card-body" style="display:flex;flex-direction:column;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">Nom <span style="color:var(--brand)">*</span></label>
+          <input type="text" name="nom" id="editRoleNom" class="input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <input type="text" name="description" id="editRoleDesc" class="input">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Couleur</label>
+            <input type="color" name="couleur" id="editRoleCouleur" class="input" style="height:38px;padding:4px 8px;cursor:pointer;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Niveau (0–100)</label>
+            <input type="number" name="niveau" id="editRoleNiveau" class="input" min="0" max="100">
+          </div>
+        </div>
+      </div>
+      <div class="card-body" style="border-top:1px solid var(--border-subtle);display:flex;justify-content:flex-end;gap:10px;padding-top:16px;">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('editRoleModal')">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 </div><!-- /page -->
 {% endblock %}
 
@@ -245,6 +332,34 @@
       }
     });
   });
+
+  function openModal(id) {
+    var m = document.getElementById(id);
+    m.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id) {
+    var m = document.getElementById(id);
+    m.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  // Close on backdrop click
+  ['createRoleModal','editRoleModal'].forEach(function(id){
+    var m = document.getElementById(id);
+    if(m) m.addEventListener('click', function(e){ if(e.target===m) closeModal(id); });
+  });
+
+  function openEditModal(id, nom, description, couleur, niveau) {
+    document.getElementById('editRoleForm').action = '/admin/roles/' + id + '/modifier';
+    document.getElementById('editRoleNom').value = nom;
+    document.getElementById('editRoleDesc').value = description;
+    document.getElementById('editRoleCouleur').value = couleur;
+    document.getElementById('editRoleNiveau').value = niveau;
+    openModal('editRoleModal');
+  }
+  window.openEditModal = openEditModal;
+  window.openModal    = openModal;
+  window.closeModal   = closeModal;
 
   // Exposer les fonctions globalement
   window.selectRole  = selectRole;

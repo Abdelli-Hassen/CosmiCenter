@@ -54,21 +54,52 @@
             >
           </div>
 
-          <!-- 2. Category selection -->
+          <!-- 2. Type de ticket -->
+          <div class="form-group" style="margin-bottom:24px;">
+            <label class="form-label">
+              Type de ticket <span style="color:var(--color-brand,#dc2626);">*</span>
+            </label>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;" id="typeCards">
+              {% set types = [
+                ('incident',  'Incident',  'Panne ou dysfonctionnement',           '#EF4444', 'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01'),
+                ('demande',   'Demande',   'Demande de service ou d\'information',  '#3B82F6', 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'),
+                ('besoin',    'Besoin',    'Besoin matériel ou logiciel',           '#F59E0B', 'M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM16 13a1 1 0 1 1 0-2 1 1 0 0 1 0 2z'),
+                ('plainte',   'Plainte',   'Réclamation ou insatisfaction',        '#8B5CF6', 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'),
+                ('tache',     'Tâche',     'Tâche planifiée ou maintenance',       '#10B981', 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'),
+              ] %}
+              {% for val, label, desc, color, path in types %}
+              <label class="type-card" data-type="{{ val }}"
+                style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 20px;min-width:110px;border:2px solid var(--border-subtle);border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s;text-align:center;flex:1;">
+                <input type="radio" name="type_ticket" value="{{ val }}" class="type-radio" style="display:none;"
+                  {% if loop.first %}checked{% endif %}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ color }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ path }}"/></svg>
+                <span style="font-size:12px;font-weight:700;color:var(--text-primary);">{{ label }}</span>
+                <span style="font-size:10px;color:var(--text-muted);line-height:1.3;">{{ desc }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- 3. Catégories (filtrées par type) -->
           <div class="form-section" style="margin-bottom:24px;">
             <div class="form-section-header">Catégorie</div>
             <div class="form-section-body">
               {% if categories %}
-              <div class="ticket-category-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:8px;">
+              <div class="ticket-category-grid" id="categoryGrid"
+                   style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:8px;">
                 {% for cat in categories %}
-                <label class="category-card" style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:1px solid var(--border-subtle);border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s;">
+                <label class="category-card" data-cat-type="{{ cat.type_ticket }}"
+                  style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:1px solid var(--border-subtle);border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s;">
                   <input type="radio" name="categorie_id" value="{{ cat.id }}" style="display:none;" class="category-radio">
-                  <span style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ cat.nom }}</span>
+                  <span style="font-size:12px;font-weight:700;color:var(--text-primary);">{{ cat.nom }}</span>
                   {% if cat.description %}
-                  <span style="font-size:11px;color:var(--text-muted);line-height:1.4;">{{ cat.description[:60] }}{% if cat.description|length > 60 %}…{% endif %}</span>
+                  <span style="font-size:10px;color:var(--text-muted);line-height:1.4;">{{ cat.description[:60] }}{% if cat.description|length > 60 %}…{% endif %}</span>
                   {% endif %}
                 </label>
                 {% endfor %}
+              </div>
+              <div id="noCategoryMsg" style="display:none;padding:20px;text-align:center;color:var(--text-muted);font-size:13px;border:1px dashed var(--border-subtle);border-radius:8px;">
+                Aucune catégorie disponible pour ce type de ticket.
               </div>
               {% else %}
               <div class="select-wrap">
@@ -169,36 +200,72 @@
 {% block extra_scripts %}
 <script>
 (function () {
-  // Category card selection
-  document.querySelectorAll('.category-card').forEach(function (card) {
+
+  /* ── Type card selection + category filtering ───────────────── */
+  var typeCards    = document.querySelectorAll('.type-card');
+  var catCards     = document.querySelectorAll('.category-card');
+  var noCatMsg     = document.getElementById('noCategoryMsg');
+
+  function selectType(val) {
+    // Highlight selected type card
+    typeCards.forEach(function (tc) {
+      var isSelected = tc.dataset.type === val;
+      tc.style.borderColor  = isSelected ? 'var(--color-brand,#dc2626)' : 'var(--border-subtle)';
+      tc.style.background   = isSelected ? 'rgba(220,38,38,.07)' : '';
+      tc.querySelector('.type-radio').checked = isSelected;
+    });
+
+    // Filter category cards
+    var visible = 0;
+    catCards.forEach(function (card) {
+      var match = card.dataset.catType === val;
+      card.style.display = match ? '' : 'none';
+      if (match) visible++;
+      // Deselect hidden cards
+      if (!match) {
+        card.style.borderColor = 'var(--border-subtle)';
+        card.style.background  = '';
+        card.querySelector('.category-radio').checked = false;
+      }
+    });
+
+    if (noCatMsg) noCatMsg.style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  typeCards.forEach(function (tc) {
+    tc.addEventListener('click', function () { selectType(tc.dataset.type); });
+  });
+
+  // Init: trigger on first checked type
+  var firstChecked = document.querySelector('.type-radio:checked');
+  if (firstChecked) selectType(firstChecked.value);
+
+  /* ── Category card selection ────────────────────────────────── */
+  catCards.forEach(function (card) {
     card.addEventListener('click', function () {
-      document.querySelectorAll('.category-card').forEach(function (c) {
+      catCards.forEach(function (c) {
         c.style.borderColor = 'var(--border-subtle)';
-        c.style.background = '';
+        c.style.background  = '';
       });
-      card.style.borderColor = 'var(--color-brand, #dc2626)';
-      card.style.background = 'var(--surface-hover)';
+      card.style.borderColor = 'var(--color-brand,#dc2626)';
+      card.style.background  = 'rgba(220,38,38,.07)';
       card.querySelector('.category-radio').checked = true;
     });
   });
 
-  // AI suggestion bar on title input
+  /* ── AI suggestion bar ──────────────────────────────────────── */
   var titleInput = document.getElementById('titre');
-  var aiBar = document.getElementById('aiSuggestionBar');
+  var aiBar      = document.getElementById('aiSuggestionBar');
   if (titleInput && aiBar) {
     titleInput.addEventListener('input', function () {
-      var words = this.value.trim().split(/\s+/).filter(Boolean);
-      aiBar.style.display = words.length >= 6 ? 'flex' : 'none';
+      aiBar.style.display = this.value.trim().split(/\s+/).filter(Boolean).length >= 6 ? 'flex' : 'none';
     });
   }
 
-  // File drop handling
+  /* ── File drop ──────────────────────────────────────────────── */
   window.handleDrop = function (e) {
     var files = e.dataTransfer.files;
-    if (files.length) {
-      document.getElementById('fileInput').files = files;
-      previewFiles(files);
-    }
+    if (files.length) { document.getElementById('fileInput').files = files; previewFiles(files); }
   };
 
   window.previewFiles = function (files) {
@@ -207,10 +274,11 @@
     Array.from(files).forEach(function (f) {
       var chip = document.createElement('span');
       chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:var(--surface-raised);border:1px solid var(--border-subtle);font-size:11px;color:var(--text-secondary);';
-      chip.textContent = f.name + ' (' + (f.size > 1048576 ? (f.size / 1048576).toFixed(1) + ' MB' : Math.round(f.size / 1024) + ' KB') + ')';
+      chip.textContent = f.name + ' (' + (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : Math.round(f.size/1024)+' KB') + ')';
       list.appendChild(chip);
     });
   };
+
 })();
 </script>
 {% endblock %}
