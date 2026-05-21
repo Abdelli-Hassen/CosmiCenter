@@ -76,16 +76,19 @@ def nouvel_utilisateur():
     """Créer un nouvel utilisateur"""
     if request.method == 'POST':
         try:
+            dept_id = request.form.get('departement_id') or None
+            matricule = request.form.get('matricule', '').strip() or None
             utilisateur = Utilisateur(
                 nom=request.form.get('nom'),
                 prenom=request.form.get('prenom'),
                 email=request.form.get('email'),
-                role=request.form.get('role', 'utilisateur'),
-                departement_id=request.form.get('departement_id')
+                role_id=request.form.get('role_id') or None,
+                departement_id=dept_id,
+                telephone=request.form.get('telephone', '').strip() or None,
+                poste=request.form.get('poste', '').strip() or None,
+                matricule=matricule,
             )
-            
-            # Définir un mot de passe par défaut
-            utilisateur.definir_mot_de_passe(request.form.get('password', 'testtest'))
+            utilisateur.set_password(request.form.get('password', 'testtest'))
             
             db.session.add(utilisateur)
             db.session.commit()
