@@ -80,22 +80,42 @@
             </div>
           </div>
 
-          <!-- 3. Catégories (filtrées par type) -->
+          <!-- hidden: auto-filled when category selected -->
+          <input type="hidden" name="departement_id" id="deptAutoField" value="">
+
+          <!-- 3. Catégories groupées par département -->
           <div class="form-section" style="margin-bottom:24px;">
-            <div class="form-section-header">Catégorie</div>
+            <div class="form-section-header" style="display:flex;align-items:center;justify-content:space-between;">
+              <span>Catégorie</span>
+              <span id="deptBadge" style="display:none;font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:rgba(220,38,38,.12);color:var(--color-brand,#dc2626);"></span>
+            </div>
             <div class="form-section-body">
-              {% if categories %}
-              <div class="ticket-category-grid" id="categoryGrid"
-                   style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:8px;">
-                {% for cat in categories %}
-                <label class="category-card" data-cat-type="{{ cat.type_ticket }}"
-                  style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:1px solid var(--border-subtle);border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s;">
-                  <input type="radio" name="categorie_id" value="{{ cat.id }}" style="display:none;" class="category-radio">
-                  <span style="font-size:12px;font-weight:700;color:var(--text-primary);">{{ cat.nom }}</span>
-                  {% if cat.description %}
-                  <span style="font-size:10px;color:var(--text-muted);line-height:1.4;">{{ cat.description[:60] }}{% if cat.description|length > 60 %}…{% endif %}</span>
-                  {% endif %}
-                </label>
+              {% if cats_par_dept %}
+              <div id="deptColumns" style="display:flex;flex-direction:column;gap:20px;">
+                {% for dg in cats_par_dept %}
+                <div class="dept-group" data-dept-id="{{ dg.id }}" data-dept-name="{{ dg.nom }}">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{{ dg.couleur }};flex-shrink:0;"></span>
+                    <span style="font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--text-muted);text-transform:uppercase;">{{ dg.nom }}</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;">
+                    {% for cat in dg.cats %}
+                    <label class="category-card"
+                      data-cat-type="{{ cat.type_ticket }}"
+                      data-dept-id="{{ dg.id }}"
+                      data-dept-name="{{ dg.nom }}"
+                      data-dept-colour="{{ dg.couleur }}"
+                      data-priorite="{{ cat.priorite_defaut }}"
+                      style="display:flex;flex-direction:column;gap:4px;padding:12px 14px;border:1px solid var(--border-subtle);border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s;">
+                      <input type="radio" name="categorie_id" value="{{ cat.id }}" style="display:none;" class="category-radio">
+                      <span style="font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;">{{ cat.nom }}</span>
+                      {% if cat.description %}
+                      <span style="font-size:10px;color:var(--text-muted);line-height:1.35;">{{ cat.description[:55] }}{% if cat.description|length > 55 %}…{% endif %}</span>
+                      {% endif %}
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
                 {% endfor %}
               </div>
               <div id="noCategoryMsg" style="display:none;padding:20px;text-align:center;color:var(--text-muted);font-size:13px;border:1px dashed var(--border-subtle);border-radius:8px;">
@@ -127,33 +147,18 @@
             ></textarea>
           </div>
 
-          <!-- 4. Priority + Department (2 cols) -->
-          <div class="form-row" style="margin-bottom:24px;">
-            <div class="form-group">
-              <label class="form-label" for="priorite">Priorité</label>
-              <div class="select-wrap">
-                <select id="priorite" name="priorite" class="select">
-                  <option value="basse">Basse</option>
-                  <option value="moyenne" selected>Moyenne</option>
-                  <option value="haute">Haute</option>
-                  <option value="urgente">Urgente</option>
-                  <option value="critique">Critique</option>
-                </select>
-              </div>
+          <!-- 4. Priority -->
+          <div class="form-group" style="margin-bottom:24px;max-width:240px;">
+            <label class="form-label" for="priorite">Priorité</label>
+            <div class="select-wrap">
+              <select id="priorite" name="priorite" class="select">
+                <option value="basse">Basse</option>
+                <option value="moyenne" selected>Moyenne</option>
+                <option value="haute">Haute</option>
+                <option value="urgente">Urgente</option>
+                <option value="critique">Critique</option>
+              </select>
             </div>
-            {% if categories %}
-            <div class="form-group">
-              <label class="form-label" for="departement_id">Département</label>
-              <div class="select-wrap">
-                <select id="departement_id" name="departement_id" class="select">
-                  <option value="">Sélectionner un département...</option>
-                  {% for dept in departements %}
-                  <option value="{{ dept.id }}">{{ dept.nom }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
-            {% endif %}
           </div>
 
           <!-- 5. File attachment -->
@@ -201,46 +206,57 @@
 <script>
 (function () {
 
-  /* ── Type card selection + category filtering ───────────────── */
+  /* ── Type card selection + dept-group filtering ─────────────── */
   var typeCards    = document.querySelectorAll('.type-card');
   var catCards     = document.querySelectorAll('.category-card');
+  var deptGroups   = document.querySelectorAll('.dept-group');
   var noCatMsg     = document.getElementById('noCategoryMsg');
+  var deptField    = document.getElementById('deptAutoField');
+  var deptBadge    = document.getElementById('deptBadge');
+  var prioriteEl   = document.getElementById('priorite');
 
   function selectType(val) {
-    // Highlight selected type card
     typeCards.forEach(function (tc) {
-      var isSelected = tc.dataset.type === val;
-      tc.style.borderColor  = isSelected ? 'var(--color-brand,#dc2626)' : 'var(--border-subtle)';
-      tc.style.background   = isSelected ? 'rgba(220,38,38,.07)' : '';
-      tc.querySelector('.type-radio').checked = isSelected;
+      var sel = tc.dataset.type === val;
+      tc.style.borderColor = sel ? 'var(--color-brand,#dc2626)' : 'var(--border-subtle)';
+      tc.style.background  = sel ? 'rgba(220,38,38,.07)' : '';
+      tc.querySelector('.type-radio').checked = sel;
     });
 
-    // Filter category cards
-    var visible = 0;
-    catCards.forEach(function (card) {
-      var match = card.dataset.catType === val;
-      card.style.display = match ? '' : 'none';
-      if (match) visible++;
-      // Deselect hidden cards
-      if (!match) {
-        card.style.borderColor = 'var(--border-subtle)';
-        card.style.background  = '';
-        card.querySelector('.category-radio').checked = false;
-      }
+    // Show/hide dept groups based on whether they have matching cats
+    var totalVisible = 0;
+    deptGroups.forEach(function (dg) {
+      var dgCards = dg.querySelectorAll('.category-card');
+      var dgVisible = 0;
+      dgCards.forEach(function (card) {
+        var match = card.dataset.catType === val;
+        card.style.display = match ? '' : 'none';
+        if (match) dgVisible++;
+        if (!match) {
+          card.style.borderColor = 'var(--border-subtle)';
+          card.style.background  = '';
+          card.querySelector('.category-radio').checked = false;
+        }
+      });
+      dg.style.display = dgVisible > 0 ? '' : 'none';
+      totalVisible += dgVisible;
     });
 
-    if (noCatMsg) noCatMsg.style.display = visible === 0 ? 'block' : 'none';
+    if (noCatMsg) noCatMsg.style.display = totalVisible === 0 ? 'block' : 'none';
+
+    // Clear auto-assigned dept when type changes
+    if (deptField) deptField.value = '';
+    if (deptBadge) deptBadge.style.display = 'none';
   }
 
   typeCards.forEach(function (tc) {
     tc.addEventListener('click', function () { selectType(tc.dataset.type); });
   });
 
-  // Init: trigger on first checked type
   var firstChecked = document.querySelector('.type-radio:checked');
   if (firstChecked) selectType(firstChecked.value);
 
-  /* ── Category card selection ────────────────────────────────── */
+  /* ── Category card selection + auto-assign dept & priority ──── */
   catCards.forEach(function (card) {
     card.addEventListener('click', function () {
       catCards.forEach(function (c) {
@@ -250,6 +266,23 @@
       card.style.borderColor = 'var(--color-brand,#dc2626)';
       card.style.background  = 'rgba(220,38,38,.07)';
       card.querySelector('.category-radio').checked = true;
+
+      // Auto-assign department
+      var deptId   = card.dataset.deptId   || '';
+      var deptName = card.dataset.deptName || '';
+      if (deptField) deptField.value = deptId;
+      if (deptBadge) {
+        if (deptName) {
+          deptBadge.textContent = deptName;
+          deptBadge.style.display = 'inline-block';
+        } else {
+          deptBadge.style.display = 'none';
+        }
+      }
+
+      // Auto-set priority
+      var priorite = card.dataset.priorite;
+      if (prioriteEl && priorite) prioriteEl.value = priorite;
     });
   });
 
