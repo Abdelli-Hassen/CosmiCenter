@@ -6,6 +6,22 @@
 
 ---
 
+## Aperçu
+
+| Connexion | Tableau de bord |
+|-----------|----------------|
+| ![Connexion](static/images/screenshots/01-connexion.png) | ![Tableau de bord](static/images/screenshots/02-tableau-de-bord.png) |
+
+| Nouveau ticket | Liste des tickets |
+|---------------|-----------------|
+| ![Nouveau ticket](static/images/screenshots/04-nouveau-ticket.png) | ![Liste tickets](static/images/screenshots/03-liste-tickets.png) |
+
+| Administration | Rapports |
+|---------------|---------|
+| ![Admin](static/images/screenshots/05-admin.png) | ![Rapports](static/images/screenshots/06-rapports.png) |
+
+---
+
 ## Contexte métier
 
 Cosmitto Coffee opère plusieurs points de vente (POS). CosmittoHUB permet à chaque site de remonter des incidents ou demandes vers les équipes centrales (Support IT, Maintenance, Stock, Qualité, RH, Finances), avec suivi, priorisation et résolution traçable.
