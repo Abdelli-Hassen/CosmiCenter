@@ -204,46 +204,48 @@
 
   // ─── Dropdown menus ───────────────────────────────────────────────────────
 
+  function closeAllDropdowns(except) {
+    document.querySelectorAll('.dropdown.open').forEach(function (dd) {
+      if (dd !== except) {
+        dd.classList.remove('open');
+        dd.style.display = 'none';
+      }
+    });
+  }
+
   function setupDropdowns() {
-    // Use event delegation — buttons have data-dropdown="<dropdownId>"
+    // Use event delegation — triggers have data-dropdown="<dropdownId>"
     document.addEventListener('click', function (e) {
       var trigger = e.target.closest('[data-dropdown]');
 
-      // Close all open dropdowns that are not the current trigger's dropdown
-      document.querySelectorAll('.dropdown.open').forEach(function (dd) {
-        if (!trigger || dd.id !== trigger.getAttribute('data-dropdown')) {
-          dd.classList.remove('open');
-        }
-      });
-
-      if (!trigger) return;
+      if (!trigger) {
+        closeAllDropdowns(null);
+        return;
+      }
 
       e.stopPropagation();
       var targetId = trigger.getAttribute('data-dropdown');
       var dropdown = document.getElementById(targetId);
       if (!dropdown) return;
 
-      dropdown.classList.toggle('open');
+      var isOpen = dropdown.classList.contains('open');
+      closeAllDropdowns(null);
 
-      // Position dropdown near trigger if needed
-      if (dropdown.classList.contains('open')) {
+      if (!isOpen) {
+        dropdown.classList.add('open');
+        dropdown.style.display = 'block';
+
+        // Position: prevent overflow right
         var rect = trigger.getBoundingClientRect();
-        var ddRect = dropdown.getBoundingClientRect();
         var viewportW = window.innerWidth;
-
-        // If overflows right, align to right edge of trigger
-        if (rect.left + ddRect.width > viewportW - 8) {
+        dropdown.style.left = 'auto';
+        dropdown.style.right = 'auto';
+        if (rect.left + 200 > viewportW - 8) {
           dropdown.style.right = (viewportW - rect.right) + 'px';
-          dropdown.style.left = 'auto';
+        } else {
+          dropdown.style.left = '0';
         }
       }
-    });
-
-    // Click outside closes all dropdowns
-    document.addEventListener('click', function () {
-      document.querySelectorAll('.dropdown.open').forEach(function (dd) {
-        dd.classList.remove('open');
-      });
     });
   }
 
