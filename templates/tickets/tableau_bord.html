@@ -1,166 +1,159 @@
 {% extends "base.html" %}
 
-{% block title %}Tableau de Bord - {{ super() }}{% endblock %}
+{% block title %}Dashboard{% endblock %}
+
+{% block body_class %}page-tickets-dashboard{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1><i class="fas fa-chart-line"></i> Tableau de Bord</h1>
-    <div class="page-actions">
-        <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Nouveau Ticket
-        </a>
-    </div>
-</div>
+<div class="page">
 
-<div class="stats-grid">
-    <div class="stat-card stat-card-primary">
-        <div class="stat-icon">
-            <i class="fas fa-ticket-alt"></i>
-        </div>
-        <div class="stat-content">
-            <div class="stat-value">{{ stats.total }}</div>
-            <div class="stat-label">Total Tickets</div>
-        </div>
+  <!-- Welcome Strip -->
+  <div class="welcome-strip">
+    <div class="welcome-strip-left">
+      <div class="welcome-strip-greeting">Welcome back, <strong>{{ current_user.prenom }}</strong></div>
+      <div class="welcome-strip-sub">Here's what's happening across your workspace today.</div>
     </div>
+    <div class="welcome-strip-actions">
+      <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Ticket
+      </a>
+      <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm">View All Tickets</a>
+    </div>
+  </div>
 
-    <div class="stat-card stat-card-warning">
-        <div class="stat-icon">
-            <i class="fas fa-clock"></i>
-        </div>
-        <div class="stat-content">
-            <div class="stat-value">{{ stats.ouvert }}</div>
-            <div class="stat-label">En Attente</div>
-        </div>
+  <!-- KPI Grid -->
+  <div class="dashboard-grid-4" style="margin-bottom:28px;">
+
+    <div class="kpi-card">
+      <div class="kpi-card-label">Total Tickets</div>
+      <div class="kpi-card-value">{{ stats.total }}</div>
+      <div class="kpi-card-meta">
+        <span class="kpi-trend kpi-trend-neutral">— this period</span>
+      </div>
     </div>
 
-    <div class="stat-card stat-card-info">
-        <div class="stat-icon">
-            <i class="fas fa-tasks"></i>
-        </div>
-        <div class="stat-content">
-            <div class="stat-value">{{ stats.en_cours }}</div>
-            <div class="stat-label">En Cours</div>
-        </div>
+    <div class="kpi-card">
+      <div class="kpi-card-label">Open</div>
+      <div class="kpi-card-value">{{ stats.ouvert }}</div>
+      <div class="kpi-card-meta">
+        <span class="kpi-trend kpi-trend-up">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+          this period
+        </span>
+      </div>
     </div>
 
-    <div class="stat-card stat-card-success">
-        <div class="stat-icon">
-            <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="stat-content">
-            <div class="stat-value">{{ stats.resolu }}</div>
-            <div class="stat-label">Résolus</div>
-        </div>
-    </div>
-</div>
-
-<div class="content-section">
-    <div class="section-header">
-        <h2>Tickets Récents</h2>
-        <a href="{{ url_for('tickets.liste') }}" class="btn btn-outline">Voir tous</a>
+    <div class="kpi-card">
+      <div class="kpi-card-label">In Progress</div>
+      <div class="kpi-card-value">{{ stats.en_cours }}</div>
+      <div class="kpi-card-meta">
+        <span class="kpi-trend kpi-trend-neutral">— this period</span>
+      </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Numéro</th>
-                    <th>Titre</th>
-                    <th>Statut</th>
-                    <th>Priorité</th>
-                    <th>Créé le</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for ticket in tickets %}
-                <tr>
-                    <td><strong>{{ ticket.numero }}</strong></td>
-                    <td>{{ ticket.titre }}</td>
-                    <td><span class="badge badge-{{ ticket.statut }}">{{ ticket.statut|title }}</span></td>
-                    <td><span class="badge badge-{{ ticket.priorite }}">{{ ticket.priorite|title }}</span></td>
-                    <td>{{ ticket.date_creation.strftime('%d/%m/%Y %H:%M') }}</td>
-                    <td>
-                        <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn-icon" title="Voir">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                    </td>
-                </tr>
+    <div class="kpi-card">
+      <div class="kpi-card-label">Resolved</div>
+      <div class="kpi-card-value">{{ stats.resolu }}</div>
+      <div class="kpi-card-meta">
+        <span class="kpi-trend kpi-trend-down">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          this period
+        </span>
+      </div>
+    </div>
+
+  </div><!-- /dashboard-grid-4 -->
+
+  <!-- Recent Tickets Card -->
+  <div class="card card-raised">
+    <div class="card-header">
+      <div class="card-title">Recent Tickets</div>
+      <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm">View all</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+
+      {% if tickets %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width:28px;"></th>
+              <th style="width:120px;">Ticket ID</th>
+              <th>Title</th>
+              <th style="width:130px;">Status</th>
+              <th style="width:160px;">Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ticket in tickets[:10] %}
+            <tr class="ticket-row"
+                data-ticket-id="{{ ticket.id }}"
+                style="cursor:pointer;"
+                onclick="window.location='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'">
+              <td>
+                <span class="priority-dot dot-{{ ticket.priorite }}" title="{{ ticket.priorite|capitalize }}"></span>
+              </td>
+              <td>
+                <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}"
+                   style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);text-decoration:none;"
+                   onclick="event.stopPropagation()">{{ ticket.numero }}</a>
+              </td>
+              <td>
+                <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}"
+                   style="color:var(--text-primary);text-decoration:none;font-weight:500;"
+                   onclick="event.stopPropagation()">{{ ticket.titre }}</a>
+                {% if ticket.assigne_a %}
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+                  {{ ticket.assigne_a.prenom }} {{ ticket.assigne_a.nom }}
+                </div>
+                {% endif %}
+              </td>
+              <td>
+                {% if ticket.statut in ['nouveau', 'ouvert'] %}
+                  <span class="badge badge-new">{{ 'Open' if ticket.statut == 'ouvert' else 'New' }}</span>
+                {% elif ticket.statut == 'en_cours' %}
+                  <span class="badge badge-progress">In Progress</span>
+                {% elif ticket.statut == 'en_attente' %}
+                  <span class="badge badge-waiting">Waiting</span>
+                {% elif ticket.statut == 'resolu' %}
+                  <span class="badge badge-resolved">Resolved</span>
+                {% elif ticket.statut == 'ferme' %}
+                  <span class="badge badge-closed">Closed</span>
+                {% elif ticket.statut == 'annule' %}
+                  <span class="badge badge-cancelled">Cancelled</span>
                 {% else %}
-                <tr>
-                    <td colspan="6" class="text-center">Aucun ticket trouvé</td>
-                </tr>
-                {% endfor %}
-            </tbody>
+                  <span class="badge">{{ ticket.statut }}</span>
+                {% endif %}
+              </td>
+              <td style="font-size:12px;color:var(--text-muted);">
+                {{ ticket.date_creation.strftime('%d %b %Y, %H:%M') }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
         </table>
-    </div>
-</div>
+      </div><!-- /table-wrap -->
 
-<style>
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-2xl);
-}
+      {% else %}
+      <div class="empty-state" style="padding:64px 32px;">
+        <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <p class="empty-title">No tickets yet</p>
+        <p class="empty-desc">Create your first ticket to get started.</p>
+        <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm" style="margin-top:16px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Ticket
+        </a>
+      </div>
+      {% endif %}
 
-.stat-card {
-    background: white;
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    box-shadow: var(--shadow-md);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-lg);
-    transition: transform var(--transition-fast);
-}
+    </div><!-- /card-body -->
+  </div><!-- /card -->
 
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-xl);
-}
-
-.stat-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-}
-
-.stat-card-primary .stat-icon {
-    background: var(--primary-light);
-    color: var(--primary);
-}
-
-.stat-card-warning .stat-icon {
-    background: #FEF3C7;
-    color: var(--warning);
-}
-
-.stat-card-info .stat-icon {
-    background: #DBEAFE;
-    color: var(--info);
-}
-
-.stat-card-success .stat-icon {
-    background: #D1FAE5;
-    color: var(--success);
-}
-
-.stat-value {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--gray-900);
-}
-
-.stat-label {
-    color: var(--gray-600);
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-</style>
+</div><!-- /page -->
 {% endblock %}

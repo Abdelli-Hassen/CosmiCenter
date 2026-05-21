@@ -1,13 +1,240 @@
 {% extends "base.html" %}
-{% block title %}Administration - {{ super() }}{% endblock %}
+
+{% block title %}Administration{% endblock %}
+
 {% block content %}
-<div class="page-header">
-    <h1><i class="fas fa-cogs"></i> Administration</h1>
-</div>
-<div class="stats-grid">
-    <div class="stat-card"><h3>{{ stats.utilisateurs }}</h3><p>Utilisateurs</p></div>
-    <div class="stat-card"><h3>{{ stats.departements }}</h3><p>Départements</p></div>
-    <div class="stat-card"><h3>{{ stats.tickets_total }}</h3><p>Tickets Total</p></div>
-    <div class="stat-card"><h3>{{ stats.tickets_ouverts }}</h3><p>Tickets Ouverts</p></div>
-</div>
+<div class="page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1 class="page-title">Administration</h1>
+      <span class="page-subtitle">System overview and configuration</span>
+    </div>
+    <div class="page-header-actions">
+      <a href="{{ url_for('admin.parametres') }}" class="btn btn-ghost btn-sm">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+        System Settings
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Grid -->
+  <div class="dashboard-grid-4" style="margin-bottom:28px;">
+
+    <div class="kpi-card" style="--kpi-color: var(--brand);">
+      <div class="kpi-card-label">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Users
+      </div>
+      <div class="kpi-card-value">{{ stats.utilisateurs }}</div>
+      <div class="kpi-card-meta">
+        <span class="kpi-trend flat">Total registered</span>
+      </div>
+    </div>
+
+    <div class="kpi-card" style="--kpi-color: var(--info);">
+      <div class="kpi-card-label">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Total Tickets
+      </div>
+      <div class="kpi-card-value">{{ stats.tickets }}</div>
+      <div class="kpi-card-meta">
+        <span class="kpi-trend flat">All time</span>
+      </div>
+    </div>
+
+    <div class="kpi-card" style="--kpi-color: var(--success);">
+      <div class="kpi-card-label">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Departments
+      </div>
+      <div class="kpi-card-value">{{ stats.departements }}</div>
+      <div class="kpi-card-meta">
+        <span class="kpi-trend flat">Active units</span>
+      </div>
+    </div>
+
+    <div class="kpi-card" style="--kpi-color: var(--warning);">
+      <div class="kpi-card-label">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Open Tickets
+      </div>
+      <div class="kpi-card-value">{{ stats.tickets_ouverts }}</div>
+      <div class="kpi-card-meta">
+        <span class="kpi-trend {% if stats.tickets_ouverts > 0 %}up{% else %}flat{% endif %}">Needs attention</span>
+      </div>
+    </div>
+
+  </div><!-- /dashboard-grid-4 -->
+
+  <!-- Quick Actions -->
+  <div class="card card-raised" style="margin-bottom:24px;">
+    <div class="card-header">
+      <div class="card-title">Quick Actions</div>
+    </div>
+    <div class="card-body-sm" style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-secondary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        Manage Users
+      </a>
+      <a href="{{ url_for('admin.nouvel_utilisateur') }}" class="btn btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New User
+      </a>
+      <a href="{{ url_for('admin.categories') }}" class="btn btn-secondary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Categories
+      </a>
+      <a href="{{ url_for('admin.logs') }}" class="btn btn-secondary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        System Logs
+      </a>
+    </div>
+  </div>
+
+  <!-- Split: Tickets by Status / Tickets by Priority -->
+  <div class="dashboard-grid-2-1" style="margin-bottom:24px;">
+
+    <!-- Tickets by Status -->
+    <div class="card card-raised">
+      <div class="card-header">
+        <div class="card-title">Tickets by Status</div>
+      </div>
+      <div class="card-body" style="padding:0;">
+        {% if tickets_par_statut %}
+        <div class="table-wrap" style="border:none;border-radius:0;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th style="width:100px;text-align:right;">Count</th>
+                <th style="width:160px;">Distribution</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% set total_t = tickets_par_statut | sum(attribute='count') %}
+              {% for row in tickets_par_statut %}
+              <tr>
+                <td>
+                  {% if row.statut in ['nouveau', 'ouvert'] %}
+                    <span class="badge badge-new">{{ row.statut|capitalize }}</span>
+                  {% elif row.statut == 'en_cours' %}
+                    <span class="badge badge-progress">In Progress</span>
+                  {% elif row.statut == 'en_attente' %}
+                    <span class="badge badge-waiting">Waiting</span>
+                  {% elif row.statut == 'resolu' %}
+                    <span class="badge badge-resolved">Resolved</span>
+                  {% elif row.statut == 'ferme' %}
+                    <span class="badge badge-closed">Closed</span>
+                  {% elif row.statut == 'annule' %}
+                    <span class="badge badge-cancelled">Cancelled</span>
+                  {% else %}
+                    <span class="badge badge-neutral">{{ row.statut }}</span>
+                  {% endif %}
+                </td>
+                <td style="text-align:right;font-weight:600;color:var(--text-primary);">{{ row.count }}</td>
+                <td>
+                  {% if total_t > 0 %}
+                  {% set pct = (row.count / total_t * 100)|round(0)|int %}
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="flex:1;height:6px;background:var(--surface-4);border-radius:var(--radius-full);overflow:hidden;">
+                      <div style="height:100%;width:{{ pct }}%;background:var(--brand);border-radius:var(--radius-full);"></div>
+                    </div>
+                    <span style="font-size:11px;color:var(--text-muted);width:32px;text-align:right;">{{ pct }}%</span>
+                  </div>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:40px 24px;">
+          <p class="empty-title">No data yet</p>
+          <p class="empty-desc">Ticket status data will appear here.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Tickets by Priority -->
+    <div class="card card-raised">
+      <div class="card-header">
+        <div class="card-title">Tickets by Priority</div>
+      </div>
+      <div class="card-body" style="padding:0;">
+        {% if tickets_par_priorite %}
+        <div class="table-wrap" style="border:none;border-radius:0;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Priority</th>
+                <th style="width:80px;text-align:right;">Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in tickets_par_priorite %}
+              <tr>
+                <td>
+                  {% if row.priorite == 'critique' %}
+                    <span class="badge badge-critical">Critical</span>
+                  {% elif row.priorite == 'urgente' %}
+                    <span class="badge badge-urgent">Urgent</span>
+                  {% elif row.priorite == 'haute' %}
+                    <span class="badge badge-high">High</span>
+                  {% elif row.priorite == 'moyenne' %}
+                    <span class="badge badge-medium">Medium</span>
+                  {% else %}
+                    <span class="badge badge-low">Low</span>
+                  {% endif %}
+                </td>
+                <td style="text-align:right;font-weight:600;color:var(--text-primary);">{{ row.count }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:40px 24px;">
+          <p class="empty-title">No data yet</p>
+          <p class="empty-desc">Priority data will appear here.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div><!-- /dashboard-grid-2-1 -->
+
+  <!-- System Health Strip -->
+  <div class="card" style="border-color:var(--border-subtle);">
+    <div class="card-body-sm" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:8px;height:8px;background:var(--success);border-radius:50%;display:inline-block;box-shadow:0 0 6px var(--success);"></span>
+        <span style="font-size:12px;font-weight:600;color:var(--text-primary);">System Operational</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--text-muted);">Version</span>
+        <span class="badge badge-neutral">v1.0.0</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--text-muted);">Last check</span>
+        <span style="font-size:12px;color:var(--text-secondary);">Just now</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--text-muted);">Database</span>
+        <span class="badge badge-success">Connected</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--text-muted);">Mail</span>
+        <span class="badge badge-success">Active</span>
+      </div>
+      <div style="margin-left:auto;">
+        <a href="{{ url_for('admin.logs') }}" class="btn btn-ghost btn-sm">View logs</a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
 {% endblock %}

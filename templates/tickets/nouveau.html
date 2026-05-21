@@ -1,40 +1,216 @@
 {% extends "base.html" %}
-{% block title %}Nouveau Ticket - {{ super() }}{% endblock %}
+
+{% block title %}New Ticket{% endblock %}
+
+{% block body_class %}page-ticket-new{% endblock %}
+
 {% block content %}
-<div class="page-header">
-    <h1><i class="fas fa-plus"></i> Nouveau Ticket</h1>
-</div>
-<form method="POST" class="form-card">
-    <div class="form-group">
-        <label>Titre *</label>
-        <input type="text" name="titre" required class="form-input">
+<div class="page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ url_for('tickets.liste') }}" class="breadcrumb-link">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          All Tickets
+        </a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">New Ticket</span>
+      </nav>
+      <h1 class="page-title" style="margin-top:4px;">New Ticket</h1>
     </div>
-    <div class="form-group">
-        <label>Description *</label>
-        <textarea name="description" required class="form-input" rows="5"></textarea>
-    </div>
-    <div class="form-row">
-        <div class="form-group">
-            <label>Priorité</label>
-            <select name="priorite" class="form-input">
-                <option value="basse">Basse</option>
-                <option value="normale" selected>Normale</option>
-                <option value="haute">Haute</option>
-                <option value="urgente">Urgente</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Département</label>
-            <select name="departement_id" class="form-input">
-                {% for dept in departements %}
-                <option value="{{ dept.id }}">{{ dept.nom }}</option>
+  </div>
+
+  <!-- Form Card -->
+  <div style="max-width:720px;margin:0 auto;">
+    <div class="card card-raised">
+      <div class="card-body" style="padding:32px;">
+
+        <form method="POST" action="{{ url_for('tickets.nouveau') }}" enctype="multipart/form-data" id="newTicketForm">
+
+          <!-- AI Suggestion Bar (shown by JS when title has 6+ words) -->
+          <div id="aiSuggestionBar" class="ai-suggestion-bar" style="display:none;margin-bottom:20px;padding:12px 16px;border-radius:8px;border:1px solid var(--border-accent, rgba(220,38,38,.3));background:var(--surface-raised);display:none;align-items:center;gap:12px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand,#dc2626)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span style="font-size:13px;color:var(--text-secondary);flex:1;">AI detected a similar ticket — <strong>view suggestion</strong></span>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('aiSuggestionBar').style.display='none'">Dismiss</button>
+          </div>
+
+          <!-- 1. Title -->
+          <div class="form-group" style="margin-bottom:24px;">
+            <label class="form-label" for="titre">
+              Title <span style="color:var(--color-brand,#dc2626);">*</span>
+            </label>
+            <input
+              type="text"
+              id="titre"
+              name="titre"
+              class="input"
+              placeholder="Brief description of the issue..."
+              required
+              autofocus
+              autocomplete="off"
+              style="font-size:16px;font-weight:500;padding:14px 16px;"
+            >
+          </div>
+
+          <!-- 2. Category selection -->
+          <div class="form-section" style="margin-bottom:24px;">
+            <div class="form-section-header">Category</div>
+            <div class="form-section-body">
+              {% if categories %}
+              <div class="ticket-category-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:8px;">
+                {% for cat in categories %}
+                <label class="category-card" style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:1px solid var(--border-subtle);border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s;">
+                  <input type="radio" name="categorie_id" value="{{ cat.id }}" style="display:none;" class="category-radio">
+                  <span style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ cat.nom }}</span>
+                  {% if cat.description %}
+                  <span style="font-size:11px;color:var(--text-muted);line-height:1.4;">{{ cat.description[:60] }}{% if cat.description|length > 60 %}…{% endif %}</span>
+                  {% endif %}
+                </label>
                 {% endfor %}
-            </select>
-        </div>
-    </div>
-    <div class="form-actions">
-        <a href="{{ url_for('tickets.liste') }}" class="btn btn-outline">Annuler</a>
-        <button type="submit" class="btn btn-primary">Créer</button>
-    </div>
-</form>
+              </div>
+              {% else %}
+              <div class="select-wrap">
+                <select name="departement_id" class="select">
+                  <option value="">Select department...</option>
+                  {% for dept in departements %}
+                  <option value="{{ dept.id }}">{{ dept.nom }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- 3. Description -->
+          <div class="form-group" style="margin-bottom:24px;">
+            <label class="form-label" for="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              class="textarea"
+              rows="6"
+              placeholder="Describe the issue in detail — include steps to reproduce, expected vs actual behaviour, screenshots if applicable..."
+              style="resize:vertical;min-height:140px;"
+            ></textarea>
+          </div>
+
+          <!-- 4. Priority + Department (2 cols) -->
+          <div class="form-row" style="margin-bottom:24px;">
+            <div class="form-group">
+              <label class="form-label" for="priorite">Priority</label>
+              <div class="select-wrap">
+                <select id="priorite" name="priorite" class="select">
+                  <option value="basse">Low</option>
+                  <option value="moyenne" selected>Medium</option>
+                  <option value="haute">High</option>
+                  <option value="urgente">Urgent</option>
+                  <option value="critique">Critical</option>
+                </select>
+              </div>
+            </div>
+            {% if categories %}
+            <div class="form-group">
+              <label class="form-label" for="departement_id">Department</label>
+              <div class="select-wrap">
+                <select id="departement_id" name="departement_id" class="select">
+                  <option value="">Select department...</option>
+                  {% for dept in departements %}
+                  <option value="{{ dept.id }}">{{ dept.nom }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- 5. File attachment -->
+          <div class="form-group" style="margin-bottom:32px;">
+            <label class="form-label">Attachments</label>
+            <div id="dropZone"
+                 style="border:2px dashed var(--border-subtle);border-radius:10px;padding:32px 24px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:var(--surface-base);"
+                 onclick="document.getElementById('fileInput').click()"
+                 ondragover="event.preventDefault();this.style.borderColor='var(--color-brand,#dc2626)';this.style.background='var(--surface-hover)';"
+                 ondragleave="this.style.borderColor='var(--border-subtle)';this.style.background='var(--surface-base)';"
+                 ondrop="event.preventDefault();this.style.borderColor='var(--border-subtle)';this.style.background='var(--surface-base)';handleDrop(event);">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted);margin-bottom:8px;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p style="font-size:13px;font-weight:500;color:var(--text-secondary);margin:0 0 4px;">
+                Drag &amp; drop files here or <span style="color:var(--color-brand,#dc2626);">browse</span>
+              </p>
+              <p style="font-size:11px;color:var(--text-muted);margin:0;">PNG, JPG, PDF, ZIP up to 10 MB each</p>
+              <div id="fileList" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;"></div>
+            </div>
+            <input type="file" id="fileInput" name="attachments" multiple accept="image/*,.pdf,.zip,.txt,.log"
+                   style="display:none;" onchange="previewFiles(this.files)">
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-actions" style="display:flex;align-items:center;gap:12px;justify-content:flex-end;padding-top:8px;border-top:1px solid var(--border-subtle);">
+            <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary btn-lg">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Create Ticket
+            </button>
+          </div>
+
+        </form>
+      </div><!-- /card-body -->
+    </div><!-- /card -->
+  </div>
+
+</div><!-- /page -->
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  // Category card selection
+  document.querySelectorAll('.category-card').forEach(function (card) {
+    card.addEventListener('click', function () {
+      document.querySelectorAll('.category-card').forEach(function (c) {
+        c.style.borderColor = 'var(--border-subtle)';
+        c.style.background = '';
+      });
+      card.style.borderColor = 'var(--color-brand, #dc2626)';
+      card.style.background = 'var(--surface-hover)';
+      card.querySelector('.category-radio').checked = true;
+    });
+  });
+
+  // AI suggestion bar on title input
+  var titleInput = document.getElementById('titre');
+  var aiBar = document.getElementById('aiSuggestionBar');
+  if (titleInput && aiBar) {
+    titleInput.addEventListener('input', function () {
+      var words = this.value.trim().split(/\s+/).filter(Boolean);
+      aiBar.style.display = words.length >= 6 ? 'flex' : 'none';
+    });
+  }
+
+  // File drop handling
+  window.handleDrop = function (e) {
+    var files = e.dataTransfer.files;
+    if (files.length) {
+      document.getElementById('fileInput').files = files;
+      previewFiles(files);
+    }
+  };
+
+  window.previewFiles = function (files) {
+    var list = document.getElementById('fileList');
+    list.innerHTML = '';
+    Array.from(files).forEach(function (f) {
+      var chip = document.createElement('span');
+      chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:var(--surface-raised);border:1px solid var(--border-subtle);font-size:11px;color:var(--text-secondary);';
+      chip.textContent = f.name + ' (' + (f.size > 1048576 ? (f.size / 1048576).toFixed(1) + ' MB' : Math.round(f.size / 1024) + ' KB') + ')';
+      list.appendChild(chip);
+    });
+  };
+})();
+</script>
 {% endblock %}
