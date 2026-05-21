@@ -1,51 +1,51 @@
 {% extends "base.html" %}
 
-{% block title %}New User{% endblock %}
+{% block title %}Nouvel utilisateur{% endblock %}
 
 {% block content %}
 <div class="page">
 
-  <!-- Page Header -->
+  <!-- En-tête de page -->
   <div class="page-header">
     <div class="page-header-left">
-      <nav class="breadcrumb" aria-label="Breadcrumb">
+      <nav class="breadcrumb" aria-label="Fil d'Ariane">
         <a href="{{ url_for('admin.tableau_bord') }}" class="breadcrumb-link">Admin</a>
         <span class="breadcrumb-sep">/</span>
-        <a href="{{ url_for('admin.utilisateurs') }}" class="breadcrumb-link">Users</a>
+        <a href="{{ url_for('admin.utilisateurs') }}" class="breadcrumb-link">Utilisateurs</a>
         <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">New User</span>
+        <span class="breadcrumb-current">Nouvel utilisateur</span>
       </nav>
-      <h1 class="page-title" style="margin-top:4px;">New User</h1>
+      <h1 class="page-title" style="margin-top:4px;">Créer un utilisateur</h1>
     </div>
     <div class="page-header-actions">
       <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost btn-sm">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-        Back to Users
+        Retour à la liste
       </a>
     </div>
   </div>
 
-  <!-- Form -->
-  <div style="max-width:680px;">
-    <form method="POST" action="{{ url_for('admin.nouvel_utilisateur') }}" id="newUserForm">
+  <!-- Formulaire -->
+  <div style="max-width:700px;">
+    <form method="POST" action="{{ url_for('admin.nouvel_utilisateur') }}" id="newUserForm" novalidate>
 
-      <!-- Section: Personal Information -->
+      <!-- Section : Identité -->
       <div class="card card-raised" style="margin-bottom:20px;">
         <div class="card-header">
-          <div class="card-title">Personal Information</div>
+          <div class="card-title">Identité</div>
         </div>
         <div class="card-body" style="padding:24px;">
 
-          <!-- First name + Last name -->
-          <div class="form-row" style="margin-bottom:16px;">
+          <!-- Prénom + Nom -->
+          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
             <div class="form-group">
-              <label class="form-label" for="prenom">First Name <span style="color:var(--error);">*</span></label>
+              <label class="form-label" for="prenom">Prénom <span style="color:var(--error);">*</span></label>
               <input
                 type="text"
                 id="prenom"
                 name="prenom"
-                class="input"
-                placeholder="Jean"
+                class="form-input input"
+                placeholder="ex. Jean"
                 required
                 autofocus
                 autocomplete="given-name"
@@ -53,13 +53,13 @@
               >
             </div>
             <div class="form-group">
-              <label class="form-label" for="nom">Last Name <span style="color:var(--error);">*</span></label>
+              <label class="form-label" for="nom">Nom <span style="color:var(--error);">*</span></label>
               <input
                 type="text"
                 id="nom"
                 name="nom"
-                class="input"
-                placeholder="Dupont"
+                class="form-input input"
+                placeholder="ex. Dupont"
                 required
                 autocomplete="family-name"
                 value="{{ request.form.get('nom', '') }}"
@@ -67,15 +67,15 @@
             </div>
           </div>
 
-          <!-- Email -->
+          <!-- E-mail -->
           <div class="form-group">
-            <label class="form-label" for="email">Email Address <span style="color:var(--error);">*</span></label>
+            <label class="form-label" for="email">Adresse e-mail <span style="color:var(--error);">*</span></label>
             <input
               type="email"
               id="email"
               name="email"
-              class="input"
-              placeholder="jean.dupont@company.com"
+              class="form-input input"
+              placeholder="jean.dupont@entreprise.com"
               required
               autocomplete="email"
               value="{{ request.form.get('email', '') }}"
@@ -85,48 +85,74 @@
         </div>
       </div>
 
-      <!-- Section: Account -->
+      <!-- Section : Sécurité -->
       <div class="card card-raised" style="margin-bottom:20px;">
         <div class="card-header">
-          <div class="card-title">Account</div>
+          <div class="card-title">Sécurité</div>
         </div>
         <div class="card-body" style="padding:24px;">
 
-          <!-- Password -->
-          <div class="form-group" style="margin-bottom:16px;">
-            <label class="form-label" for="password">Password <span style="color:var(--error);">*</span></label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              class="input"
-              placeholder="Minimum 8 characters"
-              required
-              autocomplete="new-password"
-              minlength="8"
-            >
-            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Must be at least 8 characters long.</p>
+          <!-- Mot de passe + Confirmation -->
+          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0;">
+            <div class="form-group">
+              <label class="form-label" for="password">Mot de passe <span style="color:var(--error);">*</span></label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                class="form-input input"
+                placeholder="8 caractères minimum"
+                required
+                autocomplete="new-password"
+                minlength="8"
+              >
+              <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Au moins 8 caractères.</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="password_confirm">Confirmer le mot de passe <span style="color:var(--error);">*</span></label>
+              <input
+                type="password"
+                id="password_confirm"
+                name="password_confirm"
+                class="form-input input"
+                placeholder="Répéter le mot de passe"
+                required
+                autocomplete="new-password"
+                minlength="8"
+              >
+            </div>
           </div>
 
-          <!-- Role + Department -->
-          <div class="form-row" style="margin-bottom:0;">
+        </div>
+      </div>
+
+      <!-- Section : Affectation -->
+      <div class="card card-raised" style="margin-bottom:20px;">
+        <div class="card-header">
+          <div class="card-title">Affectation</div>
+        </div>
+        <div class="card-body" style="padding:24px;">
+
+          <!-- Rôle + Département -->
+          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0;">
             <div class="form-group">
-              <label class="form-label" for="role">Role <span style="color:var(--error);">*</span></label>
+              <label class="form-label" for="role_id">Rôle <span style="color:var(--error);">*</span></label>
               <div class="select-wrap">
-                <select id="role" name="role" class="select" required>
-                  <option value="">Select a role...</option>
-                  <option value="Administrateur" {% if request.form.get('role') == 'Administrateur' %}selected{% endif %}>Administrator</option>
-                  <option value="Manager" {% if request.form.get('role') == 'Manager' %}selected{% endif %}>Manager</option>
-                  <option value="Agent" {% if request.form.get('role') == 'Agent' %}selected{% endif %}>Agent</option>
-                  <option value="Utilisateur" {% if not request.form.get('role') or request.form.get('role') == 'Utilisateur' %}selected{% endif %}>User</option>
+                <select id="role_id" name="role_id" class="form-select select" required>
+                  <option value="">Choisir un rôle…</option>
+                  {% for role in roles %}
+                  <option value="{{ role.id }}" {% if request.form.get('role_id')|string == role.id|string %}selected{% endif %}>
+                    {{ role.nom }}
+                  </option>
+                  {% endfor %}
                 </select>
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label" for="departement_id">Department</label>
+              <label class="form-label" for="departement_id">Département</label>
               <div class="select-wrap">
-                <select id="departement_id" name="departement_id" class="select">
-                  <option value="">No department</option>
+                <select id="departement_id" name="departement_id" class="form-select select">
+                  <option value="">Aucun département</option>
                   {% for dept in departements %}
                   <option value="{{ dept.id }}" {% if request.form.get('departement_id')|string == dept.id|string %}selected{% endif %}>
                     {{ dept.nom }}
@@ -140,49 +166,68 @@
         </div>
       </div>
 
-      <!-- Section: Profile (optional) -->
+      <!-- Section : Informations complémentaires -->
       <div class="card card-raised" style="margin-bottom:24px;">
         <div class="card-header">
-          <div class="card-title">Profile <span style="font-weight:400;font-size:12px;color:var(--text-muted);margin-left:6px;">Optional</span></div>
+          <div class="card-title">
+            Informations complémentaires
+            <span style="font-weight:400;font-size:12px;color:var(--text-muted);margin-left:6px;">Optionnel</span>
+          </div>
         </div>
         <div class="card-body" style="padding:24px;">
 
-          <div class="form-row">
+          <!-- Téléphone + Poste -->
+          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
             <div class="form-group">
-              <label class="form-label" for="poste">Job Title</label>
+              <label class="form-label" for="telephone">Téléphone</label>
+              <input
+                type="tel"
+                id="telephone"
+                name="telephone"
+                class="form-input input"
+                placeholder="ex. +216 71 000 000"
+                autocomplete="tel"
+                value="{{ request.form.get('telephone', '') }}"
+              >
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="poste">Intitulé du poste</label>
               <input
                 type="text"
                 id="poste"
                 name="poste"
-                class="input"
-                placeholder="e.g. Support Engineer"
+                class="form-input input"
+                placeholder="ex. Ingénieur support"
                 autocomplete="organization-title"
                 value="{{ request.form.get('poste', '') }}"
               >
             </div>
-            <div class="form-group">
-              <label class="form-label" for="matricule">Employee ID</label>
-              <input
-                type="text"
-                id="matricule"
-                name="matricule"
-                class="input"
-                placeholder="e.g. EMP-0042"
-                autocomplete="off"
-                value="{{ request.form.get('matricule', '') }}"
-              >
-            </div>
+          </div>
+
+          <!-- Matricule -->
+          <div class="form-group">
+            <label class="form-label" for="matricule">Matricule</label>
+            <input
+              type="text"
+              id="matricule"
+              name="matricule"
+              class="form-input input"
+              style="max-width:280px;"
+              placeholder="ex. EMP-0042"
+              autocomplete="off"
+              value="{{ request.form.get('matricule', '') }}"
+            >
           </div>
 
         </div>
       </div>
 
-      <!-- Form Actions -->
-      <div class="form-actions" style="display:flex;align-items:center;gap:12px;justify-content:flex-end;">
-        <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost">Cancel</a>
+      <!-- Actions du formulaire -->
+      <div style="display:flex;align-items:center;gap:12px;justify-content:flex-end;">
+        <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost">Annuler</a>
         <button type="submit" class="btn btn-primary btn-lg">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Create User
+          Créer l'utilisateur
         </button>
       </div>
 
@@ -190,4 +235,24 @@
   </div>
 
 </div><!-- /page -->
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  'use strict';
+  var form = document.getElementById('newUserForm');
+  if (!form) return;
+
+  form.addEventListener('submit', function (e) {
+    var pwd  = document.getElementById('password').value;
+    var pwd2 = document.getElementById('password_confirm').value;
+    if (pwd && pwd2 && pwd !== pwd2) {
+      e.preventDefault();
+      alert('Les mots de passe ne correspondent pas.');
+      document.getElementById('password_confirm').focus();
+    }
+  });
+})();
+</script>
 {% endblock %}

@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Rôles{% endblock %}
+
+{% block content %}
+<div class="page">
+
+  <!-- En-tête de page -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <nav class="breadcrumb" aria-label="Fil d'Ariane">
+        <a href="{{ url_for('admin.tableau_bord') }}" class="breadcrumb-link">Admin</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Rôles</span>
+      </nav>
+      <h1 class="page-title" style="margin-top:4px;">Gestion des Rôles</h1>
+      <span class="page-subtitle">{{ roles|length }} rôle{{ 's' if roles|length != 1 else '' }} configuré{{ 's' if roles|length != 1 else '' }}</span>
+    </div>
+  </div>
+
+  <!-- Layout principal : liste des rôles + panneau permissions -->
+  <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:24px;align-items:start;">
+
+    <!-- Colonne gauche : liste des rôles -->
+    <div>
+      <div style="display:flex;flex-direction:column;gap:12px;" id="rolesList">
+
+        {% for role in roles %}
+        <div
+          class="card role-card"
+          data-role-id="{{ role.id }}"
+          data-role-nom="{{ role.nom }}"
+          data-role-systeme="{{ 'true' if role.systeme else 'false' }}"
+          data-role-perms="{{ role.permissions | map(attribute='id') | list | tojson }}"
+          style="cursor:pointer;border:2px solid transparent;transition:border-color 0.15s,box-shadow 0.15s;"
+          onclick="selectRole(this)"
+          tabindex="0"
+          role="button"
+          aria-pressed="false"
+        >
+          <div class="card-body" style="padding:16px 20px;">
+            <div style="display:flex;align-items:flex-start;gap:14px;">
+              <!-- Couleur indicateur -->
+              <div style="width:10px;height:10px;border-radius:50%;background:{{ role.couleur }};flex-shrink:0;margin-top:5px;"></div>
+
+              <div style="flex:1;min-width:0;">
+                <!-- Nom + badges -->
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+                  <span style="font-size:14px;font-weight:600;color:var(--text-primary);">{{ role.nom }}</span>
+                  <span class="badge" style="background:{{ role.couleur }}22;color:{{ role.couleur }};border:1px solid {{ role.couleur }}44;font-size:10px;padding:2px 7px;">Niv. {{ role.niveau }}</span>
+                  {% if role.systeme %}
+                  <span class="status-badge" style="background:var(--warning-subtle,rgba(234,179,8,.15));color:var(--warning,#eab308);font-size:10px;padding:2px 7px;border-radius:4px;">Système</span>
+                  {% endif %}
+                  {% if not role.actif %}
+                  <span class="status-badge" style="background:var(--error-subtle,rgba(239,68,68,.15));color:var(--error,#ef4444);font-size:10px;padding:2px 7px;border-radius:4px;">Inactif</span>
+                  {% endif %}
+                </div>
+
+                <!-- Description -->
+                {% if role.description %}
+                <p style="font-size:12px;color:var(--text-muted);margin:0 0 8px;line-height:1.4;">{{ role.description }}</p>
+                {% endif %}
+
+                <!-- Infos bas -->
+                <div style="display:flex;gap:16px;font-size:11px;color:var(--text-subtle,var(--text-muted));">
+                  <span>{{ role.utilisateurs|length }} utilisateur{{ 's' if role.utilisateurs|length != 1 else '' }}</span>
+                  <span>{{ role.permissions|length }} permission{{ 's' if role.permissions|length != 1 else '' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="card">
+          <div class="card-body" style="padding:40px;text-align:center;">
+            <p style="color:var(--text-muted);font-size:14px;">Aucun rôle configuré.</p>
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+
+    <!-- Colonne droite : panneau d'édition des permissions -->
+    <div id="permissionsPanel" style="position:sticky;top:24px;">
+
+      <!-- État vide -->
+      <div id="panelEmpty" class="card">
+        <div class="card-body" style="padding:60px 32px;text-align:center;">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted);margin-bottom:16px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <p style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">Sélectionner un rôle</p>
+          <p style="font-size:12px;color:var(--text-muted);">Cliquez sur un rôle pour gérer ses permissions.</p>
+        </div>
+      </div>
+
+      <!-- Panneau édition (caché initialement) -->
+      <div id="panelEditor" style="display:none;">
+        <div class="card card-raised">
+          <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div class="card-title" id="panelRoleNom">—</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;" id="panelRoleInfo"></div>
+            </div>
+            <div id="panelSystemeTag" style="display:none;">
+              <span class="status-badge" style="background:var(--warning-subtle,rgba(234,179,8,.15));color:var(--warning,#eab308);">Système — lecture seule</span>
+            </div>
+          </div>
+
+          <form method="POST" id="permsForm" action="">
+            <div class="card-body" style="padding:0;">
+
+              {% if perms_by_cat %}
+              {% for categorie, perms in perms_by_cat.items() %}
+              <div style="border-bottom:1px solid var(--border-subtle);padding:16px 24px;">
+                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:12px;">{{ categorie or 'Général' }}</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  {% for perm in perms %}
+                  <label
+                    class="perm-row"
+                    style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:6px 8px;border-radius:6px;transition:background 0.1s;"
+                    onmouseover="if(!this.querySelector('input').disabled)this.style.background='var(--surface-hover,rgba(255,255,255,.04))'"
+                    onmouseout="this.style.background=''"
+                  >
+                    <input
+                      type="checkbox"
+                      name="permissions"
+                      value="{{ perm.id }}"
+                      class="perm-checkbox"
+                      data-perm-id="{{ perm.id }}"
+                      style="margin-top:2px;accent-color:var(--brand);"
+                    >
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-size:13px;font-weight:500;color:var(--text-primary);">{{ perm.nom }}</div>
+                      {% if perm.description %}
+                      <div style="font-size:11px;color:var(--text-muted);margin-top:1px;">{{ perm.description }}</div>
+                      {% endif %}
+                      <div style="font-size:10px;color:var(--text-subtle,var(--text-muted));margin-top:2px;font-family:var(--font-mono,'IBM Plex Mono',monospace);">{{ perm.code }}</div>
+                    </div>
+                  </label>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endfor %}
+              {% else %}
+              <div style="padding:40px;text-align:center;">
+                <p style="color:var(--text-muted);font-size:14px;">Aucune permission définie dans le système.</p>
+              </div>
+              {% endif %}
+
+            </div>
+
+            <!-- Actions -->
+            <div id="panelActions" class="card-body" style="padding:16px 24px;border-top:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;">
+              <button type="button" class="btn btn-ghost btn-sm" onclick="toggleAll(true)">Tout cocher</button>
+              <div style="display:flex;gap:10px;">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleAll(false)">Tout décocher</button>
+                <button type="submit" class="btn btn-primary btn-sm" id="saveBtn">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div><!-- /page -->
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  'use strict';
+
+  // Données des rôles récupérées depuis le DOM
+  let currentRoleCard = null;
+
+  function selectRole(card) {
+    // Désélectionner l'ancien
+    if (currentRoleCard) {
+      currentRoleCard.style.borderColor = 'transparent';
+      currentRoleCard.style.boxShadow = '';
+      currentRoleCard.setAttribute('aria-pressed', 'false');
+    }
+
+    // Sélectionner le nouveau
+    card.style.borderColor = 'var(--brand)';
+    card.style.boxShadow = '0 0 0 3px var(--brand-subtle, rgba(99,102,241,.15))';
+    card.setAttribute('aria-pressed', 'true');
+    currentRoleCard = card;
+
+    const roleId    = card.dataset.roleId;
+    const roleNom   = card.dataset.roleNom;
+    const isSysteme = card.dataset.roleSysteme === 'true';
+    const rolePerms = JSON.parse(card.dataset.rolePerms || '[]');
+
+    // Mettre à jour l'en-tête du panneau
+    document.getElementById('panelRoleNom').textContent = roleNom;
+
+    const permCheckboxes = document.querySelectorAll('.perm-checkbox');
+
+    // Cocher/décocher les permissions selon le rôle
+    permCheckboxes.forEach(function (cb) {
+      cb.checked   = rolePerms.indexOf(cb.dataset.permId) !== -1;
+      cb.disabled  = isSysteme;
+    });
+
+    // Activer/désactiver les contrôles système
+    const systemeTag   = document.getElementById('panelSystemeTag');
+    const panelActions = document.getElementById('panelActions');
+    systemeTag.style.display   = isSysteme ? 'block' : 'none';
+    panelActions.style.display = isSysteme ? 'none'  : 'flex';
+
+    // Info sous le nom
+    const permCount = rolePerms.length;
+    document.getElementById('panelRoleInfo').textContent =
+      permCount + ' permission' + (permCount !== 1 ? 's' : '') + ' activée' + (permCount !== 1 ? 's' : '');
+
+    // Définir l'action du formulaire
+    document.getElementById('permsForm').action =
+      '/admin/roles/' + roleId + '/permissions';
+
+    // Afficher le panneau
+    document.getElementById('panelEmpty').style.display  = 'none';
+    document.getElementById('panelEditor').style.display = 'block';
+  }
+
+  function toggleAll(state) {
+    document.querySelectorAll('.perm-checkbox:not(:disabled)').forEach(function (cb) {
+      cb.checked = state;
+    });
+  }
+
+  // Navigation clavier sur les cartes de rôle
+  document.querySelectorAll('.role-card').forEach(function (card) {
+    card.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectRole(card);
+      }
+    });
+  });
+
+  // Exposer les fonctions globalement
+  window.selectRole  = selectRole;
+  window.toggleAll   = toggleAll;
+})();
+</script>
+{% endblock %}
