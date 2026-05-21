@@ -100,8 +100,10 @@ def nouvel_utilisateur():
             logger.error(f'Erreur lors de la création de l\'utilisateur: {str(e)}')
             flash('Erreur lors de la création de l\'utilisateur', 'danger')
     
+    from models import Role
     departements = Departement.query.filter_by(actif=True).all()
-    return render_template('admin/nouvel_utilisateur.html', departements=departements)
+    roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
+    return render_template('admin/nouvel_utilisateur.html', departements=departements, roles=roles)
 
 
 @admin_bp.route('/utilisateurs/<user_id>/modifier', methods=['GET', 'POST'])
@@ -167,6 +169,37 @@ def desactiver_utilisateur(user_id):
         flash('Erreur lors de la désactivation', 'danger')
     
     return redirect(url_for('admin.utilisateurs'))
+
+
+@admin_bp.route('/roles')
+@login_required
+@admin_required
+def roles():
+    """Gestion des rôles et permissions"""
+    from models import Role, Permission
+    roles = Role.query.order_by(Role.niveau.desc()).all()
+    permissions = Permission.query.order_by(Permission.categorie, Permission.nom).all()
+    perms_by_cat = {}
+    for p in permissions:
+        perms_by_cat.setdefault(p.categorie, []).append(p)
+    return render_template('admin/roles.html', roles=roles, perms_by_cat=perms_by_cat)
+
+
+@admin_bp.route('/roles/<role_id>/permissions', methods=['POST'])
+@login_required
+@admin_required
+def modifier_permissions_role(role_id):
+    """Modifier les permissions d'un rôle"""
+    from models import Role, Permission
+    role = Role.query.get_or_404(role_id)
+    if role.systeme:
+        flash('Les rôles système ne peuvent pas être modifiés.', 'warning')
+        return redirect(url_for('admin.roles'))
+    perm_ids = request.form.getlist('permissions')
+    role.permissions = Permission.query.filter(Permission.id.in_(perm_ids)).all()
+    db.session.commit()
+    flash(f'Permissions du rôle "{role.nom}" mises à jour.', 'success')
+    return redirect(url_for('admin.roles'))
 
 
 @admin_bp.route('/categories')

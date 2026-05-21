@@ -23,7 +23,7 @@
 </head>
 <body class="{% block body_class %}{% endblock %}">
 
-  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <a href="#main-content" class="skip-link">Aller au contenu principal</a>
 
   {% if current_user.is_authenticated %}
   <!-- ═══════════ AUTHENTICATED SHELL ═══════════ -->
@@ -40,15 +40,15 @@
       </div>
 
       <div class="chrome-center">
-        <button class="search-trigger" id="searchTrigger" aria-label="Search (Ctrl+K)">
+        <button class="search-trigger" id="searchTrigger" aria-label="Rechercher (Ctrl+K)">
           <svg class="search-trigger-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <span class="search-trigger-text">Search tickets, articles, agents...</span>
+          <span class="search-trigger-text">Rechercher des tickets, articles, agents...</span>
           <kbd class="search-trigger-kbd">⌘K</kbd>
         </button>
       </div>
 
       <div class="chrome-right" style="position:relative;">
-        <button class="chrome-btn" title="AI Copilot">
+        <button class="chrome-btn" title="Copilote IA">
           <span class="ai-status-dot"></span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </button>
