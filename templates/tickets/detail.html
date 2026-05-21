@@ -122,7 +122,7 @@
           {% if ticket.assigne_a %}
           <div style="display:flex;align-items:center;gap:7px;">
             <div class="user-avatar avatar-xs">
-              {% if ticket.assigne_a.photo %}<img src="{{ url_for('static', filename='uploads/' + ticket.assigne_a.photo) }}" alt="">{% else %}{{ ticket.assigne_a.prenom[0]|upper }}{% endif %}
+              {% if ticket.assigne_a.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + ticket.assigne_a.photo_profil) }}" alt="">{% else %}{{ ticket.assigne_a.prenom[0]|upper }}{% endif %}
             </div>
             <span style="font-size:13px;color:var(--text-primary);font-weight:500;">{{ ticket.assigne_a.prenom }} {{ ticket.assigne_a.nom }}</span>
           </div>
@@ -169,7 +169,7 @@
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Reporter</div>
           <div style="display:flex;align-items:center;gap:7px;">
             <div class="user-avatar avatar-xs">
-              {% if ticket.createur.photo %}<img src="{{ url_for('static', filename='uploads/' + ticket.createur.photo) }}" alt="">{% else %}{{ ticket.createur.prenom[0]|upper }}{% endif %}
+              {% if ticket.createur.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + ticket.createur.photo_profil) }}" alt="">{% else %}{{ ticket.createur.prenom[0]|upper }}{% endif %}
             </div>
             <span style="font-size:13px;color:var(--text-primary);">{{ ticket.createur.prenom }} {{ ticket.createur.nom }}</span>
           </div>
@@ -212,7 +212,7 @@
         <!-- Original description as first message -->
         <div class="thread-message" style="display:flex;gap:12px;">
           <div class="user-avatar avatar-sm" style="flex-shrink:0;margin-top:2px;">
-            {% if ticket.createur.photo %}<img src="{{ url_for('static', filename='uploads/' + ticket.createur.photo) }}" alt="">{% else %}{{ ticket.createur.prenom[0]|upper }}{% endif %}
+            {% if ticket.createur.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + ticket.createur.photo_profil) }}" alt="">{% else %}{{ ticket.createur.prenom[0]|upper }}{% endif %}
           </div>
           <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;">
@@ -229,7 +229,7 @@
         <div class="thread-message {% if commentaire.interne %}internal{% elif commentaire.auteur.id == ticket.createur.id %}{% else %}agent{% endif %}"
              style="display:flex;gap:12px;{% if commentaire.interne %}padding:12px 14px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;{% endif %}">
           <div class="user-avatar avatar-sm" style="flex-shrink:0;margin-top:2px;">
-            {% if commentaire.auteur.photo %}<img src="{{ url_for('static', filename='uploads/' + commentaire.auteur.photo) }}" alt="">{% else %}{{ commentaire.auteur.prenom[0]|upper }}{% endif %}
+            {% if commentaire.auteur.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + commentaire.auteur.photo_profil) }}" alt="">{% else %}{{ commentaire.auteur.prenom[0]|upper }}{% endif %}
           </div>
           <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;">
@@ -312,7 +312,7 @@
         <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">Reporter</div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
           <div class="user-avatar avatar-md">
-            {% if ticket.createur.photo %}<img src="{{ url_for('static', filename='uploads/' + ticket.createur.photo) }}" alt="">{% else %}{{ ticket.createur.prenom[0]|upper }}{{ ticket.createur.nom[0]|upper }}{% endif %}
+            {% if ticket.createur.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + ticket.createur.photo_profil) }}" alt="">{% else %}{{ ticket.createur.prenom[0]|upper }}{{ ticket.createur.nom[0]|upper }}{% endif %}
           </div>
           <div>
             <div style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ ticket.createur.prenom }} {{ ticket.createur.nom }}</div>

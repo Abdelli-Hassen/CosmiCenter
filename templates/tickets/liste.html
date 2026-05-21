@@ -163,8 +163,8 @@
               {% if ticket.assigne_a %}
               <div style="display:flex;align-items:center;gap:6px;">
                 <div class="user-avatar avatar-xs" title="{{ ticket.assigne_a.prenom }} {{ ticket.assigne_a.nom }}">
-                  {% if ticket.assigne_a.photo %}
-                  <img src="{{ url_for('static', filename='uploads/' + ticket.assigne_a.photo) }}" alt="">
+                  {% if ticket.assigne_a.photo_profil %}
+                  <img src="{{ url_for('static', filename='uploads/' + ticket.assigne_a.photo_profil) }}" alt="">
                   {% else %}{{ ticket.assigne_a.prenom[0]|upper }}{% endif %}
                 </div>
                 <span>{{ ticket.assigne_a.prenom }} {{ ticket.assigne_a.nom }}</span>

@@ -116,11 +116,11 @@
 
         <!-- Actions -->
         <div style="display:flex;align-items:center;justify-content:space-between;">
-          <a href="{{ url_for('departements.detail', departement_id=dept.id) }}"
+          <a href="{{ url_for('departements.detail', id=dept.id) }}"
              style="font-size:12px;color:var(--text-muted);text-decoration:none;">
              View details →
           </a>
-          <a href="{{ url_for('departements.formulaire', departement_id=dept.id) }}"
+          <a href="{{ url_for('departements.modifier', id=dept.id) }}"
              class="btn btn-ghost btn-sm" style="padding:5px 10px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>

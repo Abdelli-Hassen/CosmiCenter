@@ -267,7 +267,7 @@
           {{ loop.index }}
         </div>
         <div class="user-avatar avatar-sm" style="flex-shrink:0;">
-          {% if agent.photo %}<img src="{{ url_for('static', filename='uploads/' + agent.photo) }}" alt="">{% else %}{{ agent.prenom[0]|upper }}{% endif %}
+          {% if agent.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + agent.photo_profil) }}" alt="">{% else %}{{ agent.prenom[0]|upper }}{% endif %}
         </div>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ agent.prenom }} {{ agent.nom }}</div>

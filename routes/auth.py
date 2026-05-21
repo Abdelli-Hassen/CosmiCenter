@@ -33,7 +33,7 @@ def connexion():
         utilisateur = Utilisateur.query.filter_by(email=email).first()
         
         # Vérifier les identifiants
-        if utilisateur and utilisateur.verifier_mot_de_passe(password):
+        if utilisateur and utilisateur.check_password(password):
             # Vérifier que le compte est actif
             if not utilisateur.actif:
                 flash('Votre compte a été désactivé. Contactez l\'administrateur.', 'danger')

@@ -64,7 +64,7 @@
         </button>
 
         <button class="user-avatar avatar-md" id="userMenuTrigger" title="{{ current_user.prenom }} {{ current_user.nom }}" data-dropdown="userMenu">
-          {% if current_user.photo %}<img src="{{ url_for('static', filename='uploads/' + current_user.photo) }}" alt="">{% else %}{{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}{% endif %}
+          {% if current_user.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + current_user.photo_profil) }}" alt="">{% else %}{{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}{% endif %}
         </button>
 
         <div class="dropdown" id="userMenu" style="right:0; top:calc(100% + 8px); display:none; position:absolute; min-width:200px;">
@@ -159,7 +159,7 @@
 
         <div class="sidebar-footer">
           <div class="user-avatar avatar-sm" aria-hidden="true">
-            {% if current_user.photo %}<img src="{{ url_for('static', filename='uploads/' + current_user.photo) }}" alt="">{% else %}{{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}{% endif %}
+            {% if current_user.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + current_user.photo_profil) }}" alt="">{% else %}{{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}{% endif %}
           </div>
           <div class="sidebar-user">
             <div class="sidebar-user-name">{{ current_user.prenom }} {{ current_user.nom }}</div>
