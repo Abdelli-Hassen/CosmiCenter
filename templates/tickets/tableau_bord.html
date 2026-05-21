@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Tableau de bord{% endblock %}
 
 {% block body_class %}page-tickets-dashboard{% endblock %}
 
@@ -10,15 +10,15 @@
   <!-- Welcome Strip -->
   <div class="welcome-strip">
     <div class="welcome-strip-left">
-      <div class="welcome-strip-greeting">Welcome back, <strong>{{ current_user.prenom }}</strong></div>
-      <div class="welcome-strip-sub">Here's what's happening across your workspace today.</div>
+      <div class="welcome-strip-greeting">Bon retour, <strong>{{ current_user.prenom }}</strong></div>
+      <div class="welcome-strip-sub">Voici ce qui se passe dans votre espace de travail aujourd'hui.</div>
     </div>
     <div class="welcome-strip-actions">
       <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        New Ticket
+        Nouveau Ticket
       </a>
-      <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm">View All Tickets</a>
+      <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm">Voir tous les Tickets</a>
     </div>
   </div>
 
@@ -29,36 +29,36 @@
       <div class="kpi-card-label">Total Tickets</div>
       <div class="kpi-card-value">{{ stats.total }}</div>
       <div class="kpi-card-meta">
-        <span class="kpi-trend kpi-trend-neutral">— this period</span>
+        <span class="kpi-trend kpi-trend-neutral">— cette période</span>
       </div>
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-card-label">Open</div>
+      <div class="kpi-card-label">Ouvert</div>
       <div class="kpi-card-value">{{ stats.ouvert }}</div>
       <div class="kpi-card-meta">
         <span class="kpi-trend kpi-trend-up">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-          this period
+          cette période
         </span>
       </div>
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-card-label">In Progress</div>
+      <div class="kpi-card-label">En cours</div>
       <div class="kpi-card-value">{{ stats.en_cours }}</div>
       <div class="kpi-card-meta">
-        <span class="kpi-trend kpi-trend-neutral">— this period</span>
+        <span class="kpi-trend kpi-trend-neutral">— cette période</span>
       </div>
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-card-label">Resolved</div>
+      <div class="kpi-card-label">Résolu</div>
       <div class="kpi-card-value">{{ stats.resolu }}</div>
       <div class="kpi-card-meta">
         <span class="kpi-trend kpi-trend-down">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          this period
+          cette période
         </span>
       </div>
     </div>
@@ -68,8 +68,8 @@
   <!-- Recent Tickets Card -->
   <div class="card card-raised">
     <div class="card-header">
-      <div class="card-title">Recent Tickets</div>
-      <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm">View all</a>
+      <div class="card-title">Tickets récents</div>
+      <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm">Voir tout</a>
     </div>
     <div class="card-body" style="padding:0;">
 
@@ -79,10 +79,10 @@
           <thead>
             <tr>
               <th style="width:28px;"></th>
-              <th style="width:120px;">Ticket ID</th>
-              <th>Title</th>
-              <th style="width:130px;">Status</th>
-              <th style="width:160px;">Created</th>
+              <th style="width:120px;">Identifiant</th>
+              <th>Titre</th>
+              <th style="width:130px;">Statut</th>
+              <th style="width:160px;">Créé le</th>
             </tr>
           </thead>
           <tbody>
@@ -111,17 +111,17 @@
               </td>
               <td>
                 {% if ticket.statut in ['nouveau', 'ouvert'] %}
-                  <span class="badge badge-new">{{ 'Open' if ticket.statut == 'ouvert' else 'New' }}</span>
+                  <span class="badge badge-new">{{ 'Ouvert' if ticket.statut == 'ouvert' else 'Nouveau' }}</span>
                 {% elif ticket.statut == 'en_cours' %}
-                  <span class="badge badge-progress">In Progress</span>
+                  <span class="badge badge-progress">En cours</span>
                 {% elif ticket.statut == 'en_attente' %}
-                  <span class="badge badge-waiting">Waiting</span>
+                  <span class="badge badge-waiting">En attente</span>
                 {% elif ticket.statut == 'resolu' %}
-                  <span class="badge badge-resolved">Resolved</span>
+                  <span class="badge badge-resolved">Résolu</span>
                 {% elif ticket.statut == 'ferme' %}
-                  <span class="badge badge-closed">Closed</span>
+                  <span class="badge badge-closed">Fermé</span>
                 {% elif ticket.statut == 'annule' %}
-                  <span class="badge badge-cancelled">Cancelled</span>
+                  <span class="badge badge-cancelled">Annulé</span>
                 {% else %}
                   <span class="badge">{{ ticket.statut }}</span>
                 {% endif %}
@@ -143,11 +143,11 @@
           <line x1="16" y1="13" x2="8" y2="13"/>
           <line x1="16" y1="17" x2="8" y2="17"/>
         </svg>
-        <p class="empty-title">No tickets yet</p>
-        <p class="empty-desc">Create your first ticket to get started.</p>
+        <p class="empty-title">Aucun ticket pour l'instant</p>
+        <p class="empty-desc">Créez votre premier ticket pour commencer.</p>
         <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm" style="margin-top:16px;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New Ticket
+          Nouveau Ticket
         </a>
       </div>
       {% endif %}

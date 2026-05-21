@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ "Edit" if is_edit else "New" }} Department{% endblock %}
+{% block title %}{{ "Modifier" if is_edit else "Nouveau" }} Département{% endblock %}
 
 {% block content %}
 <div class="page">
@@ -9,24 +9,24 @@
   <div class="page-header">
     <div class="page-header-left">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="{{ url_for('departements.liste') }}" class="breadcrumb-link">Departments</a>
+        <a href="{{ url_for('departements.liste') }}" class="breadcrumb-link">Départements</a>
         <span class="breadcrumb-sep">/</span>
         {% if is_edit %}
           <a href="{{ url_for('departements.detail', dept_id=departement.id) }}" class="breadcrumb-link">{{ departement.nom }}</a>
           <span class="breadcrumb-sep">/</span>
-          <span class="breadcrumb-current">Edit</span>
+          <span class="breadcrumb-current">Modifier</span>
         {% else %}
-          <span class="breadcrumb-current">New Department</span>
+          <span class="breadcrumb-current">Nouveau Département</span>
         {% endif %}
       </nav>
       <h1 class="page-title" style="margin-top:4px;">
-        {% if is_edit %}Edit {{ departement.nom }}{% else %}New Department{% endif %}
+        {% if is_edit %}Modifier {{ departement.nom }}{% else %}Nouveau Département{% endif %}
       </h1>
     </div>
     <div class="page-header-actions">
       <a href="{{ url_for('departements.liste') }}" class="btn btn-ghost btn-sm">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-        Back to Departments
+        Retour aux Départements
       </a>
     </div>
   </div>
@@ -37,22 +37,22 @@
           action="{% if is_edit %}{{ url_for('departements.modifier', dept_id=departement.id) }}{% else %}{{ url_for('departements.nouveau') }}{% endif %}"
           id="deptForm">
 
-      <!-- Section: Basic Information -->
+      <!-- Section: Informations de base -->
       <div class="card card-raised" style="margin-bottom:20px;">
         <div class="card-header">
-          <div class="card-title">Basic Information</div>
+          <div class="card-title">Informations de base</div>
         </div>
         <div class="card-body" style="padding:24px;">
 
-          <!-- Name -->
+          <!-- Nom -->
           <div class="form-group" style="margin-bottom:16px;">
-            <label class="form-label" for="nom">Department Name <span style="color:var(--error);">*</span></label>
+            <label class="form-label" for="nom">Nom du Département <span style="color:var(--error);">*</span></label>
             <input
               type="text"
               id="nom"
               name="nom"
               class="input"
-              placeholder="e.g. IT Support"
+              placeholder="ex. Support informatique"
               required
               autofocus
               value="{{ request.form.get('nom', departement.nom if is_edit else '') }}"
@@ -61,20 +61,20 @@
 
           <!-- Code -->
           <div class="form-group" style="margin-bottom:16px;">
-            <label class="form-label" for="code">Short Code <span style="color:var(--error);">*</span></label>
+            <label class="form-label" for="code">Code court <span style="color:var(--error);">*</span></label>
             <input
               type="text"
               id="code"
               name="code"
               class="input"
-              placeholder="e.g. IT, HR, OPS"
+              placeholder="ex. IT, RH, OPS"
               required
               maxlength="10"
               style="text-transform:uppercase;font-family:var(--font-mono);letter-spacing:0.05em;"
               value="{{ request.form.get('code', departement.code if is_edit else '') }}"
               oninput="this.value = this.value.toUpperCase().replace(/\s/g,'')"
             >
-            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Uppercase, no spaces. Max 10 characters.</p>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Majuscules, sans espaces. Maximum 10 caractères.</p>
           </div>
 
           <!-- Description -->
@@ -85,7 +85,7 @@
               name="description"
               class="textarea"
               rows="3"
-              placeholder="Brief description of this department's responsibilities..."
+              placeholder="Brève description des responsabilités de ce département..."
               style="resize:vertical;"
             >{{ request.form.get('description', departement.description if is_edit else '') }}</textarea>
           </div>
@@ -96,47 +96,47 @@
       <!-- Section: Contact -->
       <div class="card card-raised" style="margin-bottom:20px;">
         <div class="card-header">
-          <div class="card-title">Contact <span style="font-weight:400;font-size:12px;color:var(--text-muted);margin-left:6px;">Optional</span></div>
+          <div class="card-title">Contact <span style="font-weight:400;font-size:12px;color:var(--text-muted);margin-left:6px;">Facultatif</span></div>
         </div>
         <div class="card-body" style="padding:24px;">
 
-          <!-- Email + Phone -->
+          <!-- Email + Téléphone -->
           <div class="form-row" style="margin-bottom:16px;">
             <div class="form-group">
-              <label class="form-label" for="email">Department Email</label>
+              <label class="form-label" for="email">E-mail du Département</label>
               <input
                 type="email"
                 id="email"
                 name="email"
                 class="input"
-                placeholder="dept@company.com"
+                placeholder="dept@entreprise.com"
                 autocomplete="off"
                 value="{{ request.form.get('email', departement.email if is_edit and departement.email is defined else '') }}"
               >
             </div>
             <div class="form-group">
-              <label class="form-label" for="telephone">Phone Number</label>
+              <label class="form-label" for="telephone">Numéro de Téléphone</label>
               <input
                 type="tel"
                 id="telephone"
                 name="telephone"
                 class="input"
-                placeholder="+1 (555) 000-0000"
+                placeholder="+33 1 00 00 00 00"
                 autocomplete="off"
                 value="{{ request.form.get('telephone', departement.telephone if is_edit and departement.telephone is defined else '') }}"
               >
             </div>
           </div>
 
-          <!-- Location -->
+          <!-- Localisation -->
           <div class="form-group">
-            <label class="form-label" for="localisation">Location / Office</label>
+            <label class="form-label" for="localisation">Localisation / Bureau</label>
             <input
               type="text"
               id="localisation"
               name="localisation"
               class="input"
-              placeholder="e.g. Building A, Floor 3"
+              placeholder="ex. Bâtiment A, 3e étage"
               value="{{ request.form.get('localisation', departement.localisation if is_edit and departement.localisation is defined else '') }}"
             >
           </div>
@@ -151,10 +151,10 @@
         </div>
         <div class="card-body" style="padding:24px;">
 
-          <!-- Color + Icon (2 cols) -->
+          <!-- Couleur + Icône (2 cols) -->
           <div class="form-row" style="margin-bottom:20px;">
             <div class="form-group">
-              <label class="form-label" for="couleur">Brand Color</label>
+              <label class="form-label" for="couleur">Couleur de marque</label>
               <div style="display:flex;align-items:center;gap:10px;">
                 <input
                   type="color"
@@ -176,22 +176,22 @@
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label" for="icone">Icon Name</label>
+              <label class="form-label" for="icone">Nom de l'icône</label>
               <input
                 type="text"
                 id="icone"
                 name="icone"
                 class="input"
-                placeholder="e.g. laptop, users, wrench"
+                placeholder="ex. laptop, users, wrench"
                 value="{{ request.form.get('icone', departement.icone if is_edit and departement.icone is defined else '') }}"
               >
-              <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Feather icon name (optional).</p>
+              <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Nom d'icône Feather (facultatif).</p>
             </div>
           </div>
 
-          <!-- Active toggle -->
+          <!-- Bascule actif -->
           <div class="form-group">
-            <label class="form-label">Status</label>
+            <label class="form-label">Statut</label>
             <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
               <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
                 <input
@@ -209,7 +209,7 @@
                        style="position:absolute;top:3px;{% if not is_edit or departement.actif %}left:23px{% else %}left:3px{% endif %};width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
                 </div>
                 <span style="font-size:13px;color:var(--text-secondary);" id="deptToggleLabel">
-                  {% if not is_edit or departement.actif %}Department active{% else %}Department inactive{% endif %}
+                  {% if not is_edit or departement.actif %}Département actif{% else %}Département inactif{% endif %}
                 </span>
               </label>
             </div>
@@ -218,12 +218,12 @@
         </div>
       </div>
 
-      <!-- Form Actions -->
+      <!-- Actions du formulaire -->
       <div class="form-actions" style="display:flex;align-items:center;gap:12px;justify-content:flex-end;">
-        <a href="{{ url_for('departements.liste') }}" class="btn btn-ghost">Cancel</a>
+        <a href="{{ url_for('departements.liste') }}" class="btn btn-ghost">Annuler</a>
         <button type="submit" class="btn btn-primary btn-lg">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          {% if is_edit %}Save Department{% else %}Create Department{% endif %}
+          {% if is_edit %}Enregistrer le Département{% else %}Créer le Département{% endif %}
         </button>
       </div>
 
@@ -257,11 +257,11 @@
     if (checkbox.checked) {
       track.style.background = 'var(--success)';
       thumb.style.left = '23px';
-      label.textContent = 'Department active';
+      label.textContent = 'Département actif';
     } else {
       track.style.background = 'var(--surface-4)';
       thumb.style.left = '3px';
-      label.textContent = 'Department inactive';
+      label.textContent = 'Département inactif';
     }
   };
 })();
