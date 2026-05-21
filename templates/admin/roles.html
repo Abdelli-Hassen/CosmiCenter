@@ -31,7 +31,7 @@
           data-role-id="{{ role.id }}"
           data-role-nom="{{ role.nom }}"
           data-role-systeme="{{ 'true' if role.systeme else 'false' }}"
-          data-role-perms="{{ role.permissions | map(attribute='id') | list | tojson }}"
+          data-role-perms='{{ role.permissions | map(attribute="id") | list | tojson }}'
           style="cursor:pointer;border:2px solid transparent;transition:border-color 0.15s,box-shadow 0.15s;"
           onclick="selectRole(this)"
           tabindex="0"
