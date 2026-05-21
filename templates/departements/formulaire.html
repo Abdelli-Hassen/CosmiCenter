@@ -32,7 +32,7 @@
   </div>
 
   <!-- Form -->
-  <div style="max-width:680px;">
+  <div>
     <form method="POST"
           action="{% if is_edit %}{{ url_for('departements.modifier', dept_id=departement.id) }}{% else %}{{ url_for('departements.nouveau') }}{% endif %}"
           id="deptForm">

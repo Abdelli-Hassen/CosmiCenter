@@ -39,7 +39,6 @@
           data-role-systeme="{{ 'true' if role.systeme else 'false' }}"
           data-role-perms='{{ role.permissions | map(attribute="id") | list | tojson }}'
           style="cursor:pointer;border:2px solid transparent;transition:border-color 0.15s,box-shadow 0.15s;"
-          onclick="selectRole(this)"
           tabindex="0"
           role="button"
           aria-pressed="false"
@@ -76,8 +75,12 @@
             </div>
             {% if not role.systeme %}
             <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border-subtle);display:flex;justify-content:flex-end;">
-              <button type="button" class="btn btn-ghost btn-sm"
-                onclick="event.stopPropagation();openEditModal('{{ role.id }}','{{ role.nom|e }}','{{ role.description|e }}','{{ role.couleur }}',{{ role.niveau }})">
+              <button type="button" class="btn btn-ghost btn-sm role-edit-btn"
+                data-role-id="{{ role.id }}"
+                data-nom="{{ role.nom }}"
+                data-desc="{{ role.description or '' }}"
+                data-couleur="{{ role.couleur }}"
+                data-niveau="{{ role.niveau }}">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 Modifier
               </button>
@@ -323,14 +326,29 @@
     });
   }
 
-  // Navigation clavier sur les cartes de rôle
+  // Role card click — ignore clicks on the edit button
   document.querySelectorAll('.role-card').forEach(function (card) {
-    card.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        selectRole(card);
-      }
+    card.addEventListener('click', function (e) {
+      if (e.target.closest('.role-edit-btn')) return;
+      selectRole(card);
     });
+    card.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectRole(card); }
+    });
+  });
+
+  // Edit button — delegated listener using data-* attributes
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.role-edit-btn');
+    if (!btn) return;
+    e.stopPropagation();
+    var d = btn.dataset;
+    document.getElementById('editRoleForm').action = '/admin/roles/' + d.roleId + '/modifier';
+    document.getElementById('editRoleNom').value    = d.nom;
+    document.getElementById('editRoleDesc').value   = d.desc;
+    document.getElementById('editRoleCouleur').value = d.couleur;
+    document.getElementById('editRoleNiveau').value  = d.niveau;
+    openModal('editRoleModal');
   });
 
   function openModal(id) {
@@ -343,25 +361,13 @@
     m.style.display = 'none';
     document.body.style.overflow = '';
   }
-  // Close on backdrop click
-  ['createRoleModal','editRoleModal'].forEach(function(id){
+  ['createRoleModal','editRoleModal'].forEach(function (id) {
     var m = document.getElementById(id);
-    if(m) m.addEventListener('click', function(e){ if(e.target===m) closeModal(id); });
+    if (m) m.addEventListener('click', function (e) { if (e.target === m) closeModal(id); });
   });
 
-  function openEditModal(id, nom, description, couleur, niveau) {
-    document.getElementById('editRoleForm').action = '/admin/roles/' + id + '/modifier';
-    document.getElementById('editRoleNom').value = nom;
-    document.getElementById('editRoleDesc').value = description;
-    document.getElementById('editRoleCouleur').value = couleur;
-    document.getElementById('editRoleNiveau').value = niveau;
-    openModal('editRoleModal');
-  }
-  window.openEditModal = openEditModal;
-  window.openModal    = openModal;
-  window.closeModal   = closeModal;
-
-  // Exposer les fonctions globalement
+  window.openModal   = openModal;
+  window.closeModal  = closeModal;
   window.selectRole  = selectRole;
   window.toggleAll   = toggleAll;
 })();
