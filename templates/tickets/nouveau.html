@@ -39,14 +39,14 @@
           <!-- 1. Title -->
           <div class="form-group" style="margin-bottom:24px;">
             <label class="form-label" for="titre">
-              Title <span style="color:var(--color-brand,#dc2626);">*</span>
+              Titre <span style="color:var(--color-brand,#dc2626);">*</span>
             </label>
             <input
               type="text"
               id="titre"
               name="titre"
               class="input"
-              placeholder="Brief description of the issue..."
+              placeholder="Brève description du problème..."
               required
               autofocus
               autocomplete="off"
@@ -56,7 +56,7 @@
 
           <!-- 2. Category selection -->
           <div class="form-section" style="margin-bottom:24px;">
-            <div class="form-section-header">Category</div>
+            <div class="form-section-header">Catégorie</div>
             <div class="form-section-body">
               {% if categories %}
               <div class="ticket-category-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:8px;">
@@ -73,7 +73,7 @@
               {% else %}
               <div class="select-wrap">
                 <select name="departement_id" class="select">
-                  <option value="">Select department...</option>
+                  <option value="">Sélectionner un département...</option>
                   {% for dept in departements %}
                   <option value="{{ dept.id }}">{{ dept.nom }}</option>
                   {% endfor %}
@@ -91,7 +91,7 @@
               name="description"
               class="textarea"
               rows="6"
-              placeholder="Describe the issue in detail — include steps to reproduce, expected vs actual behaviour, screenshots if applicable..."
+              placeholder="Décrivez le problème en détail — incluez les étapes pour reproduire, le comportement attendu vs réel, des captures d'écran si possible..."
               style="resize:vertical;min-height:140px;"
             ></textarea>
           </div>
@@ -99,23 +99,23 @@
           <!-- 4. Priority + Department (2 cols) -->
           <div class="form-row" style="margin-bottom:24px;">
             <div class="form-group">
-              <label class="form-label" for="priorite">Priority</label>
+              <label class="form-label" for="priorite">Priorité</label>
               <div class="select-wrap">
                 <select id="priorite" name="priorite" class="select">
-                  <option value="basse">Low</option>
-                  <option value="moyenne" selected>Medium</option>
-                  <option value="haute">High</option>
-                  <option value="urgente">Urgent</option>
-                  <option value="critique">Critical</option>
+                  <option value="basse">Basse</option>
+                  <option value="moyenne" selected>Moyenne</option>
+                  <option value="haute">Haute</option>
+                  <option value="urgente">Urgente</option>
+                  <option value="critique">Critique</option>
                 </select>
               </div>
             </div>
             {% if categories %}
             <div class="form-group">
-              <label class="form-label" for="departement_id">Department</label>
+              <label class="form-label" for="departement_id">Département</label>
               <div class="select-wrap">
                 <select id="departement_id" name="departement_id" class="select">
-                  <option value="">Select department...</option>
+                  <option value="">Sélectionner un département...</option>
                   {% for dept in departements %}
                   <option value="{{ dept.id }}">{{ dept.nom }}</option>
                   {% endfor %}
@@ -127,7 +127,7 @@
 
           <!-- 5. File attachment -->
           <div class="form-group" style="margin-bottom:32px;">
-            <label class="form-label">Attachments</label>
+            <label class="form-label">Pièces jointes</label>
             <div id="dropZone"
                  style="border:2px dashed var(--border-subtle);border-radius:10px;padding:32px 24px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:var(--surface-base);"
                  onclick="document.getElementById('fileInput').click()"
@@ -140,9 +140,9 @@
                 <line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
               <p style="font-size:13px;font-weight:500;color:var(--text-secondary);margin:0 0 4px;">
-                Drag &amp; drop files here or <span style="color:var(--color-brand,#dc2626);">browse</span>
+                Glissez-déposez des fichiers ici ou <span style="color:var(--color-brand,#dc2626);">parcourez</span>
               </p>
-              <p style="font-size:11px;color:var(--text-muted);margin:0;">PNG, JPG, PDF, ZIP up to 10 MB each</p>
+              <p style="font-size:11px;color:var(--text-muted);margin:0;">PNG, JPG, PDF, ZIP jusqu'à 10 Mo chacun</p>
               <div id="fileList" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;"></div>
             </div>
             <input type="file" id="fileInput" name="attachments" multiple accept="image/*,.pdf,.zip,.txt,.log"
@@ -151,10 +151,10 @@
 
           <!-- Form Actions -->
           <div class="form-actions" style="display:flex;align-items:center;gap:12px;justify-content:flex-end;padding-top:8px;border-top:1px solid var(--border-subtle);">
-            <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost">Cancel</a>
+            <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost">Annuler</a>
             <button type="submit" class="btn btn-primary btn-lg">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Create Ticket
+              Créer le ticket
             </button>
           </div>
 
