@@ -202,6 +202,50 @@ def modifier_permissions_role(role_id):
     return redirect(url_for('admin.roles'))
 
 
+@admin_bp.route('/roles/creer', methods=['POST'])
+@login_required
+@admin_required
+def creer_role():
+    from models import Role
+    nom = request.form.get('nom', '').strip()
+    if not nom:
+        flash('Le nom du rôle est requis.', 'danger')
+        return redirect(url_for('admin.roles'))
+    if Role.query.filter_by(nom=nom).first():
+        flash(f'Un rôle nommé "{nom}" existe déjà.', 'danger')
+        return redirect(url_for('admin.roles'))
+    role = Role(
+        nom=nom,
+        description=request.form.get('description', '').strip(),
+        couleur=request.form.get('couleur', '#3B82F6'),
+        niveau=int(request.form.get('niveau', 0)),
+        systeme=False,
+        actif=True,
+    )
+    db.session.add(role)
+    db.session.commit()
+    flash(f'Rôle "{nom}" créé avec succès.', 'success')
+    return redirect(url_for('admin.roles'))
+
+
+@admin_bp.route('/roles/<role_id>/modifier', methods=['POST'])
+@login_required
+@admin_required
+def modifier_role(role_id):
+    from models import Role
+    role = Role.query.get_or_404(role_id)
+    if role.systeme:
+        flash('Les rôles système ne peuvent pas être modifiés.', 'warning')
+        return redirect(url_for('admin.roles'))
+    role.nom = request.form.get('nom', role.nom).strip()
+    role.description = request.form.get('description', '').strip()
+    role.couleur = request.form.get('couleur', role.couleur)
+    role.niveau = int(request.form.get('niveau', role.niveau))
+    db.session.commit()
+    flash(f'Rôle "{role.nom}" mis à jour.', 'success')
+    return redirect(url_for('admin.roles'))
+
+
 @admin_bp.route('/categories')
 @login_required
 @admin_required
