@@ -1,0 +1,175 @@
+/* ============================================================
+   COSMITTOHUB — ANIMATIONS & KEYFRAMES
+   ============================================================ */
+
+/* ─── Entrance animations ─────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes springIn {
+  0%   { opacity: 0; transform: scale(0.94) translateY(-8px); }
+  60%  { opacity: 1; transform: scale(1.01) translateY(1px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ─── Panel / drawer animations ──────────────────────────── */
+@keyframes slideInFromRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes slideInFromBottom {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* ─── Toast ───────────────────────────────────────────────── */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0); max-height: 80px; margin-bottom: 8px; }
+  to   { opacity: 0; transform: translateX(20px); max-height: 0; margin-bottom: 0; }
+}
+
+/* ─── Skeleton shimmer ────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+/* ─── SLA pulse ───────────────────────────────────────────── */
+@keyframes slaPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+/* ─── Notification bell ───────────────────────────────────── */
+@keyframes bellRing {
+  0%   { transform: rotate(0deg); }
+  10%  { transform: rotate(-15deg); }
+  30%  { transform: rotate(15deg); }
+  50%  { transform: rotate(-10deg); }
+  70%  { transform: rotate(8deg); }
+  90%  { transform: rotate(-4deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* ─── AI thinking dots ────────────────────────────────────── */
+@keyframes aiDot {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40%           { opacity: 1;   transform: scale(1); }
+}
+
+/* ─── Status badge change ─────────────────────────────────── */
+@keyframes badgeUpdate {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(0.8); }
+  70%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* ─── Spin ────────────────────────────────────────────────── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ─── Float ───────────────────────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+/* ─── Count badge pop ─────────────────────────────────────── */
+@keyframes badgePop {
+  0%   { transform: scale(0); }
+  60%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* ─── Success check draw ──────────────────────────────────── */
+@keyframes checkDraw {
+  from { stroke-dashoffset: 24; }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* ─── Auth particles ──────────────────────────────────────── */
+@keyframes particleFloat {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.3; }
+  33%       { transform: translate(15px, -20px) rotate(120deg); opacity: 0.6; }
+  66%       { transform: translate(-10px, 10px) rotate(240deg); opacity: 0.4; }
+}
+
+/* ─── Ripple ──────────────────────────────────────────────── */
+@keyframes ripple {
+  from { transform: scale(0); opacity: 0.4; }
+  to   { transform: scale(4); opacity: 0; }
+}
+
+/* ─── Progress bar ────────────────────────────────────────── */
+@keyframes progressBar {
+  from { width: 0%; }
+  to   { width: var(--progress, 100%); }
+}
+
+/* ─── Utility animation classes ───────────────────────────── */
+.animate-fade-in        { animation: fadeIn var(--duration-default) var(--ease-out) both; }
+.animate-fade-in-up     { animation: fadeInUp var(--duration-moderate) var(--ease-out) both; }
+.animate-scale-in       { animation: scaleIn var(--duration-moderate) var(--ease-spring) both; }
+.animate-spring-in      { animation: springIn var(--duration-slow) var(--ease-spring) both; }
+.animate-slide-in-right { animation: slideInRight var(--duration-moderate) var(--ease-out) both; }
+.animate-spin           { animation: spin 1s linear infinite; }
+.animate-float          { animation: float 3s var(--ease-default) infinite; }
+
+/* Staggered children */
+.stagger-children > * {
+  animation: fadeInUp var(--duration-moderate) var(--ease-out) both;
+}
+.stagger-children > *:nth-child(1)  { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2)  { animation-delay: 40ms; }
+.stagger-children > *:nth-child(3)  { animation-delay: 80ms; }
+.stagger-children > *:nth-child(4)  { animation-delay: 120ms; }
+.stagger-children > *:nth-child(5)  { animation-delay: 160ms; }
+.stagger-children > *:nth-child(6)  { animation-delay: 200ms; }
+.stagger-children > *:nth-child(7)  { animation-delay: 240ms; }
+.stagger-children > *:nth-child(8)  { animation-delay: 280ms; }
+
+/* ─── Reduced motion ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .stagger-children > * { animation-delay: 0ms !important; }
+}

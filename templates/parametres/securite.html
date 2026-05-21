@@ -1,2 +1,273 @@
 {% extends "base.html" %}
-{% block content %}<h1>Sécurité</h1>{% endblock %}
+
+{% block title %}Paramètres de sécurité{% endblock %}
+
+{% block content %}
+<div class="page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1 class="page-title">Paramètres</h1>
+      <span class="page-subtitle">Gérez votre compte et vos préférences</span>
+    </div>
+  </div>
+
+  <!-- Settings Tabs -->
+  <div class="tabs" style="margin-bottom:20px;">
+    <a href="{{ url_for('parametres.profil') }}" class="tab-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profil
+    </a>
+    <a href="{{ url_for('parametres.securite') }}" class="tab-btn tab-btn-active" aria-current="page">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Sécurité
+    </a>
+    <a href="{{ url_for('parametres.notifications') }}" class="tab-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifications
+    </a>
+  </div>
+
+  <div style="max-width:600px;">
+
+    <!-- Change Password Card -->
+    <div class="card card-raised" style="margin-bottom:20px;">
+      <div class="card-header">
+        <div class="card-title">Changer le mot de passe</div>
+      </div>
+      <div class="card-body" style="padding:24px;">
+
+        <form method="POST" action="{{ url_for('parametres.securite') }}" id="passwordForm">
+          <input type="hidden" name="action" value="change_password">
+
+          <!-- Current password -->
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label" for="mot_de_passe_actuel">Mot de passe actuel <span style="color:var(--error);">*</span></label>
+            <input
+              type="password"
+              id="mot_de_passe_actuel"
+              name="mot_de_passe_actuel"
+              class="input"
+              required
+              autocomplete="current-password"
+              placeholder="Saisir votre mot de passe actuel"
+            >
+          </div>
+
+          <!-- New password -->
+          <div class="form-group" style="margin-bottom:8px;">
+            <label class="form-label" for="nouveau_mot_de_passe">Nouveau mot de passe <span style="color:var(--error);">*</span></label>
+            <input
+              type="password"
+              id="nouveau_mot_de_passe"
+              name="nouveau_mot_de_passe"
+              class="input"
+              required
+              autocomplete="new-password"
+              placeholder="Minimum 8 caractères"
+              minlength="8"
+              oninput="checkPasswordStrength(this.value)"
+            >
+          </div>
+
+          <!-- Password strength indicator -->
+          <div style="margin-bottom:16px;">
+            <div style="display:flex;gap:4px;margin-bottom:4px;" id="strengthBars">
+              <div class="strength-bar" id="bar1" style="flex:1;height:4px;border-radius:2px;background:var(--surface-4);transition:background .2s;"></div>
+              <div class="strength-bar" id="bar2" style="flex:1;height:4px;border-radius:2px;background:var(--surface-4);transition:background .2s;"></div>
+              <div class="strength-bar" id="bar3" style="flex:1;height:4px;border-radius:2px;background:var(--surface-4);transition:background .2s;"></div>
+              <div class="strength-bar" id="bar4" style="flex:1;height:4px;border-radius:2px;background:var(--surface-4);transition:background .2s;"></div>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted);" id="strengthLabel">Saisissez un mot de passe pour vérifier sa robustesse</span>
+          </div>
+
+          <!-- Confirm password -->
+          <div class="form-group" style="margin-bottom:24px;">
+            <label class="form-label" for="confirmer_mot_de_passe">Confirmer le nouveau mot de passe <span style="color:var(--error);">*</span></label>
+            <input
+              type="password"
+              id="confirmer_mot_de_passe"
+              name="confirmer_mot_de_passe"
+              class="input"
+              required
+              autocomplete="new-password"
+              placeholder="Répétez votre nouveau mot de passe"
+              oninput="checkPasswordMatch()"
+            >
+            <p style="font-size:11px;margin-top:4px;" id="matchMsg" style="display:none;"></p>
+          </div>
+
+          <div class="form-actions" style="display:flex;justify-content:flex-end;">
+            <button type="submit" class="btn btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Mettre à jour le mot de passe
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+
+    <!-- Active Sessions Card -->
+    <div class="card card-raised" style="margin-bottom:20px;">
+      <div class="card-header">
+        <div class="card-title">Sessions actives</div>
+        <form method="POST" action="{{ url_for('parametres.securite') }}">
+          <input type="hidden" name="action" value="revoke_all_sessions">
+          <button type="submit" class="btn btn-outline btn-sm"
+                  onclick="return confirm('Déconnecter toutes les autres sessions ? Votre session actuelle restera active.');">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Déconnecter toutes les autres sessions
+          </button>
+        </form>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-wrap" style="border:none;border-radius:0;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Appareil</th>
+                <th style="width:160px;">Localisation</th>
+                <th style="width:160px;">Dernière activité</th>
+                <th style="width:120px;">Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Current session (always shown) -->
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0;">
+                      <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    <div>
+                      <div style="font-size:13px;font-weight:500;color:var(--text-primary);">Navigateur actuel</div>
+                      <div style="font-size:11px;color:var(--text-muted);">Cet appareil</div>
+                    </div>
+                  </div>
+                </td>
+                <td style="font-size:12px;color:var(--text-secondary);">Localisation actuelle</td>
+                <td style="font-size:12px;color:var(--text-secondary);">À l'instant</td>
+                <td><span class="badge badge-success">Session actuelle</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:12px 16px;border-top:1px solid var(--border-subtle);">
+          <p style="font-size:12px;color:var(--text-muted);">
+            Seule votre session actuelle est affichée. Les autres sessions apparaîtront ici si vous êtes connecté sur plusieurs appareils.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Activity Card -->
+    <div class="card card-raised">
+      <div class="card-header">
+        <div class="card-title">Activité de sécurité</div>
+      </div>
+      <div class="card-body" style="padding:0;">
+
+        <!-- Recent events list -->
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--surface-raised);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:500;color:var(--text-primary);">Connexion réussie</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Dernière connexion depuis cet appareil</div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;flex-shrink:0;">
+            {% if current_user.last_login %}
+              {{ current_user.last_login.strftime('%d %b %Y, %H:%M') }}
+            {% else %}
+              Cette session
+            {% endif %}
+          </div>
+        </div>
+
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--surface-raised);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:500;color:var(--text-primary);">Compte créé</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Votre compte a été configuré sur ce système</div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;flex-shrink:0;">
+            {% if current_user.date_creation %}
+              {{ current_user.date_creation.strftime('%d %b %Y') }}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+
+        <div style="padding:12px 20px;">
+          <p style="font-size:12px;color:var(--text-muted);">
+            Les événements de sécurité tels que les changements de mot de passe et les tentatives de connexion sont suivis ici pour votre protection.
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /page -->
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  // Password strength checker
+  window.checkPasswordStrength = function (val) {
+    var bars = ['bar1','bar2','bar3','bar4'];
+    var lbl = document.getElementById('strengthLabel');
+    var score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    var colors = ['var(--error)', 'var(--warning)', 'var(--info)', 'var(--success)'];
+    var labels = ['Faible', 'Passable', 'Bon', 'Fort'];
+
+    bars.forEach(function (id, i) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.style.background = i < score ? colors[score - 1] : 'var(--surface-4)';
+    });
+
+    if (lbl) {
+      if (val.length === 0) {
+        lbl.textContent = 'Saisissez un mot de passe pour vérifier sa robustesse';
+        lbl.style.color = 'var(--text-muted)';
+      } else {
+        lbl.textContent = 'Robustesse : ' + labels[score - 1 < 0 ? 0 : score - 1];
+        lbl.style.color = colors[score - 1 < 0 ? 0 : score - 1];
+      }
+    }
+  };
+
+  // Password match checker
+  window.checkPasswordMatch = function () {
+    var pw  = document.getElementById('nouveau_mot_de_passe');
+    var cpw = document.getElementById('confirmer_mot_de_passe');
+    var msg = document.getElementById('matchMsg');
+    if (!pw || !cpw || !msg) return;
+    if (cpw.value.length === 0) { msg.textContent = ''; return; }
+    if (pw.value === cpw.value) {
+      msg.textContent = 'Les mots de passe correspondent.';
+      msg.style.color = 'var(--success)';
+    } else {
+      msg.textContent = 'Les mots de passe ne correspondent pas.';
+      msg.style.color = 'var(--error)';
+    }
+  };
+})();
+</script>
+{% endblock %}

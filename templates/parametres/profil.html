@@ -1,2 +1,234 @@
 {% extends "base.html" %}
-{% block content %}<h1>Profil</h1>{% endblock %}
+
+{% block title %}Paramètres du profil{% endblock %}
+
+{% block content %}
+<div class="page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1 class="page-title">Paramètres</h1>
+      <span class="page-subtitle">Gérez votre compte et vos préférences</span>
+    </div>
+  </div>
+
+  <!-- Profile Header Card -->
+  <div class="card card-raised" style="margin-bottom:24px;">
+    <div class="card-body" style="padding:28px 32px;">
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+
+        <!-- Avatar -->
+        <div style="position:relative;flex-shrink:0;">
+          <div class="avatar avatar-lg" style="width:72px;height:72px;border-radius:50%;background:var(--surface-raised);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:var(--text-primary);overflow:hidden;">
+            {% if current_user.photo_profil %}
+              <img src="{{ url_for('static', filename='uploads/' + current_user.photo_profil) }}" alt="{{ current_user.prenom }} {{ current_user.nom }}" style="width:100%;height:100%;object-fit:cover;">
+            {% else %}
+              {{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Name / Role / Email -->
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">
+            {{ current_user.prenom }} {{ current_user.nom }}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+            {% if current_user.role %}
+              {% if current_user.role.nom in ['Administrateur', 'Admin'] %}
+                <span class="badge badge-error">{{ current_user.role.nom }}</span>
+              {% elif current_user.role.nom in ['Manager', 'Responsable'] %}
+                <span class="badge badge-warning">{{ current_user.role.nom }}</span>
+              {% elif current_user.role.nom == 'Agent' %}
+                <span class="badge badge-success">{{ current_user.role.nom }}</span>
+              {% else %}
+                <span class="badge badge-neutral">{{ current_user.role.nom }}</span>
+              {% endif %}
+            {% endif %}
+            {% if current_user.departement %}
+              <span style="font-size:12px;color:var(--text-muted);">{{ current_user.departement.nom }}</span>
+            {% endif %}
+          </div>
+          <div style="font-size:13px;color:var(--text-muted);">{{ current_user.email }}</div>
+        </div>
+
+        <!-- Quick stats -->
+        <div style="display:flex;gap:24px;flex-shrink:0;">
+          <div style="text-align:center;">
+            <div style="font-size:22px;font-weight:700;color:var(--text-primary);">{{ stats.tickets_crees }}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Créés</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:22px;font-weight:700;color:var(--text-primary);">{{ stats.tickets_resolus }}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Résolus</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:22px;font-weight:700;color:var(--text-primary);">{{ stats.tickets_assignes }}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Assignés</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Tabs -->
+  <div class="tabs" style="margin-bottom:20px;">
+    <a href="{{ url_for('parametres.profil') }}" class="tab-btn tab-btn-active" aria-current="page">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profil
+    </a>
+    <a href="{{ url_for('parametres.securite') }}" class="tab-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Sécurité
+    </a>
+    <a href="{{ url_for('parametres.notifications') }}" class="tab-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifications
+    </a>
+  </div>
+
+  <!-- Profile Tab Panel -->
+  <div class="tab-panel" id="tab-profile">
+    <div style="max-width:600px;">
+
+      <form method="POST" action="{{ url_for('parametres.modifier_profil') }}" id="profileForm">
+
+        <!-- Personal Info -->
+        <div class="card card-raised" style="margin-bottom:20px;">
+          <div class="card-header">
+            <div class="card-title">Informations personnelles</div>
+          </div>
+          <div class="card-body" style="padding:24px;">
+
+            <div class="form-row" style="margin-bottom:16px;">
+              <div class="form-group">
+                <label class="form-label" for="prenom">Prénom</label>
+                <input type="text" id="prenom" name="prenom" class="input" autocomplete="given-name"
+                       value="{{ request.form.get('prenom', current_user.prenom) }}">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="nom">Nom</label>
+                <input type="text" id="nom" name="nom" class="input" autocomplete="family-name"
+                       value="{{ request.form.get('nom', current_user.nom) }}">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:16px;">
+              <label class="form-label" for="email">Adresse e-mail</label>
+              <input type="email" id="email" name="email" class="input" autocomplete="email"
+                     value="{{ request.form.get('email', current_user.email) }}">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="telephone">Numéro de téléphone</label>
+                <input type="tel" id="telephone" name="telephone" class="input" autocomplete="tel"
+                       placeholder="+33 6 00 00 00 00"
+                       value="{{ request.form.get('telephone', current_user.telephone if current_user.telephone is defined else '') }}">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="poste">Intitulé du poste</label>
+                <input type="text" id="poste" name="poste" class="input" autocomplete="organization-title"
+                       placeholder="ex. Ingénieur support"
+                       value="{{ request.form.get('poste', current_user.poste or '') }}">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Preferences -->
+        <div class="card card-raised" style="margin-bottom:24px;">
+          <div class="card-header">
+            <div class="card-title">Préférences</div>
+          </div>
+          <div class="card-body" style="padding:24px;">
+
+            <!-- Language -->
+            <div class="form-group" style="margin-bottom:20px;">
+              <label class="form-label" for="langue">Langue</label>
+              <div class="select-wrap">
+                <select id="langue" name="langue" class="select">
+                  {% set cur_lang = request.form.get('langue', current_user.langue if current_user.langue is defined else 'fr') %}
+                  <option value="fr" {% if cur_lang == 'fr' %}selected{% endif %}>Français</option>
+                  <option value="en" {% if cur_lang == 'en' %}selected{% endif %}>English</option>
+                  <option value="ar" {% if cur_lang == 'ar' %}selected{% endif %}>العربية</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Theme toggle -->
+            <div class="form-group">
+              <label class="form-label">Thème de l'interface</label>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                  <input type="checkbox" name="theme_sombre" id="themeToggle"
+                         {% if request.form.get('theme_sombre') or (current_user.theme is defined and current_user.theme == 'dark') %}checked{% endif %}
+                         style="display:none;">
+                  <div class="toggle-track" id="themeTrack"
+                       style="position:relative;width:44px;height:24px;border-radius:12px;background:var(--surface-4);transition:background .2s;cursor:pointer;"
+                       onclick="toggleThemePref()">
+                    <div class="toggle-thumb" id="themeThumb"
+                         style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
+                  </div>
+                  <span style="font-size:13px;color:var(--text-secondary);" id="themeLabel">Mode sombre</span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions" style="display:flex;align-items:center;gap:12px;justify-content:flex-end;">
+          <button type="reset" class="btn btn-ghost">Réinitialiser</button>
+          <button type="submit" class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Enregistrer le profil
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  var toggle = document.getElementById('themeToggle');
+  var track = document.getElementById('themeTrack');
+  var thumb = document.getElementById('themeThumb');
+  var label = document.getElementById('themeLabel');
+
+  // Init state from checkbox
+  function syncToggleUI() {
+    if (toggle && toggle.checked) {
+      track.style.background = 'var(--brand)';
+      thumb.style.left = '23px';
+      label.textContent = 'Mode sombre (activé)';
+    } else {
+      track.style.background = 'var(--surface-4)';
+      thumb.style.left = '3px';
+      label.textContent = 'Mode sombre (désactivé)';
+    }
+  }
+  if (toggle) {
+    syncToggleUI();
+  }
+
+  window.toggleThemePref = function () {
+    if (toggle) {
+      toggle.checked = !toggle.checked;
+      syncToggleUI();
+    }
+  };
+})();
+</script>
+{% endblock %}

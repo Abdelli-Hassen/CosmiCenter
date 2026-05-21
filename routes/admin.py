@@ -17,7 +17,7 @@ def admin_required(f):
     """Décorateur pour restreindre l'accès aux administrateurs"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role != 'admin':
+        if not current_user.is_authenticated or not current_user.role or current_user.role.niveau < 70:
             flash('Accès réservé aux administrateurs', 'danger')
             return redirect(url_for('tickets.tableau_bord'))
         return f(*args, **kwargs)
@@ -76,16 +76,19 @@ def nouvel_utilisateur():
     """Créer un nouvel utilisateur"""
     if request.method == 'POST':
         try:
+            dept_id = request.form.get('departement_id') or None
+            matricule = request.form.get('matricule', '').strip() or None
             utilisateur = Utilisateur(
                 nom=request.form.get('nom'),
                 prenom=request.form.get('prenom'),
                 email=request.form.get('email'),
-                role=request.form.get('role', 'utilisateur'),
-                departement_id=request.form.get('departement_id')
+                role_id=request.form.get('role_id') or None,
+                departement_id=dept_id,
+                telephone=request.form.get('telephone', '').strip() or None,
+                poste=request.form.get('poste', '').strip() or None,
+                matricule=matricule,
             )
-            
-            # Définir un mot de passe par défaut
-            utilisateur.definir_mot_de_passe(request.form.get('password', 'testtest'))
+            utilisateur.set_password(request.form.get('password', 'testtest'))
             
             db.session.add(utilisateur)
             db.session.commit()
@@ -100,8 +103,10 @@ def nouvel_utilisateur():
             logger.error(f'Erreur lors de la création de l\'utilisateur: {str(e)}')
             flash('Erreur lors de la création de l\'utilisateur', 'danger')
     
+    from models import Role
     departements = Departement.query.filter_by(actif=True).all()
-    return render_template('admin/nouvel_utilisateur.html', departements=departements)
+    roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
+    return render_template('admin/nouvel_utilisateur.html', departements=departements, roles=roles)
 
 
 @admin_bp.route('/utilisateurs/<user_id>/modifier', methods=['GET', 'POST'])
@@ -167,6 +172,81 @@ def desactiver_utilisateur(user_id):
         flash('Erreur lors de la désactivation', 'danger')
     
     return redirect(url_for('admin.utilisateurs'))
+
+
+@admin_bp.route('/roles')
+@login_required
+@admin_required
+def roles():
+    """Gestion des rôles et permissions"""
+    from models import Role, Permission
+    roles = Role.query.order_by(Role.niveau.desc()).all()
+    permissions = Permission.query.order_by(Permission.categorie, Permission.nom).all()
+    perms_by_cat = {}
+    for p in permissions:
+        perms_by_cat.setdefault(p.categorie, []).append(p)
+    return render_template('admin/roles.html', roles=roles, perms_by_cat=perms_by_cat)
+
+
+@admin_bp.route('/roles/<role_id>/permissions', methods=['POST'])
+@login_required
+@admin_required
+def modifier_permissions_role(role_id):
+    """Modifier les permissions d'un rôle"""
+    from models import Role, Permission
+    role = Role.query.get_or_404(role_id)
+    if role.systeme:
+        flash('Les rôles système ne peuvent pas être modifiés.', 'warning')
+        return redirect(url_for('admin.roles'))
+    perm_ids = request.form.getlist('permissions')
+    role.permissions = Permission.query.filter(Permission.id.in_(perm_ids)).all()
+    db.session.commit()
+    flash(f'Permissions du rôle "{role.nom}" mises à jour.', 'success')
+    return redirect(url_for('admin.roles'))
+
+
+@admin_bp.route('/roles/creer', methods=['POST'])
+@login_required
+@admin_required
+def creer_role():
+    from models import Role
+    nom = request.form.get('nom', '').strip()
+    if not nom:
+        flash('Le nom du rôle est requis.', 'danger')
+        return redirect(url_for('admin.roles'))
+    if Role.query.filter_by(nom=nom).first():
+        flash(f'Un rôle nommé "{nom}" existe déjà.', 'danger')
+        return redirect(url_for('admin.roles'))
+    role = Role(
+        nom=nom,
+        description=request.form.get('description', '').strip(),
+        couleur=request.form.get('couleur', '#3B82F6'),
+        niveau=int(request.form.get('niveau', 0)),
+        systeme=False,
+        actif=True,
+    )
+    db.session.add(role)
+    db.session.commit()
+    flash(f'Rôle "{nom}" créé avec succès.', 'success')
+    return redirect(url_for('admin.roles'))
+
+
+@admin_bp.route('/roles/<role_id>/modifier', methods=['POST'])
+@login_required
+@admin_required
+def modifier_role(role_id):
+    from models import Role
+    role = Role.query.get_or_404(role_id)
+    if role.systeme:
+        flash('Les rôles système ne peuvent pas être modifiés.', 'warning')
+        return redirect(url_for('admin.roles'))
+    role.nom = request.form.get('nom', role.nom).strip()
+    role.description = request.form.get('description', '').strip()
+    role.couleur = request.form.get('couleur', role.couleur)
+    role.niveau = int(request.form.get('niveau', role.niveau))
+    db.session.commit()
+    flash(f'Rôle "{role.nom}" mis à jour.', 'success')
+    return redirect(url_for('admin.roles'))
 
 
 @admin_bp.route('/categories')

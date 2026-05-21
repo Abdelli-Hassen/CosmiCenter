@@ -43,7 +43,7 @@ class Config:
     LOCKOUT_DURATION_MINUTES = 30
     
     # Application
-    APP_NAME = 'CosmittoDesk'
+    APP_NAME = 'CosmittoHUB'
     APP_VERSION = '2.0.0'
     SUPPORT_EMAIL = 'support@example.com'
     
