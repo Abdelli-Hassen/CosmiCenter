@@ -102,12 +102,26 @@ def nouveau():
             flash('Erreur lors de la création du ticket', 'danger')
     
     # Récupérer les données pour le formulaire
-    departements = Departement.query.filter_by(actif=True).all()
+    departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
+    # Group categories by department for display
+    cats_par_dept = {}
+    for cat in CategorieTicket.query.filter_by(actif=True).order_by(CategorieTicket.nom).all():
+        dept = cat.departement
+        if not dept:
+            continue
+        if dept.id not in cats_par_dept:
+            cats_par_dept[dept.id] = {
+                'id': dept.id, 'nom': dept.nom,
+                'couleur': dept.couleur or '#3B82F6', 'cats': []
+            }
+        cats_par_dept[dept.id]['cats'].append(cat)
+    cats_par_dept = sorted(cats_par_dept.values(), key=lambda d: d['nom'])
     categories = CategorieTicket.query.filter_by(actif=True).all()
     
     return render_template('tickets/nouveau.html',
                          departements=departements,
-                         categories=categories)
+                         categories=categories,
+                         cats_par_dept=cats_par_dept)
 
 
 @tickets_bp.route('/<ticket_id>')

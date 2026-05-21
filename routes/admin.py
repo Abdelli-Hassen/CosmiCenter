@@ -255,7 +255,49 @@ def modifier_role(role_id):
 def categories():
     """Gestion des catégories de tickets"""
     categories = CategorieTicket.query.order_by(CategorieTicket.nom).all()
-    return render_template('admin/categories.html', categories=categories)
+    departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
+    return render_template('admin/categories.html', categories=categories, departements=departements)
+
+
+@admin_bp.route('/categories/creer', methods=['POST'])
+@login_required
+@admin_required
+def creer_categorie():
+    """Créer une nouvelle catégorie de ticket"""
+    nom = request.form.get('nom', '').strip()
+    if not nom:
+        flash('Le nom de la catégorie est requis.', 'danger')
+        return redirect(url_for('admin.categories'))
+    try:
+        cat = CategorieTicket(
+            nom=nom,
+            description=request.form.get('description', '').strip() or None,
+            type_ticket=request.form.get('type_ticket', 'demande'),
+            departement_id=request.form.get('departement_id') or None,
+            priorite_defaut=request.form.get('priorite_defaut', 'moyenne'),
+            delai_resolution_jours=int(request.form.get('delai_resolution_jours') or 7),
+            couleur=request.form.get('couleur', '#3B82F6'),
+        )
+        db.session.add(cat)
+        db.session.commit()
+        flash(f'Catégorie « {nom} » créée avec succès.', 'success')
+        logger.info(f'Catégorie créée: {nom} par {current_user.email}')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Erreur création catégorie: {e}')
+        flash('Erreur lors de la création de la catégorie.', 'danger')
+    return redirect(url_for('admin.categories'))
+
+
+@admin_bp.route('/categories/<cat_id>/toggle', methods=['POST'])
+@login_required
+@admin_required
+def toggle_categorie(cat_id):
+    """Activer/désactiver une catégorie"""
+    cat = CategorieTicket.query.get_or_404(cat_id)
+    cat.actif = not cat.actif
+    db.session.commit()
+    return redirect(url_for('admin.categories'))
 
 
 @admin_bp.route('/parametres')
