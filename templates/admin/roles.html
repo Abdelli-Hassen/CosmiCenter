@@ -333,6 +333,34 @@
     });
   });
 
+  function openModal(id) {
+    var m = document.getElementById(id);
+    m.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id) {
+    var m = document.getElementById(id);
+    m.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  // Close on backdrop click
+  ['createRoleModal','editRoleModal'].forEach(function(id){
+    var m = document.getElementById(id);
+    if(m) m.addEventListener('click', function(e){ if(e.target===m) closeModal(id); });
+  });
+
+  function openEditModal(id, nom, description, couleur, niveau) {
+    document.getElementById('editRoleForm').action = '/admin/roles/' + id + '/modifier';
+    document.getElementById('editRoleNom').value = nom;
+    document.getElementById('editRoleDesc').value = description;
+    document.getElementById('editRoleCouleur').value = couleur;
+    document.getElementById('editRoleNiveau').value = niveau;
+    openModal('editRoleModal');
+  }
+  window.openEditModal = openEditModal;
+  window.openModal    = openModal;
+  window.closeModal   = closeModal;
+
   // Exposer les fonctions globalement
   window.selectRole  = selectRole;
   window.toggleAll   = toggleAll;
