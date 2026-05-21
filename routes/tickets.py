@@ -81,6 +81,7 @@ def nouveau():
             ticket = Ticket(
                 titre=request.form.get('titre'),
                 description=request.form.get('description'),
+                type_ticket=request.form.get('type_ticket', 'demande'),
                 priorite=request.form.get('priorite', 'normale'),
                 departement_id=request.form.get('departement_id'),
                 categorie_id=request.form.get('categorie_id'),
