@@ -136,27 +136,6 @@
     });
   }
 
-  // ─── Sidebar toggle (desktop collapse) ───────────────────────────────────
-
-  function setupSidebarToggle() {
-    var toggleBtn = document.querySelector('.sidebar-toggle');
-    var sidebar   = document.querySelector('.sidebar');
-    if (!toggleBtn || !sidebar) return;
-
-    // Restore saved state
-    try {
-      if (localStorage.getItem('chub-sidebar-collapsed') === 'true') {
-        sidebar.classList.add('collapsed');
-      }
-    } catch (e) {}
-
-    toggleBtn.addEventListener('click', function () {
-      var collapsed = sidebar.classList.toggle('collapsed');
-      try {
-        localStorage.setItem('chub-sidebar-collapsed', collapsed ? 'true' : 'false');
-      } catch (e) {}
-    });
-  }
 
   // ─── Mobile sidebar overlay ───────────────────────────────────────────────
 
@@ -295,7 +274,6 @@
   function init() {
     setupRipples();
     setupAutoDismissAlerts();
-    setupSidebarToggle();
     setupMobileSidebar();
     setupDropdowns();
     setupTabs();
