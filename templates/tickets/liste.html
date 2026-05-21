@@ -28,15 +28,15 @@
     <!-- Quick status filters -->
     <div class="quick-filter">
       <a href="{{ url_for('tickets.liste') }}"
-         class="chip {% if not request.args.get('statut') %}chip-active{% endif %}">All</a>
+         class="chip {% if not request.args.get('statut') %}chip-active{% endif %}">Tous</a>
       <a href="{{ url_for('tickets.liste', statut='ouvert') }}"
-         class="chip {% if request.args.get('statut') in ['ouvert','nouveau'] %}chip-active{% endif %}">Open</a>
+         class="chip {% if request.args.get('statut') in ['ouvert','nouveau'] %}chip-active{% endif %}">Ouvert</a>
       <a href="{{ url_for('tickets.liste', statut='en_cours') }}"
-         class="chip {% if request.args.get('statut') == 'en_cours' %}chip-active{% endif %}">In Progress</a>
+         class="chip {% if request.args.get('statut') == 'en_cours' %}chip-active{% endif %}">En cours</a>
       <a href="{{ url_for('tickets.liste', statut='en_attente') }}"
-         class="chip {% if request.args.get('statut') == 'en_attente' %}chip-active{% endif %}">Waiting</a>
+         class="chip {% if request.args.get('statut') == 'en_attente' %}chip-active{% endif %}">En attente</a>
       <a href="{{ url_for('tickets.liste', statut='resolu') }}"
-         class="chip {% if request.args.get('statut') == 'resolu' %}chip-active{% endif %}">Resolved</a>
+         class="chip {% if request.args.get('statut') == 'resolu' %}chip-active{% endif %}">Résolu</a>
     </div>
 
     <!-- Advanced filters -->
@@ -48,18 +48,18 @@
 
       <div class="select-wrap" style="min-width:140px;">
         <select name="priorite" class="select select-sm" onchange="this.form.submit()">
-          <option value="">All Priorities</option>
-          <option value="critique" {% if request.args.get('priorite') == 'critique' %}selected{% endif %}>Critical</option>
-          <option value="urgente" {% if request.args.get('priorite') == 'urgente' %}selected{% endif %}>Urgent</option>
-          <option value="haute" {% if request.args.get('priorite') == 'haute' %}selected{% endif %}>High</option>
-          <option value="moyenne" {% if request.args.get('priorite') == 'moyenne' %}selected{% endif %}>Medium</option>
-          <option value="basse" {% if request.args.get('priorite') == 'basse' %}selected{% endif %}>Low</option>
+          <option value="">Toutes les priorités</option>
+          <option value="critique" {% if request.args.get('priorite') == 'critique' %}selected{% endif %}>Critique</option>
+          <option value="urgente" {% if request.args.get('priorite') == 'urgente' %}selected{% endif %}>Urgente</option>
+          <option value="haute" {% if request.args.get('priorite') == 'haute' %}selected{% endif %}>Haute</option>
+          <option value="moyenne" {% if request.args.get('priorite') == 'moyenne' %}selected{% endif %}>Moyenne</option>
+          <option value="basse" {% if request.args.get('priorite') == 'basse' %}selected{% endif %}>Basse</option>
         </select>
       </div>
 
       <div class="select-wrap" style="min-width:160px;">
         <select name="departement_id" class="select select-sm" onchange="this.form.submit()">
-          <option value="">All Departments</option>
+          <option value="">Tous les départements</option>
           {% for dept in departements %}
           <option value="{{ dept.id }}"
             {% if request.args.get('departement_id')|string == dept.id|string %}selected{% endif %}>
@@ -70,7 +70,7 @@
       </div>
 
       {% if request.args.get('statut') or request.args.get('priorite') or request.args.get('departement_id') %}
-      <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm" title="Clear all filters">Clear</a>
+      <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm" title="Effacer tous les filtres">Effacer</a>
       {% endif %}
     </form>
   </div>
@@ -78,19 +78,19 @@
   <!-- Bulk Action Bar (shown when rows are selected) -->
   <div id="bulkBar" class="bulk-bar" style="display:none;">
     <span id="bulkCount" style="font-size:13px;font-weight:600;color:var(--text-primary);"></span>
-    <button id="bulkClear" class="btn btn-ghost btn-sm">Deselect all</button>
+    <button id="bulkClear" class="btn btn-ghost btn-sm">Tout désélectionner</button>
     <div style="display:flex;gap:6px;margin-left:auto;">
       <button class="btn btn-ghost btn-sm">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-        Assign
+        Assigner
       </button>
       <button class="btn btn-ghost btn-sm">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Change Status
+        Changer le statut
       </button>
       <button class="btn btn-outline btn-sm">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Export
+        Exporter
       </button>
     </div>
   </div>
@@ -103,15 +103,15 @@
         <thead>
           <tr class="ticket-row-header">
             <th style="width:40px;">
-              <input type="checkbox" id="selectAll" class="ticket-select-all" aria-label="Select all tickets">
+              <input type="checkbox" id="selectAll" class="ticket-select-all" aria-label="Sélectionner tous les tickets">
             </th>
             <th style="width:28px;"></th>
             <th style="width:110px;">ID</th>
-            <th>Title</th>
-            <th style="width:130px;">Status</th>
-            <th style="width:150px;">Assignee</th>
-            <th style="width:140px;">Department</th>
-            <th style="width:110px;">Created</th>
+            <th>Titre</th>
+            <th style="width:130px;">Statut</th>
+            <th style="width:150px;">Assigné</th>
+            <th style="width:140px;">Département</th>
+            <th style="width:110px;">Créé le</th>
             <th style="width:64px;"></th>
           </tr>
         </thead>
@@ -144,17 +144,17 @@
             </td>
             <td>
               {% if ticket.statut in ['nouveau', 'ouvert'] %}
-                <span class="badge badge-new">{{ 'Open' if ticket.statut == 'ouvert' else 'New' }}</span>
+                <span class="badge badge-new">{{ 'Ouvert' if ticket.statut == 'ouvert' else 'Nouveau' }}</span>
               {% elif ticket.statut == 'en_cours' %}
-                <span class="badge badge-progress">In Progress</span>
+                <span class="badge badge-progress">En cours</span>
               {% elif ticket.statut == 'en_attente' %}
-                <span class="badge badge-waiting">Waiting</span>
+                <span class="badge badge-waiting">En attente</span>
               {% elif ticket.statut == 'resolu' %}
-                <span class="badge badge-resolved">Resolved</span>
+                <span class="badge badge-resolved">Résolu</span>
               {% elif ticket.statut == 'ferme' %}
-                <span class="badge badge-closed">Closed</span>
+                <span class="badge badge-closed">Fermé</span>
               {% elif ticket.statut == 'annule' %}
-                <span class="badge badge-cancelled">Cancelled</span>
+                <span class="badge badge-cancelled">Annulé</span>
               {% else %}
                 <span class="badge">{{ ticket.statut }}</span>
               {% endif %}
@@ -170,7 +170,7 @@
                 <span>{{ ticket.assigne_a.prenom }} {{ ticket.assigne_a.nom }}</span>
               </div>
               {% else %}
-              <span style="color:var(--text-muted);">Unassigned</span>
+              <span style="color:var(--text-muted);">Non assigné</span>
               {% endif %}
             </td>
             <td style="font-size:12px;color:var(--text-secondary);">
@@ -181,7 +181,7 @@
             </td>
             <td>
               <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}"
-                 class="btn btn-ghost btn-sm" style="padding:4px 8px;" title="View ticket">
+                 class="btn btn-ghost btn-sm" style="padding:4px 8px;" title="Voir le ticket">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                   <circle cx="12" cy="12" r="3"/>
@@ -203,7 +203,7 @@
          statut=request.args.get('statut',''),
          priorite=request.args.get('priorite',''),
          departement_id=request.args.get('departement_id','')) }}"
-       class="page-btn" aria-label="Previous page">
+       class="page-btn" aria-label="Page précédente">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     </a>
     {% else %}
@@ -231,7 +231,7 @@
          statut=request.args.get('statut',''),
          priorite=request.args.get('priorite',''),
          departement_id=request.args.get('departement_id','')) }}"
-       class="page-btn" aria-label="Next page">
+       class="page-btn" aria-label="Page suivante">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     {% else %}
@@ -249,11 +249,11 @@
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
       <polyline points="14 2 14 8 20 8"/>
     </svg>
-    <p class="empty-title">No tickets found</p>
-    <p class="empty-desc">No tickets match your current filters.</p>
+    <p class="empty-title">Aucun ticket trouvé</p>
+    <p class="empty-desc">Aucun ticket ne correspond aux filtres actuels.</p>
     <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;">
-      <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm">Clear filters</a>
-      <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm">New Ticket</a>
+      <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm">Effacer les filtres</a>
+      <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm">Nouveau ticket</a>
     </div>
   </div>
   {% endif %}
@@ -273,7 +273,7 @@
     var checked = document.querySelectorAll('.ticket-select:checked');
     if (checked.length > 0) {
       bulkBar.style.display = 'flex';
-      bulkCount.textContent = checked.length + ' ticket' + (checked.length > 1 ? 's' : '') + ' selected';
+      bulkCount.textContent = checked.length + ' ticket' + (checked.length > 1 ? 's' : '') + ' sélectionné' + (checked.length > 1 ? 's' : '');
     } else {
       bulkBar.style.display = 'none';
     }
