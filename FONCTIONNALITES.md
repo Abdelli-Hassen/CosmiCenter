@@ -1,346 +1,514 @@
-# 🚀 COSMITTODESK 2.0 - PRÉSENTATION DES FONCTIONNALITÉS
+# CosmittoHUB — Fonctionnalités
 
-## 📋 Vue d'ensemble
-
-CosmittoDesk 2.0 est une refonte complète du système de gestion de tickets avec une architecture moderne, un design distinctif et des fonctionnalités professionnelles avancées.
+Plateforme de gestion des opérations interne de **Cosmitto Coffee** (réseau multi-POS).
 
 ---
 
-## ✨ NOUVELLES FONCTIONNALITÉS MAJEURES
+## Table des matières
 
-### 1. 🔐 Système de Rôles et Permissions Granulaire
-
-**Avant (v1.0)**: Rôles basiques (admin, utilisateur, département)
-**Maintenant (v2.0)**: Système complet de permissions
-
-#### Rôles Préconfigurés:
-- **Super Administrateur** (Niveau 100)
-  - Accès complet à toutes les fonctionnalités
-  - Gestion des rôles et permissions
-  - Configuration système
-
-- **Administrateur** (Niveau 90)
-  - Gestion des utilisateurs et départements
-  - Gestion complète des tickets
-  - Accès aux rapports détaillés
-
-- **Manager** (Niveau 70)
-  - Gestion des tickets de son département
-  - Assignation des tickets
-  - Rapports de département
-
-- **Agent** (Niveau 50)
-  - Traitement des tickets assignés
-  - Création de tickets
-  - Accès à la base de connaissances
-
-- **Utilisateur** (Niveau 10)
-  - Création et suivi de ses propres tickets
-  - Consultation de la base de connaissances
-
-#### Permissions Disponibles (20+):
-- tickets.creer, tickets.voir_tous, tickets.modifier, tickets.supprimer
-- admin.utilisateurs, admin.departements, admin.categories, admin.roles
-- rapports.voir, rapports.exporter
-- kb.creer, kb.modifier, kb.voir
-- Et bien d'autres...
+1. [Authentification](#1-authentification)
+2. [Tableau de bord](#2-tableau-de-bord)
+3. [Tickets](#3-tickets)
+4. [Annuaire des utilisateurs](#4-annuaire-des-utilisateurs)
+5. [Départements](#5-départements)
+6. [Administration](#6-administration)
+7. [Rapports](#7-rapports)
+8. [Paramètres du compte](#8-paramètres-du-compte)
+9. [API REST](#9-api-rest)
+10. [Modèles de données](#10-modèles-de-données)
+11. [Rôles et permissions](#11-rôles-et-permissions)
+12. [Architecture technique](#12-architecture-technique)
 
 ---
 
-### 2. 👥 Gestion Avancée des Utilisateurs
+## 1. Authentification
 
-**Nouvelles fonctionnalités:**
-- ✅ Profils utilisateurs détaillés avec photo
-- ✅ Matricule unique pour chaque employé
-- ✅ Informations de poste et département
-- ✅ Paramètres personnalisés (thème, langue, notifications)
-- ✅ Historique des connexions
-- ✅ Gestion des tentatives de connexion
-- ✅ Verrouillage automatique du compte
-- ✅ Statistiques par utilisateur
+| Route | Fonctionnalité |
+|-------|---------------|
+| `GET/POST /auth/connexion` | Connexion e-mail + mot de passe ; option "Se souvenir de moi" ; vérification du statut actif du compte |
+| `GET /auth/deconnexion` | Déconnexion et invalidation de la session |
+| `GET/POST /auth/mot-de-passe-oublie` | Demande de réinitialisation de mot de passe (envoi d'e-mail) |
+| `GET /auth/profil` | Affichage du profil de l'utilisateur connecté |
 
-**Champs utilisateur:**
-```
-- Nom, Prénom, Email
-- Téléphone, Poste, Matricule
-- Photo de profil
-- Département et Rôle
-- Préférences (langue, thème, notifications)
-- État (actif/inactif, verrouillé)
-- Dates (création, dernière connexion, dernière activité)
-```
+**Sécurité**
+- Hashage des mots de passe avec Werkzeug (scrypt)
+- Verrouillage du compte après tentatives échouées
+- Protection CSRF sur tous les formulaires POST
+- Sessions sécurisées Flask-Login
 
 ---
 
-### 3. 🏢 Gestion Complète des Départements
+## 2. Tableau de bord
 
-**Nouveau module dédié avec:**
-- ✅ Création et organisation de départements
-- ✅ Code unique et couleur personnalisée
-- ✅ Icône personnalisable
-- ✅ Responsable de département
-- ✅ SLA configurables (temps de réponse, temps de résolution)
-- ✅ Horaires de travail personnalisés
-- ✅ Email et téléphone de contact
-- ✅ Localisation du département
-- ✅ Catégories de tickets par département
-- ✅ Statistiques détaillées
+Route : `GET /tickets/tableau-bord`
 
-**Exemple de départements:**
-- Support IT (Informatique)
-- Ressources Humaines
-- Finances
-- Achats
-- Maintenance
-- etc.
+**Métriques affichées**
+- Compteurs : tickets ouverts, en cours, résolus, en attente
+- Activité récente : derniers tickets créés ou modifiés
+- Répartition par priorité et par département
+- Filtrage automatique selon le rôle : admins et managers voient tout, agents et utilisateurs voient uniquement leurs tickets
 
 ---
 
-### 4. 📊 Rapports et Statistiques Avancés
+## 3. Tickets
 
-**Tableau de Bord Analytique:**
-- 📈 Métriques en temps réel
-- 📊 Graphiques d'évolution
-- 🎯 Indicateurs de performance (KPI)
-- ⏱️ Temps moyens de résolution
-- 😊 Satisfaction client
-- 📋 Respect des SLA
+### 3.1 Liste des tickets
 
-**Rapports Disponibles:**
+Route : `GET /tickets/liste`
 
-#### a) Rapport Global
-- Total de tickets par période
-- Répartition par statut (nouveau, en cours, résolu, fermé)
-- Répartition par priorité
-- Répartition par type (demande, besoin, plainte, incident)
-- Répartition par département
-- Évolution quotidienne
+- Pagination (20 par page)
+- Filtres : statut, priorité, département
+- Tri par date de création décroissante
+- Accès filtré par rôle (voir section Rôles)
 
-#### b) Rapport de Performance des Agents
-- Tickets assignés par agent
-- Tickets résolus par agent
-- Temps moyen de résolution par agent
-- Taux de résolution
-- Satisfaction moyenne par agent
-- Classement des meilleurs agents
+### 3.2 Créer un ticket
 
-#### c) Rapport de Satisfaction Client
-- Distribution des notes (1 à 5 étoiles)
+Route : `GET/POST /tickets/nouveau`
+
+**Types de tickets**
+| Type | Description |
+|------|-------------|
+| Incident | Panne, dysfonctionnement |
+| Demande | Demande de service ou d'information |
+| Besoin | Besoin opérationnel (fournitures, équipements) |
+| Plainte | Réclamation client ou interne |
+| Tâche | Tâche planifiée ou projet |
+
+**Champs disponibles**
+- Titre, description
+- Type et catégorie (groupées par département, attribution automatique du département)
+- Priorité (basse / moyenne / haute / urgente / critique) — pré-remplie par la catégorie, modifiable
+- Impact et urgence → calcul automatique de priorité via matrice Impact × Urgence
+- Champs spécifiques par type : article demandé, quantité, unité, nature du besoin, personne concernée, date et lieu d'incident
+- Numéro unique généré automatiquement (ex. `TK-2026-0042`)
+
+### 3.3 Détail d'un ticket
+
+Route : `GET /tickets/<id>`
+
+- Affichage complet : description, historique, commentaires, pièces jointes, sous-tâches
+- Contrôle d'accès : créateur, agent assigné, ou admin/manager
+- Assignation d'un agent
+- Ajout de commentaires (publics ou internes)
+- Fermeture du ticket
+
+### 3.4 Modifier un ticket
+
+Route : `GET/POST /tickets/<id>/modifier`
+
+- Modification du titre, description, priorité, statut
+- Assignation (réservée aux admins/managers)
+- Enregistrement automatique dans l'historique
+
+### 3.5 Commenter un ticket
+
+Route : `POST /tickets/<id>/commenter`
+
+- Commentaire public ou interne (note visible uniquement par les agents)
+- Type : commentaire, solution, note
+
+### 3.6 Fermer un ticket
+
+Route : `POST /tickets/<id>/fermer`
+
+- Passage au statut `fermé`
+- Enregistrement de la date de fermeture
+- Permission : créateur, assigné, ou admin
+
+### 3.7 Suivi SLA
+
+- Temps de première réponse (`date_premiere_reponse`)
+- Temps de résolution (`date_resolution`)
+- Indicateur de respect du SLA (`sla_respecte`)
+- Temps calculés en minutes pour les rapports
+
+### 3.8 Évaluation de satisfaction
+
+- Note de 1 à 5 étoiles
+- Commentaire libre associé
+
+### 3.9 Historique des modifications
+
+Chaque modification d'un ticket crée une entrée d'audit :
+- Champ modifié, ancienne valeur, nouvelle valeur
+- Utilisateur et horodatage
+
+---
+
+## 4. Annuaire des utilisateurs
+
+Route : `GET /utilisateurs/`
+
+- Liste de tous les utilisateurs (pagination 50 par page)
+- Filtres : recherche (nom, prénom, e-mail, matricule), rôle, département, statut actif/inactif
+- Vue en liste horizontale : avatar coloré par département, nom, poste, e-mail, rôle, département, statut, dernière connexion
+
+### 4.1 Profil utilisateur
+
+Route : `GET /utilisateurs/<id>`
+
+- Informations complètes : nom, poste, département, e-mail, téléphone, matricule
+- Statistiques : tickets créés, tickets en cours assignés, tickets résolus, commentaires
+- 10 derniers tickets récents
+
+### 4.2 Créer un utilisateur
+
+Route : `GET/POST /utilisateurs/nouveau`
+
+Champs : nom, prénom, e-mail, mot de passe, rôle, département, téléphone, poste, matricule (unique)
+
+### 4.3 Modifier un utilisateur
+
+Route : `GET/POST /utilisateurs/<id>/modifier`
+
+- Auto-modification limitée (pas de changement de rôle)
+- Admin : modification complète
+- Changement de mot de passe optionnel
+- Validation unicité e-mail et matricule
+
+### 4.4 Activer / Désactiver
+
+Route : `POST /utilisateurs/<id>/toggle-actif`
+
+Blocage de la déconnexion sur son propre compte.
+
+### 4.5 Supprimer
+
+Route : `POST /utilisateurs/<id>/supprimer`
+
+Bloqué si l'utilisateur a des tickets associés (désactivation recommandée).
+
+---
+
+## 5. Départements
+
+### 5.1 Liste des départements
+
+Route : `GET /departements/`
+
+- Pagination (20 par page)
+- Filtres : recherche, statut actif/inactif
+- Non-admins : voient uniquement leur département
+- Statistiques par département : membres, tickets actifs/total, catégories
+
+### 5.2 Détail d'un département
+
+Route : `GET /departements/<id>`
+
+- Membres, responsable, contact (e-mail, téléphone, localisation)
+- SLA configurés (temps de réponse, temps de résolution)
+- Statistiques tickets par statut
+- 10 tickets récents
+
+### 5.3 Créer / Modifier un département
+
+Routes : `GET/POST /departements/nouveau` · `GET/POST /departements/<id>/modifier`
+
+**Champs**
+| Champ | Description |
+|-------|-------------|
+| Nom | Nom unique du département |
+| Code | Code court unique (ex. `IT`, `RH`) |
+| Description | Description libre |
+| E-mail / Téléphone | Contact du département |
+| Localisation | Adresse ou site |
+| Couleur | Couleur d'identification (hex) |
+| Icône | Icône SVG ou emoji |
+| Responsable | Utilisateur responsable |
+| SLA réponse | Délai de première réponse (heures, défaut : 4h) |
+| SLA résolution | Délai de résolution (heures, défaut : 48h) |
+| Horaires de travail | JSON (jours, heures) |
+
+### 5.4 Activer / Désactiver / Supprimer
+
+- Toggle actif : `POST /departements/<id>/toggle-actif`
+- Suppression : bloquée si des membres ou catégories sont rattachés
+
+---
+
+## 6. Administration
+
+Accès réservé aux utilisateurs avec `role.niveau >= 70`.
+
+### 6.1 Tableau de bord admin
+
+Route : `GET /admin/tableau-bord`
+
+- Statistiques globales : utilisateurs actifs, départements, tickets ouverts/total/du mois
+- Tickets regroupés par statut et priorité
+
+### 6.2 Gestion des utilisateurs (admin)
+
+Route : `GET /admin/utilisateurs`
+
+- Vue liste avec stat chips (total, actifs, inactifs)
+- Filtres : recherche (nom, prénom, e-mail, poste), rôle (dynamique), département, statut
+- Actions par ligne : modifier, désactiver, réactiver
+
+**Créer** : `GET/POST /admin/utilisateurs/nouveau`
+**Modifier** : `GET/POST /admin/utilisateurs/<id>/modifier`
+**Désactiver** : `POST /admin/utilisateurs/<id>/desactiver` — empêche la self-désactivation
+**Réactiver** : `POST /admin/utilisateurs/<id>/reactiver` — remet à zéro le verrou et les tentatives de connexion
+
+### 6.3 Rôles et permissions
+
+Route : `GET /admin/roles`
+
+- Liste des rôles avec niveau hiérarchique et couleur
+- Permissions organisées par catégorie
+- Rôles système (non modifiables) vs rôles personnalisés
+
+**Créer un rôle** : `POST /admin/roles/creer` — nom, niveau, couleur, description
+**Modifier un rôle** : `POST /admin/roles/<id>/modifier`
+**Modifier les permissions** : `POST /admin/roles/<id>/permissions` — cases à cocher par permission
+
+### 6.4 Catégories de tickets
+
+Route : `GET /admin/categories`
+
+Affichage en tableau : nom + couleur, description, type, département, priorité par défaut, délai SLA, statut.
+
+**Créer** : `POST /admin/categories/creer`
+
+| Champ | Valeurs |
+|-------|---------|
+| Nom | Texte libre |
+| Description | Optionnel |
+| Type | incident / demande / besoin / plainte / tâche |
+| Département | Sélection (obligatoire) |
+| Priorité par défaut | basse / moyenne / haute / urgente / critique |
+| Délai de résolution | Jours (défaut : 7) |
+| Couleur | Sélecteur de couleur |
+
+**Toggle actif/inactif** : `POST /admin/categories/<id>/toggle`
+
+### 6.5 Paramètres système
+
+Route : `GET /admin/parametres` — (en cours d'implémentation)
+
+### 6.6 Logs système
+
+Route : `GET /admin/logs` — (en cours d'implémentation)
+
+---
+
+## 7. Rapports
+
+Accès réservé aux rôles avec la permission `rapports.voir`.
+
+### 7.1 Tableau de bord rapports
+
+Route : `GET /rapports/`
+
+**Filtres de période** : 7 jours / 30 jours / 90 jours / 1 an
+
+**Métriques globales**
+- Total tickets, ouverts, résolus, fermés
+- Utilisateurs et départements actifs
+- Temps moyen de première réponse (minutes)
+- Temps moyen de résolution (minutes)
+- Note de satisfaction moyenne
+- Taux de respect des SLA (%)
+
+**Distributions**
+- Par statut (nouveau, en cours, en attente, résolu, fermé, annulé)
+- Par priorité (basse → critique)
+- Par type (incident, demande, besoin, plainte, tâche)
+- Par département
+
+**Évolution quotidienne** : courbe des tickets créés jour par jour
+
+**Top 10 agents** : classés par tickets résolus sur la période
+
+### 7.2 Performance des agents
+
+Route : `GET /rapports/performance-agents`
+
+Par agent : tickets totaux, résolus, en cours, temps moyen de résolution, taux de résolution (%), satisfaction moyenne.
+
+### 7.3 Satisfaction client
+
+Route : `GET /rapports/satisfaction-client`
+
+- Filtres de période
+- Distribution des notes 1–5 étoiles
 - Satisfaction moyenne globale
 - Satisfaction par département
-- Commentaires positifs et négatifs
-- Tendances d'évolution
+- Liste des derniers commentaires positifs et négatifs
 
-#### d) Export de Données
-- Export CSV complet
-- Filtres personnalisables
-- Tous les champs des tickets
+### 7.4 Export CSV
 
----
+Route : `GET /rapports/export/csv`
 
-### 5. 🎯 Améliorations des Tickets
+Export de tous les tickets avec filtres de dates.
 
-**Nouvelles fonctionnalités de tickets:**
+**Colonnes exportées** : numéro, titre, type, priorité, statut, créateur, assigné, département, catégorie, date création, date résolution, satisfaction.
 
-#### Gestion Avancée:
-- ✅ **Sous-tâches**: Diviser un ticket en tâches plus petites
-- ✅ **Tags personnalisables**: Organisation flexible
-- ✅ **Calcul automatique de priorité**: Impact × Urgence
-- ✅ **Données personnalisées**: Champs additionnels par type
-- ✅ **Évaluation de satisfaction**: Note de 1 à 5 étoiles
-- ✅ **Historique détaillé**: Chaque modification enregistrée
+### 7.5 API stats (JSON)
 
-#### Impact et Urgence:
-```
-Impact:   Faible → Moyen → Élevé → Critique
-Urgence:  Faible → Moyenne → Élevée → Critique
+Route : `GET /rapports/api/stats`
 
-Matrice de Priorité:
-- Critique + Critique = Priorité CRITIQUE
-- Élevé + Élevé = Priorité URGENTE
-- Moyen + Moyen = Priorité MOYENNE
-- Faible + Faible = Priorité BASSE
-```
-
-#### Suivi SLA:
-- Temps de première réponse
-- Temps de résolution
-- Respect automatique des SLA
-- Alertes de dépassement
+Paramètre `type` :
+- `evolution` → données pour graphique journalier
+- `statuts` → distribution par statut
 
 ---
 
-### 6. 🔔 Système de Notifications
+## 8. Paramètres du compte
 
-**Centre de Notifications:**
-- 🔔 Notifications en temps réel
-- 📧 Notifications par email (optionnel)
-- 🔕 Paramètres personnalisables
-- ✅ Marquage lu/non lu
-- 📋 Historique des notifications
+### 8.1 Profil
 
-**Types de notifications:**
-- Nouveau ticket créé
-- Ticket assigné
-- Nouveau commentaire
-- Changement de statut
+Route : `GET /parametres/profil`
+
+Statistiques personnelles : tickets créés, assignés actifs, résolus.
+
+### 8.2 Modifier le profil
+
+Route : `GET/POST /parametres/profil/modifier`
+
+- Nom, prénom, téléphone
+- Préférences d'affichage : thème (clair/sombre/auto), langue
+- Notifications : e-mail, push
+
+### 8.3 Sécurité — changer le mot de passe
+
+Route : `GET/POST /parametres/securite`
+
+- Validation de l'ancien mot de passe
+- Minimum 8 caractères
+- Confirmation requise
+
+### 8.4 Notifications
+
+Route : `GET /parametres/notifications`
+
+- Liste paginée (20 par page), non-lues en premier
+- Marquer une notification comme lue : `POST /parametres/notifications/<id>/marquer-lue`
+- Tout marquer comme lu : `POST /parametres/notifications/marquer-toutes-lues`
+
+**Types de notifications**
+- Ticket créé, assigné, commenté, statut changé
 - Échéance approchante
 - SLA dépassé
 - Mention dans un commentaire
+- Notification système
 
 ---
 
-### 7. 📚 Base de Connaissances
+## 9. API REST
 
-**Nouveau module KB (Knowledge Base):**
-- ✅ Articles FAQ
-- ✅ Solutions pré-enregistrées
-- ✅ Modèles de réponses
-- ✅ Catégorisation
-- ✅ Tags
-- ✅ Recherche intégrée
-- ✅ Statistiques d'utilisation
-- ✅ Gestion collaborative
+Toutes les routes API requièrent `@login_required`.
 
-**Utilisation:**
-- Agents: Créer et modifier des articles
-- Utilisateurs: Consulter pour trouver des solutions
-- Réduction du nombre de tickets grâce à l'auto-assistance
+| Route | Méthode | Description |
+|-------|---------|-------------|
+| `/api/stats/globales` | GET | Stats globales JSON : tickets, utilisateurs, départements |
+| `/api/stats/tickets-par-jour` | GET | Tickets créés par jour (30 derniers jours) |
+| `/api/stats/tickets-par-departement` | GET | Tickets groupés par département |
+| `/api/stats/tickets-par-priorite` | GET | Tickets groupés par priorité |
+| `/api/tickets/<id>/statut` | PUT | Changer le statut d'un ticket |
+| `/api/tickets/<id>/assigner` | PUT | Assigner ou désassigner un ticket |
+| `/api/recherche/utilisateurs` | GET | Recherche d'utilisateurs (min. 2 chars, max 10 résultats) |
+| `/api/health` | GET | Vérification de l'état du serveur |
 
 ---
 
-### 8. 🎨 Interface Utilisateur Modernisée
+## 10. Modèles de données
 
-**Design Distinctif:**
-- 🎨 Identité visuelle Cosmitto (rouge emblématique)
-- 🆕 Typographie unique (Staatliches + IBM Plex Sans)
-- ✨ Animations fluides et micro-interactions
-- 🌓 Thème clair et sombre
-- 📱 Responsive (mobile, tablette, desktop)
-- 🖼️ Effets visuels (grain, ombres, gradients)
-
-**Navigation améliorée:**
-- Sidebar fixe avec menu hiérarchique
-- Indicateurs visuels de navigation
-- Badges de notifications
-- Recherche rapide
-- Raccourcis clavier (à venir)
-
----
-
-## 🔧 AMÉLIORATIONS TECHNIQUES
-
-### Architecture:
-- ✅ Modularité avec Blueprints Flask
-- ✅ Séparation des préoccupations
-- ✅ Configuration par environnement
-- ✅ Migrations de base de données (Flask-Migrate)
-
-### Sécurité:
-- 🔒 Hashage sécurisé des mots de passe (Werkzeug)
-- 🔒 Protection CSRF
-- 🔒 Validation des entrées
-- 🔒 Gestion des sessions sécurisée
-- 🔒 Prévention des injections SQL
-
-### Performance:
-- ⚡ Requêtes optimisées
-- ⚡ Indexation des champs critiques
-- ⚡ Mise en cache (prévu)
-- ⚡ Pagination des résultats
-
-### Compatibilité:
-- 💾 SQLite (développement)
-- 💾 PostgreSQL (production recommandée)
-- 💾 MySQL (supporté)
+| Modèle | Rôle principal |
+|--------|---------------|
+| `Utilisateur` | Comptes utilisateurs avec rôles, département, préférences |
+| `Role` | Rôles hiérarchiques avec niveau et permissions associées |
+| `Permission` | Permissions granulaires par code (ex. `tickets.modifier`) |
+| `Departement` | Unités organisationnelles avec SLA et responsable |
+| `CategorieTicket` | Catégories de tickets par type, département et priorité par défaut |
+| `Ticket` | Tickets avec statut, priorité, SLA, satisfaction, historique |
+| `Tache` | Sous-tâches rattachées à un ticket |
+| `Commentaire` | Commentaires publics et notes internes sur les tickets |
+| `PieceJointe` | Fichiers joints à un ticket |
+| `HistoriqueTicket` | Journal d'audit de chaque modification de ticket |
+| `Notification` | Notifications utilisateur (lue/non lue) |
+| `Statistique` | Données agrégées pour les rapports |
+| `ModeleReponse` | Modèles de réponses pré-rédigés pour les agents |
+| `BaseConnaissance` | Articles FAQ et base de connaissances |
 
 ---
 
-## 📦 STRUCTURE DU PROJET
+## 11. Rôles et permissions
+
+### Rôles préconfigurés
+
+| Rôle | Niveau | Accès |
+|------|--------|-------|
+| Super Administrateur | 100 | Accès complet, y compris configuration système |
+| Administrateur | 90 | Gestion utilisateurs, départements, tickets, rapports |
+| Manager | 70 | Supervision de son département, assignation, rapports |
+| Agent | 50 | Traitement des tickets assignés, commentaires |
+| Utilisateur | 10 | Création et suivi de ses propres tickets |
+
+### Permissions disponibles
+
+**Tickets** : `tickets.creer`, `tickets.voir_tous`, `tickets.modifier`, `tickets.supprimer`  
+**Administration** : `admin.utilisateurs`, `admin.departements`, `admin.categories`, `admin.roles`  
+**Rapports** : `rapports.voir`, `rapports.exporter`  
+**Base de connaissances** : `kb.creer`, `kb.modifier`, `kb.voir`
+
+---
+
+## 12. Architecture technique
+
+### Stack
+
+| Composant | Technologie |
+|-----------|-------------|
+| Backend | Python 3.11, Flask 3.0 |
+| ORM | Flask-SQLAlchemy |
+| Migrations | Flask-Migrate (Alembic) |
+| Auth | Flask-Login |
+| Templates | Jinja2 |
+| Base de données | SQLite (dev), PostgreSQL (prod) |
+| Frontend | HTML/CSS/JS vanilla (pas de framework JS) |
+| Typographie | IBM Plex Sans, IBM Plex Mono, Staatliches |
+
+### Structure du projet
 
 ```
-CosmittoDesk2/
-├── app.py              # Application principale
-├── config.py          # Configuration multi-environnement
-├── models.py          # 14+ modèles de données
-├── routes/            # 8 blueprints
-│   ├── auth.py
-│   ├── tickets.py
-│   ├── admin.py
-│   ├── departements.py
-│   ├── utilisateurs.py
-│   ├── rapports.py
-│   ├── parametres.py
-│   └── api.py
-├── templates/         # Templates HTML modernes
-├── static/            # Assets (CSS, JS, images)
-├── scripts/           # Scripts utilitaires
-└── instance/          # Base de données
+CosmittoHUB/
+├── app.py                  # Point d'entrée Flask, factory
+├── config.py               # Configuration par environnement
+├── models.py               # 14 modèles SQLAlchemy
+├── routes/
+│   ├── auth.py             # Authentification (4 routes)
+│   ├── tickets.py          # Tickets (7 routes)
+│   ├── admin.py            # Administration (15 routes)
+│   ├── utilisateurs.py     # Annuaire utilisateurs (6 routes)
+│   ├── departements.py     # Départements (6 routes)
+│   ├── rapports.py         # Rapports et export (5 routes)
+│   ├── parametres.py       # Paramètres compte (6 routes)
+│   └── api.py              # API REST (8 routes)
+├── templates/              # 30 templates Jinja2
+├── static/
+│   ├── css/                # Feuilles de style
+│   ├── js/app.js           # Logique UI (ripples, dropdowns, tabs, sidebar)
+│   └── images/             # Logos, screenshots, guide
+├── scripts/
+│   ├── init_db.py          # Initialisation de la base de données
+│   └── seed_incidents.py   # Données de test
+└── instance/               # Fichier SQLite (dev)
 ```
+
+### Chiffres clés
+
+| Métrique | Valeur |
+|----------|--------|
+| Routes HTTP | 57 endpoints |
+| Modèles de données | 14 |
+| Templates Jinja2 | 30 |
+| Rôles préconfigurés | 5 |
+| Permissions | 20+ |
+| Types de tickets | 5 |
+| Priorités | 5 niveaux |
+| Statuts de ticket | 6 |
 
 ---
 
-## 📊 STATISTIQUES DU PROJET
-
-- **Lignes de code Python**: 3000+
-- **Templates HTML**: 25+
-- **Modèles de données**: 14
-- **Routes**: 50+
-- **Permissions**: 20+
-- **Rôles préconfigurés**: 5
-- **Langues supportées**: Préparé pour FR, EN, AR
-
----
-
-## 🚀 DÉMARRAGE RAPIDE
-
-### Windows:
-```bash
-start.bat
-```
-
-### Linux/Mac:
-```bash
-chmod +x start.sh
-./start.sh
-```
-
-### Connexion par défaut:
-```
-Email: admin@example.com
-Mot de passe: testtest
-```
-
-⚠️ **Important**: Changez le mot de passe dès la première connexion!
-
----
-
-## 🎯 ROADMAP FUTURE
-
-### Version 2.1 (Planifiée):
-- [ ] Module de chat en temps réel
-- [ ] Webhooks pour intégrations
-- [ ] Application mobile (React Native)
-- [ ] Mode hors ligne
-- [ ] Automatisations avancées
-
-### Version 2.2:
-- [ ] Intelligence artificielle
-  - Classification automatique des tickets
-  - Suggestions de solutions
-  - Chatbot d'assistance
-- [ ] Reporting avancé avec BI
-- [ ] Multi-entreprises (SaaS)
-
----
-
-## 📞 SUPPORT
-
-Pour toute question ou assistance:
-- **Email**: support@example.com
-- **Documentation**: Consultez le README.md
-
----
-
-**CosmittoDesk 2.0** - Développé avec ❤️ pour Cosmitto
-**Version**: 2.0.0 | **Date**: Février 2026
+*CosmittoHUB — Pour moi © 2026 — Documentation*

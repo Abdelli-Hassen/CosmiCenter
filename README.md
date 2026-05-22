@@ -10,31 +10,81 @@
 
 | Connexion | Tableau de bord |
 |-----------|----------------|
-| ![Connexion](static/images/screenshots/01-connexion.png) | ![Tableau de bord](static/images/screenshots/02-tableau-de-bord.png) |
+| ![Connexion](static/images/guide/01-connexion.png) | ![Tableau de bord](static/images/guide/02-tableau-bord.png) |
 
 | Nouveau ticket | Liste des tickets |
 |---------------|-----------------|
-| ![Nouveau ticket](static/images/screenshots/04-nouveau-ticket.png) | ![Liste tickets](static/images/screenshots/03-liste-tickets.png) |
+| ![Nouveau ticket](static/images/guide/04-nouveau-ticket.png) | ![Liste tickets](static/images/guide/03-liste-tickets.png) |
 
 | Administration | Rapports |
 |---------------|---------|
-| ![Admin](static/images/screenshots/05-admin.png) | ![Rapports](static/images/screenshots/06-rapports.png) |
+| ![Admin](static/images/guide/05-admin-tableau-bord.png) | ![Rapports](static/images/guide/11-rapports.png) |
 
 ---
 
 ## Contexte métier
 
-Cosmitto Coffee opère plusieurs points de vente (POS). CosmittoHUB permet à chaque site de remonter des incidents ou demandes vers les équipes centrales (Support IT, Maintenance, Stock, Qualité, RH, Finances), avec suivi, priorisation et résolution traçable.
+Cosmitto Coffee opère plusieurs points de vente (POS). CosmittoHUB permet à chaque site de remonter des incidents ou demandes vers les équipes centrales (Support IT, Maintenance, Stock, Qualité, RH, Finances, SI), avec suivi, priorisation et résolution traçable.
+
+---
 
 ## Fonctionnalités
 
-- **Tickets** — incidents, demandes, besoins, plaintes, tâches
-- **25 catégories d'incidents** pré-configurées pour la restauration (pannes équipements, ruptures stock, hygiène, SI, RH…)
-- **Départements** — Support IT, Maintenance, Stock, Qualité, RH, Finances, SI
-- **Rôles & permissions** granulaires (Super Admin, Admin, Manager, Agent, Utilisateur)
-- **Tableau de bord** avec métriques en temps réel
-- **Rapports** — délais de résolution, SLA, performance par département
-- **Interface française**, thème clair/sombre
+### Tickets
+- 5 types : incident, demande, besoin, plainte, tâche
+- Numérotation automatique (ex. `TK-2026-0042`)
+- Catégories regroupées par département avec attribution automatique
+- Priorité calculée automatiquement via matrice Impact × Urgence
+- Sous-tâches, pièces jointes, commentaires (publics ou internes)
+- Historique d'audit complet de chaque modification
+- Évaluation de satisfaction (1–5 étoiles)
+- Suivi SLA : temps de première réponse et de résolution
+
+### Utilisateurs
+- Profils complets : nom, poste, matricule, département, photo
+- Vue liste avec avatars colorés par département
+- Filtres : recherche, rôle, département, statut
+- Activation / désactivation / réactivation
+- Statistiques par utilisateur (tickets créés, assignés, résolus)
+
+### Départements
+- Création avec code unique, couleur, icône, responsable
+- SLA configurables par département (réponse : défaut 4h, résolution : défaut 48h)
+- Horaires de travail personnalisés
+- Statistiques : membres, tickets par statut, catégories
+
+### Rôles et permissions
+| Rôle | Niveau | Périmètre |
+|------|--------|-----------|
+| Super Administrateur | 100 | Accès total |
+| Administrateur | 90 | Utilisateurs, départements, tickets, rapports |
+| Manager | 70 | Son département, assignation, rapports |
+| Agent | 50 | Tickets assignés, commentaires |
+| Utilisateur | 10 | Ses propres tickets |
+
+20+ permissions granulaires (tickets, admin, rapports, base de connaissances).
+
+### Rapports
+- Tableau de bord analytique : métriques SLA, satisfaction, évolution quotidienne
+- Performance par agent : tickets résolus, temps moyen, taux de résolution
+- Satisfaction client : distribution des notes, commentaires par département
+- Export CSV avec filtres de dates
+
+### Administration
+- Gestion des utilisateurs avec filtres avancés et stat chips (total / actifs / inactifs)
+- Gestion des rôles et permissions par cases à cocher
+- Gestion des catégories de tickets (type, priorité par défaut, délai SLA, couleur)
+- Logs système et paramètres (en cours)
+
+### Paramètres du compte
+- Modification du profil : nom, téléphone, préférences (thème clair/sombre/auto, langue)
+- Changement de mot de passe sécurisé
+- Centre de notifications (marquer lu, tout marquer lu)
+
+### API REST
+8 endpoints JSON pour intégrations : stats globales, stats par jour/département/priorité, changement de statut, assignation, recherche d'utilisateurs, health check.
+
+---
 
 ## Installation
 
@@ -54,17 +104,19 @@ cp .env.example .env
 # 4. Base de données
 python scripts/init_db.py
 
-# 5. Catégories d'incidents (optionnel)
+# 5. Données de démonstration (optionnel)
 python scripts/seed_incidents.py
 
 # 6. Lancer
 python app.py
 ```
 
-Accès : http://127.0.0.1:5000  
+Accès : `http://127.0.0.1:5000`  
 Compte par défaut : `admin@example.com` / `testtest`
 
 > ⚠️ Changer le mot de passe admin à la première connexion.
+
+---
 
 ## Base de données
 
@@ -74,18 +126,39 @@ SQLite par défaut (développement). PostgreSQL recommandé en production :
 DATABASE_URL=postgresql://user:testtest@localhost:5432/cosmitto_hub
 ```
 
+---
+
 ## Structure
 
 ```
 CosmittoHUB/
 ├── app.py              # Point d'entrée Flask
-├── config.py           # Configuration
-├── models.py           # Modèles SQLAlchemy
-├── routes/             # Blueprints (auth, tickets, admin, …)
-├── templates/          # Templates Jinja2
-├── static/             # CSS, JS, images
+├── config.py           # Configuration par environnement
+├── models.py           # 14 modèles SQLAlchemy
+├── routes/             # 8 blueprints — 57 routes HTTP
+│   ├── auth.py
+│   ├── tickets.py
+│   ├── admin.py
+│   ├── utilisateurs.py
+│   ├── departements.py
+│   ├── rapports.py
+│   ├── parametres.py
+│   └── api.py
+├── templates/          # 30 templates Jinja2
+├── static/             # CSS, JS, images, guide
 └── scripts/            # init_db.py, seed_incidents.py
 ```
+
+---
+
+## Documentation
+
+| Document | Contenu |
+|----------|---------|
+| `FONCTIONNALITES.md` | Référence complète de toutes les fonctionnalités et routes |
+| `GUIDE_UTILISATEUR.md` | Guide utilisateur illustré en français (14 captures d'écran) |
+
+---
 
 ## Licence
 
