@@ -8,10 +8,12 @@
   <!-- Page Header -->
   <div class="page-header">
     <div class="page-header-left">
-      <h1 class="page-title">Gestion des utilisateurs</h1>
-      <span class="page-subtitle">
-        {{ utilisateurs.total }} utilisateur{{ 's' if utilisateurs.total != 1 else '' }} au total
-      </span>
+      <nav class="breadcrumb" aria-label="Fil d'Ariane">
+        <a href="{{ url_for('admin.tableau_bord') }}" class="breadcrumb-link">Admin</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Utilisateurs</span>
+      </nav>
+      <h1 class="page-title" style="margin-top:4px;">Utilisateurs</h1>
     </div>
     <div class="page-header-actions">
       <a href="{{ url_for('admin.nouvel_utilisateur') }}" class="btn btn-primary btn-sm">
@@ -21,9 +23,27 @@
     </div>
   </div>
 
+  <!-- Stat chips -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;background:var(--surface-raised);border:1px solid var(--border-subtle);">
+      <span style="font-size:18px;font-weight:700;color:var(--text-primary);">{{ total_actifs + total_inactifs }}</span>
+      <span style="font-size:12px;color:var(--text-muted);">Total</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);">
+      <span style="font-size:18px;font-weight:700;color:#10B981;">{{ total_actifs }}</span>
+      <span style="font-size:12px;color:#10B981;">Actifs</span>
+    </div>
+    {% if total_inactifs > 0 %}
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);">
+      <span style="font-size:18px;font-weight:700;color:#EF4444;">{{ total_inactifs }}</span>
+      <span style="font-size:12px;color:#EF4444;">Inactifs</span>
+    </div>
+    {% endif %}
+  </div>
+
   <!-- Search + Filter Bar -->
   <form method="GET" action="{{ url_for('admin.utilisateurs') }}" id="filterForm">
-    <div class="filter-bar" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px;">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px;">
 
       <!-- Search -->
       <div style="position:relative;flex:1;min-width:200px;max-width:320px;">
@@ -33,7 +53,7 @@
           name="search"
           class="input"
           style="padding-left:32px;"
-          placeholder="Rechercher par nom ou e-mail..."
+          placeholder="Nom, e-mail, poste…"
           value="{{ request.args.get('search', '') }}"
           autocomplete="off"
         >
@@ -41,12 +61,21 @@
 
       <!-- Role filter -->
       <div class="select-wrap" style="min-width:150px;">
-        <select name="role" class="select select-sm" onchange="this.form.submit()">
+        <select name="role_id" class="select select-sm" onchange="this.form.submit()">
           <option value="">Tous les rôles</option>
-          <option value="Administrateur" {% if request.args.get('role') == 'Administrateur' %}selected{% endif %}>Administrateur</option>
-          <option value="Manager" {% if request.args.get('role') == 'Manager' %}selected{% endif %}>Manager</option>
-          <option value="Agent" {% if request.args.get('role') == 'Agent' %}selected{% endif %}>Agent</option>
-          <option value="Utilisateur" {% if request.args.get('role') == 'Utilisateur' %}selected{% endif %}>Utilisateur</option>
+          {% for r in roles %}
+          <option value="{{ r.id }}" {% if request.args.get('role_id') == r.id %}selected{% endif %}>{{ r.nom }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Department filter -->
+      <div class="select-wrap" style="min-width:160px;">
+        <select name="departement_id" class="select select-sm" onchange="this.form.submit()">
+          <option value="">Tous les départements</option>
+          {% for d in departements %}
+          <option value="{{ d.id }}" {% if request.args.get('departement_id') == d.id %}selected{% endif %}>{{ d.nom }}</option>
+          {% endfor %}
         </select>
       </div>
 
@@ -59,10 +88,9 @@
         </select>
       </div>
 
-      <!-- Search submit -->
       <button type="submit" class="btn btn-secondary btn-sm">Rechercher</button>
 
-      {% if request.args.get('search') or request.args.get('role') or request.args.get('actif') %}
+      {% if request.args.get('search') or request.args.get('role_id') or request.args.get('actif') or request.args.get('departement_id') %}
       <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost btn-sm">Effacer</a>
       {% endif %}
 
@@ -73,134 +101,186 @@
   {% if utilisateurs.items %}
   <div class="card card-raised" style="overflow:hidden;">
     <div class="table-wrap">
-      <table class="table">
+      <table class="data-table" style="width:100%;">
         <thead>
           <tr>
-            <th style="min-width:200px;">Utilisateur</th>
-            <th style="min-width:200px;">E-mail</th>
+            <th style="padding:12px 20px;min-width:220px;">Utilisateur</th>
+            <th style="min-width:190px;">E-mail</th>
             <th style="width:130px;">Rôle</th>
-            <th style="width:150px;">Département</th>
+            <th style="width:160px;">Département</th>
+            <th style="width:90px;">Tickets</th>
             <th style="width:110px;">Statut</th>
-            <th style="width:140px;">Dernière connexion</th>
-            <th style="width:100px;">Actions</th>
+            <th style="width:150px;">Dernière connexion</th>
+            <th style="width:90px;"></th>
           </tr>
         </thead>
         <tbody>
           {% for u in utilisateurs.items %}
-          <tr>
+          {% set initials = (u.prenom[0]|upper) + (u.nom[0]|upper) %}
+          {% set dept_color = u.departement.couleur if u.departement and u.departement.couleur else '#6366F1' %}
+          <tr class="{% if not u.actif %}row-inactive{% endif %}">
+
             <!-- Avatar + Name -->
-            <td>
+            <td style="padding:12px 20px;">
               <div style="display:flex;align-items:center;gap:10px;">
-                <div class="avatar avatar" style="width:32px;height:32px;border-radius:50%;background:var(--surface-raised);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text-primary);overflow:hidden;flex-shrink:0;">
+                <div style="width:34px;height:34px;border-radius:50%;background:{{ dept_color }}22;border:1.5px solid {{ dept_color }}55;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:{{ dept_color }};flex-shrink:0;overflow:hidden;letter-spacing:.03em;">
                   {% if u.photo_profil %}
                     <img src="{{ url_for('static', filename='uploads/' + u.photo_profil) }}" alt="{{ u.prenom }} {{ u.nom }}" style="width:100%;height:100%;object-fit:cover;">
                   {% else %}
-                    {{ u.prenom[0]|upper }}{{ u.nom[0]|upper }}
+                    {{ initials }}
                   {% endif %}
                 </div>
                 <div>
                   <div style="font-weight:600;font-size:13px;color:var(--text-primary);">{{ u.prenom }} {{ u.nom }}</div>
-                  {% if u.poste %}<div style="font-size:11px;color:var(--text-muted);">{{ u.poste }}</div>{% endif %}
+                  {% if u.poste %}<div style="font-size:11px;color:var(--text-muted);margin-top:1px;">{{ u.poste }}</div>{% endif %}
+                  {% if u.matricule %}<div style="font-size:10px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;opacity:.7;">{{ u.matricule }}</div>{% endif %}
                 </div>
               </div>
             </td>
+
             <!-- Email -->
-            <td style="font-size:13px;color:var(--text-secondary);">{{ u.email }}</td>
+            <td style="font-size:13px;color:var(--text-secondary);">
+              <a href="mailto:{{ u.email }}" style="color:inherit;text-decoration:none;" title="{{ u.email }}">{{ u.email }}</a>
+            </td>
+
             <!-- Role -->
             <td>
               {% if u.role %}
-                {% if u.role.nom in ['Administrateur', 'Admin'] %}
+                {% set rnl = u.role.nom|lower %}
+                {% if 'admin' in rnl %}
                   <span class="badge badge-error">{{ u.role.nom }}</span>
-                {% elif u.role.nom in ['Manager', 'Responsable'] %}
+                {% elif 'manager' in rnl or 'responsable' in rnl %}
                   <span class="badge badge-warning">{{ u.role.nom }}</span>
-                {% elif u.role.nom == 'Agent' %}
+                {% elif 'agent' in rnl %}
                   <span class="badge badge-success">{{ u.role.nom }}</span>
                 {% else %}
                   <span class="badge badge-neutral">{{ u.role.nom }}</span>
                 {% endif %}
               {% else %}
-                <span class="badge badge-neutral">—</span>
+                <span style="font-size:11px;color:var(--text-muted);">—</span>
               {% endif %}
             </td>
+
             <!-- Department -->
-            <td style="font-size:13px;color:var(--text-secondary);">
-              {% if u.departement %}{{ u.departement.nom }}{% else %}<span style="color:var(--text-muted);">—</span>{% endif %}
+            <td>
+              {% if u.departement %}
+              <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">
+                <span style="width:7px;height:7px;border-radius:50%;background:{{ dept_color }};flex-shrink:0;"></span>
+                {{ u.departement.nom }}
+              </span>
+              {% else %}
+              <span style="font-size:12px;color:var(--text-muted);">—</span>
+              {% endif %}
             </td>
+
+            <!-- Ticket count -->
+            <td style="text-align:center;">
+              {% set nb = u.tickets_crees|length %}
+              {% if nb > 0 %}
+              <span style="font-size:12px;font-weight:600;color:var(--text-secondary);">{{ nb }}</span>
+              {% else %}
+              <span style="font-size:12px;color:var(--text-muted);">—</span>
+              {% endif %}
+            </td>
+
             <!-- Status -->
             <td>
-              {% if u.actif %}
+              {% if u.verrouille %}
+                <span class="badge badge-warning" title="Compte verrouillé">Verrouillé</span>
+              {% elif u.actif %}
                 <span class="badge badge-success">Actif</span>
               {% else %}
                 <span class="badge badge-error">Inactif</span>
               {% endif %}
             </td>
+
             <!-- Last Login -->
             <td style="font-size:11px;color:var(--text-muted);white-space:nowrap;">
-              {% if u.last_login %}
-                {{ u.last_login.strftime('%d %b %Y') }}
+              {% if u.derniere_connexion %}
+                <span title="{{ u.derniere_connexion.strftime('%d/%m/%Y %H:%M') }}">
+                  {{ u.derniere_connexion.strftime('%d %b %Y') }}
+                </span>
               {% else %}
-                Jamais
+                <span>Jamais</span>
               {% endif %}
             </td>
+
             <!-- Actions -->
-            <td>
-              <div style="display:flex;align-items:center;gap:6px;">
-                <a href="{{ url_for('admin.modifier_utilisateur', user_id=u.id) }}" class="btn btn-ghost btn-sm" title="Modifier l'utilisateur">
+            <td style="padding-right:16px;">
+              <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;">
+                <a href="{{ url_for('admin.modifier_utilisateur', user_id=u.id) }}"
+                   class="btn btn-ghost btn-sm" title="Modifier">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </a>
-                {% if u.actif %}
-                <form method="POST" action="{{ url_for('admin.desactiver_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm('Désactiver {{ u.prenom }} {{ u.nom }} ? Cette personne ne pourra plus se connecter.');">
-                  <button type="submit" class="btn btn-ghost btn-sm" title="Désactiver l'utilisateur" style="color:var(--error);">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </button>
-                </form>
+                {% if u.id != current_user.id %}
+                  {% if u.actif %}
+                  <form method="POST" action="{{ url_for('admin.desactiver_utilisateur', user_id=u.id) }}"
+                        style="display:inline;"
+                        onsubmit="return confirm('Désactiver {{ u.prenom }} {{ u.nom }} ?');">
+                    <button type="submit" class="btn btn-ghost btn-sm" title="Désactiver" style="color:var(--error);">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                    </button>
+                  </form>
+                  {% else %}
+                  <form method="POST" action="{{ url_for('admin.reactiver_utilisateur', user_id=u.id) }}"
+                        style="display:inline;"
+                        onsubmit="return confirm('Réactiver {{ u.prenom }} {{ u.nom }} ?');">
+                    <button type="submit" class="btn btn-ghost btn-sm" title="Réactiver" style="color:#10B981;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    </button>
+                  </form>
+                  {% endif %}
                 {% endif %}
               </div>
             </td>
+
           </tr>
           {% endfor %}
         </tbody>
       </table>
-    </div><!-- /table-wrap -->
-  </div><!-- /card -->
+    </div>
+  </div>
 
-  <!-- Pagination -->
-  {% if utilisateurs.pages > 1 %}
-  <div class="pagination" style="margin-top:20px;">
-    {% if utilisateurs.has_prev %}
-    <a href="{{ url_for('admin.utilisateurs', page=utilisateurs.prev_num, search=request.args.get('search',''), role=request.args.get('role',''), actif=request.args.get('actif','')) }}"
-       class="page-btn" aria-label="Page précédente">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-    </a>
-    {% else %}
-    <span class="page-btn page-btn-disabled" aria-disabled="true">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+  <!-- Result count + Pagination -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;flex-wrap:wrap;gap:10px;">
+    <span style="font-size:12px;color:var(--text-muted);">
+      {{ utilisateurs.total }} résultat{{ 's' if utilisateurs.total != 1 else '' }}
+      {% if utilisateurs.pages > 1 %}· page {{ utilisateurs.page }}/{{ utilisateurs.pages }}{% endif %}
     </span>
-    {% endif %}
 
-    {% for p in range(1, utilisateurs.pages + 1) %}
-      {% if p == utilisateurs.page %}
-        <span class="page-btn page-btn-active" aria-current="page">{{ p }}</span>
-      {% elif p == 1 or p == utilisateurs.pages or (p >= utilisateurs.page - 2 and p <= utilisateurs.page + 2) %}
-        <a href="{{ url_for('admin.utilisateurs', page=p, search=request.args.get('search',''), role=request.args.get('role',''), actif=request.args.get('actif','')) }}"
-           class="page-btn">{{ p }}</a>
-      {% elif p == utilisateurs.page - 3 or p == utilisateurs.page + 3 %}
-        <span class="page-btn page-btn-ellipsis">…</span>
+    {% if utilisateurs.pages > 1 %}
+    <div class="pagination">
+      {% if utilisateurs.has_prev %}
+      <a href="{{ url_for('admin.utilisateurs', page=utilisateurs.prev_num, search=request.args.get('search',''), role_id=request.args.get('role_id',''), actif=request.args.get('actif',''), departement_id=request.args.get('departement_id','')) }}"
+         class="page-btn" aria-label="Page précédente">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </a>
+      {% else %}
+      <span class="page-btn page-btn-disabled"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></span>
       {% endif %}
-    {% endfor %}
 
-    {% if utilisateurs.has_next %}
-    <a href="{{ url_for('admin.utilisateurs', page=utilisateurs.next_num, search=request.args.get('search',''), role=request.args.get('role',''), actif=request.args.get('actif','')) }}"
-       class="page-btn" aria-label="Page suivante">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-    </a>
-    {% else %}
-    <span class="page-btn page-btn-disabled" aria-disabled="true">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-    </span>
+      {% for p in range(1, utilisateurs.pages + 1) %}
+        {% if p == utilisateurs.page %}
+          <span class="page-btn page-btn-active">{{ p }}</span>
+        {% elif p == 1 or p == utilisateurs.pages or (p >= utilisateurs.page - 2 and p <= utilisateurs.page + 2) %}
+          <a href="{{ url_for('admin.utilisateurs', page=p, search=request.args.get('search',''), role_id=request.args.get('role_id',''), actif=request.args.get('actif',''), departement_id=request.args.get('departement_id','')) }}"
+             class="page-btn">{{ p }}</a>
+        {% elif p == utilisateurs.page - 3 or p == utilisateurs.page + 3 %}
+          <span class="page-btn page-btn-ellipsis">…</span>
+        {% endif %}
+      {% endfor %}
+
+      {% if utilisateurs.has_next %}
+      <a href="{{ url_for('admin.utilisateurs', page=utilisateurs.next_num, search=request.args.get('search',''), role_id=request.args.get('role_id',''), actif=request.args.get('actif',''), departement_id=request.args.get('departement_id','')) }}"
+         class="page-btn" aria-label="Page suivante">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      {% else %}
+      <span class="page-btn page-btn-disabled"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+      {% endif %}
+    </div>
     {% endif %}
   </div>
-  {% endif %}
 
   {% else %}
   <!-- Empty State -->
@@ -211,14 +291,14 @@
     </svg>
     <p class="empty-title">Aucun utilisateur trouvé</p>
     <p class="empty-desc">
-      {% if request.args.get('search') or request.args.get('role') or request.args.get('actif') %}
-        Aucun utilisateur ne correspond aux filtres actuels. Essayez d'affiner votre recherche.
+      {% if request.args.get('search') or request.args.get('role_id') or request.args.get('actif') or request.args.get('departement_id') %}
+        Aucun utilisateur ne correspond à ces filtres.
       {% else %}
         Commencez par créer le premier compte utilisateur.
       {% endif %}
     </p>
     <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;">
-      {% if request.args.get('search') or request.args.get('role') or request.args.get('actif') %}
+      {% if request.args.get('search') or request.args.get('role_id') or request.args.get('actif') or request.args.get('departement_id') %}
       <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost btn-sm">Effacer les filtres</a>
       {% endif %}
       <a href="{{ url_for('admin.nouvel_utilisateur') }}" class="btn btn-primary btn-sm">Nouvel utilisateur</a>
@@ -226,5 +306,10 @@
   </div>
   {% endif %}
 
-</div><!-- /page -->
+</div>
+
+<style>
+  tr.row-inactive td { opacity: .55; }
+  tr.row-inactive:hover td { opacity: .75; }
+</style>
 {% endblock %}

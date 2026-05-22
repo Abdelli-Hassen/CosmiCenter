@@ -61,12 +61,49 @@ def tableau_bord():
 @admin_required
 def utilisateurs():
     """Liste des utilisateurs"""
-    page = request.args.get('page', 1, type=int)
-    utilisateurs = Utilisateur.query.order_by(Utilisateur.nom).paginate(
+    from models import Role
+    page        = request.args.get('page', 1, type=int)
+    search      = request.args.get('search', '').strip()
+    role_id     = request.args.get('role_id', '')
+    actif_str   = request.args.get('actif', '')
+    dept_id     = request.args.get('departement_id', '')
+
+    q = Utilisateur.query
+    if search:
+        like = f'%{search}%'
+        q = q.filter(
+            db.or_(
+                Utilisateur.nom.ilike(like),
+                Utilisateur.prenom.ilike(like),
+                Utilisateur.email.ilike(like),
+                Utilisateur.poste.ilike(like),
+            )
+        )
+    if role_id:
+        q = q.filter(Utilisateur.role_id == role_id)
+    if actif_str in ('0', '1'):
+        q = q.filter(Utilisateur.actif == (actif_str == '1'))
+    if dept_id:
+        q = q.filter(Utilisateur.departement_id == dept_id)
+
+    utilisateurs_page = q.order_by(Utilisateur.nom, Utilisateur.prenom).paginate(
         page=page, per_page=20, error_out=False
     )
-    
-    return render_template('admin/utilisateurs.html', utilisateurs=utilisateurs)
+
+    total_actifs   = Utilisateur.query.filter_by(actif=True).count()
+    total_inactifs = Utilisateur.query.filter_by(actif=False).count()
+
+    roles        = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
+    departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
+
+    return render_template(
+        'admin/utilisateurs.html',
+        utilisateurs=utilisateurs_page,
+        roles=roles,
+        departements=departements,
+        total_actifs=total_actifs,
+        total_inactifs=total_inactifs,
+    )
 
 
 @admin_bp.route('/utilisateurs/nouveau', methods=['GET', 'POST'])
@@ -171,6 +208,26 @@ def desactiver_utilisateur(user_id):
         logger.error(f'Erreur lors de la désactivation: {str(e)}')
         flash('Erreur lors de la désactivation', 'danger')
     
+    return redirect(url_for('admin.utilisateurs'))
+
+
+@admin_bp.route('/utilisateurs/<user_id>/reactiver', methods=['POST'])
+@login_required
+@admin_required
+def reactiver_utilisateur(user_id):
+    """Réactiver un utilisateur désactivé"""
+    utilisateur = Utilisateur.query.get_or_404(user_id)
+    try:
+        utilisateur.actif = True
+        utilisateur.verrouille = False
+        utilisateur.tentatives_connexion = 0
+        db.session.commit()
+        flash(f'{utilisateur.prenom} {utilisateur.nom} a été réactivé', 'success')
+        logger.info(f'Utilisateur réactivé: {utilisateur.email} par {current_user.email}')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Erreur lors de la réactivation: {str(e)}')
+        flash('Erreur lors de la réactivation', 'danger')
     return redirect(url_for('admin.utilisateurs'))
 
 
