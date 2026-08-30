@@ -81,15 +81,14 @@
           <!-- Role + Department -->
           <div class="form-row" style="margin-bottom:16px;">
             <div class="form-group">
-              <label class="form-label" for="role">Rôle <span style="color:var(--error);">*</span></label>
+              <label class="form-label" for="role_id">Rôle <span style="color:var(--error);">*</span></label>
               <div class="select-wrap">
-                <select id="role" name="role" class="select" required>
+                <select id="role_id" name="role_id" class="select" required>
                   <option value="">Sélectionner un rôle...</option>
-                  {% set current_role = request.form.get('role', utilisateur.role.nom if utilisateur.role else '') %}
-                  <option value="Administrateur" {% if current_role == 'Administrateur' %}selected{% endif %}>Administrateur</option>
-                  <option value="Manager" {% if current_role == 'Manager' %}selected{% endif %}>Manager</option>
-                  <option value="Agent" {% if current_role == 'Agent' %}selected{% endif %}>Agent</option>
-                  <option value="Utilisateur" {% if current_role == 'Utilisateur' %}selected{% endif %}>Utilisateur</option>
+                  {% set current_role_id = request.form.get('role_id', utilisateur.role_id or '') %}
+                  {% for role in roles %}
+                  <option value="{{ role.id }}" {% if current_role_id == role.id %}selected{% endif %}>{{ role.nom }}</option>
+                  {% endfor %}
                 </select>
               </div>
             </div>
