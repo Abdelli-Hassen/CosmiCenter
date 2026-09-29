@@ -248,3 +248,28 @@ def fermer(ticket_id):
         flash('Erreur lors de la fermeture', 'danger')
     
     return redirect(url_for('tickets.detail', ticket_id=ticket_id))
+
+
+# ─── Base de connaissances (FAQ) ────────────────────────────────────────────
+
+@tickets_bp.route('/faq')
+@login_required
+def faq_liste():
+    """Liste des guides de la base de connaissances"""
+    return render_template('faq/liste.html')
+
+
+@tickets_bp.route('/faq/<article_id>')
+@login_required
+def faq_detail(article_id):
+    """Lecture d'un article de la base de connaissances"""
+    return render_template('faq/detail.html')
+
+
+# ─── Chat / Messagerie ───────────────────────────────────────────────────────
+
+@tickets_bp.route('/chat')
+@login_required
+def chat_inbox():
+    """Centre de messagerie"""
+    return render_template('chat/inbox.html')

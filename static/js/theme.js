@@ -31,9 +31,13 @@
    */
   function setTheme(theme) {
     const t = theme === LIGHT ? LIGHT : DARK;
-    document.body.dataset.theme = t;
+    document.documentElement.dataset.theme = t;
+    document.documentElement.style.colorScheme = t;
+    document.documentElement.style.backgroundColor = t === DARK ? '#14122B' : '#FAF6F1';
+    
     try {
       localStorage.setItem(STORAGE_KEY, t);
+      document.cookie = "chub_theme=" + t + "; path=/; max-age=31536000";
     } catch (e) {}
     updateToggleButton(t);
     // Dispatch a custom event so other modules can react
@@ -45,14 +49,23 @@
    * @returns {string}
    */
   function currentTheme() {
-    return document.body.dataset.theme === LIGHT ? LIGHT : DARK;
+    return document.documentElement.dataset.theme === LIGHT ? LIGHT : DARK;
   }
 
   /**
    * Toggle between dark and light.
    */
   function toggle() {
-    setTheme(currentTheme() === DARK ? LIGHT : DARK);
+    const nextTheme = currentTheme() === DARK ? LIGHT : DARK;
+    if (document.startViewTransition) {
+      document.startViewTransition(() => setTheme(nextTheme));
+    } else {
+      document.documentElement.classList.add('theme-transitioning');
+      setTheme(nextTheme);
+      setTimeout(() => {
+        document.documentElement.classList.remove('theme-transitioning');
+      }, 400);
+    }
   }
 
   /**
@@ -63,21 +76,19 @@
     const btn = document.getElementById('theme-toggle');
     if (!btn) return;
 
-    const iconEl  = btn.querySelector('.theme-toggle-icon');
-    const labelEl = btn.querySelector('.theme-toggle-label');
+    const darkIcon = document.getElementById('themeIconDark');
+    const lightIcon = document.getElementById('themeIconLight');
 
     if (theme === LIGHT) {
-      // Currently light — button offers to switch to dark
-      if (iconEl)  iconEl.textContent = '🌙';
-      if (labelEl) labelEl.textContent = 'Dark mode';
-      btn.setAttribute('aria-label', 'Switch to dark mode');
-      btn.setAttribute('data-tooltip', 'Switch to dark mode');
+      if (darkIcon) darkIcon.style.display = 'block'; // Sun icon for light mode
+      if (lightIcon) lightIcon.style.display = 'none';
+      btn.setAttribute('aria-label', 'Activer le mode sombre');
+      btn.setAttribute('title', 'Activer le mode sombre');
     } else {
-      // Currently dark — button offers to switch to light
-      if (iconEl)  iconEl.textContent = '☀️';
-      if (labelEl) labelEl.textContent = 'Light mode';
-      btn.setAttribute('aria-label', 'Switch to light mode');
-      btn.setAttribute('data-tooltip', 'Switch to light mode');
+      if (darkIcon) darkIcon.style.display = 'none';
+      if (lightIcon) lightIcon.style.display = 'block'; // Moon icon for dark mode
+      btn.setAttribute('aria-label', 'Activer le mode clair');
+      btn.setAttribute('title', 'Activer le mode clair');
     }
   }
 
@@ -100,7 +111,7 @@
    */
   function init() {
     const theme = resolveInitialTheme();
-    document.body.dataset.theme = theme;
+    document.documentElement.dataset.theme = theme;
 
     // Bind interactive elements after DOM is ready
     if (document.readyState === 'loading') {

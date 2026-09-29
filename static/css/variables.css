@@ -1,155 +1,201 @@
 /* ============================================================
-   COSMITTOHUB — DESIGN SYSTEM TOKENS
-   Complete CSS custom properties for the entire platform
+   COSMITTOHUB — DESIGN SYSTEM TOKENS v3
+   Calm, dense, readable daily-use tool
    ============================================================ */
 
-:root {
-  /* ─── Brand ─────────────────────────────────────────────── */
-  --brand:          #DC2626;
-  --brand-hover:    #B91C1C;
-  --brand-active:   #991B1B;
-  --brand-light:    rgba(220, 38, 38, 0.10);
-  --brand-subtle:   rgba(220, 38, 38, 0.06);
-  --brand-glow:     rgba(220, 38, 38, 0.25);
 
-  /* ─── Surfaces (Dark mode — default) ────────────────────── */
-  --surface-base:   #080B10;
-  --surface-1:      #0F172A;
-  --surface-2:      #1E293B;
-  --surface-3:      #263245;
-  --surface-4:      #334155;
-  --surface-5:      #475569;
+:root {
+  /* ─── Exact Spec Tokens ──────────────────────────────────── */
+  --red:     #E8213F;
+  --ink:     #0B0B0F;
+  --space:   #14122B;
+  --cream:   #FAF6F1;
+  --border:  #E7E5E4;
+  --radius:  10px;
+  --shadow:  0 1px 2px rgba(11,11,15,.06);
+
+  /* ─── Brand ─────────────────────────────────────────────── */
+  --brand:          var(--red);
+  --brand-hover:    #C9162F;
+  --brand-active:   #A81027;
+  --brand-light:    rgba(232, 33, 63, 0.10);
+  --brand-subtle:   rgba(232, 33, 63, 0.06);
+  --brand-glow:     rgba(232, 33, 63, 0.25);
+}
+
+:root:not([data-theme="dark"]) {
+  /* ─── Shell (sidebar, chrome) - Light Mode ─────────────── */
+  --shell:          #FFFFFF;
+  --shell-1:        #F8FAFC;
+  --shell-2:        #F1F5F9;
+  --shell-3:        #E2E8F0;
+  --shell-muted:    var(--text-muted);
+  --shell-border:   var(--border-subtle);
+
+  /* ─── Surfaces (Light mode — default) ───────────────────── */
+  --surface-base:   var(--cream);
+  --surface-1:      #FFFFFF;
+  --surface-2:      #F4F0EB;
+  --surface-3:      #EDE8E1;
+  --surface-4:      #E0D9D0;
+  --surface-raised: #FFFFFF;
 
   /* ─── Text ───────────────────────────────────────────────── */
-  --text-primary:   #F8FAFC;
-  --text-secondary: #CBD5E1;
-  --text-muted:     #94A3B8;
-  --text-faint:     #64748B;
-  --text-disabled:  #475569;
-  --text-inverse:   #080B10;
-  --text-brand:     #FCA5A5;
-  --text-ai:        #C4B5FD;
+  --text-primary:   var(--ink);
+  --text-secondary: #3A3A42;
+  --text-muted:     #6B6B76;
+  --text-faint:     #9A9AA5;
+  --text-disabled:  #C5C5CC;
+  --text-inverse:   #FFFFFF;
+  --text-brand:     var(--red);
 
   /* ─── Borders ────────────────────────────────────────────── */
-  --border-subtle:  rgba(255, 255, 255, 0.06);
-  --border-default: rgba(255, 255, 255, 0.10);
-  --border-strong:  rgba(255, 255, 255, 0.16);
-  --border-focus:   #6366F1;
+  --border-subtle:  #F0EDE9;
+  --border-default: var(--border);
+  --border-strong:  #CCC9C4;
+  --border-focus:   var(--red);
+}
 
-  /* ─── Status ─────────────────────────────────────────────── */
-  --status-new:           #6366F1;
-  --status-new-bg:        rgba(99, 102, 241, 0.12);
-  --status-new-border:    rgba(99, 102, 241, 0.25);
-  --status-progress:      #0EA5E9;
-  --status-progress-bg:   rgba(14, 165, 233, 0.12);
-  --status-progress-border: rgba(14, 165, 233, 0.25);
-  --status-waiting:       #F59E0B;
-  --status-waiting-bg:    rgba(245, 158, 11, 0.12);
-  --status-waiting-border: rgba(245, 158, 11, 0.25);
-  --status-resolved:      #10B981;
-  --status-resolved-bg:   rgba(16, 185, 129, 0.12);
-  --status-resolved-border: rgba(16, 185, 129, 0.25);
-  --status-closed:        #64748B;
-  --status-closed-bg:     rgba(100, 116, 139, 0.12);
-  --status-closed-border: rgba(100, 116, 139, 0.25);
-  --status-cancelled:     #EF4444;
-  --status-cancelled-bg:  rgba(239, 68, 68, 0.12);
-  --status-cancelled-border: rgba(239, 68, 68, 0.25);
+:root {
+  /* ─── Status (strictly separated from brand red) ─────────── */
+  --status-new:              #2F6BFF;
+  --status-new-bg:           rgba(47, 107, 255, 0.10);
+  --status-new-border:       rgba(47, 107, 255, 0.25);
+  --status-progress:         #7A5500;
+  --status-progress-bg:      #FFC93C;
+  --status-progress-border:  rgba(255, 201, 60, 0.40);
+  --status-progress-badge:   #FFC93C;
+  --status-waiting:          #7A5AF8;
+  --status-waiting-bg:       rgba(122, 90, 248, 0.10);
+  --status-waiting-border:   rgba(122, 90, 248, 0.25);
+  --status-resolved:         #1FA36B;
+  --status-resolved-bg:      rgba(31, 163, 107, 0.10);
+  --status-resolved-border:  rgba(31, 163, 107, 0.25);
+  --status-closed:           #9A9AA5;
+  --status-closed-bg:        rgba(154, 154, 165, 0.10);
+  --status-closed-border:    rgba(154, 154, 165, 0.25);
+  --status-cancelled:        #9A9AA5;
+  --status-cancelled-bg:     rgba(154, 154, 165, 0.10);
+  --status-cancelled-border: rgba(154, 154, 165, 0.25);
 
   /* ─── Priority ───────────────────────────────────────────── */
-  --priority-critical:    #DC2626;
-  --priority-critical-bg: rgba(220, 38, 38, 0.12);
-  --priority-urgent:      #F97316;
-  --priority-urgent-bg:   rgba(249, 115, 22, 0.12);
-  --priority-high:        #F59E0B;
-  --priority-high-bg:     rgba(245, 158, 11, 0.12);
-  --priority-medium:      #3B82F6;
-  --priority-medium-bg:   rgba(59, 130, 246, 0.12);
-  --priority-low:         #64748B;
-  --priority-low-bg:      rgba(100, 116, 139, 0.12);
+  --priority-critical:    #9B1030;
+  --priority-critical-bg: rgba(155, 16, 48, 0.10);
+  --priority-urgent:      #E8213F;
+  --priority-urgent-bg:   rgba(232, 33, 63, 0.10);
+  --priority-high:        #F97316;
+  --priority-high-bg:     rgba(249, 115, 22, 0.10);
+  --priority-medium:      #2F6BFF;
+  --priority-medium-bg:   rgba(47, 107, 255, 0.10);
+  --priority-low:         #9A9AA5;
+  --priority-low-bg:      rgba(154, 154, 165, 0.10);
 
   /* ─── AI ─────────────────────────────────────────────────── */
-  --ai-primary:     #8B5CF6;
-  --ai-bg:          rgba(139, 92, 246, 0.10);
-  --ai-border:      rgba(139, 92, 246, 0.25);
-  --ai-text:        #C4B5FD;
-  --ai-glow:        rgba(139, 92, 246, 0.30);
+  --ai-primary:     #7A5AF8;
+  --ai-bg:          rgba(122, 90, 248, 0.08);
+  --ai-border:      rgba(122, 90, 248, 0.22);
+  --ai-text:        #7A5AF8;
+  --ai-glow:        rgba(122, 90, 248, 0.25);
 
   /* ─── Feedback ───────────────────────────────────────────── */
-  --success:        #10B981;
-  --success-bg:     rgba(16, 185, 129, 0.10);
-  --success-border: rgba(16, 185, 129, 0.25);
-  --warning:        #F59E0B;
-  --warning-bg:     rgba(245, 158, 11, 0.10);
-  --warning-border: rgba(245, 158, 11, 0.25);
-  --error:          #EF4444;
-  --error-bg:       rgba(239, 68, 68, 0.10);
-  --error-border:   rgba(239, 68, 68, 0.25);
-  --info:           #0EA5E9;
-  --info-bg:        rgba(14, 165, 233, 0.10);
-  --info-border:    rgba(14, 165, 233, 0.25);
+  --success:        #1FA36B;
+  --success-bg:     rgba(31, 163, 107, 0.10);
+  --success-border: rgba(31, 163, 107, 0.25);
+  --warning:        #FFC93C;
+  --warning-bg:     rgba(255, 201, 60, 0.15);
+  --warning-border: rgba(255, 201, 60, 0.35);
+  --error:          #E8213F;
+  --error-bg:       rgba(232, 33, 63, 0.08);
+  --error-border:   rgba(232, 33, 63, 0.25);
+  --info:           #2F6BFF;
+  --info-bg:        rgba(47, 107, 255, 0.08);
+  --info-border:    rgba(47, 107, 255, 0.25);
 
-  /* ─── Chart colors ───────────────────────────────────────── */
-  --chart-1: #6366F1;
-  --chart-2: #0EA5E9;
-  --chart-3: #10B981;
-  --chart-4: #F59E0B;
-  --chart-5: #EF4444;
-  --chart-6: #8B5CF6;
+  /* ─── Chart colors (status palette) ─────────────────────── */
+  --chart-1: #2F6BFF;
+  --chart-2: #FFC93C;
+  --chart-3: #1FA36B;
+  --chart-4: #7A5AF8;
+  --chart-5: #E8213F;
+  --chart-6: #9A9AA5;
 
   /* ─── Shadows ────────────────────────────────────────────── */
-  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm:  0 2px 4px rgba(0, 0, 0, 0.35);
-  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg:  0 16px 32px rgba(0, 0, 0, 0.5);
-  --shadow-xl:  0 32px 64px rgba(0, 0, 0, 0.6);
-  --shadow-focus: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  --shadow-brand: 0 0 0 3px rgba(220, 38, 38, 0.15);
+  --shadow-xs:     var(--shadow);
+  --shadow-sm:     0 2px 4px rgba(11,11,15,.08);
+  --shadow-md:     0 4px 12px rgba(11,11,15,.10);
+  --shadow-lg:     0 16px 32px rgba(11,11,15,.12);
+  --shadow-xl:     0 32px 64px rgba(11,11,15,.16);
+  --shadow-focus:  0 0 0 3px rgba(232, 33, 63, 0.18);
+  --shadow-brand:  0 0 0 3px rgba(232, 33, 63, 0.18);
+  --shadow-brutal: 3px 3px 0px var(--ink);
 
   /* ─── Border radius ──────────────────────────────────────── */
+  --r-sm:   6px;
+  --r-md:   10px;
+  --r-lg:   16px;
+  --r-pill: 999px;
+  /* Aliases for existing code */
   --radius-xs:   2px;
-  --radius-sm:   4px;
-  --radius-md:   6px;
-  --radius-lg:   10px;
+  --radius-sm:   var(--r-sm);
+  --radius-md:   var(--r-md);
+  --radius-lg:   var(--r-lg);
   --radius-xl:   14px;
   --radius-2xl:  20px;
-  --radius-full: 9999px;
+  --radius-full: var(--r-pill);
 
-  /* ─── Spacing ────────────────────────────────────────────── */
-  --space-1:  4px;
-  --space-2:  8px;
-  --space-3:  12px;
-  --space-4:  16px;
-  --space-5:  20px;
-  --space-6:  24px;
-  --space-8:  32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
+  /* ─── Spacing (8px scale) ────────────────────────────────── */
+  --s1:  4px;
+  --s2:  8px;
+  --s3:  12px;
+  --s4:  16px;
+  --s6:  24px;
+  --s8:  32px;
+  --s12: 48px;
+  --s16: 64px;
+  /* Legacy aliases */
+  --space-1:  var(--s1);
+  --space-2:  var(--s2);
+  --space-3:  var(--s3);
+  --space-4:  var(--s4);
+  --space-5:  20px; /* legacy */
+  --space-6:  var(--s6);
+  --space-8:  var(--s8);
+  --space-10: 40px; /* legacy */
+  --space-12: var(--s12);
+  --space-16: var(--s16);
   --space-20: 80px;
 
   /* ─── Layout ─────────────────────────────────────────────── */
-  --chrome-height:   48px;
-  --sidebar-width:   240px;
-  --sidebar-collapsed: 52px;
+  --chrome-height:       56px; /* Updated from 48px */
+  --sidebar-width:       248px; /* Updated from 240px */
+  --sidebar-collapsed:   64px; /* Updated from 52px */
   --context-panel-width: 320px;
+  --row-height:          48px;
 
-  /* ─── Animation ──────────────────────────────────────────── */
-  --ease-default:    cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-in:         cubic-bezier(0.4, 0, 1, 1);
-  --ease-out:        cubic-bezier(0, 0, 0.2, 1);
-  --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* ─── Motion System ──────────────────────────────────────── */
+  --fast: 120ms;
+  --base: 200ms;
+  --slow: 320ms;
+  --emph: 600ms;
 
-  --duration-fast:      100ms;
-  --duration-default:   150ms;
-  --duration-moderate:  200ms;
-  --duration-slow:      300ms;
-  --duration-deliberate: 400ms;
+  --ease-out:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:    cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Legacy aliases */
+  --ease-default:        var(--ease-out);
+  --ease-spring:         var(--spring);
+  --duration-fast:       var(--fast);
+  --duration-default:    var(--base);
+  --duration-moderate:   var(--base);
+  --duration-slow:       var(--slow);
+  --duration-deliberate: var(--emph);
 
   /* ─── Typography ─────────────────────────────────────────── */
-  --font-display:    'Staatliches', system-ui, sans-serif;
-  --font-sans:       'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono:       'IBM Plex Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --font-display:  'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-sans:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:     'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 
   --text-2xs:  11px;
   --text-xs:   12px;
@@ -164,45 +210,59 @@
   --text-6xl:  56px;
 
   /* ─── Z-index stack ──────────────────────────────────────── */
-  --z-base:       0;
-  --z-raised:     10;
-  --z-dropdown:   100;
-  --z-sticky:     200;
-  --z-overlay:    300;
-  --z-modal:      400;
-  --z-popover:    500;
-  --z-toast:      600;
-  --z-command:    700;
+  --z-base:     0;
+  --z-raised:   10;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-overlay:  300;
+  --z-modal:    400;
+  --z-popover:  500;
+  --z-toast:    600;
+  --z-command:  700;
 }
 
-/* ─── Light mode ──────────────────────────────────────────── */
-[data-theme="light"] {
-  --surface-base:   #F8FAFC;
-  --surface-1:      #FFFFFF;
-  --surface-2:      #F1F5F9;
-  --surface-3:      #E2E8F0;
-  --surface-4:      #CBD5E1;
-  --surface-5:      #94A3B8;
+/* ─── Dark mode ───────────────────────────────────────────── */
+[data-theme="dark"] {
+  /* Shell (Deep Space) */
+  --shell:          var(--space);
+  --shell-1:        #1C1A36;
+  --shell-2:        #25233F;
+  --shell-3:        #302E4E;
+  --shell-muted:    rgba(255,255,255,0.45);
+  --shell-border:   rgba(255,255,255,0.08);
 
-  --text-primary:   #0F172A;
-  --text-secondary: #334155;
-  --text-muted:     #64748B;
-  --text-faint:     #94A3B8;
-  --text-disabled:  #CBD5E1;
-  --text-inverse:   #F8FAFC;
-  --text-brand:     #991B1B;
-  --text-ai:        #7C3AED;
+  /* Surfaces */
+  --surface-base:   var(--shell);
+  --surface-1:      var(--shell-1);
+  --surface-2:      var(--shell-2);
+  --surface-3:      var(--shell-3);
+  --surface-4:      var(--space-3);
+  --surface-raised: var(--shell-1);
 
-  --border-subtle:  rgba(0, 0, 0, 0.05);
-  --border-default: rgba(0, 0, 0, 0.09);
-  --border-strong:  rgba(0, 0, 0, 0.14);
+  --text-primary:   #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted:     #9A9AA5;
+  --text-faint:     #6B6B76;
+  --text-disabled:  #475569;
+  --text-inverse:   #0B0B0F;
+  --text-brand:     var(--red);
 
-  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-sm:  0 2px 4px rgba(0, 0, 0, 0.08);
-  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.10);
-  --shadow-lg:  0 16px 32px rgba(0, 0, 0, 0.12);
-  --shadow-xl:  0 32px 64px rgba(0, 0, 0, 0.16);
+  --border:         rgba(255,255,255,0.10);
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-default: rgba(255,255,255,0.10);
+  --border-strong:  rgba(255,255,255,0.16);
 
-  --ai-bg:     rgba(139, 92, 246, 0.06);
-  --ai-border: rgba(139, 92, 246, 0.20);
+  --shadow-xs:     0 1px 2px rgba(0,0,0,.30);
+  --shadow-sm:     0 2px 4px rgba(0,0,0,.35);
+  --shadow-md:     0 4px 12px rgba(0,0,0,.40);
+  --shadow-lg:     0 16px 32px rgba(0,0,0,.50);
+  --shadow-xl:     0 32px 64px rgba(0,0,0,.60);
+  --shadow-brutal: 3px 3px 0px rgba(255,255,255,0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { 
+    animation-duration: 0.01ms !important; 
+    transition-duration: 0.01ms !important; 
+  }
 }

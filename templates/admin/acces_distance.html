@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block title %}Accès à distance{% endblock %}
+{% block content %}
+<style>
+  .admin-header {
+    margin-bottom: 32px;
+    text-align: center;
+  }
+  .admin-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 12px;
+  }
+  .admin-subtitle {
+    font-size: 16px;
+    color: #64748b;
+    margin: 0;
+  }
+  
+  .search-container {
+    max-width: 700px;
+    margin: 0 auto 40px;
+    position: relative;
+  }
+  .search-input {
+    width: 100%;
+    padding: 16px 24px 16px 56px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    font-size: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-input:focus {
+    outline: none;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  }
+  .search-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .access-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 24px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .access-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    border-color: #cbd5e1;
+  }
+  .access-card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .access-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    margin-right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #475569;
+    font-size: 18px;
+  }
+  .access-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+  .access-company {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #64748b;
+  }
+  .access-detail {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 14px;
+  }
+  .access-label {
+    color: #64748b;
+  }
+  .access-value {
+    font-weight: 500;
+    color: #0f172a;
+    font-family: var(--font-mono, monospace);
+  }
+  .access-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+  }
+  .btn-connect {
+    flex: 1;
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+  }
+  .btn-connect:hover {
+    background: #b91c1c;
+  }
+  .btn-copy {
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-copy:hover {
+    background: #e2e8f0;
+  }
+</style>
+
+<div class="page" style="padding: 40px 24px;">
+  <div class="admin-header">
+    <h1 class="admin-title">Accès à Distance (AnyDesk / TeamViewer)</h1>
+    <p class="admin-subtitle">Recherchez rapidement les identifiants de connexion d'un collaborateur.</p>
+  </div>
+
+  <div class="search-container">
+    <svg class="search-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" class="search-input" placeholder="Rechercher par nom, poste, ou société...">
+  </div>
+
+  <div class="results-grid">
+    <!-- Result Card -->
+    <div class="access-card">
+      <div class="access-card-header">
+        <div class="access-avatar">JD</div>
+        <div>
+          <h3 class="access-name">Jean Dupont</h3>
+          <p class="access-company">Comptable • Meninx</p>
+        </div>
+      </div>
+      <div>
+        <div class="access-detail">
+          <span class="access-label">ID AnyDesk</span>
+          <span class="access-value">123 456 789</span>
+        </div>
+        <div class="access-detail">
+          <span class="access-label">Mot de passe</span>
+          <span class="access-value">••••••••</span>
+        </div>
+        <div class="access-detail">
+          <span class="access-label">Poste</span>
+          <span class="access-value">PC-COMPTA-01</span>
+        </div>
+      </div>
+      <div class="access-actions">
+        <button class="btn-connect">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Connecter
+        </button>
+        <button class="btn-copy" title="Copier l'ID">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Result Card -->
+    <div class="access-card">
+      <div class="access-card-header">
+        <div class="access-avatar" style="background:#fef3c7; color:#d97706;">SB</div>
+        <div>
+          <h3 class="access-name">Sarra Ben Ali</h3>
+          <p class="access-company">RH • Cosmitto Coffee</p>
+        </div>
+      </div>
+      <div>
+        <div class="access-detail">
+          <span class="access-label">ID TeamViewer</span>
+          <span class="access-value">987 654 321</span>
+        </div>
+        <div class="access-detail">
+          <span class="access-label">Mot de passe</span>
+          <span class="access-value">••••••••</span>
+        </div>
+        <div class="access-detail">
+          <span class="access-label">Poste</span>
+          <span class="access-value">PC-RH-02</span>
+        </div>
+      </div>
+      <div class="access-actions">
+        <button class="btn-connect" style="background:#2563eb;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Connecter
+        </button>
+        <button class="btn-copy" title="Copier l'ID">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

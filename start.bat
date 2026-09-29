@@ -2,7 +2,7 @@
 chcp 65001 >nul
 echo.
 echo ╔════════════════════════════════════════════════════════╗
-echo ║     COSMITTODESK 2.0 - DÉMARRAGE RAPIDE              ║
+echo ║     COSMITTODESK 2.0 - DÉMARRAGE RAPIDE                ║
 echo ╚════════════════════════════════════════════════════════╝
 echo.
 
@@ -50,14 +50,16 @@ echo.
 echo ═══════════════════════════════════════════════════════
 echo.
 
-REM Vérifier si la base de données existe
-if not exist "instance\cosmitto.db" (
-    echo La base de données n'existe pas encore.
+REM Vérifier si la base de données PostgreSQL est initialisée
+python -c "import psycopg, sys; conn=psycopg.connect('postgresql+psycopg://CosHub:testtest@localhost:5432/CosHub'.replace('postgresql+psycopg','postgresql')); cur=conn.cursor(); cur.execute(\"SELECT COUNT(*) FROM pg_tables WHERE schemaname='public'\"); n=cur.fetchone()[0]; conn.close(); sys.exit(0 if n>0 else 1)" >nul 2>&1
+if errorlevel 1 (
+    echo La base de données PostgreSQL n'est pas encore initialisée.
     echo.
     set /p init="Voulez-vous initialiser la base de données? (O/N): "
     if /i "%init%"=="O" (
         echo.
         echo Initialisation de la base de données...
+        set DATABASE_URL=postgresql+psycopg://CosHub:testtest@localhost:5432/CosHub
         python scripts\init_db.py
         echo.
     )
@@ -68,7 +70,7 @@ echo ╔════════════════════════
 echo ║           LANCEMENT DE L'APPLICATION                  ║
 echo ╚════════════════════════════════════════════════════════╝
 echo.
-echo L'application va démarrer sur http://127.0.0.1:5000
+echo L'application va démarrer sur http://127.0.0.1:8080
 echo.
 echo Connexion par défaut:
 echo   Email: admin@example.com
@@ -80,6 +82,7 @@ echo ═════════════════════════
 echo.
 
 REM Lancer l'application
+set DATABASE_URL=postgresql+psycopg://CosHub:testtest@localhost:5432/CosHub
 python app.py
 
 pause

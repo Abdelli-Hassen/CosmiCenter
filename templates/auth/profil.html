@@ -1,10 +1,177 @@
 {% extends "base.html" %}
 {% block title %}Mon Profil - {{ super() }}{% endblock %}
+
 {% block content %}
-<div class="page-header"><h1>Mon Profil</h1></div>
-<div class="profile-card">
-    <h2>{{ utilisateur.prenom }} {{ utilisateur.nom }}</h2>
-    <p>E-mail : {{ utilisateur.email }}</p>
-    <p>Rôle : {{ utilisateur.role }}</p>
+<style>
+  .profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+  .page-header {
+    margin-bottom: 32px;
+  }
+  .page-header h1 {
+    font-size: 24px;
+    color: var(--text-primary, #111827);
+    margin: 0;
+  }
+  .profile-section {
+    background: var(--surface-default, #ffffff);
+    border: 1px solid var(--border-subtle, #e5e7eb);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .profile-section h2 {
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 24px;
+    color: var(--text-primary, #111827);
+  }
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary, #374151);
+    margin-bottom: 8px;
+  }
+  .form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #111827;
+  }
+  .form-control:focus {
+    outline: none;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220,38,38,.1);
+  }
+  .form-row {
+    display: flex;
+    gap: 20px;
+  }
+  .form-row > .form-group {
+    flex: 1;
+  }
+  .btn-save {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-save:hover {
+    background: #b91c1c;
+  }
+  .avatar-upload {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .avatar-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: #9ca3af;
+    font-size: 24px;
+    font-weight: bold;
+    border: 2px solid #e5e7eb;
+  }
+</style>
+
+<div class="profile-container">
+  <div class="page-header">
+    <h1>Gérer mon compte</h1>
+  </div>
+
+  <div class="profile-section">
+    <h2>Informations personnelles</h2>
+    <form method="POST" action="{{ url_for('auth.profil') }}" enctype="multipart/form-data">
+      <input type="hidden" name="action" value="update_info">
+      
+      <div class="avatar-upload">
+        <div class="avatar-preview">
+          {{ utilisateur.prenom[0] }}{{ utilisateur.nom[0] }}
+        </div>
+        <div>
+          <label class="form-group" style="margin-bottom:0;">
+            <span style="display:block;margin-bottom:8px;font-size:14px;font-weight:500;">Photo de profil</span>
+            <input type="file" name="avatar" accept="image/*" class="form-control" style="border:none;padding:0;">
+          </label>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Prénom</label>
+          <input type="text" name="prenom" value="{{ utilisateur.prenom }}" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Nom</label>
+          <input type="text" name="nom" value="{{ utilisateur.nom }}" class="form-control" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>E-mail (Géré par l'administrateur)</label>
+          <input type="email" value="{{ utilisateur.email }}" class="form-control" disabled style="background:#f9fafb;color:#6b7280;">
+        </div>
+        <div class="form-group">
+          <label>Numéro de téléphone</label>
+          <input type="tel" name="telephone" value="{{ utilisateur.telephone | default('') }}" class="form-control">
+        </div>
+      </div>
+      
+      <div style="text-align: right; margin-top: 10px;">
+        <button type="submit" class="btn-save">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="profile-section">
+    <h2>Changer le mot de passe</h2>
+    <form method="POST" action="{{ url_for('auth.profil') }}">
+      <input type="hidden" name="action" value="update_password">
+      
+      <div class="form-group">
+        <label>Mot de passe actuel</label>
+        <input type="password" name="current_password" class="form-control" required>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nouveau mot de passe</label>
+          <input type="password" name="new_password" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Confirmer le nouveau mot de passe</label>
+          <input type="password" name="confirm_password" class="form-control" required>
+        </div>
+      </div>
+      
+      <div style="text-align: right; margin-top: 10px;">
+        <button type="submit" class="btn-save">Enregistrer le mot de passe</button>
+      </div>
+    </form>
+  </div>
+
 </div>
 {% endblock %}

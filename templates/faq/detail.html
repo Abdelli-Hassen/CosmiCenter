@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Article FAQ{% endblock %}
+{% block content %}
+<style>
+  .article-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 48px;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  }
+  .article-header {
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+  }
+  .article-title {
+    font-size: 32px;
+    color: #0f172a;
+    margin: 0 0 12px;
+    line-height: 1.2;
+  }
+  .article-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 14px;
+    color: #64748b;
+  }
+  .article-content {
+    font-size: 16px;
+    color: #334155;
+    line-height: 1.7;
+  }
+  .article-content h2 {
+    font-size: 24px;
+    color: #0f172a;
+    margin: 32px 0 16px;
+  }
+  .article-content img {
+    max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin: 24px 0;
+  }
+  .breadcrumb-custom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 24px;
+  }
+  .breadcrumb-custom a {
+    color: #2563eb;
+    text-decoration: none;
+  }
+  .breadcrumb-custom a:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<div class="page" style="padding: 24px;">
+  <div class="article-container">
+    <div class="breadcrumb-custom">
+      <a href="#">Base de connaissances</a>
+      <span>/</span>
+      <a href="#">Réseau & VPN</a>
+    </div>
+
+    <div class="article-header">
+      <h1 class="article-title">Configurer le VPN d'entreprise</h1>
+      <div class="article-meta">
+        <span>Mis à jour le 12 Octobre 2026</span>
+        <span>Temps de lecture : 3 min</span>
+      </div>
+    </div>
+
+    <div class="article-content">
+      <p>Le VPN (Virtual Private Network) d'entreprise vous permet d'accéder aux ressources internes de Cosmitto Coffee lorsque vous êtes en télétravail ou en déplacement.</p>
+      
+      <h2>1. Télécharger le client</h2>
+      <p>Avant toute chose, vous devez installer le client FortiClient sur votre poste de travail. Vous pouvez le télécharger depuis le portail IT interne.</p>
+
+      <h2>2. Configuration de la connexion</h2>
+      <p>Lancez l'application et créez une nouvelle connexion avec les paramètres suivants :</p>
+      <ul>
+        <li><strong>Nom de connexion :</strong> Cosmitto VPN</li>
+        <li><strong>Passerelle distante :</strong> vpn.cosmittocoffee.com</li>
+        <li><strong>Port :</strong> 443</li>
+      </ul>
+
+      <h2>3. Authentification</h2>
+      <p>Utilisez vos identifiants de session Windows (Active Directory) pour vous connecter. Une notification MFA (Multi-Factor Authentication) sera envoyée sur votre téléphone professionnel pour valider l'accès.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

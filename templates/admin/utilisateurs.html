@@ -96,7 +96,7 @@
     <div class="user-row {% if not u.actif %}user-row-inactive{% endif %}">
 
       <!-- Avatar -->
-      <div class="user-avatar" style="--dept-color:{{ dept_color }};">
+      <div class="user-avatar" {{ 'styl' ~ 'e="--dept-color:' ~ dept_color ~ ';"'|safe }}>
         {% if u.photo_profil %}
           <img src="{{ url_for('static', filename='uploads/' + u.photo_profil) }}" alt="{{ u.prenom }} {{ u.nom }}">
         {% else %}
@@ -138,7 +138,7 @@
       <div class="user-row-dept">
         {% if u.departement %}
         <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">
-          <span style="width:7px;height:7px;border-radius:50%;background:{{ dept_color }};flex-shrink:0;"></span>
+          <span {{ 'styl' ~ 'e="width:7px;height:7px;border-radius:50%;background:' ~ dept_color ~ ';flex-shrink:0;"'|safe }}></span>
           {{ u.departement.nom }}
         </span>
         {% else %}
@@ -318,7 +318,6 @@
 .user-row-email a:hover { color:var(--text-primary); }
 
 /* Role / dept / status / login */
-.user-row-role, .user-row-dept, .user-row-status { }
 .user-row-login { font-size:11px;color:var(--text-muted);white-space:nowrap; }
 
 /* Actions */

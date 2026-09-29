@@ -81,6 +81,13 @@ def create_app(config_name='default'):
         if current_user.is_authenticated:
             return redirect(url_for('tickets.tableau_bord'))
         return redirect(url_for('auth.connexion'))
+
+    # Favicon
+    @app.route('/favicon.ico')
+    def favicon():
+        from flask import send_from_directory
+        return send_from_directory(os.path.join(app.root_path, 'static', 'images'),
+                                   'logo-icon.png', mimetype='image/png')
     
     # Avant chaque requête
     @app.before_request
@@ -195,7 +202,9 @@ def create_app(config_name='default'):
 if __name__ == '__main__':
     app = create_app(os.getenv('FLASK_ENV', 'development'))
     app.run(
-        debug=True,
-        host=os.getenv('FLASK_HOST', '0.0.0.0'),
-        port=int(os.getenv('FLASK_PORT', 5000))
+        debug=False,
+        host=os.getenv('FLASK_HOST', '127.0.0.1'),
+        port=int(os.getenv('FLASK_PORT', 8080)),
+        use_reloader=False,
+        threaded=True
     )

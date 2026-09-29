@@ -1,23 +1,43 @@
 <!DOCTYPE html>
-<html lang="fr" data-theme="dark">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="{{ app_name }} — Plateforme de service d'assistance">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo-icon.png') }}">
   <title>{% block title %}{{ app_name }}{% endblock %} — {{ app_name }}</title>
+
+  <!-- Server-side Theme Cookie for flawless canvas clearing -->
+  {% set current_theme = request.cookies.get('chub_theme', 'dark') %}
+  <meta name="color-scheme" content="{{ current_theme }}">
+
+  <!-- Smooth Navigation & Anti-FOUC -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('chub-theme');
+        var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+        
+        var bg = theme === 'dark' ? '#14122B' : '#FAF6F1';
+        document.write('<style>html, body { background-color: ' + bg + ' !important; }</style>');
+      } catch (e) {}
+    })();
+  </script>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Staatliches&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <!-- Design System CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/tickets.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}?v=103">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}?v=101">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v=101">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v=101">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tickets.css') }}?v=101">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=101">
 
   {% block extra_head %}{% endblock %}
 </head>
@@ -112,6 +132,11 @@
               <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               <span class="nav-item-label">Nouveau ticket</span>
             </a>
+            <a href="{{ url_for('tickets.chat_inbox') }}" class="nav-item {% if request.endpoint == 'tickets.chat_inbox' %}active{% endif %}">
+              <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span class="nav-item-label">Messagerie</span>
+            </a>
+
           </div>
 
           <div class="nav-divider"></div>
@@ -154,6 +179,14 @@
               <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               <span class="nav-item-label">Rôles</span>
             </a>
+            <a href="{{ url_for('admin.plan_action') }}" class="nav-item {% if request.endpoint == 'admin.plan_action' %}active{% endif %}">
+              <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span class="nav-item-label">Plan d'action</span>
+            </a>
+            <a href="{{ url_for('admin.acces_distance') }}" class="nav-item {% if request.endpoint == 'admin.acces_distance' %}active{% endif %}">
+              <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              <span class="nav-item-label">Accès à distance</span>
+            </a>
           </div>
           {% endif %}
 
@@ -191,22 +224,6 @@
     </div><!-- /app-body -->
   </div><!-- /app-shell -->
 
-  <!-- Command Palette -->
-  <div class="cmd-overlay hidden" id="cmdPalette" role="dialog" aria-modal="true" aria-label="Palette de commandes">
-    <div class="cmd-box">
-      <div class="cmd-input-wrap">
-        <svg class="cmd-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" class="cmd-input" id="cmdInput" placeholder="Rechercher ou saisir une commande..." autocomplete="off" spellcheck="false">
-        <span class="cmd-close-hint">Esc</span>
-      </div>
-      <div class="cmd-results" id="cmdResults" role="listbox"></div>
-      <div class="cmd-footer">
-        <span class="cmd-footer-hint"><kbd>↑↓</kbd> naviguer</span>
-        <span class="cmd-footer-hint"><kbd>Enter</kbd> sélectionner</span>
-        <span class="cmd-footer-hint"><kbd>Esc</kbd> fermer</span>
-      </div>
-    </div>
-  </div>
 
   <!-- Notification Panel -->
   <div class="notif-panel" id="notifPanel">
@@ -248,18 +265,18 @@
   <!-- JS Config -->
   <script>
     window.CHUB_CONFIG = {
-      isAuthenticated: {{ 'true' if current_user.is_authenticated else 'false' }},
-      userId: '{{ current_user.id if current_user.is_authenticated else "" }}',
-      appName: '{{ app_name }}',
+      isAuthenticated: "{{ 'true' if current_user and current_user.is_authenticated else 'false' }}" === "true",
+      userId: "{{ current_user.id if current_user and current_user.is_authenticated else '' }}",
+      appName: "{{ app_name | default('CosmittoHUB') }}"
     };
   </script>
 
-  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/command-palette.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/keyboard.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/tickets.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}?v=102"></script>
+  <script src="{{ url_for('static', filename='js/theme.js') }}?v=102"></script>
+  <script src="{{ url_for('static', filename='js/notifications.js') }}?v=102"></script>
+  <script src="{{ url_for('static', filename='js/command-palette.js') }}?v=102"></script>
+  <script src="{{ url_for('static', filename='js/keyboard.js') }}?v=102"></script>
+  <script src="{{ url_for('static', filename='js/tickets.js') }}?v=102"></script>
 
   {% block extra_scripts %}{% endblock %}
 </body>

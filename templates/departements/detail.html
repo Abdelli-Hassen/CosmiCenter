@@ -1,2 +1,22 @@
 {% extends "base.html" %}
-{% block content %}<h1>Détail Département</h1>{% endblock %}
+{% block title %}Détails Département{% endblock %}
+{% block body_class %}page-department-detail{% endblock %}
+
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <a href="{{ url_for('departements.liste') }}" class="breadcrumb-link" style="color:var(--text-muted);font-size:var(--text-sm);text-decoration:none;">← Retour aux départements</a>
+      <h1 class="page-title" style="margin-top:var(--space-2);">{{ departement.nom if departement else 'Détail Département' }}</h1>
+    </div>
+  </div>
+
+  <div class="empty-state" style="padding: 80px 32px;">
+    <svg class="empty-icon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+    </svg>
+    <p class="empty-title">En construction</p>
+    <p class="empty-desc">La vue détaillée pour ce département sera bientôt disponible.</p>
+  </div>
+</div>
+{% endblock %}

@@ -23,7 +23,8 @@
   </div>
 
   <!-- KPI Grid -->
-  <div class="dashboard-grid-4" style="margin-bottom:28px;">
+  <div class="page-body">
+    <div class="dashboard-grid-4" style="margin-bottom:28px;">
 
     <div class="kpi-card">
       <div class="kpi-card-label">Total Tickets</div>
@@ -65,13 +66,16 @@
 
   </div><!-- /dashboard-grid-4 -->
 
-  <!-- Recent Tickets Card -->
-  <div class="card card-raised">
-    <div class="card-header">
-      <div class="card-title">Tickets récents</div>
-      <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm">Voir tout</a>
-    </div>
-    <div class="card-body" style="padding:0;">
+  <!-- Content Grid -->
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-top: 28px; align-items: start;">
+    
+    <!-- Recent Tickets Card -->
+    <div class="card card-raised" style="margin: 0;">
+      <div class="card-header">
+        <div class="card-title">Tickets récents</div>
+        <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm">Voir tout</a>
+      </div>
+      <div class="card-body" style="padding:0;">
 
       {% if tickets %}
       <div class="table-wrap">
@@ -89,8 +93,9 @@
             {% for ticket in tickets[:10] %}
             <tr class="ticket-row"
                 data-ticket-id="{{ ticket.id }}"
+                data-url="{{ url_for('tickets.detail', ticket_id=ticket.id) }}"
                 style="cursor:pointer;"
-                onclick="window.location='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'">
+                onclick="window.location.href=this.getAttribute('data-url');">
               <td>
                 <span class="priority-dot dot-{{ ticket.priorite }}" title="{{ ticket.priorite|capitalize }}"></span>
               </td>
@@ -152,8 +157,40 @@
       </div>
       {% endif %}
 
-    </div><!-- /card-body -->
-  </div><!-- /card -->
+      </div><!-- /card-body -->
+    </div><!-- /card -->
 
+    <!-- News Feed Card -->
+    <div class="card card-raised" style="margin: 0;">
+      <div class="card-header">
+        <div class="card-title">Quoi de neuf ?</div>
+      </div>
+      <div class="card-body" style="padding: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          
+          <div style="padding-bottom: 16px; border-bottom: 1px solid var(--border-subtle, #e5e7eb);">
+            <div style="font-size: 11px; color: #dc2626; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Cybersécurité</div>
+            <div style="font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px;">Sensibilisation au Phishing</div>
+            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.4;">Un nouveau module de formation est disponible. Rappelez-vous de ne jamais partager vos mots de passe.</div>
+          </div>
+
+          <div style="padding-bottom: 16px; border-bottom: 1px solid var(--border-subtle, #e5e7eb);">
+            <div style="font-size: 11px; color: #2563eb; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Mise à jour</div>
+            <div style="font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px;">Nouvelle version InterComm v2.1</div>
+            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.4;">La gestion des tickets intègre désormais les checklists pour les processus IT automatisés.</div>
+          </div>
+
+          <div>
+            <div style="font-size: 11px; color: #16a34a; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Infrastructure</div>
+            <div style="font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px;">Maintenance Serveur Sage 100</div>
+            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.4;">Une maintenance aura lieu ce vendredi à 20h00. Veuillez enregistrer votre travail.</div>
+          </div>
+
+        </div>
+      </div><!-- /card-body -->
+    </div><!-- /card -->
+
+  </div><!-- /content-grid -->
+  </div><!-- /page-body -->
 </div><!-- /page -->
 {% endblock %}

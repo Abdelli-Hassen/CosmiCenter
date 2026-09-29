@@ -196,6 +196,7 @@ def modifier(id):
             flash('Le nom du département est requis.', 'danger')
             return render_template('departements/formulaire.html', 
                                  departement=departement,
+                                 is_edit=True,
                                  utilisateurs=Utilisateur.query.all())
         
         # Vérifier l'unicité (sauf pour le département actuel)
@@ -204,6 +205,7 @@ def modifier(id):
             flash('Un département avec ce nom existe déjà.', 'danger')
             return render_template('departements/formulaire.html',
                                  departement=departement,
+                                 is_edit=True,
                                  utilisateurs=Utilisateur.query.all())
         
         if code:
@@ -212,6 +214,7 @@ def modifier(id):
                 flash('Un département avec ce code existe déjà.', 'danger')
                 return render_template('departements/formulaire.html',
                                      departement=departement,
+                                     is_edit=True,
                                      utilisateurs=Utilisateur.query.all())
         
         # Mettre à jour
@@ -239,6 +242,7 @@ def modifier(id):
     utilisateurs = Utilisateur.query.filter_by(actif=True).order_by(Utilisateur.nom).all()
     return render_template('departements/formulaire.html',
                          departement=departement,
+                         is_edit=True,
                          utilisateurs=utilisateurs)
 
 

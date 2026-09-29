@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% block title %}Plan d'action & Calendrier{% endblock %}
+{% block content %}
+<style>
+  .admin-header {
+    margin-bottom: 24px;
+  }
+  .admin-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 8px;
+  }
+  .admin-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+  }
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+  }
+  .card-premium {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  .card-premium-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card-premium-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+  .card-premium-body {
+    padding: 24px;
+  }
+  
+  /* Mock Calendar Styles */
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .calendar-nav {
+    display: flex;
+    gap: 8px;
+  }
+  .calendar-nav button {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #475569;
+  }
+  .calendar-nav button:hover {
+    background: #f1f5f9;
+  }
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: #e2e8f0;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .calendar-day-header {
+    background: #f8fafc;
+    padding: 12px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+  }
+  .calendar-day {
+    background: white;
+    min-height: 100px;
+    padding: 8px;
+  }
+  .calendar-date {
+    font-size: 14px;
+    color: #475569;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  .calendar-event {
+    background: #e0e7ff;
+    color: #4338ca;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .calendar-event.urgent {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  /* Table Styles */
+  .project-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .project-table th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    border-bottom: 1px solid #e2e8f0;
+    text-transform: uppercase;
+  }
+  .project-table td {
+    padding: 16px;
+    font-size: 14px;
+    color: #334155;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .project-table tr:last-child td {
+    border-bottom: none;
+  }
+  .status-badge {
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .status-badge.progress { background: #dbeafe; color: #1d4ed8; }
+  .status-badge.planned { background: #f1f5f9; color: #475569; }
+</style>
+
+<div class="page" style="padding: 32px; max-width: 1400px; margin: 0 auto;">
+  <div class="admin-header">
+    <h1 class="admin-title">Plan d'action de l'équipe</h1>
+    <p class="admin-subtitle">Suivez les tâches planifiées et l'avancement des projets IT en cours.</p>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- Calendar Card -->
+    <div class="card-premium">
+      <div class="card-premium-header">
+        <h2 class="card-premium-title">Calendrier des interventions</h2>
+        <div class="calendar-nav">
+          <button>Aujourd'hui</button>
+          <button>&lt;</button>
+          <button>&gt;</button>
+        </div>
+      </div>
+      <div class="card-premium-body">
+        <div class="calendar-header">
+          <h3 style="margin: 0; font-size: 18px; color: #0f172a;">Octobre 2026</h3>
+        </div>
+        <div class="calendar-grid">
+          <div class="calendar-day-header">Lun</div>
+          <div class="calendar-day-header">Mar</div>
+          <div class="calendar-day-header">Mer</div>
+          <div class="calendar-day-header">Jeu</div>
+          <div class="calendar-day-header">Ven</div>
+          <div class="calendar-day-header">Sam</div>
+          <div class="calendar-day-header">Dim</div>
+          
+          <!-- Mock Days -->
+          <div class="calendar-day"><div class="calendar-date" style="color: #cbd5e1;">28</div></div>
+          <div class="calendar-day"><div class="calendar-date" style="color: #cbd5e1;">29</div></div>
+          <div class="calendar-day"><div class="calendar-date" style="color: #cbd5e1;">30</div></div>
+          <div class="calendar-day">
+            <div class="calendar-date">1</div>
+            <div class="calendar-event">Intervention réseau #104</div>
+          </div>
+          <div class="calendar-day"><div class="calendar-date">2</div></div>
+          <div class="calendar-day"><div class="calendar-date">3</div></div>
+          <div class="calendar-day"><div class="calendar-date">4</div></div>
+          
+          <div class="calendar-day">
+            <div class="calendar-date">5</div>
+            <div class="calendar-event urgent">Maintenance Serveur Sage</div>
+          </div>
+          <div class="calendar-day"><div class="calendar-date">6</div></div>
+          <div class="calendar-day"><div class="calendar-date">7</div></div>
+          <div class="calendar-day">
+            <div class="calendar-date" style="background: #dc2626; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">8</div>
+            <div class="calendar-event">Onboarding - J. Dupont</div>
+          </div>
+          <div class="calendar-day"><div class="calendar-date">9</div></div>
+          <div class="calendar-day"><div class="calendar-date">10</div></div>
+          <div class="calendar-day"><div class="calendar-date">11</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="card-premium">
+      <div class="card-premium-header">
+        <h2 class="card-premium-title">Projets IT</h2>
+        <button class="btn btn-primary btn-sm">Nouveau projet</button>
+      </div>
+      <div class="card-premium-body" style="padding: 0;">
+        <table class="project-table">
+          <thead>
+            <tr>
+              <th>Projet</th>
+              <th>Statut</th>
+              <th>Échéance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div style="font-weight: 600; color: #0f172a;">Migration Office 365</div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Phase 2 - Utilisateurs VIP</div>
+              </td>
+              <td><span class="status-badge progress">En cours</span></td>
+              <td>15 Oct 2026</td>
+            </tr>
+            <tr>
+              <td>
+                <div style="font-weight: 600; color: #0f172a;">Renouvellement Parc PC</div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Achat et préparation 50 postes</div>
+              </td>
+              <td><span class="status-badge planned">Planifié</span></td>
+              <td>01 Nov 2026</td>
+            </tr>
+            <tr>
+              <td>
+                <div style="font-weight: 600; color: #0f172a;">Audit Cybersécurité</div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Tests d'intrusion réseau interne</div>
+              </td>
+              <td><span class="status-badge progress">En cours</span></td>
+              <td>31 Oct 2026</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

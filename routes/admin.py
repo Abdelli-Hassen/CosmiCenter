@@ -377,3 +377,19 @@ def logs():
     """Visualisation des logs système"""
     # TODO: Implémenter la lecture des fichiers de logs
     return render_template('admin/logs.html')
+
+
+@admin_bp.route('/plan-action')
+@login_required
+@admin_required
+def plan_action():
+    """Plan d'action — calendrier et projets IT"""
+    return render_template('admin/plan_action.html')
+
+
+@admin_bp.route('/acces-distance')
+@login_required
+@admin_required
+def acces_distance():
+    """Accès à distance — identifiants AnyDesk/TeamViewer"""
+    return render_template('admin/acces_distance.html')

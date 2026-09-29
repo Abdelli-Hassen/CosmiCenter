@@ -59,22 +59,7 @@
     return diffYr + 'y ago';
   }
 
-  // ─── Theme initialisation (before DOM ready to avoid FOUC) ───────────────
 
-  (function initThemeEarly() {
-    try {
-      var saved = localStorage.getItem('chub-theme');
-      if (saved === 'light' || saved === 'dark') {
-        document.body.dataset.theme = saved;
-      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        document.body.dataset.theme = 'light';
-      } else {
-        document.body.dataset.theme = 'dark';
-      }
-    } catch (e) {
-      document.body.dataset.theme = 'dark';
-    }
-  })();
 
   // ─── Ripple effect ────────────────────────────────────────────────────────
 

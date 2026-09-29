@@ -105,11 +105,11 @@
         <!-- Stats -->
         <div style="display:flex;gap:16px;padding:10px 0;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);margin-bottom:14px;">
           <div style="text-align:center;">
-            <div style="font-size:16px;font-weight:700;color:var(--text-primary);">—</div>
+            <div style="font-size:16px;font-weight:700;color:var(--text-primary);">{{ dept.tickets|length if dept.tickets else 0 }}</div>
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);">Tickets</div>
           </div>
           <div style="text-align:center;">
-            <div style="font-size:16px;font-weight:700;color:var(--text-primary);">—</div>
+            <div style="font-size:16px;font-weight:700;color:var(--text-primary);">{{ dept.membres|length if dept.membres else 0 }}</div>
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);">Agents</div>
           </div>
         </div>

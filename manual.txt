@@ -1,0 +1,66 @@
+1. Se connecter
+L'accès à InterComm se fait avec l'adresse email et le mot de passe fournis par votre administrateur IT. Il n'y a pas d'auto-inscription : seul un administrateur peut créer un compte.
+- Rendez-vous sur la page de connexion d'InterComm, saisissez votre email professionnel et votre mot de passe, puis cliquez sur « Se connecter ».
+- En cas de mot de passe oublié, contactez votre administrateur IT (support@example.com) : lui seul peut réinitialiser un mot de passe et vous communiquer un nouveau mot de passe temporaire.
+
+2. Page d'accueil
+La page d'accueil regroupe les nouveautés de l'application et les actualités IT/cybersécurité.
+- Consultez la page d'accueil après connexion pour suivre les évolutions de l'application et les actualités IT récentes.
+
+3. Créer un ticket
+Un ticket permet de signaler un incident (panne, dysfonctionnement) ou de faire une demande de service (matériel, accès, information) à l'équipe IT.
+- Dans le menu de gauche, cliquez sur « Nouveau ticket ».
+- Renseignez un titre court et une description détaillée du problème ou de la demande. Si votre demande correspond à un processus IT formalisé (ex. remplacement de matériel, arrivée d'un collaborateur, accès Sage 100...), sélectionnez-le dans la liste « Processus IT » : les champs Type/Catégorie seront alors automatiquement renseignés par le processus.
+- Si aucun processus ne correspond, choisissez manuellement le Type de demande, la Catégorie puis la Sous-catégorie : la priorité et le délai de traitement (SLA) sont déterminés automatiquement par la sous-catégorie choisie.
+- Vous pouvez joindre une ou plusieurs pièces jointes (photo de l'écran d'erreur, document...) directement depuis le formulaire.
+- Cliquez sur « Créer le ticket » pour soumettre votre demande. Vous recevrez un email de confirmation et pourrez suivre son avancement dans « Mes tickets ».
+
+4. Consulter tous les tickets
+Contrairement à un utilisateur simple, un agent voit tous les tickets (pas seulement les siens) dans « Tous les tickets », avec des filtres et colonnes supplémentaires (société, temps écoulé). Si l'équipe IT a déclaré les sociétés qu'elle prend en charge (Administration de service > Sociétés gérées), un agent ne voit que les tickets de ces sociétés — sauf ceux qui lui sont explicitement assignés, toujours visibles.
+- Ouvrez « Tous les tickets ». Utilisez les filtres (statut, type, catégorie, priorité, société) et la recherche pour retrouver un ticket. Cochez « Archivés » pour afficher les tickets archivés (masqués par défaut).
+- Cliquez sur la référence d'un ticket pour ouvrir sa fiche détaillée et le prendre en charge.
+
+5. Gérer un ticket (statut, assignation, archivage)
+Le bloc « Gestion du ticket », visible uniquement par les agents/admins sur la fiche d'un ticket, permet de faire évoluer sa prise en charge.
+- Sur la fiche d'un ticket, repérez le bloc « Gestion du ticket » en bas de page.
+- Changez le statut du ticket (Ouvert → En cours → En attente → Résolu → Fermé) via le menu déroulant « Statut », et assignez ou réassignez le ticket à un agent via le menu « Assigné à ». Le demandeur est notifié par email à chaque changement important.
+- Vous pouvez ajouter un commentaire visible par le demandeur, ou cocher « Note interne » pour un commentaire réservé à l'équipe IT.
+- Utilisez le bouton « Archiver » pour masquer un ticket traité de la liste principale sans le supprimer (il reste consultable via la case « Archivés »). Le bouton devient « Désarchiver » une fois le ticket archivé.
+
+6. Traiter une demande de processus IT
+Certaines demandes (onboarding/offboarding, remplacement de matériel, accès applicatif, acquisition de licence...) suivent un processus IT formalisé avec validation hiérarchique et checklist de traitement.
+- Sur un ticket lié à un processus, un bloc dédié affiche l'état de la validation hiérarchique (si requise) et la checklist des étapes à réaliser.
+- Cochez chaque étape au fur et à mesure de son exécution réelle (ex. création du compte AD, préparation du poste, remise du matériel...). La checklist constitue une preuve de traitement consultable à tout moment.
+- Si le processus requiert un formulaire papier (ex. décharge de matériel), un rappel de téléchargement/impression s'affiche à la création du ticket ; une fois le formulaire signé archivé physiquement, utilisez le bouton « Marquer l'original comme archivé » pour le tracer dans InterComm.
+
+7. Automatiser un accès Sage 100
+Le processus « Accès Sage 100 » propose un bouton « Automatiser » qui exécute automatiquement trois des cinq étapes de la checklist (accès RDP au serveur applicatif, copie des fichiers de connexion, création de l'accès SQL Server).
+- Sur un ticket « Accès Sage 100 » validé, cliquez sur « Automatiser » dans le bloc dédié.
+- Le résultat de chaque étape automatisée (RDP, fichiers, SQL) s'affiche avec une coche verte en cas de succès ou une croix rouge avec le message d'erreur en cas d'échec (ex. identifiant AD manquant sur la fiche utilisateur). Les étapes réussies sont cochées automatiquement dans la checklist.
+- La dernière étape — création de l'utilisateur dans l'application Sage 100 elle-même — reste manuelle et doit être cochée à la main une fois réalisée.
+
+8. Consulter la base de connaissances
+La base de connaissances regroupe des guides de dépannage en libre-service (FAQ) rédigés par l'équipe IT, classés par catégorie.
+- Ouvrez « Base de connaissances » dans le menu de gauche pour parcourir la liste des articles, ou utilisez la recherche/le filtre par catégorie pour retrouver un guide précis.
+- Cliquez sur un article pour afficher son contenu complet (texte, images, étapes). Lors de la création d'un ticket, des articles pertinents peuvent aussi vous être suggérés automatiquement selon la catégorie choisie.
+
+9. Répondre aux utilisateurs via le chat
+Contrairement à un utilisateur simple qui ne voit que sa propre conversation, un agent voit la boîte de réception complète : une conversation par utilisateur, partagée entre tous les agents/admins.
+- Ouvrez « Chat » : la liste des conversations apparaît à gauche, triée par dernier message reçu. Cliquez sur une conversation pour l'ouvrir.
+- Écrivez votre réponse dans le champ en bas et cliquez sur « Envoyer ». La conversation est mise à jour en temps réel pour tous les agents connectés.
+- Survolez une conversation pour faire apparaître les actions rapides : l'icône d'archive permet de la masquer de la boîte de réception (retrouvable ensuite via « Voir les conversations archivées »). La suppression définitive d'une conversation est réservée aux administrateurs.
+- Le bouton « + Conversation » permet de démarrer vous-même une discussion avec un utilisateur (par exemple pour donner suite à un ticket).
+
+10. Plan d'action (responsable d'équipe)
+Si vous êtes désigné responsable de l'équipe IT (menu « Plan d'action », sous Administration IT), vous suivez votre propre calendrier de tickets assignés et de tâches planifiées — la gestion de l'équipe, des sociétés prises en charge et des règles d'affectation reste réservée à un administrateur.
+- Le calendrier affiche uniquement vos propres tickets et tâches planifiées, jour par jour. Cliquez sur « + Planifier une tâche » pour ajouter une tâche interne sur une date donnée, ou sur un jour du calendrier pour voir/ajouter le détail de ce jour.
+- Le tableau « Suivi des projets de l'équipe IT » en bas de page se remplit automatiquement avec vos tickets et tâches, et peut être complété par des lignes de suivi ajoutées manuellement via « + Ajouter » (projet partagé par toute l'équipe, visible par tous ses membres).
+
+11. Accès à distance
+La page « Accès à distance » (réservée aux agents/admins) centralise les identifiants de connexion à distance (AnyDesk, TeamViewer, UltraViewer) et le nom de poste de chaque utilisateur, pour faciliter une prise en main rapide.
+- Recherchez un utilisateur par nom, poste ou société pour retrouver ses identifiants de connexion à distance.
+
+12. Gérer mon compte
+La page « Mon compte » (icône en bas de la barre latérale) permet de gérer vos informations personnelles.
+- Modifiez votre nom, votre numéro de téléphone ou votre photo de profil, puis cliquez sur « Enregistrer ».
+- Pour changer votre mot de passe, renseignez votre mot de passe actuel puis le nouveau mot de passe (deux fois), et cliquez sur « Enregistrer ».
