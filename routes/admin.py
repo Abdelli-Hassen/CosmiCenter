@@ -158,31 +158,36 @@ def modifier_utilisateur(user_id):
             utilisateur.nom = request.form.get('nom')
             utilisateur.prenom = request.form.get('prenom')
             utilisateur.email = request.form.get('email')
-            utilisateur.role = request.form.get('role')
-            utilisateur.departement_id = request.form.get('departement_id')
-            utilisateur.actif = request.form.get('actif') == 'on'
-            
-            # Changer le mot de passe si fourni
+            utilisateur.role_id = request.form.get('role_id') or None
+            utilisateur.departement_id = request.form.get('departement_id') or None
+            utilisateur.telephone = request.form.get('telephone', '').strip() or None
+            utilisateur.poste = request.form.get('poste', '').strip() or None
+            utilisateur.matricule = request.form.get('matricule', '').strip() or None
+            utilisateur.actif = request.form.get('actif') == '1'
+
             nouveau_mdp = request.form.get('nouveau_password')
             if nouveau_mdp:
-                utilisateur.definir_mot_de_passe(nouveau_mdp)
-            
+                utilisateur.set_password(nouveau_mdp)
+
             db.session.commit()
-            
+
             flash('Utilisateur modifié avec succès', 'success')
             logger.info(f'Utilisateur modifié: {utilisateur.email} par {current_user.email}')
-            
+
             return redirect(url_for('admin.utilisateurs'))
-        
+
         except Exception as e:
             db.session.rollback()
             logger.error(f'Erreur lors de la modification de l\'utilisateur: {str(e)}')
             flash('Erreur lors de la modification', 'danger')
-    
+
+    from models import Role
     departements = Departement.query.filter_by(actif=True).all()
-    return render_template('admin/modifier_utilisateur.html', 
+    roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
+    return render_template('admin/modifier_utilisateur.html',
                          utilisateur=utilisateur,
-                         departements=departements)
+                         departements=departements,
+                         roles=roles)
 
 
 @admin_bp.route('/utilisateurs/<user_id>/desactiver', methods=['POST'])

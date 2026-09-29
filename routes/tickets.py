@@ -25,7 +25,7 @@ def tableau_bord():
     }
     
     # Tickets récents
-    if current_user.role == 'admin' or current_user.role == 'responsable':
+    if current_user.role and current_user.role.niveau >= 70:
         tickets_recents = Ticket.query.order_by(Ticket.date_creation.desc()).limit(10).all()
     else:
         tickets_recents = Ticket.query.filter_by(createur_id=current_user.id)\
@@ -46,7 +46,7 @@ def liste():
     departement_id = request.args.get('departement')
     
     # Query de base
-    if current_user.role == 'admin' or current_user.role == 'responsable':
+    if current_user.role and current_user.role.niveau >= 70:
         query = Ticket.query
     else:
         query = Ticket.query.filter_by(createur_id=current_user.id)
@@ -131,8 +131,8 @@ def detail(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     
     # Vérifier les permissions
-    if current_user.role not in ['admin', 'responsable']:
-        if ticket.createur_id != current_user.id and ticket.assigne_id != current_user.id:
+    if not (current_user.role and current_user.role.niveau >= 70):
+        if ticket.createur_id != current_user.id and ticket.assigne_a_id != current_user.id:
             flash('Accès non autorisé', 'danger')
             return redirect(url_for('tickets.liste'))
     
@@ -156,20 +156,20 @@ def modifier(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     
     # Vérifier les permissions
-    if current_user.role not in ['admin', 'responsable']:
+    if not (current_user.role and current_user.role.niveau >= 70):
         if ticket.createur_id != current_user.id:
             flash('Accès non autorisé', 'danger')
             return redirect(url_for('tickets.detail', ticket_id=ticket_id))
-    
+
     if request.method == 'POST':
         try:
             ticket.titre = request.form.get('titre')
             ticket.description = request.form.get('description')
             ticket.priorite = request.form.get('priorite')
             ticket.statut = request.form.get('statut')
-            
-            if current_user.role in ['admin', 'responsable']:
-                ticket.assigne_id = request.form.get('assigne_id')
+
+            if current_user.role and current_user.role.niveau >= 70:
+                ticket.assigne_a_id = request.form.get('assigne_a_id') or None
             
             db.session.commit()
             
@@ -229,11 +229,11 @@ def fermer(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     
     # Vérifier les permissions
-    if current_user.role not in ['admin', 'responsable']:
-        if ticket.createur_id != current_user.id and ticket.assigne_id != current_user.id:
+    if not (current_user.role and current_user.role.niveau >= 70):
+        if ticket.createur_id != current_user.id and ticket.assigne_a_id != current_user.id:
             flash('Accès non autorisé', 'danger')
             return redirect(url_for('tickets.detail', ticket_id=ticket_id))
-    
+
     try:
         ticket.statut = 'ferme'
         ticket.date_fermeture = datetime.utcnow()
