@@ -6,11 +6,10 @@ class Config:
     # Clé secrète
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production-cosmitto-2024')
     
-    # Base de données
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        'DATABASE_URL',
-        f'sqlite:///{os.path.join(os.path.abspath(os.path.dirname(__file__)), "instance", "cosmitto.db")}'
-    )
+    # Base de données (PostgreSQL obligatoire)
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    if not SQLALCHEMY_DATABASE_URI:
+        raise ValueError("DATABASE_URL environment variable is not set. A PostgreSQL database is required.")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     
