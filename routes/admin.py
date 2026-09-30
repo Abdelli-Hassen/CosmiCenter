@@ -14,10 +14,10 @@ logger = logging.getLogger(__name__)
 
 
 def admin_required(f):
-    """Décorateur pour restreindre l'accès aux administrateurs"""
+    """Décorateur pour restreindre l'accès aux administrateurs (niveau >= 90)"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.role or current_user.role.niveau < 70:
+        if not current_user.is_authenticated or not current_user.role or current_user.role.niveau < 90:
             flash('Accès réservé aux administrateurs', 'danger')
             return redirect(url_for('tickets.tableau_bord'))
         return f(*args, **kwargs)
@@ -42,12 +42,12 @@ def tableau_bord():
     
     # Tickets par statut
     tickets_par_statut = db.session.query(
-        Ticket.statut, db.func.count(Ticket.id)
+        Ticket.statut, db.func.count(Ticket.id).label('total_count')
     ).group_by(Ticket.statut).all()
     
     # Tickets par priorité
     tickets_par_priorite = db.session.query(
-        Ticket.priorite, db.func.count(Ticket.id)
+        Ticket.priorite, db.func.count(Ticket.id).label('total_count')
     ).group_by(Ticket.priorite).all()
     
     return render_template('admin/tableau_bord.html',
@@ -113,8 +113,22 @@ def nouvel_utilisateur():
     """Créer un nouvel utilisateur"""
     if request.method == 'POST':
         try:
-            dept_id = request.form.get('departement_id') or None
+            email = request.form.get('email', '').strip()
             matricule = request.form.get('matricule', '').strip() or None
+            
+            # Vérifier l'unicité de l'email
+            if Utilisateur.query.filter_by(email=email).first():
+                flash(f"L'adresse email {email} est déjà utilisée par un autre compte.", 'danger')
+                from models import Role
+                return render_template('admin/nouvel_utilisateur.html', departements=Departement.query.filter_by(actif=True).all(), roles=Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all())
+            
+            # Vérifier l'unicité du matricule
+            if matricule and Utilisateur.query.filter_by(matricule=matricule).first():
+                flash(f"Le matricule {matricule} est déjà utilisé.", 'danger')
+                from models import Role
+                return render_template('admin/nouvel_utilisateur.html', departements=Departement.query.filter_by(actif=True).all(), roles=Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all())
+
+            dept_id = request.form.get('departement_id') or None
             utilisateur = Utilisateur(
                 nom=request.form.get('nom'),
                 prenom=request.form.get('prenom'),
@@ -155,14 +169,29 @@ def modifier_utilisateur(user_id):
     
     if request.method == 'POST':
         try:
+            email = request.form.get('email', '').strip()
+            matricule = request.form.get('matricule', '').strip() or None
+            
+            # Vérifier l'unicité
+            existing_email = Utilisateur.query.filter_by(email=email).first()
+            if existing_email and existing_email.id != utilisateur.id:
+                flash(f"L'adresse email {email} est déjà utilisée par un autre compte.", 'danger')
+                return redirect(url_for('admin.modifier_utilisateur', user_id=user_id))
+                
+            if matricule:
+                existing_mat = Utilisateur.query.filter_by(matricule=matricule).first()
+                if existing_mat and existing_mat.id != utilisateur.id:
+                    flash(f"Le matricule {matricule} est déjà utilisé.", 'danger')
+                    return redirect(url_for('admin.modifier_utilisateur', user_id=user_id))
+
             utilisateur.nom = request.form.get('nom')
             utilisateur.prenom = request.form.get('prenom')
-            utilisateur.email = request.form.get('email')
+            utilisateur.email = email
             utilisateur.role_id = request.form.get('role_id') or None
             utilisateur.departement_id = request.form.get('departement_id') or None
             utilisateur.telephone = request.form.get('telephone', '').strip() or None
             utilisateur.poste = request.form.get('poste', '').strip() or None
-            utilisateur.matricule = request.form.get('matricule', '').strip() or None
+            utilisateur.matricule = matricule
             utilisateur.actif = request.form.get('actif') == '1'
 
             nouveau_mdp = request.form.get('nouveau_password')

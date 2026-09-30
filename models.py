@@ -3,7 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
-import json
 
 db = SQLAlchemy()
 
@@ -13,8 +12,8 @@ def generate_uuid():
 
 # Table d'association pour les rôles et permissions
 roles_permissions = db.Table('roles_permissions',
-    db.Column('role_id', db.String(36), db.ForeignKey('roles.id'), primary_key=True),
-    db.Column('permission_id', db.String(36), db.ForeignKey('permissions.id'), primary_key=True)
+    db.Column('role_id', db.String(36), db.ForeignKey('roles.id', ondelete='CASCADE'), primary_key=True, index=True),
+    db.Column('permission_id', db.String(36), db.ForeignKey('permissions.id', ondelete='CASCADE'), primary_key=True, index=True)
 )
 
 
@@ -52,6 +51,9 @@ class Role(db.Model):
 
     def has_permission(self, permission_code):
         """Vérifie si le rôle a une permission spécifique"""
+        # Le super administrateur (niveau 100) a toutes les permissions implicitement
+        if self.niveau >= 100:
+            return True
         return any(p.code == permission_code for p in self.permissions)
 
     def __repr__(self):
@@ -72,8 +74,8 @@ class Utilisateur(UserMixin, db.Model):
     photo_profil = db.Column(db.String(255))
     
     # Rôle
-    role_id = db.Column(db.String(36), db.ForeignKey('roles.id'))
-    departement_id = db.Column(db.String(36), db.ForeignKey('departements.id'))
+    role_id = db.Column(db.String(36), db.ForeignKey('roles.id', ondelete='SET NULL'), index=True)
+    departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='SET NULL'), index=True)
     
     # Paramètres
     langue = db.Column(db.String(10), default='fr')
@@ -131,12 +133,12 @@ class Departement(db.Model):
     icone = db.Column(db.String(50), default='building')
     
     # Responsable
-    responsable_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id'))
+    responsable_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), index=True)
     
     # Paramètres SLA
     sla_reponse_heures = db.Column(db.Integer, default=4)  # Heures pour première réponse
     sla_resolution_heures = db.Column(db.Integer, default=48)  # Heures pour résolution
-    horaires_travail = db.Column(db.Text)  # JSON des horaires
+    horaires_travail = db.Column(db.JSON)  # JSON des horaires
     
     # État
     actif = db.Column(db.Boolean, default=True)
@@ -166,18 +168,18 @@ class CategorieTicket(db.Model):
     nom = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     type_ticket = db.Column(db.String(20), default='demande')  # demande, besoin, plainte, incident, tache
-    departement_id = db.Column(db.String(36), db.ForeignKey('departements.id'), nullable=False)
+    departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='CASCADE'), nullable=False, index=True)
     priorite_defaut = db.Column(db.String(20), default='moyenne')  # basse, moyenne, haute, urgente, critique
     delai_resolution_jours = db.Column(db.Integer, default=7)
     
     # Workflow
-    etapes_workflow = db.Column(db.Text)  # JSON des étapes personnalisées
+    etapes_workflow = db.Column(db.JSON)  # JSON des étapes personnalisées
     auto_assignation = db.Column(db.Boolean, default=False)
     
     # Paramètres
     couleur = db.Column(db.String(20), default='#3B82F6')
     icone = db.Column(db.String(50), default='ticket')
-    formulaire_personnalise = db.Column(db.Text)  # JSON du formulaire
+    formulaire_personnalise = db.Column(db.JSON)  # JSON du formulaire
     
     actif = db.Column(db.Boolean, default=True)
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
@@ -205,11 +207,11 @@ class Ticket(db.Model):
     urgence = db.Column(db.String(20))  # faible, moyenne, elevee, critique
 
     # Relations utilisateurs
-    createur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id'), nullable=False)
-    assigne_a_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id'))
+    createur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='RESTRICT'), nullable=False, index=True)
+    assigne_a_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), index=True)
 
     # Catégorie
-    categorie_id = db.Column(db.String(36), db.ForeignKey('categories_tickets.id'))
+    categorie_id = db.Column(db.String(36), db.ForeignKey('categories_tickets.id', ondelete='SET NULL'), index=True)
 
     # Dates
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
@@ -239,10 +241,8 @@ class Ticket(db.Model):
     lieu_incident = db.Column(db.String(200))
     
     # Données personnalisées
-    donnees_personnalisees = db.Column(db.Text)  # JSON
-
-    # Tags
-    tags = db.Column(db.Text)  # JSON array de tags
+    donnees_personnalisees = db.Column(db.JSON)  # JSON
+    tags = db.Column(db.JSON)  # JSON array de tags
 
     # Relations
     commentaires = db.relationship('Commentaire', backref='ticket', cascade='all, delete-orphan', 
@@ -284,10 +284,10 @@ class Tache(db.Model):
     __tablename__ = 'taches'
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    ticket_id = db.Column(db.String(36), db.ForeignKey('tickets.id'), nullable=False)
+    ticket_id = db.Column(db.String(36), db.ForeignKey('tickets.id', ondelete='CASCADE'), nullable=False, index=True)
     titre = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
-    assigne_a_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id'))
+    assigne_a_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), index=True)
     terminee = db.Column(db.Boolean, default=False)
     ordre = db.Column(db.Integer, default=0)
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
@@ -304,8 +304,8 @@ class Commentaire(db.Model):
     __tablename__ = 'commentaires'
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    ticket_id = db.Column(db.String(36), db.ForeignKey('tickets.id'), nullable=False)
-    auteur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id'), nullable=False)
+    ticket_id = db.Column(db.String(36), db.ForeignKey('tickets.id', ondelete='CASCADE'), nullable=False, index=True)
+    auteur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), nullable=False, index=True)
     contenu = db.Column(db.Text, nullable=False)
     interne = db.Column(db.Boolean, default=False)
     type_commentaire = db.Column(db.String(20), default='commentaire')  # commentaire, solution, note
@@ -321,7 +321,7 @@ class PieceJointe(db.Model):
     __tablename__ = 'pieces_jointes'
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    ticket_id = db.Column(db.String(36), db.ForeignKey('tickets.id'), nullable=False)
+    ticket_id = db.Column(db.String(36), db.ForeignKey('tickets.id', ondelete='CASCADE'), nullable=False, index=True)
     nom_fichier = db.Column(db.String(255), nullable=False)
     nom_original = db.Column(db.String(255), nullable=False)
     type_mime = db.Column(db.String(100))
@@ -329,7 +329,7 @@ class PieceJointe(db.Model):
     chemin = db.Column(db.String(500), nullable=False)
     miniature = db.Column(db.String(500))  # Pour les images
     date_upload = db.Column(db.DateTime, default=datetime.utcnow)
-    uploade_par_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id'))
+    uploade_par_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), index=True)
 
     uploade_par = db.relationship('Utilisateur')
 
@@ -341,8 +341,8 @@ class HistoriqueTicket(db.Model):
     __tablename__ = 'historique_tickets'
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    ticket_id = db.Column(db.String(36), db.ForeignKey('tickets.id'), nullable=False)
-    utilisateur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id'))
+    ticket_id = db.Column(db.String(36), db.ForeignKey('tickets.id', ondelete='CASCADE'), nullable=False, index=True)
+    utilisateur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), index=True)
     action = db.Column(db.String(100), nullable=False)
     details = db.Column(db.Text)
     champ_modifie = db.Column(db.String(100))
@@ -361,7 +361,7 @@ class Notification(db.Model):
     __tablename__ = 'notifications'
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    utilisateur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id'), nullable=False)
+    utilisateur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), nullable=False, index=True)
     titre = db.Column(db.String(200), nullable=False)
     message = db.Column(db.Text)
     type_notification = db.Column(db.String(50))  # ticket, mention, systeme, etc.
@@ -382,9 +382,9 @@ class Statistique(db.Model):
     type_stat = db.Column(db.String(50), nullable=False)
     valeur = db.Column(db.Integer, default=0)
     valeur_float = db.Column(db.Float)  # Pour les moyennes, pourcentages
-    departement_id = db.Column(db.String(36), db.ForeignKey('departements.id'))
-    categorie_id = db.Column(db.String(36), db.ForeignKey('categories_tickets.id'))
-    meta_data = db.Column(db.Text)  # JSON pour données supplémentaires
+    departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='CASCADE'), index=True)
+    categorie_id = db.Column(db.String(36), db.ForeignKey('categories_tickets.id', ondelete='CASCADE'), index=True)
+    meta_data = db.Column(db.JSON)  # JSON pour données supplémentaires
 
     departement = db.relationship('Departement')
     categorie = db.relationship('CategorieTicket')
@@ -400,10 +400,10 @@ class ModeleReponse(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     titre = db.Column(db.String(200), nullable=False)
     contenu = db.Column(db.Text, nullable=False)
-    categorie_id = db.Column(db.String(36), db.ForeignKey('categories_tickets.id'))
-    departement_id = db.Column(db.String(36), db.ForeignKey('departements.id'))
+    categorie_id = db.Column(db.String(36), db.ForeignKey('categories_tickets.id', ondelete='CASCADE'), index=True)
+    departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='CASCADE'), index=True)
     public = db.Column(db.Boolean, default=False)
-    createur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id'))
+    createur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), index=True)
     utilisation_count = db.Column(db.Integer, default=0)
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -422,11 +422,11 @@ class BaseConnaissance(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     titre = db.Column(db.String(200), nullable=False)
     contenu = db.Column(db.Text, nullable=False)
-    categorie_id = db.Column(db.String(36), db.ForeignKey('categories_tickets.id'))
-    departement_id = db.Column(db.String(36), db.ForeignKey('departements.id'))
-    tags = db.Column(db.Text)  # JSON
+    categorie_id = db.Column(db.String(36), db.ForeignKey('categories_tickets.id', ondelete='SET NULL'), index=True)
+    departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='SET NULL'), index=True)
+    tags = db.Column(db.JSON)  # JSON
     publique = db.Column(db.Boolean, default=True)
-    auteur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id'))
+    auteur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), index=True)
     vues = db.Column(db.Integer, default=0)
     utile_count = db.Column(db.Integer, default=0)
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
@@ -438,3 +438,28 @@ class BaseConnaissance(db.Model):
 
     def __repr__(self):
         return f'<BaseConnaissance {self.titre}>'
+
+
+class Notification(db.Model):
+    """Modèle pour les notifications système"""
+    __tablename__ = 'notifications'
+
+    id = db.Column(db.String(36), primary_key=True)
+    utilisateur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), index=True, nullable=False)
+    titre = db.Column(db.String(255), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    lien = db.Column(db.String(255))
+    lue = db.Column(db.Boolean, default=False)
+    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+    date_lecture = db.Column(db.DateTime)
+
+    utilisateur = db.relationship('Utilisateur', backref=db.backref('mes_notifications', lazy='dynamic', cascade='all, delete-orphan'))
+
+    def __init__(self, **kwargs):
+        super(Notification, self).__init__(**kwargs)
+        if not self.id:
+            import uuid
+            self.id = str(uuid.uuid4())
+
+    def __repr__(self):
+        return f'<Notification {self.titre} (Lue: {self.lue})>'

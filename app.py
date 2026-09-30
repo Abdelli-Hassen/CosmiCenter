@@ -1,15 +1,16 @@
 import os
 import logging
 from datetime import datetime
-from flask import Flask, render_template, redirect, url_for, request, g
-from flask_login import LoginManager, current_user
-from flask_migrate import Migrate
 from dotenv import load_dotenv
-from models import db, Utilisateur, Notification
-from config import config
 
 # Charger les variables d'environnement
 load_dotenv()
+
+from flask import Flask, render_template, redirect, url_for, request, g
+from flask_login import LoginManager, current_user
+from flask_migrate import Migrate
+from models import db, Utilisateur, Notification
+from config import config
 
 # Configuration du logging
 _BASE_DIR = os.path.abspath(os.path.dirname(__file__))

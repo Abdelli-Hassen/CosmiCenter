@@ -33,25 +33,45 @@ def connexion():
         utilisateur = Utilisateur.query.filter_by(email=email).first()
         
         # Vérifier les identifiants
-        if utilisateur and utilisateur.check_password(password):
-            # Vérifier que le compte est actif
-            if not utilisateur.actif:
-                flash('Votre compte a été désactivé. Contactez l\'administrateur.', 'danger')
-                logger.warning(f'Tentative de connexion d\'un compte désactivé: {email}')
+        if utilisateur:
+            if utilisateur.verrouille:
+                flash("Votre compte est verrouillé suite à trop de tentatives infructueuses. Veuillez contacter un administrateur.", "danger")
+                logger.warning(f"Tentative de connexion d'un compte verrouillé: {email}")
                 return render_template('auth/connexion.html')
-            
-            # Connecter l'utilisateur
-            login_user(utilisateur, remember=remember)
-            logger.info(f'Connexion réussie: {email}')
-            
-            # Rediriger vers la page demandée ou le tableau de bord
-            next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)
-            return redirect(url_for('tickets.tableau_bord'))
+
+            if utilisateur.check_password(password):
+                # Vérifier que le compte est actif
+                if not utilisateur.actif:
+                    flash("Votre compte a été désactivé. Contactez l'administrateur.", "danger")
+                    logger.warning(f"Tentative de connexion d'un compte désactivé: {email}")
+                    return render_template('auth/connexion.html')
+                
+                # Réinitialiser les tentatives de connexion
+                utilisateur.tentatives_connexion = 0
+                db.session.commit()
+                
+                # Connecter l'utilisateur
+                login_user(utilisateur, remember=remember)
+                logger.info(f"Connexion réussie: {email}")
+                
+                # Rediriger vers la page demandée ou le tableau de bord
+                next_page = request.args.get('next')
+                if next_page:
+                    return redirect(next_page)
+                return redirect(url_for('tickets.tableau_bord'))
+            else:
+                # Mauvais mot de passe
+                utilisateur.tentatives_connexion += 1
+                if utilisateur.tentatives_connexion >= 5:
+                    utilisateur.verrouille = True
+                    logger.warning(f"Compte verrouillé suite à de multiples échecs: {email}")
+                db.session.commit()
+                flash('Email ou mot de passe incorrect', 'danger')
+                logger.warning(f'Échec de connexion pour: {email}')
         else:
+            # L'utilisateur n'existe pas, on renvoie la même erreur générique
             flash('Email ou mot de passe incorrect', 'danger')
-            logger.warning(f'Échec de connexion pour: {email}')
+            logger.warning(f'Échec de connexion (utilisateur introuvable): {email}')
     
     return render_template('auth/connexion.html')
 

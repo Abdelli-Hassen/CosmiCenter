@@ -25,7 +25,7 @@ def tableau_bord():
     }
     
     # Tickets récents
-    if current_user.role and current_user.role.niveau >= 70:
+    if current_user.has_permission('tickets.voir_tous'):
         tickets_recents = Ticket.query.order_by(Ticket.date_creation.desc()).limit(10).all()
     else:
         tickets_recents = Ticket.query.filter_by(createur_id=current_user.id)\
@@ -43,10 +43,10 @@ def liste():
     # Filtres
     statut = request.args.get('statut')
     priorite = request.args.get('priorite')
-    departement_id = request.args.get('departement')
+    departement_id = request.args.get('departement_id')
     
     # Query de base
-    if current_user.role and current_user.role.niveau >= 70:
+    if current_user.has_permission('tickets.voir_tous'):
         query = Ticket.query
     else:
         query = Ticket.query.filter_by(createur_id=current_user.id)
@@ -57,7 +57,7 @@ def liste():
     if priorite:
         query = query.filter_by(priorite=priorite)
     if departement_id:
-        query = query.filter_by(departement_id=departement_id)
+        query = query.join(CategorieTicket).filter(CategorieTicket.departement_id == departement_id)
     
     # Tri et pagination
     page = request.args.get('page', 1, type=int)
@@ -79,6 +79,7 @@ def nouveau():
     if request.method == 'POST':
         try:
             ticket = Ticket(
+                numero=Ticket.generer_numero(),
                 titre=request.form.get('titre'),
                 description=request.form.get('description'),
                 type_ticket=request.form.get('type_ticket', 'demande'),
@@ -131,7 +132,7 @@ def detail(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     
     # Vérifier les permissions
-    if not (current_user.role and current_user.role.niveau >= 70):
+    if not current_user.has_permission('tickets.voir_tous'):
         if ticket.createur_id != current_user.id and ticket.assigne_a_id != current_user.id:
             flash('Accès non autorisé', 'danger')
             return redirect(url_for('tickets.liste'))
@@ -155,11 +156,11 @@ def modifier(ticket_id):
     """Modifier un ticket"""
     ticket = Ticket.query.get_or_404(ticket_id)
     
-    # Vérifier les permissions
-    if not (current_user.role and current_user.role.niveau >= 70):
-        if ticket.createur_id != current_user.id:
-            flash('Accès non autorisé', 'danger')
-            return redirect(url_for('tickets.detail', ticket_id=ticket_id))
+    # Seul le créateur ou un manager/admin peut modifier complètement le ticket
+    est_admin = current_user.role and current_user.role.niveau >= 70
+    if not est_admin and ticket.createur_id != current_user.id:
+        flash("Seul le créateur du ticket peut en modifier les détails. Les agents peuvent uniquement changer le statut.", "danger")
+        return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
     if request.method == 'POST':
         try:
@@ -168,7 +169,7 @@ def modifier(ticket_id):
             ticket.priorite = request.form.get('priorite')
             ticket.statut = request.form.get('statut')
 
-            if current_user.role and current_user.role.niveau >= 70:
+            if current_user.has_permission('tickets.assigner'):
                 ticket.assigne_a_id = request.form.get('assigne_a_id') or None
             
             db.session.commit()
@@ -222,6 +223,47 @@ def commenter(ticket_id):
     return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
 
+@tickets_bp.route('/<ticket_id>/statut', methods=['POST'])
+@login_required
+def changer_statut(ticket_id):
+    """Mettre à jour rapidement le statut ou l'assignation d'un ticket depuis la barre latérale"""
+    ticket = Ticket.query.get_or_404(ticket_id)
+    
+    # Vérification des droits : l'agent assigné, le créateur, ou un admin
+    est_admin = current_user.role and current_user.role.niveau >= 70
+    if not est_admin and ticket.createur_id != current_user.id and ticket.assigne_a_id != current_user.id:
+        flash("Vous n'êtes pas autorisé à modifier ce ticket.", "danger")
+        return redirect(url_for('tickets.detail', ticket_id=ticket_id))
+
+    nouveau_statut = request.form.get('statut')
+    nouvel_assigne = request.form.get('assigne_a_id')
+
+    try:
+        modifie = False
+        if nouveau_statut and nouveau_statut in ['nouveau', 'en_cours', 'en_attente', 'resolu', 'ferme', 'annule']:
+            ticket.statut = nouveau_statut
+            if nouveau_statut == 'resolu' and not ticket.date_resolution:
+                ticket.date_resolution = datetime.utcnow()
+            modifie = True
+
+        # Mise à jour de l'assignation si l'utilisateur a le droit
+        if nouvel_assigne is not None and current_user.has_permission('tickets.assigner'):
+            ticket.assigne_a_id = nouvel_assigne if nouvel_assigne else None
+            modifie = True
+
+        if modifie:
+            db.session.commit()
+            flash('Le ticket a été mis à jour.', 'success')
+            logger.info(f"Ticket {ticket.numero} mis à jour via action rapide par {current_user.email}")
+            
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Erreur lors de la mise à jour rapide: {str(e)}')
+        flash('Erreur lors de la mise à jour.', 'danger')
+            
+    return redirect(url_for('tickets.detail', ticket_id=ticket_id))
+
+
 @tickets_bp.route('/<ticket_id>/fermer', methods=['POST'])
 @login_required
 def fermer(ticket_id):
@@ -229,7 +271,7 @@ def fermer(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     
     # Vérifier les permissions
-    if not (current_user.role and current_user.role.niveau >= 70):
+    if not current_user.has_permission('tickets.fermer'):
         if ticket.createur_id != current_user.id and ticket.assigne_a_id != current_user.id:
             flash('Accès non autorisé', 'danger')
             return redirect(url_for('tickets.detail', ticket_id=ticket_id))

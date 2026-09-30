@@ -7,9 +7,17 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production-cosmitto-2024')
     
     # Base de données (PostgreSQL obligatoire)
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
-    if not SQLALCHEMY_DATABASE_URI:
+    db_url = os.getenv('DATABASE_URL')
+    if not db_url:
         raise ValueError("DATABASE_URL environment variable is not set. A PostgreSQL database is required.")
+    
+    # Fix common PostgreSQL URI schemes for SQLAlchemy 2+ and psycopg3
+    if db_url.startswith('postgres://'):
+        db_url = db_url.replace('postgres://', 'postgresql://', 1)
+    if db_url.startswith('postgresql://'):
+        db_url = db_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+        
+    SQLALCHEMY_DATABASE_URI = db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     

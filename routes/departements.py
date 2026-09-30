@@ -29,7 +29,7 @@ def liste():
     query = Departement.query
     
     # Filtres
-    if not current_user.has_permission('admin.departements'):
+    if not current_user.has_permission('admin.departements') and not current_user.has_permission('departements.voir'):
         # Les utilisateurs normaux ne voient que leur département
         if current_user.departement_id:
             query = query.filter_by(id=current_user.departement_id)
@@ -137,7 +137,7 @@ def detail(id):
     departement = Departement.query.get_or_404(id)
     
     # Vérifier les permissions
-    if not current_user.has_permission('admin.departements'):
+    if not current_user.has_permission('admin.departements') and not current_user.has_permission('departements.voir'):
         if current_user.departement_id != departement.id:
             flash('Accès non autorisé.', 'danger')
             return redirect(url_for('tickets.tableau_bord'))

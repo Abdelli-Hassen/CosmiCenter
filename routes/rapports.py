@@ -99,11 +99,11 @@ def tableau_bord():
     
     # Évolution des tickets (par jour)
     evolution_tickets = db.session.query(
-        func.date(Ticket.date_creation).label('date'),
+        db.cast(Ticket.date_creation, db.Date).label('date'),
         func.count(Ticket.id).label('count')
     ).filter(
         Ticket.date_creation >= date_debut
-    ).group_by(func.date(Ticket.date_creation)).all()
+    ).group_by(db.cast(Ticket.date_creation, db.Date)).all()
     
     # Temps moyen de résolution
     temps_moyen_resolution = db.session.query(
@@ -374,11 +374,11 @@ def api_stats():
     if type_stat == 'evolution':
         # Évolution quotidienne
         evolution = db.session.query(
-            func.date(Ticket.date_creation).label('date'),
+            db.cast(Ticket.date_creation, db.Date).label('date'),
             func.count(Ticket.id).label('count')
         ).filter(
             Ticket.date_creation >= date_debut
-        ).group_by(func.date(Ticket.date_creation)).all()
+        ).group_by(db.cast(Ticket.date_creation, db.Date)).all()
         
         return jsonify({
             'dates': [str(e.date) for e in evolution],

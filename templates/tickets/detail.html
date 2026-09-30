@@ -119,12 +119,12 @@
         <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Gestion du ticket
         </div>
 
-        <form method="POST" action="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" id="gestionForm">
+        <form method="POST" action="{{ url_for('tickets.changer_statut', ticket_id=ticket.id) }}" id="gestionForm">
           <input type="hidden" name="action" value="gestion">
           <div style="margin-bottom:12px;">
             <label for="ticketStatut"
               style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Statut</label>
-            <select id="ticketStatut" name="statut" class="select select-sm" style="width:100%;">
+            <select id="ticketStatut" name="statut" class="select select-sm" style="width:100%;" onchange="this.form.submit()">
               <option value="ouvert" {% if ticket.statut=='ouvert' %}selected{% endif %}>Ouvert</option>
               <option value="en_cours" {% if ticket.statut=='en_cours' %}selected{% endif %}>En cours</option>
               <option value="en_attente" {% if ticket.statut=='en_attente' %}selected{% endif %}>En attente</option>
@@ -137,10 +137,11 @@
             <label for="ticketAssigne"
               style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Assigné
               à</label>
-            <select id="ticketAssigne" name="assigne_a_id" class="select select-sm" style="width:100%;">
+            <select id="ticketAssigne" name="assigne_a_id" class="select select-sm" style="width:100%;" onchange="this.form.submit()" {% if not current_user.has_permission('tickets.assigner') %}disabled{% endif %}>
               <option value="">Non assigné</option>
-              <option value="1">Admin Système</option>
-              <option value="2">Technicien Support</option>
+              {% for u in utilisateurs %}
+              <option value="{{ u.id }}" {% if ticket.assigne_a_id == u.id %}selected{% endif %}>{{ u.nom_complet }}</option>
+              {% endfor %}
             </select>
           </div>
 

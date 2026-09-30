@@ -143,7 +143,7 @@
                 </tr>
               </thead>
               <tbody>
-                {% set total_t = tickets_par_statut | sum(attribute='count') %}
+                {% set total_t = tickets_par_statut | sum(attribute='total_count') %}
                 {% for row in tickets_par_statut %}
                 <tr>
                   <td>
@@ -163,10 +163,10 @@
                     <span class="badge badge-neutral">{{ row.statut }}</span>
                     {% endif %}
                   </td>
-                  <td style="text-align:right;font-weight:600;color:var(--text-primary);">{{ row.count }}</td>
+                  <td style="text-align:right;font-weight:600;color:var(--text-primary);">{{ row.total_count }}</td>
                   <td>
                     {% if total_t > 0 %}
-                    {% set pct = (row.count / total_t * 100)|round(0)|int %}
+                    {% set pct = (row.total_count / total_t * 100)|round(0)|int %}
                     <div style="display:flex;align-items:center;gap:8px;">
                       <div
                         style="flex:1;height:6px;background:var(--surface-4);border-radius:var(--radius-full);overflow:hidden;">
@@ -211,7 +211,7 @@
                 </tr>
               </thead>
               <tbody>
-                {% set total_p = tickets_par_priorite | sum(attribute='count') %}
+                {% set total_p = tickets_par_priorite | sum(attribute='total_count') %}
                 {% for row in tickets_par_priorite %}
                 <tr>
                   <td>
@@ -227,10 +227,10 @@
                     <span class="badge badge-neutral">Basse</span>
                     {% endif %}
                   </td>
-                  <td style="text-align:right;font-weight:600;color:var(--text-primary);">{{ row.count }}</td>
+                  <td style="text-align:right;font-weight:600;color:var(--text-primary);">{{ row.total_count }}</td>
                   <td>
                     {% if total_p > 0 %}
-                    {% set pct = (row.count / total_p * 100)|round(0)|int %}
+                    {% set pct = (row.total_count / total_p * 100)|round(0)|int %}
                     <div style="display:flex;align-items:center;gap:8px;">
                       <div
                         style="flex:1;height:6px;background:var(--surface-4);border-radius:var(--radius-full);overflow:hidden;">
