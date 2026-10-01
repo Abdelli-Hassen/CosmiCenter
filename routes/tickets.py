@@ -60,8 +60,20 @@ def liste():
         query = query.join(CategorieTicket).filter(CategorieTicket.departement_id == departement_id)
     
     # Tri et pagination
+    sort_by = request.args.get('sort_by', 'date_creation')
+    order = request.args.get('order', 'desc')
+    
+    sort_column = getattr(Ticket, sort_by, Ticket.date_creation) if hasattr(Ticket, sort_by) else Ticket.date_creation
+    if sort_by == 'id':
+        sort_column = Ticket.numero
+        
+    if order == 'asc':
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
+        
     page = request.args.get('page', 1, type=int)
-    tickets = query.order_by(Ticket.date_creation.desc()).paginate(
+    tickets = query.paginate(
         page=page, per_page=20, error_out=False
     )
     
@@ -69,7 +81,53 @@ def liste():
     
     return render_template('tickets/liste.html', 
                          tickets=tickets,
-                         departements=departements)
+                         departements=departements,
+                         page_title="Tous les tickets")
+
+@tickets_bp.route('/mes-tickets')
+@login_required
+def mes_tickets():
+    """Liste de mes tickets"""
+    # Filtres
+    statut = request.args.get('statut')
+    priorite = request.args.get('priorite')
+    departement_id = request.args.get('departement_id')
+    
+    # Query de base: créé par ou assigné à
+    query = Ticket.query.filter((Ticket.createur_id == current_user.id) | (Ticket.assigne_a_id == current_user.id))
+    
+    # Appliquer les filtres
+    if statut:
+        query = query.filter_by(statut=statut)
+    if priorite:
+        query = query.filter_by(priorite=priorite)
+    if departement_id:
+        query = query.join(CategorieTicket).filter(CategorieTicket.departement_id == departement_id)
+    
+    # Tri et pagination
+    sort_by = request.args.get('sort_by', 'date_creation')
+    order = request.args.get('order', 'desc')
+    
+    sort_column = getattr(Ticket, sort_by, Ticket.date_creation) if hasattr(Ticket, sort_by) else Ticket.date_creation
+    if sort_by == 'id':
+        sort_column = Ticket.numero
+        
+    if order == 'asc':
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
+        
+    page = request.args.get('page', 1, type=int)
+    tickets = query.paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    departements = Departement.query.filter_by(actif=True).all()
+    
+    return render_template('tickets/liste.html', 
+                         tickets=tickets,
+                         departements=departements,
+                         page_title="Mes tickets")
 
 
 @tickets_bp.route('/nouveau', methods=['GET', 'POST'])
@@ -78,18 +136,55 @@ def nouveau():
     """Créer un nouveau ticket"""
     if request.method == 'POST':
         try:
+            type_ticket = request.form.get('type_ticket', 'demande')
+            if type_ticket == 'autre':
+                type_ticket = request.form.get('custom_type', 'Autre')
+                
             ticket = Ticket(
                 numero=Ticket.generer_numero(),
                 titre=request.form.get('titre'),
                 description=request.form.get('description'),
-                type_ticket=request.form.get('type_ticket', 'demande'),
+                type_ticket=type_ticket,
                 priorite=request.form.get('priorite', 'normale'),
-                departement_id=request.form.get('departement_id'),
-                categorie_id=request.form.get('categorie_id'),
+                departement_id=request.form.get('departement_id') or None,
+                categorie_id=request.form.get('categorie_id') or None,
                 createur_id=current_user.id
             )
             
             db.session.add(ticket)
+            db.session.flush() # Ensure we have the ticket ID
+            
+            # Handle File Attachments
+            import os
+            import uuid
+            from werkzeug.utils import secure_filename
+            from models import PieceJointe
+            
+            UPLOAD_FOLDER = os.path.join(request.root_path, 'static', 'uploads', 'tickets')
+            if not os.path.exists(UPLOAD_FOLDER):
+                os.makedirs(UPLOAD_FOLDER)
+                
+            fichiers = request.files.getlist('attachments')
+            for f in fichiers:
+                if f and f.filename:
+                    nom_original = secure_filename(f.filename)
+                    ext = nom_original.rsplit('.', 1)[1].lower() if '.' in nom_original else 'bin'
+                    nouveau_nom = f"{uuid.uuid4().hex}.{ext}"
+                    chemin = os.path.join(UPLOAD_FOLDER, nouveau_nom)
+                    f.save(chemin)
+                    
+                    taille = os.path.getsize(chemin)
+                    pj = PieceJointe(
+                        ticket_id=ticket.id,
+                        nom_fichier=nouveau_nom,
+                        nom_original=nom_original,
+                        type_mime=f.content_type,
+                        taille=taille,
+                        chemin=f'uploads/tickets/{nouveau_nom}',
+                        uploade_par_id=current_user.id
+                    )
+                    db.session.add(pj)
+            
             db.session.commit()
             
             flash('Ticket créé avec succès', 'success')
@@ -116,6 +211,28 @@ def nouveau():
                 'couleur': dept.couleur or '#3B82F6', 'cats': []
             }
         cats_par_dept[dept.id]['cats'].append(cat)
+        
+    # Inject standalone departments that have no categories
+    for dept in departements:
+        if dept.id not in cats_par_dept:
+            cats_par_dept[dept.id] = {
+                'id': dept.id, 'nom': dept.nom,
+                'couleur': dept.couleur or '#3B82F6', 
+                'cats': [{
+                    'id': '',
+                    'nom': 'Routage direct',
+                    'description': f'Assigner directement à {dept.nom}',
+                    'type_ticket': 'demande', # Fallback mapping
+                    'priorite_defaut': 'moyenne'
+                }, {
+                    'id': '',
+                    'nom': 'Routage direct (Incident)',
+                    'description': f'Signaler un incident à {dept.nom}',
+                    'type_ticket': 'incident',
+                    'priorite_defaut': 'haute'
+                }]
+            }
+            
     cats_par_dept = sorted(cats_par_dept.values(), key=lambda d: d['nom'])
     categories = CategorieTicket.query.filter_by(actif=True).all()
     
@@ -168,6 +285,8 @@ def modifier(ticket_id):
             ticket.description = request.form.get('description')
             ticket.priorite = request.form.get('priorite')
             ticket.statut = request.form.get('statut')
+            ticket.departement_id = request.form.get('departement_id') or None
+            ticket.categorie_id = request.form.get('categorie_id') or None
 
             if current_user.has_permission('tickets.assigner'):
                 ticket.assigne_a_id = request.form.get('assigne_a_id') or None

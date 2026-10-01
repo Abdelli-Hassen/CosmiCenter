@@ -144,11 +144,8 @@ def detail(id):
     """Afficher les détails d'un utilisateur"""
     utilisateur = Utilisateur.query.get_or_404(id)
     
-    # Vérifier les permissions
-    if not current_user.has_permission('admin.utilisateurs'):
-        if current_user.id != utilisateur.id:
-            flash('Accès non autorisé.', 'danger')
-            return redirect(url_for('tickets.tableau_bord'))
+    # Pas de restriction stricte pour visualiser un profil
+    # Tous les utilisateurs peuvent voir le profil de base des autres
     
     # Statistiques
     stats = {

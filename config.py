@@ -21,6 +21,9 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     
+    # Auto-reload templates without restarting server
+    TEMPLATES_AUTO_RELOAD = True
+    
     # Upload de fichiers
     UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'static/uploads')
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50 MB

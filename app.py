@@ -66,6 +66,7 @@ def create_app(config_name='default'):
     from routes.utilisateurs import utilisateurs_bp
     from routes.rapports import rapports_bp
     from routes.parametres import parametres_bp
+    from routes.chat import chat_bp
     
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(tickets_bp, url_prefix='/tickets')
@@ -75,6 +76,7 @@ def create_app(config_name='default'):
     app.register_blueprint(utilisateurs_bp, url_prefix='/utilisateurs')
     app.register_blueprint(rapports_bp, url_prefix='/rapports')
     app.register_blueprint(parametres_bp, url_prefix='/parametres')
+    app.register_blueprint(chat_bp, url_prefix='/chat')
     
     # Route principale
     @app.route('/')
@@ -201,11 +203,12 @@ def create_app(config_name='default'):
 
 
 if __name__ == '__main__':
+    is_dev = os.getenv('FLASK_ENV', 'development') == 'development'
     app = create_app(os.getenv('FLASK_ENV', 'development'))
     app.run(
-        debug=False,
+        debug=is_dev,
         host=os.getenv('FLASK_HOST', '127.0.0.1'),
         port=int(os.getenv('FLASK_PORT', 8080)),
-        use_reloader=False,
+        use_reloader=is_dev,
         threaded=True
     )

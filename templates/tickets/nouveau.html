@@ -4,113 +4,176 @@
 
 {% block body_class %}page-ticket-new{% endblock %}
 
+{% block extra_head %}
+<style>
+  /* Page Specific Overrides */
+  .page-header { margin-bottom: 24px; }
+  .page-title { font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+  
+  .ticket-form-layout {
+    display: grid;
+    grid-template-columns: 2.5fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  
+  @media (max-width: 992px) {
+    .ticket-form-layout { grid-template-columns: 1fr; }
+  }
+
+  /* Input Styling */
+  .premium-input, .premium-textarea {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--surface-raised, #f9fafb);
+    border: 1px solid var(--border-subtle, #e5e7eb);
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-primary, #111827);
+    transition: all 0.2s ease;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.01);
+  }
+  .premium-input:focus, .premium-textarea:focus {
+    outline: none;
+    border-color: var(--color-brand, #dc2626);
+    background: var(--surface-base, #ffffff);
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+  }
+
+  /* Label Styling */
+  .premium-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary, #4b5563);
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
+  }
+
+  /* Type Cards */
+  .type-card {
+    display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 12px;
+    border: 2px solid var(--border-subtle); border-radius: 12px; cursor: pointer;
+    background: var(--surface-base); transition: all 0.2s ease; flex: 1; text-align: center;
+  }
+  .type-card:hover { border-color: var(--border-accent, #d1d5db); background: var(--surface-raised); }
+  .type-card input:checked + svg + span { color: var(--color-brand, #dc2626); }
+
+  /* Priority Toggle Buttons */
+  .priority-toggles {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .priority-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border: 1px solid var(--border-subtle); border-radius: 10px;
+    cursor: pointer; background: var(--surface-base); transition: all 0.2s;
+  }
+  .priority-toggle:hover { background: var(--surface-hover); }
+  .priority-toggle.active {
+    border-color: currentColor; background: var(--surface-base); box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .priority-toggle.active svg { opacity: 1 !important; }
+  
+  .p-critique { color: #ef4444; }
+  .p-urgente { color: #f97316; }
+  .p-haute { color: #eab308; }
+  .p-moyenne { color: #3b82f6; }
+  .p-basse { color: #9ca3af; }
+
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="page">
+<div class="page" style="padding: 24px 32px; max-width: 1400px; margin: 0 auto;">
 
   <!-- Page Header -->
   <div class="page-header">
-    <div class="page-header-left">
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="{{ url_for('tickets.liste') }}" class="breadcrumb-link">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          Tous les tickets
-        </a>
-        <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">Nouveau ticket</span>
-      </nav>
-      <h1 class="page-title" style="margin-top:4px;">Nouveau ticket</h1>
-    </div>
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="font-size:13px; color:var(--text-muted); display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+      <a href="{{ url_for('tickets.liste') }}" style="color:var(--text-secondary); text-decoration:none; display:flex; align-items:center; gap:4px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Tous les tickets
+      </a>
+      <span>/</span>
+      <span style="font-weight:600; color:var(--text-primary);">Nouveau ticket</span>
+    </nav>
+    <h1 class="page-title">Créer un nouveau ticket</h1>
   </div>
 
-  <!-- Form Card -->
-  <div>
-    <div class="card card-raised">
-      <div class="card-body" style="padding:32px;">
+  <form method="POST" action="{{ url_for('tickets.nouveau') }}" enctype="multipart/form-data" id="newTicketForm">
+    <div class="ticket-form-layout">
+      
+      <!-- LEFT COLUMN: Main Form -->
+      <div style="display: flex; flex-direction: column; gap: 24px; min-width: 0;">
+        
+        <!-- AI Suggestion Bar -->
+        <div id="aiSuggestionBar" style="display:none; padding:12px 16px; border-radius:10px; border:1px solid rgba(220,38,38,.3); background:rgba(220,38,38,.05); align-items:center; gap:12px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span style="font-size:13px; color:var(--text-primary); flex:1;">L'IA a détecté un problème similaire. <a href="#" style="color:#dc2626; font-weight:600; text-decoration:underline;">Voir la solution suggérée</a></span>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="this.parentElement.style.display='none'">Fermer</button>
+        </div>
 
-        <form method="POST" action="{{ url_for('tickets.nouveau') }}" enctype="multipart/form-data" id="newTicketForm">
-
-          <!-- AI Suggestion Bar (shown by JS when title has 6+ words) -->
-          <div id="aiSuggestionBar" class="ai-suggestion-bar" style="display:none;margin-bottom:20px;padding:12px 16px;border-radius:8px;border:1px solid var(--border-accent, rgba(220,38,38,.3));background:var(--surface-raised);display:none;align-items:center;gap:12px;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand,#dc2626)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span style="font-size:13px;color:var(--text-secondary);flex:1;">L'IA a détecté un ticket similaire — <strong>voir la suggestion</strong></span>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('aiSuggestionBar').style.display='none'">Ignorer</button>
-          </div>
-
+        <div class="card" style="background: var(--surface-base); border: 1px solid var(--border-subtle); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); padding: 32px;">
+          
           <!-- 1. Title -->
-          <div class="form-group" style="margin-bottom:24px;">
-            <label class="form-label" for="titre">
-              Titre <span style="color:var(--color-brand,#dc2626);">*</span>
-            </label>
-            <input
-              type="text"
-              id="titre"
-              name="titre"
-              class="input"
-              placeholder="Brève description du problème..."
-              required
-              autofocus
-              autocomplete="off"
-              style="font-size:16px;font-weight:500;padding:14px 16px;"
-            >
+          <div style="margin-bottom: 28px;">
+            <label class="premium-label" for="titre">Résumé du problème <span style="color:#dc2626;">*</span></label>
+            <input type="text" id="titre" name="titre" class="premium-input" style="font-size: 16px; font-weight: 500;" placeholder="Ex: Impossible de se connecter à la base de données de paie..." required autofocus autocomplete="off">
           </div>
 
           <!-- 2. Type de ticket -->
-          <div class="form-group" style="margin-bottom:24px;">
-            <label class="form-label">
-              Type de ticket <span style="color:var(--color-brand,#dc2626);">*</span>
-            </label>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;" id="typeCards">
+          <div style="margin-bottom: 28px;">
+            <label class="premium-label">Type de ticket <span style="color:#dc2626;">*</span></label>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;" id="typeCards">
               {% set types = [
-                ('incident',  'Incident',  'Panne ou dysfonctionnement',           '#EF4444', 'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01'),
-                ('demande',   'Demande',   'Demande de service ou d\'information',  '#3B82F6', 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'),
-                ('besoin',    'Besoin',    'Besoin matériel ou logiciel',           '#F59E0B', 'M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM16 13a1 1 0 1 1 0-2 1 1 0 0 1 0 2z'),
-                ('plainte',   'Plainte',   'Réclamation ou insatisfaction',        '#8B5CF6', 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'),
-                ('tache',     'Tâche',     'Tâche planifiée ou maintenance',       '#10B981', 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'),
+                ('incident',  'Incident',  'Panne/Erreur',           '#EF4444', 'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01'),
+                ('demande',   'Demande',   'Demande d\'accès',  '#3B82F6', 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'),
+                ('besoin',    'Besoin',    'Matériel/Logiciel',           '#F59E0B', 'M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM16 13a1 1 0 1 1 0-2 1 1 0 0 1 0 2z'),
+                ('plainte',   'Plainte',   'Réclamation',        '#8B5CF6', 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'),
+                ('tache',     'Tâche',     'Maintenance/Projet', '#10B981', 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'),
+                ('autre',     'Autre',     'Personnalisé',       '#6B7280', 'M12 5v14M5 12h14')
               ] %}
               {% for val, label, desc, color, path in types %}
-              <label class="type-card" data-type="{{ val }}"
-                style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 20px;min-width:110px;border:2px solid var(--border-subtle);border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s;text-align:center;flex:1;">
-                <input type="radio" name="type_ticket" value="{{ val }}" class="type-radio" style="display:none;"
-                  {% if loop.first %}checked{% endif %}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ color }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ path }}"/></svg>
-                <span style="font-size:12px;font-weight:700;color:var(--text-primary);">{{ label }}</span>
-                <span style="font-size:10px;color:var(--text-muted);line-height:1.3;">{{ desc }}</span>
+              <label class="type-card" data-type="{{ val }}">
+                <input type="radio" name="type_ticket" value="{{ val }}" class="type-radio" style="display:none;" {% if loop.first %}checked{% endif %}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{ color }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 4px;"><path d="{{ path }}"/></svg>
+                <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">{{ label }}</span>
+                <span style="font-size: 11px; color: var(--text-muted); line-height: 1.2;">{{ desc }}</span>
               </label>
               {% endfor %}
             </div>
+            
+            <div id="customTypeContainer" style="display: none; margin-top: 16px;">
+              <input type="text" id="custom_type_input" name="custom_type" class="premium-input" placeholder="Précisez le type personnalisé...">
+            </div>
           </div>
 
-          <!-- hidden: auto-filled when category selected -->
+          <!-- Hidden departement -->
           <input type="hidden" name="departement_id" id="deptAutoField" value="">
 
-          <!-- 3. Catégories groupées par département -->
-          <div class="form-section" style="margin-bottom:24px;">
-            <div class="form-section-header" style="display:flex;align-items:center;justify-content:space-between;">
-              <span>Catégorie</span>
-              <span id="deptBadge" style="display:none;font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:rgba(220,38,38,.12);color:var(--color-brand,#dc2626);"></span>
+          <!-- 3. Catégorie -->
+          <div style="margin-bottom: 28px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
+              <label class="premium-label" style="margin: 0;">Catégorie &amp; Routage</label>
+              <span id="deptBadge" style="display:none; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; background: rgba(107,114,128,0.1); color: var(--text-secondary);">Département auto-assigné</span>
             </div>
-            <div class="form-section-body">
+            
+            <div style="background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
               {% if cats_par_dept %}
               <div id="deptColumns" style="display:flex;flex-direction:column;gap:20px;">
                 {% for dg in cats_par_dept %}
                 <div class="dept-group" data-dept-id="{{ dg.id }}" data-dept-name="{{ dg.nom }}">
-                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{{ dg.couleur }};flex-shrink:0;"></span>
-                    <span style="font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--text-muted);text-transform:uppercase;">{{ dg.nom }}</span>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{{ dg.couleur }};"></span>
+                    <span style="font-size:12px;font-weight:700;letter-spacing:.05em;color:var(--text-secondary);text-transform:uppercase;">{{ dg.nom }}</span>
                   </div>
-                  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
                     {% for cat in dg.cats %}
-                    <label class="category-card"
-                      data-cat-type="{{ cat.type_ticket }}"
-                      data-dept-id="{{ dg.id }}"
-                      data-dept-name="{{ dg.nom }}"
-                      data-dept-colour="{{ dg.couleur }}"
-                      data-priorite="{{ cat.priorite_defaut }}"
-                      style="display:flex;flex-direction:column;gap:4px;padding:12px 14px;border:1px solid var(--border-subtle);border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s;">
+                    <label class="category-card" data-cat-type="{{ cat.type_ticket }}" data-dept-id="{{ dg.id }}" data-dept-name="{{ dg.nom }}" data-dept-colour="{{ dg.couleur }}" data-priorite="{{ cat.priorite_defaut }}"
+                      style="display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1px solid var(--border-subtle);border-radius:10px;cursor:pointer;transition:all .2s; background: var(--surface-base);">
                       <input type="radio" name="categorie_id" value="{{ cat.id }}" style="display:none;" class="category-radio">
-                      <span style="font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;">{{ cat.nom }}</span>
+                      <span style="font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.3;">{{ cat.nom }}</span>
                       {% if cat.description %}
-                      <span style="font-size:10px;color:var(--text-muted);line-height:1.35;">{{ cat.description[:55] }}{% if cat.description|length > 55 %}…{% endif %}</span>
+                      <span style="font-size:11px;color:var(--text-muted);line-height:1.4;">{{ cat.description }}</span>
                       {% endif %}
                     </label>
                     {% endfor %}
@@ -118,86 +181,100 @@
                 </div>
                 {% endfor %}
               </div>
-              <div id="noCategoryMsg" style="display:none;padding:20px;text-align:center;color:var(--text-muted);font-size:13px;border:1px dashed var(--border-subtle);border-radius:8px;">
-                Aucune catégorie disponible pour ce type de ticket.
-              </div>
+              <div id="noCategoryMsg" style="display:none; text-align:center; color:var(--text-muted); font-size:13px; padding: 20px 0;">Aucune catégorie disponible pour ce type.</div>
               {% else %}
-              <div class="select-wrap">
-                <select name="departement_id" class="select">
-                  <option value="">Sélectionner un département...</option>
-                  {% for dept in departements %}
-                  <option value="{{ dept.id }}">{{ dept.nom }}</option>
-                  {% endfor %}
-                </select>
-              </div>
+              <select name="departement_id" class="premium-input">
+                <option value="">Sélectionner un département...</option>
+                {% for dept in departements %}
+                <option value="{{ dept.id }}">{{ dept.nom }}</option>
+                {% endfor %}
+              </select>
               {% endif %}
             </div>
           </div>
 
-          <!-- 3. Description -->
-          <div class="form-group" style="margin-bottom:24px;">
-            <label class="form-label" for="description">Description</label>
-            <textarea
-              id="description"
-              name="description"
-              class="textarea"
-              rows="6"
-              placeholder="Décrivez le problème en détail — incluez les étapes pour reproduire, le comportement attendu vs réel, des captures d'écran si possible..."
-              style="resize:vertical;min-height:140px;"
-            ></textarea>
+          <!-- 4. Description -->
+          <div>
+            <label class="premium-label" for="description">Description détaillée</label>
+            <textarea id="description" name="description" class="premium-textarea" rows="8" placeholder="Décrivez le problème. N'hésitez pas à inclure des messages d'erreur, des étapes pour reproduire le bug, ou le comportement attendu..." style="resize:vertical; min-height:150px;"></textarea>
           </div>
 
-          <!-- 4. Priority -->
-          <div class="form-group" style="margin-bottom:24px;max-width:240px;">
-            <label class="form-label" for="priorite">Priorité</label>
-            <div class="select-wrap">
-              <select id="priorite" name="priorite" class="select">
-                <option value="basse">Basse</option>
-                <option value="moyenne" selected>Moyenne</option>
-                <option value="haute">Haute</option>
-                <option value="urgente">Urgente</option>
-                <option value="critique">Critique</option>
-              </select>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Sidebar (Metadata & Actions) -->
+      <div style="display: flex; flex-direction: column; gap: 24px; position: sticky; top: 24px; min-width: 0;">
+        
+        <div class="card" style="background: var(--surface-base); border: 1px solid var(--border-subtle); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); padding: 24px; min-width: 0; overflow-x: hidden;">
+          
+          <!-- Priority Buttons -->
+          <div style="margin-bottom: 24px;">
+            <label class="premium-label">Priorité</label>
+            <input type="hidden" name="priorite" id="hiddenPriorite" value="moyenne">
+            
+            <div class="priority-toggles">
+              <div class="priority-toggle p-critique" data-value="critique">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="priority-dot dot-critique"></span><span style="font-size:13px; font-weight:600;">Critique</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="opacity:0;"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="priority-toggle p-urgente" data-value="urgente">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="priority-dot dot-urgente"></span><span style="font-size:13px; font-weight:600;">Urgente</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="opacity:0;"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="priority-toggle p-haute" data-value="haute">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="priority-dot dot-haute"></span><span style="font-size:13px; font-weight:600;">Haute</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="opacity:0;"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="priority-toggle p-moyenne active" data-value="moyenne">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="priority-dot dot-moyenne"></span><span style="font-size:13px; font-weight:600;">Moyenne</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="opacity:0;"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="priority-toggle p-basse" data-value="basse">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="priority-dot dot-basse"></span><span style="font-size:13px; font-weight:600;">Basse</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="opacity:0;"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
             </div>
           </div>
 
-          <!-- 5. File attachment -->
-          <div class="form-group" style="margin-bottom:32px;">
-            <label class="form-label">Pièces jointes</label>
-            <div id="dropZone"
-                 style="border:2px dashed var(--border-subtle);border-radius:10px;padding:32px 24px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:var(--surface-base);"
-                 onclick="document.getElementById('fileInput').click()"
-                 ondragover="event.preventDefault();this.style.borderColor='var(--color-brand,#dc2626)';this.style.background='var(--surface-hover)';"
-                 ondragleave="this.style.borderColor='var(--border-subtle)';this.style.background='var(--surface-base)';"
-                 ondrop="event.preventDefault();this.style.borderColor='var(--border-subtle)';this.style.background='var(--surface-base)';handleDrop(event);">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted);margin-bottom:8px;">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
+          <!-- Attachments -->
+          <div>
+            <label class="premium-label">Pièces jointes</label>
+            <div id="dropZone" style="border: 2px dashed var(--border-subtle); border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface-raised);" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.style.borderColor='var(--color-brand,#dc2626)';this.style.background='var(--surface-hover)';" ondragleave="this.style.borderColor='var(--border-subtle)';this.style.background='var(--surface-raised)';" ondrop="event.preventDefault();this.style.borderColor='var(--border-subtle)';this.style.background='var(--surface-raised)';handleDrop(event);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted); margin-bottom:12px;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
-              <p style="font-size:13px;font-weight:500;color:var(--text-secondary);margin:0 0 4px;">
-                Glissez-déposez des fichiers ici ou <span style="color:var(--color-brand,#dc2626);">parcourez</span>
-              </p>
-              <p style="font-size:11px;color:var(--text-muted);margin:0;">PNG, JPG, PDF, ZIP jusqu'à 10 Mo chacun</p>
-              <div id="fileList" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;"></div>
+              <p style="font-size: 13px; font-weight: 500; color: var(--text-primary); margin: 0 0 4px;">Glisser vos fichiers</p>
+              <p style="font-size: 11px; color: var(--text-muted); margin: 0;">JPG, PNG, PDF (Max 10Mo)</p>
+              <div id="fileList" style="margin-top:12px; display:flex; flex-direction:column; gap:6px;"></div>
             </div>
-            <input type="file" id="fileInput" name="attachments" multiple accept="image/*,.pdf,.zip,.txt,.log"
-                   style="display:none;" onchange="previewFiles(this.files)">
+            <input type="file" id="fileInput" name="attachments" multiple accept="image/*,.pdf,.zip,.txt,.log" style="display:none;" onchange="previewFiles(this.files)">
           </div>
 
-          <!-- Form Actions -->
-          <div class="form-actions" style="display:flex;align-items:center;gap:12px;justify-content:flex-end;padding-top:8px;border-top:1px solid var(--border-subtle);">
-            <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost">Annuler</a>
-            <button type="submit" class="btn btn-primary btn-lg">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Créer le ticket
-            </button>
-          </div>
+        </div>
+        
+        <!-- Form Actions -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Créer le ticket
+          </button>
+          <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost" style="width: 100%; justify-content: center; border-radius: 12px;">Annuler</a>
+        </div>
 
-        </form>
-      </div><!-- /card-body -->
-    </div><!-- /card -->
-  </div>
+      </div>
+
+    </div>
+  </form>
 
 </div><!-- /page -->
 {% endblock %}
@@ -205,36 +282,44 @@
 {% block extra_scripts %}
 <script>
 (function () {
-
-  /* ── Type card selection + dept-group filtering ─────────────── */
+  /* ── 1. Type selection & Category filtering ── */
   var typeCards    = document.querySelectorAll('.type-card');
   var catCards     = document.querySelectorAll('.category-card');
   var deptGroups   = document.querySelectorAll('.dept-group');
   var noCatMsg     = document.getElementById('noCategoryMsg');
   var deptField    = document.getElementById('deptAutoField');
   var deptBadge    = document.getElementById('deptBadge');
-  var prioriteEl   = document.getElementById('priorite');
-
+  
   function selectType(val) {
     typeCards.forEach(function (tc) {
       var sel = tc.dataset.type === val;
       tc.style.borderColor = sel ? 'var(--color-brand,#dc2626)' : 'var(--border-subtle)';
-      tc.style.background  = sel ? 'rgba(220,38,38,.07)' : '';
+      tc.style.background  = sel ? 'rgba(220,38,38,.04)' : '';
       tc.querySelector('.type-radio').checked = sel;
     });
 
-    // Show/hide dept groups based on whether they have matching cats
+    var customContainer = document.getElementById('customTypeContainer');
+    var customInput = document.getElementById('custom_type_input');
+    if (val === 'autre') {
+        customContainer.style.display = 'block';
+        customInput.required = true;
+    } else {
+        customContainer.style.display = 'none';
+        customInput.required = false;
+    }
+
     var totalVisible = 0;
     deptGroups.forEach(function (dg) {
       var dgCards = dg.querySelectorAll('.category-card');
       var dgVisible = 0;
       dgCards.forEach(function (card) {
-        var match = card.dataset.catType === val;
+        // Show all categories regardless of ticket type
+        var match = true;
         card.style.display = match ? '' : 'none';
         if (match) dgVisible++;
         if (!match) {
           card.style.borderColor = 'var(--border-subtle)';
-          card.style.background  = '';
+          card.style.background  = 'var(--surface-base)';
           card.querySelector('.category-radio').checked = false;
         }
       });
@@ -243,50 +328,62 @@
     });
 
     if (noCatMsg) noCatMsg.style.display = totalVisible === 0 ? 'block' : 'none';
-
-    // Clear auto-assigned dept when type changes
     if (deptField) deptField.value = '';
     if (deptBadge) deptBadge.style.display = 'none';
   }
 
-  typeCards.forEach(function (tc) {
-    tc.addEventListener('click', function () { selectType(tc.dataset.type); });
-  });
-
+  typeCards.forEach(function (tc) { tc.addEventListener('click', function () { selectType(tc.dataset.type); }); });
   var firstChecked = document.querySelector('.type-radio:checked');
   if (firstChecked) selectType(firstChecked.value);
 
-  /* ── Category card selection + auto-assign dept & priority ──── */
+  /* ── 2. Category selection & Auto-assign ── */
   catCards.forEach(function (card) {
     card.addEventListener('click', function () {
       catCards.forEach(function (c) {
         c.style.borderColor = 'var(--border-subtle)';
-        c.style.background  = '';
+        c.style.background  = 'var(--surface-base)';
+        c.style.boxShadow   = 'none';
       });
       card.style.borderColor = 'var(--color-brand,#dc2626)';
-      card.style.background  = 'rgba(220,38,38,.07)';
+      card.style.background  = 'var(--surface-base)';
+      card.style.boxShadow   = '0 2px 8px rgba(220,38,38,0.1)';
       card.querySelector('.category-radio').checked = true;
 
-      // Auto-assign department
-      var deptId   = card.dataset.deptId   || '';
-      var deptName = card.dataset.deptName || '';
-      if (deptField) deptField.value = deptId;
+      // Assign Dept
+      if (deptField) deptField.value = card.dataset.deptId || '';
       if (deptBadge) {
-        if (deptName) {
-          deptBadge.textContent = deptName;
-          deptBadge.style.display = 'inline-block';
-        } else {
-          deptBadge.style.display = 'none';
-        }
+        deptBadge.textContent = card.dataset.deptName ? card.dataset.deptName : '';
+        deptBadge.style.display = card.dataset.deptName ? 'inline-block' : 'none';
       }
 
       // Auto-set priority
       var priorite = card.dataset.priorite;
-      if (prioriteEl && priorite) prioriteEl.value = priorite;
+      if (priorite) {
+        setPriority(priorite);
+      }
     });
   });
 
-  /* ── AI suggestion bar ──────────────────────────────────────── */
+  /* ── 3. Priority Buttons Logic ── */
+  var pToggles = document.querySelectorAll('.priority-toggle');
+  var hiddenP  = document.getElementById('hiddenPriorite');
+  
+  function setPriority(val) {
+    pToggles.forEach(function(t) {
+      if (t.dataset.value === val) {
+        t.classList.add('active');
+        hiddenP.value = val;
+      } else {
+        t.classList.remove('active');
+      }
+    });
+  }
+  
+  pToggles.forEach(function(t) {
+    t.addEventListener('click', function() { setPriority(this.dataset.value); });
+  });
+
+  /* ── 4. AI Suggestion ── */
   var titleInput = document.getElementById('titre');
   var aiBar      = document.getElementById('aiSuggestionBar');
   if (titleInput && aiBar) {
@@ -295,19 +392,27 @@
     });
   }
 
-  /* ── File drop ──────────────────────────────────────────────── */
+  /* ── 5. File Drop ── */
   window.handleDrop = function (e) {
     var files = e.dataTransfer.files;
     if (files.length) { document.getElementById('fileInput').files = files; previewFiles(files); }
   };
-
   window.previewFiles = function (files) {
     var list = document.getElementById('fileList');
     list.innerHTML = '';
     Array.from(files).forEach(function (f) {
-      var chip = document.createElement('span');
-      chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:var(--surface-raised);border:1px solid var(--border-subtle);font-size:11px;color:var(--text-secondary);';
-      chip.textContent = f.name + ' (' + (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : Math.round(f.size/1024)+' KB') + ')';
+      var isImage = f.type.startsWith('image/');
+      var previewHtml = '';
+      if (isImage) {
+        var objectUrl = URL.createObjectURL(f);
+        previewHtml = '<img src="' + objectUrl + '" style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-subtle); flex-shrink: 0;" />';
+      } else {
+        previewHtml = '<div style="width: 36px; height: 36px; background: var(--surface-raised); border-radius: 6px; border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-shrink: 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg></div>';
+      }
+      
+      var chip = document.createElement('div');
+      chip.style.cssText = 'display:flex; align-items:center; gap: 12px; padding: 8px; border-radius: 8px; background: var(--surface-base); border: 1px solid var(--border-subtle); text-align: left; box-shadow: 0 1px 2px rgba(0,0,0,0.02);';
+      chip.innerHTML = previewHtml + '<div style="flex: 1; min-width: 0;"><div style="font-size:12px; font-weight:600; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + f.name + '</div><div style="font-size:11px; color:var(--text-muted);">' + (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : Math.round(f.size/1024)+' KB') + '</div></div>';
       list.appendChild(chip);
     });
   };

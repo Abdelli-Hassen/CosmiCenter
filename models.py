@@ -210,8 +210,9 @@ class Ticket(db.Model):
     createur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='RESTRICT'), nullable=False, index=True)
     assigne_a_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), index=True)
 
-    # Catégorie
+    # Catégorie & Routage direct
     categorie_id = db.Column(db.String(36), db.ForeignKey('categories_tickets.id', ondelete='SET NULL'), index=True)
+    departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='SET NULL'), index=True)
 
     # Dates
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
@@ -251,6 +252,15 @@ class Ticket(db.Model):
     historique = db.relationship('HistoriqueTicket', backref='ticket', cascade='all, delete-orphan', 
                                 order_by='HistoriqueTicket.date_creation.desc()')
     taches = db.relationship('Tache', backref='ticket', cascade='all, delete-orphan')
+    departement_associe = db.relationship('Departement', foreign_keys=[departement_id])
+
+    @property
+    def departement(self):
+        if self.departement_associe:
+            return self.departement_associe
+        if self.categorie:
+            return self.categorie.departement
+        return None
 
     @staticmethod
     def generer_numero():
@@ -439,27 +449,30 @@ class BaseConnaissance(db.Model):
     def __repr__(self):
         return f'<BaseConnaissance {self.titre}>'
 
+class Message(db.Model):
+    """Messages du chat interne"""
+    __tablename__ = 'messages'
 
-class Notification(db.Model):
-    """Modèle pour les notifications système"""
-    __tablename__ = 'notifications'
-
-    id = db.Column(db.String(36), primary_key=True)
-    utilisateur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), index=True, nullable=False)
-    titre = db.Column(db.String(255), nullable=False)
-    message = db.Column(db.Text, nullable=False)
-    lien = db.Column(db.String(255))
-    lue = db.Column(db.Boolean, default=False)
-    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
-    date_lecture = db.Column(db.DateTime)
-
-    utilisateur = db.relationship('Utilisateur', backref=db.backref('mes_notifications', lazy='dynamic', cascade='all, delete-orphan'))
-
-    def __init__(self, **kwargs):
-        super(Notification, self).__init__(**kwargs)
-        if not self.id:
-            import uuid
-            self.id = str(uuid.uuid4())
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    sender_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), nullable=False, index=True)
+    receiver_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), nullable=False, index=True)
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    is_read = db.Column(db.Boolean, default=False)
+    
+    # Relations
+    sender = db.relationship('Utilisateur', foreign_keys=[sender_id], backref=db.backref('messages_sent', lazy='dynamic'))
+    receiver = db.relationship('Utilisateur', foreign_keys=[receiver_id], backref=db.backref('messages_received', lazy='dynamic'))
 
     def __repr__(self):
-        return f'<Notification {self.titre} (Lue: {self.lue})>'
+        return f'<Message {self.id}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'sender_id': self.sender_id,
+            'receiver_id': self.receiver_id,
+            'content': self.content,
+            'timestamp': self.timestamp.isoformat() + 'Z',
+            'is_read': self.is_read
+        }
