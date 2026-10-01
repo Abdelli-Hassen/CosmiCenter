@@ -16,6 +16,17 @@ roles_permissions = db.Table('roles_permissions',
     db.Column('permission_id', db.String(36), db.ForeignKey('permissions.id', ondelete='CASCADE'), primary_key=True, index=True)
 )
 
+# Tables d'association pour la collaboration sur les tickets
+ticket_collaborateurs = db.Table('ticket_collaborateurs',
+    db.Column('ticket_id', db.String(36), db.ForeignKey('tickets.id', ondelete='CASCADE'), primary_key=True, index=True),
+    db.Column('utilisateur_id', db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), primary_key=True, index=True)
+)
+
+ticket_departements_collab = db.Table('ticket_departements_collab',
+    db.Column('ticket_id', db.String(36), db.ForeignKey('tickets.id', ondelete='CASCADE'), primary_key=True, index=True),
+    db.Column('departement_id', db.String(36), db.ForeignKey('departements.id', ondelete='CASCADE'), primary_key=True, index=True)
+)
+
 
 class Permission(db.Model):
     """Permissions granulaires pour le système"""
@@ -253,6 +264,12 @@ class Ticket(db.Model):
                                 order_by='HistoriqueTicket.date_creation.desc()')
     taches = db.relationship('Tache', backref='ticket', cascade='all, delete-orphan')
     departement_associe = db.relationship('Departement', foreign_keys=[departement_id])
+    
+    # Collaborations
+    collaborateurs = db.relationship('Utilisateur', secondary=ticket_collaborateurs, lazy='subquery',
+                                     backref=db.backref('tickets_en_collaboration', lazy=True))
+    departements_collab = db.relationship('Departement', secondary=ticket_departements_collab, lazy='subquery',
+                                          backref=db.backref('tickets_en_collaboration', lazy=True))
 
     @property
     def departement(self):

@@ -140,49 +140,93 @@
             </div>
           </div>
 
-          <!-- Hidden departement -->
-          <input type="hidden" name="departement_id" id="deptAutoField" value="">
-
-          <!-- 3. Catégorie -->
+          <!-- 3. Département & Routage -->
           <div style="margin-bottom: 28px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
-              <label class="premium-label" style="margin: 0;">Catégorie &amp; Routage</label>
-              <span id="deptBadge" style="display:none; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; background: rgba(107,114,128,0.1); color: var(--text-secondary);">Département auto-assigné</span>
-            </div>
-            
+            <label class="premium-label" style="margin-bottom: 8px;">Département concerné</label>
             <div style="background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
-              {% if cats_par_dept %}
-              <div id="deptColumns" style="display:flex;flex-direction:column;gap:20px;">
-                {% for dg in cats_par_dept %}
-                <div class="dept-group" data-dept-id="{{ dg.id }}" data-dept-name="{{ dg.nom }}">
-                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{{ dg.couleur }};"></span>
-                    <span style="font-size:12px;font-weight:700;letter-spacing:.05em;color:var(--text-secondary);text-transform:uppercase;">{{ dg.nom }}</span>
-                  </div>
-                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
-                    {% for cat in dg.cats %}
-                    <label class="category-card" data-cat-type="{{ cat.type_ticket }}" data-dept-id="{{ dg.id }}" data-dept-name="{{ dg.nom }}" data-dept-colour="{{ dg.couleur }}" data-priorite="{{ cat.priorite_defaut }}"
-                      style="display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1px solid var(--border-subtle);border-radius:10px;cursor:pointer;transition:all .2s; background: var(--surface-base);">
-                      <input type="radio" name="categorie_id" value="{{ cat.id }}" style="display:none;" class="category-radio">
-                      <span style="font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.3;">{{ cat.nom }}</span>
-                      {% if cat.description %}
-                      <span style="font-size:11px;color:var(--text-muted);line-height:1.4;">{{ cat.description }}</span>
-                      {% endif %}
-                    </label>
-                    {% endfor %}
-                  </div>
-                </div>
-                {% endfor %}
-              </div>
-              <div id="noCategoryMsg" style="display:none; text-align:center; color:var(--text-muted); font-size:13px; padding: 20px 0;">Aucune catégorie disponible pour ce type.</div>
-              {% else %}
-              <select name="departement_id" class="premium-input">
+              <select name="departement_id" id="departementSelect" class="premium-input" required style="margin-bottom: 24px;">
                 <option value="">Sélectionner un département...</option>
                 {% for dept in departements %}
                 <option value="{{ dept.id }}">{{ dept.nom }}</option>
                 {% endfor %}
               </select>
-              {% endif %}
+
+              <div style="padding-top: 20px; border-top: 1px solid var(--border-subtle);">
+                <label class="premium-label" style="margin-bottom: 12px;">Type d'assignation</label>
+                
+                <style>
+                  .routing-radio {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 10px 16px;
+                    border: 1px solid var(--border-subtle);
+                    border-radius: 8px;
+                    background: var(--surface-base);
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: var(--text-secondary);
+                  }
+                  .routing-radio:has(input:checked) {
+                    border-color: var(--color-brand, #dc2626);
+                    background: rgba(220, 38, 38, 0.05);
+                    color: var(--text-primary);
+                  }
+                  .routing-radio input {
+                    accent-color: var(--color-brand, #dc2626);
+                    transform: scale(1.1);
+                  }
+                </style>
+
+                <div style="display:flex; gap:12px; margin-bottom: 20px; flex-wrap: wrap;">
+                  <label class="routing-radio">
+                    <input type="radio" name="routing_type" value="all" checked onchange="toggleRoutingUI()"> 
+                    <span>À tout le département</span>
+                  </label>
+                  <label class="routing-radio">
+                    <input type="radio" name="routing_type" value="specific" onchange="toggleRoutingUI()"> 
+                    <span>À une personne spécifique</span>
+                  </label>
+                  <label class="routing-radio">
+                    <input type="radio" name="routing_type" value="collab" onchange="toggleRoutingUI()"> 
+                    <span>Collaboration (multiples)</span>
+                  </label>
+                </div>
+
+                <div id="routingSpecificUI" style="display:none; padding: 16px; background: var(--surface-base); border-radius: 8px; border: 1px solid var(--border-subtle);">
+                  <label class="premium-label">Sélectionner l'agent (Optionnel)</label>
+                  <select name="assigne_a_id" class="premium-input">
+                    <option value="">Sélectionner une personne...</option>
+                    {% for u in utilisateurs %}
+                    <option value="{{ u.id }}">{{ u.prenom }} {{ u.nom }} ({{ u.departement.nom if u.departement else 'Sans Dpt' }})</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div id="routingCollabUI" style="display:none; padding: 16px; background: var(--surface-base); border-radius: 8px; border: 1px solid var(--border-subtle); flex-direction:column; gap:16px;">
+                  <div>
+                    <label class="premium-label">Départements collaborateurs</label>
+                    <select name="collab_departements[]" class="premium-input" multiple style="min-height: 100px; padding: 8px;">
+                      {% for dept in departements %}
+                      <option value="{{ dept.id }}" style="padding: 4px 8px;">{{ dept.nom }}</option>
+                      {% endfor %}
+                    </select>
+                    <span style="font-size:11px; color:var(--text-muted); display:inline-block; margin-top:4px;">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs options.</span>
+                  </div>
+                  <div>
+                    <label class="premium-label">Agents collaborateurs</label>
+                    <select name="collab_users[]" class="premium-input" multiple style="min-height: 120px; padding: 8px;">
+                      {% for u in utilisateurs %}
+                      <option value="{{ u.id }}" style="padding: 4px 8px;">{{ u.prenom }} {{ u.nom }} ({{ u.departement.nom if u.departement else 'Sans Dpt' }})</option>
+                      {% endfor %}
+                    </select>
+                    <span style="font-size:11px; color:var(--text-muted); display:inline-block; margin-top:4px;">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs options.</span>
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
 
@@ -328,62 +372,26 @@
         customContainer.style.display = 'none';
         customInput.required = false;
     }
-
-    var totalVisible = 0;
-    deptGroups.forEach(function (dg) {
-      var dgCards = dg.querySelectorAll('.category-card');
-      var dgVisible = 0;
-      dgCards.forEach(function (card) {
-        // Show all categories regardless of ticket type
-        var match = true;
-        card.style.display = match ? '' : 'none';
-        if (match) dgVisible++;
-        if (!match) {
-          card.style.borderColor = 'var(--border-subtle)';
-          card.style.background  = 'var(--surface-base)';
-          card.querySelector('.category-radio').checked = false;
-        }
-      });
-      dg.style.display = dgVisible > 0 ? '' : 'none';
-      totalVisible += dgVisible;
-    });
-
-    if (noCatMsg) noCatMsg.style.display = totalVisible === 0 ? 'block' : 'none';
-    if (deptField) deptField.value = '';
-    if (deptBadge) deptBadge.style.display = 'none';
   }
+
+  window.toggleRoutingUI = function() {
+    var val = document.querySelector('input[name="routing_type"]:checked').value;
+    var specificUI = document.getElementById('routingSpecificUI');
+    var collabUI = document.getElementById('routingCollabUI');
+    
+    specificUI.style.display = 'none';
+    collabUI.style.display = 'none';
+    
+    if (val === 'specific') {
+      specificUI.style.display = 'block';
+    } else if (val === 'collab') {
+      collabUI.style.display = 'flex';
+    }
+  };
 
   typeCards.forEach(function (tc) { tc.addEventListener('click', function () { selectType(tc.dataset.type); }); });
   var firstChecked = document.querySelector('.type-radio:checked');
   if (firstChecked) selectType(firstChecked.value);
-
-  /* ── 2. Category selection & Auto-assign ── */
-  catCards.forEach(function (card) {
-    card.addEventListener('click', function () {
-      catCards.forEach(function (c) {
-        c.style.borderColor = 'var(--border-subtle)';
-        c.style.background  = 'var(--surface-base)';
-        c.style.boxShadow   = 'none';
-      });
-      card.style.borderColor = 'var(--color-brand,#dc2626)';
-      card.style.background  = 'var(--surface-base)';
-      card.style.boxShadow   = '0 2px 8px rgba(220,38,38,0.1)';
-      card.querySelector('.category-radio').checked = true;
-
-      // Assign Dept
-      if (deptField) deptField.value = card.dataset.deptId || '';
-      if (deptBadge) {
-        deptBadge.textContent = card.dataset.deptName ? card.dataset.deptName : '';
-        deptBadge.style.display = card.dataset.deptName ? 'inline-block' : 'none';
-      }
-
-      // Auto-set priority
-      var priorite = card.dataset.priorite;
-      if (priorite) {
-        setPriority(priorite);
-      }
-    });
-  });
 
   /* ── 3. Priority Buttons Logic ── */
   var pToggles = document.querySelectorAll('.priority-toggle');

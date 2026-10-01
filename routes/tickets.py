@@ -140,6 +140,8 @@ def nouveau():
             if type_ticket == 'autre':
                 type_ticket = request.form.get('custom_type', 'Autre')
                 
+            routing_type = request.form.get('routing_type', 'all')
+            
             ticket = Ticket(
                 numero=Ticket.generer_numero(),
                 titre=request.form.get('titre'),
@@ -147,9 +149,31 @@ def nouveau():
                 type_ticket=type_ticket,
                 priorite=request.form.get('priorite', 'normale'),
                 departement_id=request.form.get('departement_id') or None,
-                categorie_id=request.form.get('categorie_id') or None,
                 createur_id=current_user.id
             )
+            
+            if routing_type == 'specific':
+                ticket.assigne_a_id = request.form.get('assigne_a_id') or None
+            
+            db.session.add(ticket)
+            db.session.flush() # Ensure we have the ticket ID
+            
+            if routing_type == 'collab':
+                # Handle Collaboration Departments
+                collab_depts = request.form.getlist('collab_departements[]')
+                for dept_id in collab_depts:
+                    if dept_id:
+                        dept = Departement.query.get(dept_id)
+                        if dept:
+                            ticket.departements_collab.append(dept)
+                
+                # Handle Collaboration Users
+                collab_users = request.form.getlist('collab_users[]')
+                for user_id in collab_users:
+                    if user_id:
+                        user = Utilisateur.query.get(user_id)
+                        if user:
+                            ticket.collaborateurs.append(user)
             
             db.session.add(ticket)
             db.session.flush() # Ensure we have the ticket ID
@@ -212,47 +236,11 @@ def nouveau():
     
     # Récupérer les données pour le formulaire
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
-    # Group categories by department for display
-    cats_par_dept = {}
-    for cat in CategorieTicket.query.filter_by(actif=True).order_by(CategorieTicket.nom).all():
-        dept = cat.departement
-        if not dept:
-            continue
-        if dept.id not in cats_par_dept:
-            cats_par_dept[dept.id] = {
-                'id': dept.id, 'nom': dept.nom,
-                'couleur': dept.couleur or '#3B82F6', 'cats': []
-            }
-        cats_par_dept[dept.id]['cats'].append(cat)
-        
-    # Inject standalone departments that have no categories
-    for dept in departements:
-        if dept.id not in cats_par_dept:
-            cats_par_dept[dept.id] = {
-                'id': dept.id, 'nom': dept.nom,
-                'couleur': dept.couleur or '#3B82F6', 
-                'cats': [{
-                    'id': '',
-                    'nom': 'Routage direct',
-                    'description': f'Assigner directement à {dept.nom}',
-                    'type_ticket': 'demande', # Fallback mapping
-                    'priorite_defaut': 'moyenne'
-                }, {
-                    'id': '',
-                    'nom': 'Routage direct (Incident)',
-                    'description': f'Signaler un incident à {dept.nom}',
-                    'type_ticket': 'incident',
-                    'priorite_defaut': 'haute'
-                }]
-            }
-            
-    cats_par_dept = sorted(cats_par_dept.values(), key=lambda d: d['nom'])
-    categories = CategorieTicket.query.filter_by(actif=True).all()
+    utilisateurs = Utilisateur.query.filter_by(actif=True).order_by(Utilisateur.nom).all()
     
     return render_template('tickets/nouveau.html',
                          departements=departements,
-                         categories=categories,
-                         cats_par_dept=cats_par_dept)
+                         utilisateurs=utilisateurs)
 
 
 @tickets_bp.route('/<ticket_id>')
