@@ -1,158 +1,651 @@
 {% extends "base.html" %}
 
 {% block title %}Modifier {{ ticket.numero }}{% endblock %}
-
 {% block body_class %}page-ticket-edit{% endblock %}
 
-{% block content %}
-<div class="page">
+{% block extra_head %}
+<style>
+/* ── Layout ─────────────────────────────────── */
+.edit-shell {
+  display: grid;
+  grid-template-columns: 1fr 308px;
+  gap: 18px;
+  padding: 0 28px 80px;
+  align-items: start;
+}
+.edit-section {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.edit-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+}
+.edit-section-icon {
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.edit-section-title {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.edit-section-body { padding: 18px; }
 
-  <!-- Page Header -->
-  <div class="page-header" style="max-width: 800px; margin: 0 auto; padding-top: 32px; padding-bottom: 24px;">
-    <div class="page-header-left">
-      <nav class="breadcrumb" aria-label="Fil d'Ariane">
-        <a href="{{ url_for('tickets.liste') }}" class="breadcrumb-link">Tous les tickets</a>
-        <span class="breadcrumb-sep">/</span>
-        <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="breadcrumb-link"
-           style="font-family:var(--font-mono);font-size:12px;">{{ ticket.numero }}</a>
-        <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">Modifier</span>
+/* ── Field label ─────────────────────────────── */
+.fl {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.fl .req { color: var(--brand); }
+
+/* ── Inputs ──────────────────────────────────── */
+.fi {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-family: var(--font-sans);
+  transition: border-color var(--fast), box-shadow var(--fast);
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+.fi:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: var(--shadow-brand);
+}
+.fi::placeholder { color: var(--text-faint); }
+select.fi { cursor: pointer; }
+textarea.fi { resize: vertical; min-height: 140px; }
+
+/* ── Type grid ───────────────────────────────── */
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+.type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 11px 6px 9px;
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: border-color var(--fast), background var(--fast), box-shadow var(--fast);
+  background: var(--surface-1);
+  text-align: center;
+  user-select: none;
+}
+.type-card:hover { border-color: var(--brand); background: var(--brand-subtle); }
+.type-card.active {
+  border-color: var(--brand);
+  background: var(--brand-subtle);
+  box-shadow: 0 0 0 3px var(--brand-light);
+}
+.type-card svg { color: var(--text-secondary); transition: color var(--fast); }
+.type-card:hover svg, .type-card.active svg { color: var(--brand); }
+.tc-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  transition: color var(--fast);
+  line-height: 1;
+}
+.type-card:hover .tc-label, .type-card.active .tc-label { color: var(--brand); }
+
+/* ── Routing radios ──────────────────────────── */
+.routing-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.routing-radio {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  cursor: pointer;
+  transition: all var(--fast);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.routing-radio:has(input:checked) {
+  border-color: var(--brand);
+  background: var(--brand-subtle);
+  color: var(--text-primary);
+}
+.routing-radio input { accent-color: var(--brand); transform: scale(1.1); }
+
+/* ── Priority list ───────────────────────────── */
+.priority-list { display: flex; flex-direction: column; gap: 6px; }
+.priority-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all var(--fast);
+  background: var(--surface-1);
+}
+.priority-row:hover { background: var(--surface-2); }
+.priority-row.active { border-color: var(--p-color); background: var(--p-bg); }
+.priority-row .p-left { display: flex; align-items: center; gap: 10px; }
+.p-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--p-color); flex-shrink: 0; }
+.priority-row.active .p-dot { box-shadow: 0 0 0 2px var(--p-bg), 0 0 7px var(--p-color); }
+.p-label { font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
+.p-check { opacity: 0; transition: opacity var(--fast); color: var(--p-color); }
+.priority-row.active .p-check { opacity: 1; }
+
+/* ── Checklist ───────────────────────────────── */
+.checklist-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.drag-handle {
+  color: var(--text-faint);
+  cursor: grab;
+  flex-shrink: 0;
+  padding: 2px;
+}
+.checklist-row.done-row .fi {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* ── File chip ───────────────────────────────── */
+.file-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+/* ── Drop zone ───────────────────────────────── */
+.drop-zone {
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  padding: 18px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--fast), background var(--fast);
+  background: var(--surface-1);
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--brand);
+  background: var(--brand-subtle);
+}
+
+/* ── Unsaved dot ─────────────────────────────── */
+#unsavedDot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--warning);
+  display: none;
+  flex-shrink: 0;
+}
+#unsavedDot.on { display: inline-block; }
+
+/* ── Responsive ──────────────────────────────── */
+@media (max-width: 960px) {
+  .edit-shell { grid-template-columns: 1fr; padding: 0 16px 80px; }
+  .right-col { position: static !important; }
+  .type-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 520px) {
+  .type-grid { grid-template-columns: repeat(2, 1fr); }
+  .routing-options { flex-direction: column; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page" style="padding-bottom: 80px;">
+
+  <!-- Page header -->
+  <div style="padding: 22px 28px 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-bottom: 1px solid var(--border-subtle);">
+    <div>
+      <nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 5px; margin-bottom: 8px;">
+        <a href="{{ url_for('tickets.liste') }}" class="breadcrumb-link" style="font-size: var(--text-xs); color: var(--text-muted);">Tickets</a>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-faint);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+        <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" style="text-decoration:none; display:flex; align-items:center;">
+          <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--brand); background:var(--brand-subtle); border:1px solid var(--brand-light); border-radius:4px; padding:1px 7px;">{{ ticket.numero }}</span>
+        </a>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-faint);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+        <span style="font-size:var(--text-xs); color:var(--text-secondary); font-weight:500;">Modifier</span>
       </nav>
-      <h1 class="page-title" style="margin-top: 8px; font-size: 28px; font-weight: 800; background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-muted) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.02em;">Modifier {{ ticket.numero }}</h1>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <h1 style="font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -.02em; margin: 0; line-height: 1.2;">
+          Modifier le ticket
+        </h1>
+        <span id="unsavedDot" title="Modifications non enregistrees"></span>
+      </div>
+      <p style="margin: 3px 0 0; font-size: var(--text-sm); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 480px;">{{ ticket.titre }}</p>
+    </div>
+    <div style="display: flex; gap: 8px; flex-shrink: 0; align-items: center; padding-top: 4px;">
+      <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-ghost btn-sm">Annuler</a>
+      <button form="editForm" type="submit" class="btn btn-primary btn-sm" style="display:flex; align-items:center; gap:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Enregistrer
+      </button>
     </div>
   </div>
 
-  <!-- Form Card -->
-  <div class="page-body" style="max-width: 800px; margin: 0 auto; padding-bottom: 80px;">
-    <div class="card card-raised" style="border-radius: 16px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); overflow: hidden;">
-      <div class="card-body" style="padding: 32px;">
+  <form method="POST" action="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" enctype="multipart/form-data" id="editForm">
+    <div class="edit-shell" style="padding-top: 20px;">
 
-        <form method="POST" action="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" id="editForm">
+      <!-- ═══ LEFT COLUMN ═══ -->
+      <div>
 
-          <!-- Title -->
-          <div class="form-group" style="margin-bottom:24px;">
-            <label class="form-label" for="titre">
-              Titre <span style="color:var(--color-brand,#dc2626);">*</span>
-            </label>
-            <input
-              type="text"
-              id="titre"
-              name="titre"
-              class="input"
-              value="{{ ticket.titre }}"
-              required
-              autofocus
-              style="font-size:15px;font-weight:500;padding:13px 16px;"
-            >
-          </div>
-
-          <!-- Description -->
-          <div class="form-group" style="margin-bottom:24px;">
-            <label class="form-label" for="description">Description</label>
-            <textarea
-              id="description"
-              name="description"
-              class="textarea"
-              rows="7"
-              placeholder="Décrivez le problème en détail..."
-              style="resize:vertical;min-height:140px;"
-            >{{ ticket.description or '' }}</textarea>
-          </div>
-
-          <!-- Status + Priority (2 cols) -->
-          <div class="form-row" style="margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-            <div class="form-group">
-              <label class="form-label" for="statut">Statut</label>
-              <div class="select-wrap">
-                <select id="statut" name="statut" class="select" style="height:42px; border-radius:10px;">
-                  <option value="nouveau"    {% if ticket.statut == 'nouveau' %}selected{% endif %}>Nouveau</option>
-                  <option value="ouvert"     {% if ticket.statut == 'ouvert' %}selected{% endif %}>Ouvert</option>
-                  <option value="en_cours"   {% if ticket.statut == 'en_cours' %}selected{% endif %}>En cours</option>
-                  <option value="en_attente" {% if ticket.statut == 'en_attente' %}selected{% endif %}>En attente</option>
-                  <option value="resolu"     {% if ticket.statut == 'resolu' %}selected{% endif %}>Résolu</option>
-                  <option value="ferme"      {% if ticket.statut == 'ferme' %}selected{% endif %}>Fermé</option>
-                  <option value="annule"     {% if ticket.statut == 'annule' %}selected{% endif %}>Annulé</option>
-                </select>
-              </div>
+        <!-- Type -->
+        <div class="edit-section">
+          <div class="edit-section-header">
+            <div class="edit-section-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
-
-            <div class="form-group">
-              <label class="form-label" for="priorite">Priorité</label>
-              <div class="select-wrap">
-                <select id="priorite" name="priorite" class="select" style="height:42px; border-radius:10px;">
-                  <option value="basse"    {% if ticket.priorite == 'basse' %}selected{% endif %}>Basse</option>
-                  <option value="moyenne"  {% if ticket.priorite == 'moyenne' %}selected{% endif %}>Moyenne</option>
-                  <option value="haute"    {% if ticket.priorite == 'haute' %}selected{% endif %}>Haute</option>
-                  <option value="urgente"  {% if ticket.priorite == 'urgente' %}selected{% endif %}>Urgente</option>
-                  <option value="critique" {% if ticket.priorite == 'critique' %}selected{% endif %}>Critique</option>
-                </select>
-              </div>
+            <span class="edit-section-title">Type de ticket</span>
+          </div>
+          <div class="edit-section-body">
+            {% set tc = ticket.type_ticket %}
+            <div class="type-grid">
+              <label class="type-card {% if tc == 'incident' %}active{% endif %}" data-type="incident">
+                <input type="radio" name="type_ticket" value="incident" class="type-radio" style="display:none;" {% if tc == 'incident' %}checked{% endif %}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span class="tc-label">Incident</span>
+              </label>
+              <label class="type-card {% if tc == 'demande' %}active{% endif %}" data-type="demande">
+                <input type="radio" name="type_ticket" value="demande" class="type-radio" style="display:none;" {% if tc == 'demande' %}checked{% endif %}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span class="tc-label">Demande</span>
+              </label>
+              <label class="type-card {% if tc == 'besoin' %}active{% endif %}" data-type="besoin">
+                <input type="radio" name="type_ticket" value="besoin" class="type-radio" style="display:none;" {% if tc == 'besoin' %}checked{% endif %}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span class="tc-label">Besoin</span>
+              </label>
+              <label class="type-card {% if tc == 'tache' %}active{% endif %}" data-type="tache">
+                <input type="radio" name="type_ticket" value="tache" class="type-radio" style="display:none;" {% if tc == 'tache' %}checked{% endif %}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span class="tc-label">Tache</span>
+              </label>
+              <label class="type-card {% if tc == 'plainte' %}active{% endif %}" data-type="plainte">
+                <input type="radio" name="type_ticket" value="plainte" class="type-radio" style="display:none;" {% if tc == 'plainte' %}checked{% endif %}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span class="tc-label">Plainte</span>
+              </label>
+              <label class="type-card {% if tc not in ['incident','demande','besoin','tache','plainte'] %}active{% endif %}" data-type="autre">
+                <input type="radio" name="type_ticket" value="autre" class="type-radio" style="display:none;" {% if tc not in ['incident','demande','besoin','tache','plainte'] %}checked{% endif %}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                <span class="tc-label">Autre</span>
+              </label>
+            </div>
+            <div id="customTypeContainer" style="display:{% if tc not in ['incident','demande','besoin','tache','plainte'] %}block{% else %}none{% endif %}; margin-top: 12px;">
+              <input type="text" id="custom_type_input" name="custom_type" class="fi" placeholder="Precisez le type..."
+                value="{{ tc if tc not in ['incident','demande','besoin','tache','plainte'] else '' }}">
             </div>
           </div>
+        </div>
 
-          <!-- Department + Assignee (2 cols) -->
-          <div class="form-row" style="margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-            <div class="form-group">
-              <label class="form-label" for="departement_id">Département</label>
-              <div class="select-wrap">
-                <select id="departement_id" name="departement_id" class="select" style="height:42px; border-radius:10px;">
-                  <option value="">Aucun département</option>
-                  {% for dept in departements %}
-                  <option value="{{ dept.id }}"
-                    {% if ticket.departement and ticket.departement.id == dept.id %}selected{% endif %}>
-                    {{ dept.nom }}
-                  </option>
-                  {% endfor %}
-                </select>
-              </div>
+        <!-- Contenu -->
+        <div class="edit-section">
+          <div class="edit-section-header">
+            <div class="edit-section-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="10" x2="3" y2="10"/><line x1="16" y1="14" x2="3" y2="14"/><line x1="13" y1="18" x2="3" y2="18"/></svg>
             </div>
-
-            <div class="form-group">
-              <label class="form-label" for="assigne_a_id">Assigné à</label>
-              <div class="select-wrap">
-                <select id="assigne_a_id" name="assigne_a_id" class="select" style="height:42px; border-radius:10px;">
-                  <option value="">Non assigné</option>
-                  {% for u in utilisateurs %}
-                  <option value="{{ u.id }}"
-                    {% if ticket.assigne_a_id is defined and ticket.assigne_a_id == u.id %}selected
-                    {% elif ticket.assigne_a and ticket.assigne_a.id == u.id %}selected{% endif %}>
-                    {{ u.prenom }} {{ u.nom }}
-                  </option>
-                  {% endfor %}
-                </select>
-              </div>
+            <span class="edit-section-title">Contenu</span>
+          </div>
+          <div class="edit-section-body">
+            <div style="margin-bottom: 16px;">
+              <label class="fl" for="titre">Titre <span class="req">*</span></label>
+              <input type="text" id="titre" name="titre" class="fi" value="{{ ticket.titre }}" required
+                style="font-size: var(--text-base); font-weight: 500;" placeholder="Decrivez le sujet en une phrase claire...">
+            </div>
+            <div>
+              <label class="fl" for="description">Description</label>
+              <textarea id="description" name="description" class="fi" rows="8"
+                placeholder="Contexte, impact, etapes de reproduction...">{{ ticket.description or '' }}</textarea>
             </div>
           </div>
+        </div>
 
-          <!-- Category -->
-          <div class="form-group" style="margin-bottom:32px;">
-            <label class="form-label" for="categorie_id">Catégorie</label>
-            <div class="select-wrap">
-              <select id="categorie_id" name="categorie_id" class="select" style="height:42px; border-radius:10px;">
-                <option value="">Aucune catégorie</option>
-                {% for cat in categories %}
-                <option value="{{ cat.id }}"
-                  {% if ticket.categorie and ticket.categorie.id == cat.id %}selected{% endif %}>
-                  {{ cat.nom }}
-                </option>
+        <!-- Assignation -->
+        <div class="edit-section">
+          <div class="edit-section-header">
+            <div class="edit-section-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <span class="edit-section-title">Departement &amp; Assignation</span>
+          </div>
+          <div class="edit-section-body">
+            <div style="margin-bottom: 18px;">
+              <label class="fl">Departement</label>
+              <select name="departement_id" class="fi">
+                <option value="">-- Aucun departement --</option>
+                {% for dept in departements %}
+                <option value="{{ dept.id }}" {% if ticket.departement and ticket.departement.id == dept.id %}selected{% endif %}>{{ dept.nom }}</option>
                 {% endfor %}
               </select>
             </div>
-          </div>
 
-          <!-- Form Actions -->
-          <div class="form-actions" style="position: sticky; bottom: 24px; z-index: 100; display: flex; align-items: center; justify-content: flex-end; gap: 16px; margin-top: 40px; padding: 20px 24px; background: color-mix(in srgb, var(--surface-1) 85%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 16px; border: 1px solid var(--border-subtle); box-shadow: 0 12px 32px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);">
-            <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-ghost" style="color: var(--text-secondary); font-weight: 600;">Annuler</a>
-            <button type="submit" class="btn btn-primary btn-lg" style="box-shadow: 0 8px 16px rgba(220, 38, 38, 0.25); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 12px 20px rgba(220, 38, 38, 0.3)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 16px rgba(220, 38, 38, 0.25)';">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 6px;"><polyline points="20 6 9 17 4 12"/></svg>
-              Enregistrer les modifications
+            <div style="padding-top: 16px; border-top: 1px solid var(--border-subtle);">
+              <label class="fl" style="margin-bottom: 10px;">Routage</label>
+              {% set routing_type = 'collab' if ticket.collaborateurs or ticket.departements_collab else ('specific' if ticket.assigne_a else 'all') %}
+              <div class="routing-options" style="margin-bottom: 14px;">
+                <label class="routing-radio">
+                  <input type="radio" name="routing_type" value="all" onchange="toggleRoutingUI()" {% if routing_type == 'all' %}checked{% endif %}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  Tout le departement
+                </label>
+                <label class="routing-radio">
+                  <input type="radio" name="routing_type" value="specific" onchange="toggleRoutingUI()" {% if routing_type == 'specific' %}checked{% endif %}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  Personne specifique
+                </label>
+                <label class="routing-radio">
+                  <input type="radio" name="routing_type" value="collab" onchange="toggleRoutingUI()" {% if routing_type == 'collab' %}checked{% endif %}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                  Collaboration
+                </label>
+              </div>
+
+              <div id="routingSpecificUI" style="display:{% if routing_type == 'specific' %}block{% else %}none{% endif %};">
+                <label class="fl">Assigner a</label>
+                <select name="assigne_a_id" class="fi">
+                  <option value="">-- Selectionner --</option>
+                  {% for u in utilisateurs %}
+                  <option value="{{ u.id }}" {% if ticket.assigne_a and ticket.assigne_a.id == u.id %}selected{% endif %}>{{ u.prenom }} {{ u.nom }}{% if u.departement %} &mdash; {{ u.departement.nom }}{% endif %}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div id="routingCollabUI" style="display:{% if routing_type == 'collab' %}flex{% else %}none{% endif %}; flex-direction: column; gap: 14px;">
+                <div>
+                  <label class="fl">Departements collaborateurs</label>
+                  <select name="collab_departements[]" class="fi" multiple style="min-height: 90px;">
+                    {% for dept in departements %}
+                    <option value="{{ dept.id }}" {% if dept in ticket.departements_collab %}selected{% endif %}>{{ dept.nom }}</option>
+                    {% endfor %}
+                  </select>
+                  <span style="font-size: 11px; color: var(--text-faint); margin-top: 3px; display: block;">Ctrl+clic pour selectionner plusieurs</span>
+                </div>
+                <div>
+                  <label class="fl">Agents collaborateurs</label>
+                  <select name="collab_users[]" class="fi" multiple style="min-height: 110px;">
+                    {% for u in utilisateurs %}
+                    <option value="{{ u.id }}" {% if u in ticket.collaborateurs %}selected{% endif %}>{{ u.prenom }} {{ u.nom }}{% if u.departement %} &mdash; {{ u.departement.nom }}{% endif %}</option>
+                    {% endfor %}
+                  </select>
+                  <span style="font-size: 11px; color: var(--text-faint); margin-top: 3px; display: block;">Ctrl+clic pour selectionner plusieurs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Checklist -->
+        <div class="edit-section">
+          <div class="edit-section-header">
+            <div class="edit-section-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <span class="edit-section-title">Checklist de traitement</span>
+            {% if ticket.taches %}
+            {% set done_count = ticket.taches | selectattr('terminee') | list | length %}
+            <span style="margin-left: auto; font-size: 11px; font-weight: 700; color: var(--text-muted);">{{ done_count }}/{{ ticket.taches | length }}</span>
+            {% endif %}
+          </div>
+          <div class="edit-section-body">
+            {% if ticket.taches %}
+            {% set pct = (ticket.taches | selectattr('terminee') | list | length / ticket.taches | length * 100) | int %}
+            <div style="background: var(--surface-3); border-radius: 99px; height: 3px; margin-bottom: 14px; overflow: hidden;">
+              <div style="background: var(--success); height: 100%; width: {{ pct }}%; border-radius: 99px;"></div>
+            </div>
+            {% endif %}
+
+            <div id="checklistContainer" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
+              {% for tache in ticket.taches | sort(attribute='ordre') %}
+              <div class="checklist-row {% if tache.terminee %}done-row{% endif %}">
+                <svg class="drag-handle" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/>
+                  <circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/>
+                </svg>
+                <input type="checkbox" name="taches_terminees[]" value="{{ tache.id }}"
+                  {% if tache.terminee %}checked{% endif %}
+                  style="width:15px;height:15px;border-radius:4px;accent-color:var(--success);cursor:pointer;flex-shrink:0;"
+                  onchange="this.closest('.checklist-row').classList.toggle('done-row',this.checked); this.closest('.checklist-row').querySelector('input.fi').style.textDecoration=this.checked?'line-through':'none';">
+                <input type="text" name="taches_existantes[{{ tache.id }}]" class="fi"
+                  value="{{ tache.titre }}" style="flex:1; padding: 7px 10px; {% if tache.terminee %}text-decoration:line-through;{% endif %}">
+                <button type="button"
+                  style="background:none;border:none;cursor:pointer;padding:4px 5px;color:var(--text-faint);border-radius:var(--r-sm);transition:color var(--fast),background var(--fast);"
+                  onmouseover="this.style.color='#ef4444';this.style.background='rgba(239,68,68,.08)'"
+                  onmouseout="this.style.color='var(--text-faint)';this.style.background='none'"
+                  onclick="this.closest('.checklist-row').remove()" title="Supprimer">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              {% endfor %}
+            </div>
+
+            <div id="newChecklistItems"></div>
+
+            <button type="button" id="addStepBtn" onclick="addChecklistItem()"
+              style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px;font-size:var(--text-sm);font-weight:600;color:var(--text-muted);background:none;border:1.5px dashed var(--border-default);border-radius:var(--r-md);cursor:pointer;transition:all var(--fast);"
+              onmouseover="this.style.borderColor='var(--brand)';this.style.color='var(--brand)';this.style.background='var(--brand-subtle)'"
+              onmouseout="this.style.borderColor='var(--border-default)';this.style.color='var(--text-muted)';this.style.background='none'">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Ajouter une etape
             </button>
           </div>
+        </div>
 
-        </form>
-      </div><!-- /card-body -->
-    </div><!-- /card -->
-  </div>
+      </div><!-- /left -->
 
-</div><!-- /page -->
+      <!-- ═══ RIGHT COLUMN ═══ -->
+      <div class="right-col" style="position: sticky; top: 20px; display: flex; flex-direction: column; gap: 12px;">
+
+        <!-- Statut -->
+        <div class="edit-section">
+          <div class="edit-section-header">
+            <div class="edit-section-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <span class="edit-section-title">Statut</span>
+          </div>
+          <div class="edit-section-body">
+            <select id="statut" name="statut" class="fi">
+              <option value="nouveau"    {% if ticket.statut == 'nouveau' %}selected{% endif %}>&#9679; Nouveau</option>
+              <option value="ouvert"     {% if ticket.statut == 'ouvert' %}selected{% endif %}>&#9679; Ouvert</option>
+              <option value="en_cours"   {% if ticket.statut == 'en_cours' %}selected{% endif %}>&#9679; En cours</option>
+              <option value="en_attente" {% if ticket.statut == 'en_attente' %}selected{% endif %}>&#9679; En attente</option>
+              <option value="resolu"     {% if ticket.statut == 'resolu' %}selected{% endif %}>&#9679; Resolu</option>
+              <option value="ferme"      {% if ticket.statut == 'ferme' %}selected{% endif %}>&#9679; Ferme</option>
+              <option value="annule"     {% if ticket.statut == 'annule' %}selected{% endif %}>&#9679; Annule</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Priorite -->
+        <div class="edit-section">
+          <div class="edit-section-header">
+            <div class="edit-section-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+            </div>
+            <span class="edit-section-title">Priorite</span>
+          </div>
+          <div class="edit-section-body">
+            <input type="hidden" name="priorite" id="hiddenPriorite" value="{{ ticket.priorite or 'moyenne' }}">
+            <div class="priority-list">
+              <div class="priority-row {% if ticket.priorite == 'critique' %}active{% endif %}" data-value="critique" style="--p-color:#9B1030;--p-bg:rgba(155,16,48,.08);">
+                <div class="p-left"><span class="p-dot"></span><span class="p-label">Critique</span></div>
+                <svg class="p-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="priority-row {% if ticket.priorite == 'urgente' %}active{% endif %}" data-value="urgente" style="--p-color:#E8213F;--p-bg:rgba(232,33,63,.08);">
+                <div class="p-left"><span class="p-dot"></span><span class="p-label">Urgente</span></div>
+                <svg class="p-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="priority-row {% if ticket.priorite == 'haute' %}active{% endif %}" data-value="haute" style="--p-color:#F97316;--p-bg:rgba(249,115,22,.08);">
+                <div class="p-left"><span class="p-dot"></span><span class="p-label">Haute</span></div>
+                <svg class="p-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="priority-row {% if ticket.priorite == 'moyenne' %}active{% endif %}" data-value="moyenne" style="--p-color:#2F6BFF;--p-bg:rgba(47,107,255,.08);">
+                <div class="p-left"><span class="p-dot"></span><span class="p-label">Moyenne</span></div>
+                <svg class="p-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="priority-row {% if ticket.priorite == 'basse' %}active{% endif %}" data-value="basse" style="--p-color:#9A9AA5;--p-bg:rgba(154,154,165,.08);">
+                <div class="p-left"><span class="p-dot"></span><span class="p-label">Basse</span></div>
+                <svg class="p-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fichiers -->
+        <div class="edit-section">
+          <div class="edit-section-header">
+            <div class="edit-section-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <span class="edit-section-title">Pieces jointes</span>
+            {% if ticket.pieces_jointes %}
+            <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--text-muted);">{{ ticket.pieces_jointes|length }}</span>
+            {% endif %}
+          </div>
+          <div class="edit-section-body">
+            {% if ticket.pieces_jointes %}
+            <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
+              {% for pj in ticket.pieces_jointes %}
+              <div class="file-chip">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                <span style="flex:1;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ pj.nom_original }}</span>
+                <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">{{ (pj.taille/1024)|round(0)|int }}Ko</span>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="drop-zone" id="dropZone"
+              onclick="document.getElementById('fileInput').click()"
+              ondragover="event.preventDefault();this.classList.add('drag-over')"
+              ondragleave="this.classList.remove('drag-over')"
+              ondrop="event.preventDefault();this.classList.remove('drag-over');handleDrop(event);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted);margin-bottom:5px;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p style="margin:0 0 2px;font-size:var(--text-sm);font-weight:600;color:var(--text-secondary);">Ajouter des fichiers</p>
+              <p style="margin:0;font-size:11px;color:var(--text-faint);">ou glisser-deposer ici</p>
+              <div id="fileList" style="margin-top:8px;display:flex;flex-direction:column;gap:5px;"></div>
+            </div>
+            <input type="file" id="fileInput" name="attachments" multiple accept="image/*,.pdf,.zip,.txt,.log,.docx,.xlsx" style="display:none;">
+          </div>
+        </div>
+
+        <!-- Save actions -->
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button type="submit" form="editForm" class="btn btn-primary" style="width:100%;justify-content:center;gap:6px;padding:11px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Enregistrer les modifications
+          </button>
+          <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-ghost" style="width:100%;justify-content:center;">Annuler</a>
+        </div>
+
+      </div><!-- /right -->
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  /* Unsaved dot */
+  var dirty = false, dot = document.getElementById('unsavedDot');
+  document.getElementById('editForm').addEventListener('input', function() {
+    if (!dirty) { dirty = true; dot.classList.add('on'); }
+  });
+  document.getElementById('editForm').addEventListener('submit', function() { dirty = false; });
+
+  /* Type cards */
+  var typeCards = document.querySelectorAll('.type-card');
+  function selectType(val) {
+    typeCards.forEach(function(tc) { tc.classList.toggle('active', tc.dataset.type === val); tc.querySelector('.type-radio').checked = (tc.dataset.type === val); });
+    var cc = document.getElementById('customTypeContainer'), ci = document.getElementById('custom_type_input');
+    if (val === 'autre') { cc.style.display='block'; ci.required=true; ci.focus(); }
+    else { cc.style.display='none'; ci.required=false; }
+  }
+  typeCards.forEach(function(tc) { tc.addEventListener('click', function() { selectType(tc.dataset.type); }); });
+
+  /* Routing */
+  window.toggleRoutingUI = function() {
+    var v = document.querySelector('input[name="routing_type"]:checked').value;
+    document.getElementById('routingSpecificUI').style.display = v === 'specific' ? 'block' : 'none';
+    document.getElementById('routingCollabUI').style.display = v === 'collab' ? 'flex' : 'none';
+  };
+
+  /* Priority */
+  var pRows = document.querySelectorAll('.priority-row'), hiddenP = document.getElementById('hiddenPriorite');
+  pRows.forEach(function(r) {
+    r.addEventListener('click', function() {
+      pRows.forEach(function(x) { x.classList.remove('active'); });
+      r.classList.add('active'); hiddenP.value = r.dataset.value;
+    });
+  });
+
+  /* Checklist */
+  window.addChecklistItem = function() {
+    var c = document.getElementById('newChecklistItems'), row = document.createElement('div');
+    row.className = 'checklist-row'; row.style.marginBottom = '8px';
+    row.innerHTML =
+      '<svg class="drag-handle" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg>' +
+      '<input type="checkbox" style="width:15px;height:15px;border-radius:4px;accent-color:var(--success);cursor:pointer;flex-shrink:0;">' +
+      '<input type="text" name="taches[]" class="fi" placeholder="Nouvelle etape..." style="flex:1;padding:7px 10px;">' +
+      '<button type="button" style="background:none;border:none;cursor:pointer;padding:4px 5px;color:var(--text-faint);border-radius:var(--r-sm);transition:color var(--fast),background var(--fast);" onmouseover="this.style.color=\'#ef4444\';this.style.background=\'rgba(239,68,68,.08)\'" onmouseout="this.style.color=\'var(--text-faint)\';this.style.background=\'none\'" onclick="this.closest(\'.checklist-row\').remove()">' +
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+    c.appendChild(row);
+    row.querySelector('input[type=text]').focus();
+  };
+
+  /* Files */
+  var dt = new DataTransfer();
+  window.handleDrop = function(e) { if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files); };
+  document.getElementById('fileInput').addEventListener('change', function(e) { addFiles(e.target.files); });
+  window.addFiles = function(files) { for (var i=0;i<files.length;i++) dt.items.add(files[i]); document.getElementById('fileInput').files=dt.files; renderFiles(); };
+  window.removeFile = function(i) { dt.items.remove(i); document.getElementById('fileInput').files=dt.files; renderFiles(); };
+  window.renderFiles = function() {
+    var list=document.getElementById('fileList'); list.innerHTML='';
+    for (var i=0;i<dt.files.length;i++) {
+      var f=dt.files[i], chip=document.createElement('div');
+      chip.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid var(--border-subtle);border-radius:var(--r-sm);background:var(--surface-2);';
+      chip.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg><span style="flex:1;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+f.name+'</span><span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">'+(f.size>1048576?(f.size/1048576).toFixed(1)+' MB':Math.round(f.size/1024)+' Ko')+'</span><button type="button" onclick="removeFile('+i+')" style="background:none;border:none;cursor:pointer;color:var(--text-faint);padding:2px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+      list.appendChild(chip);
+    }
+  };
+})();
+</script>
 {% endblock %}

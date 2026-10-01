@@ -1,510 +1,677 @@
 {% extends "base.html" %}
 
 {% block title %}{{ ticket.numero }} — {{ ticket.titre }}{% endblock %}
-
 {% block body_class %}page-ticket-detail{% endblock %}
 
 {% block extra_head %}
 <style>
-  .thread-message.internal {
-    padding: 12px 14px;
-    background: rgba(245, 158, 11, 0.06);
-    border: 1px solid rgba(245, 158, 11, 0.2);
-    border-radius: 8px;
-  }
+/* ── 3-panel layout ──────────────────────────────────────── */
+.detail-shell {
+  display: grid;
+  grid-template-columns: 272px 1fr 272px;
+  gap: 0;
+  height: calc(100vh - 57px);
+  overflow: hidden;
+}
+.detail-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.left-panel {
+  background: var(--surface-base);
+  border-right: 1px solid var(--border-subtle);
+  padding: 16px 14px;
+}
+.right-panel {
+  background: var(--surface-base);
+  border-left: 1px solid var(--border-subtle);
+  padding: 16px 14px;
+}
+.center-panel {
+  background: var(--surface-1);
+  flex-direction: column;
+}
+
+/* ── Side block ──────────────────────────────────────────── */
+.side-block {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.side-block-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+}
+.side-block-icon {
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.side-block-title {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.side-block-body { padding: 13px; }
+
+/* ── Meta row ────────────────────────────────────────────── */
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 13px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.meta-row:last-child { border-bottom: none; }
+.meta-key {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  min-width: 64px;
+  flex-shrink: 0;
+}
+.meta-val {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+  flex: 1;
+}
+
+/* ── Gestion inline selects ──────────────────────────────── */
+.ctrl-select {
+  flex: 1;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-sm);
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: border-color var(--fast);
+}
+.ctrl-select:focus { outline: none; border-color: var(--brand); }
+
+/* ── Priority dot ────────────────────────────────────────── */
+.p-dot-sm {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 5px;
+  flex-shrink: 0;
+}
+
+/* ── User pill ───────────────────────────────────────────── */
+.user-pill { display: flex; align-items: center; gap: 8px; }
+
+/* ── Collab chips ────────────────────────────────────────── */
+.collab-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 6px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* ── Ticket header ───────────────────────────────────────── */
+.ticket-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 22px;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  flex-wrap: wrap;
+}
+
+/* ── Thread ──────────────────────────────────────────────── */
+.thread-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.message-bubble { display: flex; gap: 12px; }
+.msg-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--brand-light);
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  overflow: hidden;
+  border: 1.5px solid var(--surface-3);
+}
+.msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.msg-body { flex: 1; min-width: 0; }
+.msg-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.msg-author { font-size: var(--text-sm); font-weight: 700; color: var(--text-primary); }
+.msg-role {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 99px;
+  padding: 1px 7px;
+}
+.msg-time { font-size: 11px; color: var(--text-faint); margin-left: auto; }
+.msg-content {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  line-height: 1.75;
+  white-space: pre-wrap;
+  padding: 13px 16px;
+  background: var(--surface-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0 var(--r-lg) var(--r-lg) var(--r-lg);
+}
+
+/* ── Checklist ───────────────────────────────────────────── */
+.checklist-card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.checklist-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 16px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background var(--fast);
+}
+.task-row:last-child { border-bottom: none; }
+.task-row:hover { background: var(--surface-2); }
+.task-row.done .task-label { text-decoration: line-through; color: var(--text-muted); }
+
+/* ── File chips ──────────────────────────────────────────── */
+.attach-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  transition: background var(--fast);
+  text-decoration: none;
+}
+.attach-chip:hover { background: var(--surface-3); }
+
+/* ── Timeline ────────────────────────────────────────────── */
+.timeline-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .detail-shell { grid-template-columns: 240px 1fr 240px; }
+}
+@media (max-width: 860px) {
+  .detail-shell { grid-template-columns: 1fr; height: auto; overflow: visible; }
+  .detail-panel { height: auto; overflow: visible; }
+  .left-panel, .right-panel { border: none; border-bottom: 1px solid var(--border-subtle); }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page" style="padding-bottom:0;">
+<div class="page" style="padding-bottom:0; display:flex; flex-direction:column; height:calc(100vh - 57px); overflow:hidden;">
 
-  <!-- Ticket Detail Header -->
-  <div class="ticket-detail-header"
-    style="display:flex; align-items:center; gap:16px; padding:24px; background:var(--surface-base); border-bottom:1px solid var(--border-subtle); margin-bottom:0; flex-wrap:wrap; position:sticky; top:0; z-index:10; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-    
-    <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm" style="flex-shrink:0; padding:8px; border-radius:10px; background:var(--surface-1);"
-      aria-label="Retour à la liste des tickets">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <polyline points="15 18 9 12 15 6" />
-      </svg>
+  <!-- Header -->
+  <div class="ticket-header">
+    <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm"
+      style="padding:7px; border-radius:var(--r-md); flex-shrink:0;" aria-label="Retour">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
     </a>
 
-    <div style="display:flex; flex-direction:column; flex:1; min-width:0; gap:4px;">
-      <span style="font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--color-brand); text-transform:uppercase; letter-spacing:0.05em; background:var(--surface-1); padding:2px 8px; border-radius:12px; width:fit-content;">{{ ticket.numero }}</span>
-      
-      <h1
-        style="font-size:20px; font-weight:800; color:var(--text-primary); margin:0; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:-0.01em;">
-        {{ ticket.titre }}
-      </h1>
+    <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:3px;">
+      <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
+        <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--brand); background:var(--brand-subtle); border:1px solid var(--brand-light); border-radius:4px; padding:1px 8px; flex-shrink:0;">{{ ticket.numero }}</span>
+        {% if ticket.type_ticket %}
+        <span style="font-size:11px; font-weight:700; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border-default); border-radius:99px; padding:1px 9px; flex-shrink:0;">{{ ticket.type_ticket | capitalize }}</span>
+        {% endif %}
+        {% if ticket.statut in ['nouveau','ouvert'] %}
+        <span class="badge badge-new" style="flex-shrink:0;">{{ 'Ouvert' if ticket.statut == 'ouvert' else 'Nouveau' }}</span>
+        {% elif ticket.statut == 'en_cours' %}<span class="badge badge-progress" style="flex-shrink:0;">En cours</span>
+        {% elif ticket.statut == 'en_attente' %}<span class="badge badge-waiting" style="flex-shrink:0;">En attente</span>
+        {% elif ticket.statut == 'resolu' %}<span class="badge badge-resolved" style="flex-shrink:0;">Resolu</span>
+        {% elif ticket.statut == 'ferme' %}<span class="badge badge-closed" style="flex-shrink:0;">Ferme</span>
+        {% elif ticket.statut == 'annule' %}<span class="badge badge-cancelled" style="flex-shrink:0;">Annule</span>
+        {% endif %}
+      </div>
+      <h1 style="font-size:16px; font-weight:800; color:var(--text-primary); margin:0; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:-.01em;">{{ ticket.titre }}</h1>
     </div>
 
-    <!-- Status badge -->
-    {% if ticket.statut in ['nouveau', 'ouvert'] %}
-    <span class="badge badge-new" style="flex-shrink:0;">{{ 'Ouvert' if ticket.statut == 'ouvert' else 'Nouveau'
-      }}</span>
-    {% elif ticket.statut == 'en_cours' %}
-    <span class="badge badge-progress" style="flex-shrink:0;">En cours</span>
-    {% elif ticket.statut == 'en_attente' %}
-    <span class="badge badge-waiting" style="flex-shrink:0;">En attente</span>
-    {% elif ticket.statut == 'resolu' %}
-    <span class="badge badge-resolved" style="flex-shrink:0;">Résolu</span>
-    {% elif ticket.statut == 'ferme' %}
-    <span class="badge badge-closed" style="flex-shrink:0;">Fermé</span>
-    {% elif ticket.statut == 'annule' %}
-    <span class="badge badge-cancelled" style="flex-shrink:0;">Annulé</span>
-    {% endif %}
-
-    <!-- Actions -->
-    <div style="display:flex;gap:6px;flex-shrink:0;">
-      <a href="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" class="btn btn-secondary btn-sm">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-        </svg>
+    <div style="display:flex; gap:6px; flex-shrink:0; align-items:center;">
+      <a href="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Modifier
       </a>
       <div style="position:relative;">
-        <button class="btn btn-ghost btn-sm" id="moreActionsBtn" data-dropdown="moreActionsMenu" aria-haspopup="true"
-          aria-expanded="false">
-          ⋯ Actions
+        <button class="btn btn-ghost btn-sm" id="moreActionsBtn" aria-haspopup="true" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/></svg>
         </button>
-        <div class="dropdown" id="moreActionsMenu"
-          style="right:0;top:calc(100% + 4px);display:none;position:absolute;min-width:180px;">
-          {% if ticket.statut not in ['ferme', 'annule', 'resolu'] %}
+        <div class="dropdown" id="moreActionsMenu" style="right:0;top:calc(100% + 4px);display:none;position:absolute;min-width:190px;">
+          {% if ticket.statut not in ['ferme','annule','resolu'] %}
           <form method="POST" action="{{ url_for('tickets.fermer', ticket_id=ticket.id) }}" style="margin:0;">
-            <button type="submit" class="dropdown-item danger"
-              style="width:100%;text-align:left;background:none;border:none;cursor:pointer;">
-              <svg class="item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="15" y1="9" x2="9" y2="15" />
-                <line x1="9" y1="9" x2="15" y2="15" />
-              </svg>
+            <button type="submit" class="dropdown-item danger" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;">
+              <svg class="item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
               Fermer le ticket
             </button>
           </form>
           {% endif %}
+          {% if ticket.statut == 'ferme' %}
+          <form method="POST" action="{{ url_for('tickets.reouvrir', ticket_id=ticket.id) }}" style="margin:0;">
+            <button type="submit" class="dropdown-item" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;">
+              <svg class="item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+              Reouvrir le ticket
+            </button>
+          </form>
+          {% endif %}
           <a href="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" class="dropdown-item">
-            <svg class="item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2">
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-            Modifier les détails
+            <svg class="item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Modifier les details
           </a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SLA Warning Banner (shown by JS if needed) -->
-  <div id="slaWarning"
-    style="display:none;padding:10px 16px;background:rgba(245,158,11,.12);border-bottom:1px solid rgba(245,158,11,.25);border-radius:0;font-size:13px;color:var(--text-primary);display:none;align-items:center;gap:8px;">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(245,158,11)" stroke-width="2">
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="8" x2="12" y2="12" />
-      <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
-    <span>Dépassement de SLA imminent — répondez dans <strong id="slaCountdown">—</strong></span>
-  </div>
+  <!-- 3-Panel -->
+  <div class="detail-shell" style="flex:1; min-height:0;">
 
-  <!-- 3-Panel Layout -->
-  <div class="ticket-detail"
-    style="display:grid; grid-template-columns:260px 1fr 280px; gap:0; height:calc(100vh - 94px); overflow:hidden; align-items:stretch; background: var(--surface-1);">
+    <!-- LEFT PANEL -->
+    <aside class="detail-panel left-panel">
 
-    <!-- ═══════════ LEFT PANEL ═══════════ -->
-    <aside class="ticket-detail-left"
-      style="padding:24px; border-right:1px solid var(--border-subtle); display:flex; flex-direction:column; gap:24px; height:100%; min-height:0; overflow-y:auto; background: var(--surface-base);">
-
-      <!-- Gestion du ticket -->
-      <div
-        style="background:var(--surface-base); padding:20px; border-radius:16px; border:1px solid var(--border-subtle); box-shadow:var(--shadow-sm); position:relative; overflow:hidden;">
-        <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:linear-gradient(to right, var(--color-brand, #3b82f6), #8b5cf6);"></div>
-        <div style="font-size:14px; font-weight:800; color:var(--text-primary); margin-bottom:16px; display:flex; align-items:center; gap:8px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-          Gestion du ticket
+      <!-- Gestion -->
+      <div class="side-block">
+        <div class="side-block-header">
+          <div class="side-block-icon">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          </div>
+          <span class="side-block-title">Gestion</span>
         </div>
-
-        <form method="POST" action="{{ url_for('tickets.changer_statut', ticket_id=ticket.id) }}" id="gestionForm">
-          <input type="hidden" name="action" value="gestion">
-          <div style="margin-bottom:16px;">
-            <label for="ticketStatut"
-              style="font-size:12px; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Statut</label>
-            <select id="ticketStatut" name="statut" class="select" style="width:100%; height:36px; border-radius:10px;" onchange="this.form.submit()">
-              <option value="ouvert" {% if ticket.statut=='ouvert' %}selected{% endif %}>Ouvert</option>
-              <option value="en_cours" {% if ticket.statut=='en_cours' %}selected{% endif %}>En cours</option>
-              <option value="en_attente" {% if ticket.statut=='en_attente' %}selected{% endif %}>En attente</option>
-              <option value="resolu" {% if ticket.statut=='resolu' %}selected{% endif %}>Résolu</option>
-              <option value="ferme" {% if ticket.statut=='ferme' %}selected{% endif %}>Fermé</option>
-            </select>
-          </div>
-
-          <div style="margin-bottom:16px;">
-            <label for="ticketAssigne"
-              style="font-size:12px; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Assigné à</label>
-            <select id="ticketAssigne" name="assigne_a_id" class="select" style="width:100%; height:36px; border-radius:10px;" onchange="this.form.submit()" {% if not current_user.has_permission('tickets.assigner') %}disabled{% endif %}>
-              <option value="">Non assigné</option>
-              {% for u in utilisateurs %}
-              <option value="{{ u.id }}" {% if ticket.assigne_a_id == u.id %}selected{% endif %}>{{ u.nom_complet }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div style="margin-top:20px; padding-top:16px; border-top:1px dashed var(--border-subtle);">
-            <button type="button" class="btn btn-ghost" style="width:100%; justify-content:center; color:var(--text-secondary); font-weight:500;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="21 8 21 21 3 21 3 8" />
-                <rect x="1" y="3" width="22" height="5" />
-                <line x1="10" y1="12" x2="14" y2="12" />
-              </svg>
-              Archiver le ticket
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Priority -->
-      <div>
-        <div
-          style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px;">
-          Priorité</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span class="priority-dot dot-{{ ticket.priorite }}"></span>
-          {% if ticket.priorite == 'critique' %}
-          <span class="badge badge-critical">Critique</span>
-          {% elif ticket.priorite in ['urgente', 'urgent'] %}
-          <span class="badge badge-urgent">Urgente</span>
-          {% elif ticket.priorite in ['haute', 'high'] %}
-          <span class="badge badge-high">Haute</span>
-          {% elif ticket.priorite in ['moyenne', 'medium'] %}
-          <span class="badge badge-medium">Moyenne</span>
-          {% else %}
-          <span class="badge badge-low">Basse</span>
-          {% endif %}
+        <div class="side-block-body" style="padding:0;">
+          <form method="POST" action="{{ url_for('tickets.changer_statut', ticket_id=ticket.id) }}">
+            <input type="hidden" name="action" value="gestion">
+            <div class="meta-row">
+              <span class="meta-key">Statut</span>
+              <select name="statut" class="ctrl-select" onchange="this.form.submit()">
+                <option value="ouvert"     {% if ticket.statut=='ouvert' %}selected{% endif %}>Ouvert</option>
+                <option value="en_cours"   {% if ticket.statut=='en_cours' %}selected{% endif %}>En cours</option>
+                <option value="en_attente" {% if ticket.statut=='en_attente' %}selected{% endif %}>En attente</option>
+                <option value="resolu"     {% if ticket.statut=='resolu' %}selected{% endif %}>Resolu</option>
+                <option value="ferme"      {% if ticket.statut=='ferme' %}selected{% endif %}>Ferme</option>
+              </select>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Assigne</span>
+              <select name="assigne_a_id" class="ctrl-select" onchange="this.form.submit()" {% if not current_user.has_permission('tickets.assigner') %}disabled{% endif %}>
+                <option value="">Non assigne</option>
+                {% for u in utilisateurs %}
+                <option value="{{ u.id }}" {% if ticket.assigne_a_id == u.id %}selected{% endif %}>{{ u.nom_complet }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </form>
         </div>
       </div>
 
       <!-- Details -->
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div
-          style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">
-          Détails</div>
-
-        <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Assigné</div>
-          {% if ticket.assigne_a %}
-          <div style="display:flex;align-items:center;gap:7px;">
-            <div class="user-avatar avatar-xs">
-              {% if ticket.assigne_a.photo_profil %}<img
-                src="{{ url_for('static', filename='uploads/' + ticket.assigne_a.photo_profil) }}" alt="">{% else %}{{
-              ticket.assigne_a.prenom[0]|upper }}{% endif %}
-            </div>
-            <span style="font-size:13px;color:var(--text-primary);font-weight:500;">{{ ticket.assigne_a.prenom }} {{
-              ticket.assigne_a.nom }}</span>
+      <div class="side-block">
+        <div class="side-block-header">
+          <div class="side-block-icon">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           </div>
-          {% else %}
-          <span style="font-size:13px;color:var(--text-muted);">Non assigné</span>
+          <span class="side-block-title">Details</span>
+        </div>
+        <div class="side-block-body" style="padding:0;">
+          <div class="meta-row">
+            <span class="meta-key">Priorite</span>
+            <span class="meta-val">
+              {% if ticket.priorite == 'critique' %}
+              <span class="p-dot-sm" style="background:#9B1030;box-shadow:0 0 5px rgba(155,16,48,.5);"></span><span class="badge badge-critical">Critique</span>
+              {% elif ticket.priorite in ['urgente','urgent'] %}
+              <span class="p-dot-sm" style="background:#E8213F;box-shadow:0 0 5px rgba(232,33,63,.4);"></span><span class="badge badge-urgent">Urgente</span>
+              {% elif ticket.priorite in ['haute','high'] %}
+              <span class="p-dot-sm" style="background:#F97316;"></span><span class="badge badge-high">Haute</span>
+              {% elif ticket.priorite in ['moyenne','medium'] %}
+              <span class="p-dot-sm" style="background:#2F6BFF;"></span><span class="badge badge-medium">Moyenne</span>
+              {% else %}
+              <span class="p-dot-sm" style="background:#9A9AA5;"></span><span class="badge badge-low">Basse</span>
+              {% endif %}
+            </span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Type</span>
+            <span class="meta-val">{{ ticket.type_ticket | capitalize if ticket.type_ticket else '—' }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Dept.</span>
+            <span class="meta-val">{{ ticket.departement.nom if ticket.departement else '—' }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Cree le</span>
+            <span class="meta-val">{{ ticket.date_creation.strftime('%d %b %Y') }}<br><span style="font-size:11px;color:var(--text-muted);">{{ ticket.date_creation.strftime('%H:%M') }}</span></span>
+          </div>
+          {% if ticket.date_modification and ticket.date_modification != ticket.date_creation %}
+          <div class="meta-row">
+            <span class="meta-key">Modifie</span>
+            <span class="meta-val">{{ ticket.date_modification.strftime('%d %b %Y, %H:%M') }}</span>
+          </div>
+          {% endif %}
+          {% if ticket.date_resolution %}
+          <div class="meta-row">
+            <span class="meta-key">Resolu</span>
+            <span class="meta-val" style="color:var(--success);">{{ ticket.date_resolution.strftime('%d %b %Y, %H:%M') }}</span>
+          </div>
           {% endif %}
         </div>
+      </div>
 
-        <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Département</div>
-          <span style="font-size:13px;color:var(--text-primary);">{{ ticket.departement.nom if ticket.departement else
-            '—' }}</span>
-        </div>
-
-        <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Catégorie</div>
-          <span style="font-size:13px;color:var(--text-primary);">{{ ticket.categorie.nom if ticket.categorie else '—'
-            }}</span>
-        </div>
-
-        <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Type</div>
-          <span style="font-size:13px;color:var(--text-primary);">{{ ticket.type_ticket or '—' }}</span>
-        </div>
-
-        <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Créé le</div>
-          <span style="font-size:13px;color:var(--text-primary);">{{ ticket.date_creation.strftime('%d %b %Y, %H:%M')
-            }}</span>
-        </div>
-
-        {% if ticket.date_modification %}
-        <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Dernière mise à jour</div>
-          <span style="font-size:13px;color:var(--text-primary);">{{ ticket.date_modification.strftime('%d %b %Y,
-            %H:%M') }}</span>
-        </div>
-        {% endif %}
-
-        {% if ticket.date_resolution %}
-        <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Résolu le</div>
-          <span style="font-size:13px;color:var(--text-primary);">{{ ticket.date_resolution.strftime('%d %b %Y, %H:%M')
-            }}</span>
-        </div>
-        {% endif %}
-
-        <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Demandeur</div>
-          <div style="display:flex;align-items:center;gap:7px;">
-            <div class="user-avatar avatar-xs">
-              {% if ticket.createur.photo_profil %}<img
-                src="{{ url_for('static', filename='uploads/' + ticket.createur.photo_profil) }}" alt="">{% else %}{{
-              ticket.createur.prenom[0]|upper }}{% endif %}
-            </div>
-            <span style="font-size:13px;color:var(--text-primary);">{{ ticket.createur.prenom }} {{ ticket.createur.nom
-              }}</span>
+      <!-- Demandeur -->
+      <div class="side-block">
+        <div class="side-block-header">
+          <div class="side-block-icon">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
+          <span class="side-block-title">Demandeur</span>
+        </div>
+        <div class="side-block-body">
+          <div class="user-pill" style="margin-bottom:8px;">
+            <div style="width:30px;height:30px;border-radius:50%;background:var(--brand-light);color:var(--brand);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1.5px solid var(--brand-subtle);flex-shrink:0;">
+              {% if ticket.createur.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + ticket.createur.photo_profil) }}" alt="">{% else %}{{ ticket.createur.prenom[0]|upper }}{{ ticket.createur.nom[0]|upper }}{% endif %}
+            </div>
+            <div>
+              <div style="font-size:var(--text-sm);font-weight:700;color:var(--text-primary);">{{ ticket.createur.prenom }} {{ ticket.createur.nom }}</div>
+              <div style="font-size:11px;color:var(--text-muted);">{{ ticket.createur.email }}</div>
+            </div>
+          </div>
+          {% if ticket.createur.departement %}
+          <div style="font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:4px;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            {{ ticket.createur.departement.nom }}
+          </div>
+          {% endif %}
         </div>
       </div>
 
-      <!-- SLA Ring placeholder -->
-      <div style="padding:12px;border:1px solid var(--border-subtle);border-radius:8px;text-align:center;">
-        <div
-          style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">
-          SLA</div>
-        <div
-          style="width:60px;height:60px;margin:0 auto;border-radius:50%;border:4px solid var(--border-subtle);position:relative;display:flex;align-items:center;justify-content:center;">
-          <svg width="60" height="60" viewBox="0 0 60 60"
-            style="position:absolute;top:0;left:0;transform:rotate(-90deg);">
-            <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-brand,#dc2626)" stroke-width="4"
-              stroke-dasharray="163" stroke-dashoffset="60" stroke-linecap="round" opacity=".7" />
-          </svg>
-          <span style="font-size:11px;font-weight:700;color:var(--text-primary);z-index:1;">63%</span>
+      <!-- Collaboration -->
+      {% if ticket.collaborateurs or ticket.departements_collab %}
+      <div class="side-block">
+        <div class="side-block-header">
+          <div class="side-block-icon">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </div>
+          <span class="side-block-title">Collaboration</span>
         </div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Dans les délais SLA</div>
-      </div>
-
-      <!-- Tags -->
-      {% if ticket.tags is defined and ticket.tags %}
-      <div>
-        <div
-          style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px;">
-          Étiquettes</div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px;">
-          {% for tag in ticket.tags %}
-          <span
-            style="padding:3px 9px;border-radius:20px;background:var(--surface-raised);border:1px solid var(--border-subtle);font-size:11px;color:var(--text-secondary);">{{
-            tag }}</span>
-          {% endfor %}
+        <div class="side-block-body" style="display:flex;flex-direction:column;gap:10px;">
+          {% if ticket.departements_collab %}
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">Departements</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;">
+              {% for dept in ticket.departements_collab %}
+              <span class="collab-chip">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/></svg>
+                {{ dept.nom }}
+              </span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          {% if ticket.collaborateurs %}
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">Agents</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              {% for u in ticket.collaborateurs %}
+              <div class="user-pill">
+                <div style="width:22px;height:22px;border-radius:50%;background:var(--surface-3);color:var(--text-secondary);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">
+                  {% if u.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + u.photo_profil) }}" alt="">{% else %}{{ u.prenom[0]|upper }}{{ u.nom[0]|upper }}{% endif %}
+                </div>
+                <span style="font-size:var(--text-xs);font-weight:600;color:var(--text-primary);">{{ u.prenom }} {{ u.nom }}</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
         </div>
       </div>
       {% endif %}
 
     </aside>
 
-    <!-- ═══════════ CENTER PANEL ═══════════ -->
-    <section class="ticket-detail-center" style="display:flex; flex-direction:column; height:100%; min-height:0; overflow:hidden; background: var(--surface-1);">
+    <!-- CENTER PANEL -->
+    <section class="detail-panel center-panel">
+      <div class="thread-area">
 
-      <!-- Thread -->
-      <div class="thread-scroll"
-        style="flex:1; min-height:0; overflow-y:auto; padding:24px 32px; display:flex; flex-direction:column; gap:24px;">
-
+        <!-- Checklist -->
         {% if ticket.taches %}
-        <!-- Processus IT Block -->
-        <div class="card card-raised"
-          style="flex-shrink: 0; margin-bottom: 24px; border-radius: 16px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); overflow: hidden; position: relative;">
-          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: linear-gradient(to bottom, #ec4899, #8b5cf6);"></div>
-          
-          <div class="card-header"
-            style="background: var(--surface-2); padding: 16px 24px 16px 30px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
-            <div class="card-title" style="font-size: 15px; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="url(#itGradient)" stroke-width="2.5">
-                <defs>
-                  <linearGradient id="itGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#ec4899" />
-                    <stop offset="100%" stop-color="#8b5cf6" />
-                  </linearGradient>
-                </defs>
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-              </svg>
-              Checklist de traitement
+        {% set total_t = ticket.taches|length %}
+        {% set done_t  = ticket.taches|selectattr('terminee','equalto',true)|list|length %}
+        {% set pct_t   = (done_t / total_t * 100)|int %}
+        <div class="checklist-card">
+          <div class="checklist-card-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--brand);"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              <span style="font-size:var(--text-sm);font-weight:700;color:var(--text-primary);">Checklist de traitement</span>
             </div>
-            {% set total_taches = ticket.taches|length %}
-            {% set terminees = ticket.taches|selectattr('terminee', 'equalto', true)|list|length %}
-            {% if total_taches > 0 and total_taches == terminees %}
-            <span class="badge badge-resolved" style="padding: 4px 10px; font-size: 11px;">Terminé</span>
-            {% else %}
-            <span class="badge badge-pending" style="padding: 4px 10px; font-size: 11px; background:rgba(245,158,11,.12); color:#f59e0b;">{{ terminees }}/{{ total_taches }}</span>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:72px;height:3px;background:var(--surface-3);border-radius:99px;overflow:hidden;">
+                <div style="background:{% if pct_t==100 %}var(--success){% else %}var(--brand){% endif %};height:100%;width:{{ pct_t }}%;border-radius:99px;"></div>
+              </div>
+              {% if pct_t == 100 %}
+              <span class="badge badge-resolved" style="font-size:10px;padding:2px 8px;">Termine</span>
+              {% else %}
+              <span style="font-size:11px;font-weight:700;color:var(--text-muted);">{{ done_t }}/{{ total_t }}</span>
+              {% endif %}
+            </div>
+          </div>
+          {% for tache in ticket.taches|sort(attribute='ordre') %}
+          <div class="task-row {% if tache.terminee %}done{% endif %}" id="row-{{ tache.id }}">
+            <input type="checkbox" {% if tache.terminee %}checked{% endif %}
+              style="width:15px;height:15px;border-radius:4px;accent-color:var(--success);cursor:pointer;flex-shrink:0;"
+              onchange="toggleTask('{{ tache.id }}', this)">
+            <span class="task-label" id="task-text-{{ tache.id }}" style="font-size:var(--text-sm);flex:1;">{{ tache.titre }}</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" id="task-check-{{ tache.id }}" style="display:{% if tache.terminee %}block{% else %}none{% endif %};flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Description -->
+        <div class="message-bubble">
+          <div class="msg-avatar">
+            {% if ticket.createur.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + ticket.createur.photo_profil) }}" alt="">
+            {% else %}{{ ticket.createur.prenom[0]|upper }}{% endif %}
+          </div>
+          <div class="msg-body">
+            <div class="msg-meta">
+              <span class="msg-author">{{ ticket.createur.prenom }} {{ ticket.createur.nom }}</span>
+              <span class="msg-role">Demandeur</span>
+              <span class="msg-time">{{ ticket.date_creation.strftime('%d %b %Y, %H:%M') }}</span>
+            </div>
+            <div class="msg-content">{{ ticket.description or 'Aucune description fournie.' }}</div>
+            {% if ticket.pieces_jointes %}
+            <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
+              {% for pj in ticket.pieces_jointes %}
+              <a href="{{ url_for('static', filename=pj.chemin) }}" target="_blank" class="attach-chip">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                <span style="font-size:11px;font-weight:600;color:var(--text-secondary);">{{ pj.nom_original }}</span>
+                <span style="font-size:10px;color:var(--text-faint);">{{ (pj.taille/1024)|round(0)|int }}Ko</span>
+              </a>
+              {% endfor %}
+            </div>
             {% endif %}
           </div>
-          
-          <div class="card-body" style="padding: 24px 24px 24px 30px;">
-            <div style="display:flex; flex-direction:column; gap:12px;" id="taskList">
-              
-              {% for tache in ticket.taches|sort(attribute='ordre') %}
-              <label style="display:flex; align-items:flex-start; gap:12px; font-size:14px; cursor:pointer; color:var(--text-primary);">
-                <input type="checkbox" style="margin-top:3px; transform: scale(1.1);" onchange="toggleTask('{{ tache.id }}', this)" {% if tache.terminee %}checked{% endif %}> 
-                <div>
-                  <span id="task-text-{{ tache.id }}" style="{% if tache.terminee %}text-decoration: line-through; color:var(--text-muted);{% endif %}">{{ tache.titre }}</span> 
-                  <span id="task-status-{{ tache.id }}" style="color:#10b981; font-size:12px; font-weight:700; margin-left: 8px; display:{% if tache.terminee %}inline{% else %}none{% endif %};">(Succès)</span>
-                </div>
-              </label>
-              {% endfor %}
-              
-            </div>
-          </div>
-        </div>
-        
-        <script>
-        function toggleTask(taskId, checkbox) {
-            fetch('/tickets/tache/' + taskId + '/toggle', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    const textEl = document.getElementById('task-text-' + taskId);
-                    const statusEl = document.getElementById('task-status-' + taskId);
-                    if (data.terminee) {
-                        textEl.style.textDecoration = 'line-through';
-                        textEl.style.color = 'var(--text-muted)';
-                        statusEl.style.display = 'inline';
-                    } else {
-                        textEl.style.textDecoration = 'none';
-                        textEl.style.color = 'var(--text-primary)';
-                        statusEl.style.display = 'none';
-                    }
-                    // Optionally refresh the page or update the progress badge
-                } else {
-                    alert('Erreur: ' + data.error);
-                    checkbox.checked = !checkbox.checked; // revert
-                }
-            })
-            .catch(err => {
-                alert('Erreur réseau');
-                checkbox.checked = !checkbox.checked; // revert
-            });
-        }
-        </script>
-        {% endif %}
-
-        <!-- Original description as first message -->
-        <div class="thread-message" style="flex-shrink: 0; display:flex; gap:12px;">
-          <div class="user-avatar avatar-sm" style="flex-shrink:0;margin-top:2px;">
-            {% if ticket.createur.photo_profil %}<img
-              src="{{ url_for('static', filename='uploads/' + ticket.createur.photo_profil) }}" alt="">{% else %}{{
-            ticket.createur.prenom[0]|upper }}{% endif %}
-          </div>
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;">
-              <span style="font-size:14px;font-weight:700;color:var(--text-primary);">{{ ticket.createur.prenom }} {{
-                ticket.createur.nom }}</span>
-              <span style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);">Demandeur</span>
-              <span style="font-size:11px;font-weight:500;color:var(--text-muted);margin-left:auto;">{{
-                ticket.date_creation.strftime('%d %b %Y, %H:%M') }}</span>
-            </div>
-            <div
-              style="font-size:14px;color:var(--text-primary);line-height:1.7;white-space:pre-wrap;background:var(--surface-base);padding:16px 20px;border-radius:0 16px 16px 16px;border:1px solid var(--border-subtle);box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-              {{ ticket.description or 'Aucune description fournie.' }}</div>
-          </div>
         </div>
 
-      </div><!-- /thread-scroll -->
-
-    </section><!-- /ticket-detail-center -->
-
-    <!-- ═══════════ RIGHT PANEL ═══════════ -->
-    <aside class="ticket-detail-right"
-      style="padding:24px; border-left:1px solid var(--border-subtle); display:flex; flex-direction:column; gap:24px; height:100%; min-height:0; overflow-y:auto; background: var(--surface-base);">
-
-      <!-- Reporter Card -->
-      <div>
-        <div
-          style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">
-          Demandeur</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <div class="user-avatar avatar-md">
-            {% if ticket.createur.photo_profil %}<img
-              src="{{ url_for('static', filename='uploads/' + ticket.createur.photo_profil) }}" alt="">{% else %}{{
-            ticket.createur.prenom[0]|upper }}{{ ticket.createur.nom[0]|upper }}{% endif %}
-          </div>
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ ticket.createur.prenom }} {{
-              ticket.createur.nom }}</div>
-            <div style="font-size:11px;color:var(--text-muted);">{{ ticket.createur.email }}</div>
-          </div>
-        </div>
-        {% if ticket.createur.departement %}
-        <div style="font-size:12px;color:var(--text-secondary);">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            style="vertical-align:middle;margin-right:4px;">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          </svg>
-          {{ ticket.createur.departement.nom }}
-        </div>
-        {% endif %}
       </div>
+    </section>
 
+    <!-- RIGHT PANEL -->
+    <aside class="detail-panel right-panel">
 
-
-      <!-- Related Tickets placeholder -->
-      <div>
-        <div
-          style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">
-          Tickets liés</div>
-        <div
-          style="font-size:12px;color:var(--text-muted);padding:16px;text-align:center;border:1px dashed var(--border-subtle);border-radius:6px;">
-          Aucun ticket lié trouvé.
+      <!-- Assigne a -->
+      {% if ticket.assigne_a %}
+      <div class="side-block">
+        <div class="side-block-header">
+          <div class="side-block-icon">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <span class="side-block-title">Assigne a</span>
         </div>
-      </div>
-
-      <!-- Ticket History -->
-      <div>
-        <div
-          style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">
-          Historique</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div style="display:flex;gap:8px;font-size:11px;color:var(--text-muted);">
-            <div
-              style="width:6px;height:6px;border-radius:50%;background:var(--text-muted);margin-top:4px;flex-shrink:0;">
+        <div class="side-block-body">
+          <div class="user-pill">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--surface-3);color:var(--text-secondary);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">
+              {% if ticket.assigne_a.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + ticket.assigne_a.photo_profil) }}" alt="">
+              {% else %}{{ ticket.assigne_a.prenom[0]|upper }}{{ ticket.assigne_a.nom[0]|upper }}{% endif %}
             </div>
             <div>
-              <span style="color:var(--text-secondary);font-weight:500;">Ticket créé</span><br>
-              {{ ticket.date_creation.strftime('%d %b %Y, %H:%M') }} par {{ ticket.createur.prenom }}
+              <div style="font-size:var(--text-sm);font-weight:700;color:var(--text-primary);">{{ ticket.assigne_a.prenom }} {{ ticket.assigne_a.nom }}</div>
+              {% if ticket.assigne_a.departement %}<div style="font-size:11px;color:var(--text-muted);">{{ ticket.assigne_a.departement.nom }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Tickets lies -->
+      <div class="side-block">
+        <div class="side-block-header">
+          <div class="side-block-icon">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </div>
+          <span class="side-block-title">Tickets lies</span>
+        </div>
+        <div class="side-block-body">
+          <p style="margin:0;font-size:var(--text-xs);color:var(--text-muted);text-align:center;padding:6px 0;">Aucun ticket lie.</p>
+        </div>
+      </div>
+
+      <!-- Historique -->
+      <div class="side-block">
+        <div class="side-block-header">
+          <div class="side-block-icon">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+          </div>
+          <span class="side-block-title">Historique</span>
+        </div>
+        <div class="side-block-body" style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div class="timeline-dot" style="margin-top:3px;"></div>
+            <div>
+              <div style="font-size:var(--text-xs);font-weight:700;color:var(--text-secondary);">Ticket cree</div>
+              <div style="font-size:11px;color:var(--text-muted);">{{ ticket.date_creation.strftime('%d %b %Y, %H:%M') }} par {{ ticket.createur.prenom }}</div>
             </div>
           </div>
           {% if ticket.date_modification and ticket.date_modification != ticket.date_creation %}
-          <div style="display:flex;gap:8px;font-size:11px;color:var(--text-muted);">
-            <div
-              style="width:6px;height:6px;border-radius:50%;background:var(--text-muted);margin-top:4px;flex-shrink:0;">
-            </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div class="timeline-dot"></div>
             <div>
-              <span style="color:var(--text-secondary);font-weight:500;">Dernière modification</span><br>
-              {{ ticket.date_modification.strftime('%d %b %Y, %H:%M') }}
+              <div style="font-size:var(--text-xs);font-weight:700;color:var(--text-secondary);">Derniere modification</div>
+              <div style="font-size:11px;color:var(--text-muted);">{{ ticket.date_modification.strftime('%d %b %Y, %H:%M') }}</div>
             </div>
           </div>
           {% endif %}
         </div>
       </div>
 
-    </aside><!-- /ticket-detail-right -->
+    </aside>
 
-  </div><!-- /ticket-detail -->
-
-</div><!-- /page -->
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-  (function () {
-    // More actions dropdown
-    var moreBtn = document.getElementById('moreActionsBtn');
-    var moreMenu = document.getElementById('moreActionsMenu');
-    if (moreBtn && moreMenu) {
-      moreBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        var visible = moreMenu.style.display !== 'none';
-        moreMenu.style.display = visible ? 'none' : 'block';
-        moreBtn.setAttribute('aria-expanded', !visible);
-      });
-      document.addEventListener('click', function () {
-        moreMenu.style.display = 'none';
-        moreBtn.setAttribute('aria-expanded', 'false');
-      });
-    }
-  })();
+(function () {
+  var btn = document.getElementById('moreActionsBtn');
+  var menu = document.getElementById('moreActionsMenu');
+  if (btn && menu) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var open = menu.style.display !== 'none';
+      menu.style.display = open ? 'none' : 'block';
+      btn.setAttribute('aria-expanded', !open);
+    });
+    document.addEventListener('click', function() {
+      menu.style.display = 'none';
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  window.toggleTask = function(taskId, checkbox) {
+    fetch('/tickets/tache/' + taskId + '/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) {
+        var row   = document.getElementById('row-' + taskId);
+        var check = document.getElementById('task-check-' + taskId);
+        if (data.terminee) { row.classList.add('done'); check.style.display = 'block'; }
+        else { row.classList.remove('done'); check.style.display = 'none'; }
+      } else {
+        checkbox.checked = !checkbox.checked;
+      }
+    })
+    .catch(function() { checkbox.checked = !checkbox.checked; });
+  };
+})();
 </script>
 {% endblock %}

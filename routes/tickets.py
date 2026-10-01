@@ -282,36 +282,119 @@ def modifier(ticket_id):
 
     if request.method == 'POST':
         try:
+            type_ticket = request.form.get('type_ticket', 'demande')
+            if type_ticket == 'autre':
+                type_ticket = request.form.get('custom_type', 'Autre')
+
             ticket.titre = request.form.get('titre')
             ticket.description = request.form.get('description')
             ticket.priorite = request.form.get('priorite')
             ticket.statut = request.form.get('statut')
+            ticket.type_ticket = type_ticket
             ticket.departement_id = request.form.get('departement_id') or None
-            ticket.categorie_id = request.form.get('categorie_id') or None
 
-            if current_user.has_permission('tickets.assigner'):
+            # Routing type
+            routing_type = request.form.get('routing_type', 'all')
+
+            if routing_type == 'specific':
                 ticket.assigne_a_id = request.form.get('assigne_a_id') or None
-            
+                ticket.collaborateurs.clear()
+                ticket.departements_collab.clear()
+            elif routing_type == 'collab':
+                ticket.assigne_a_id = None
+                # Update collaboration departments
+                ticket.departements_collab.clear()
+                for dept_id in request.form.getlist('collab_departements[]'):
+                    if dept_id:
+                        dept = Departement.query.get(dept_id)
+                        if dept:
+                            ticket.departements_collab.append(dept)
+                # Update collaboration users
+                ticket.collaborateurs.clear()
+                for user_id in request.form.getlist('collab_users[]'):
+                    if user_id:
+                        user = Utilisateur.query.get(user_id)
+                        if user:
+                            ticket.collaborateurs.append(user)
+            else:  # 'all'
+                ticket.assigne_a_id = None
+                ticket.collaborateurs.clear()
+                ticket.departements_collab.clear()
+
+            # Handle existing checklist tasks (update titles + completion)
+            from models import Tache
+            taches_terminees = set(request.form.getlist('taches_terminees[]'))
+            taches_existantes = {k.split('[')[1].rstrip(']'): v
+                                 for k, v in request.form.items()
+                                 if k.startswith('taches_existantes[')}
+
+            # Load current tasks by ID to update or delete
+            existing_ids = {t.id for t in ticket.taches}
+            submitted_ids = set(taches_existantes.keys())
+
+            for tache in ticket.taches:
+                if tache.id in submitted_ids:
+                    titre = taches_existantes[tache.id].strip()
+                    if titre:
+                        tache.titre = titre
+                        tache.terminee = tache.id in taches_terminees
+                        if tache.terminee and not tache.date_completion:
+                            tache.date_completion = datetime.utcnow()
+                        elif not tache.terminee:
+                            tache.date_completion = None
+                    else:
+                        db.session.delete(tache)
+                else:
+                    # Was removed from form (user clicked ×)
+                    db.session.delete(tache)
+
+            # Add brand-new checklist items
+            new_taches = request.form.getlist('taches[]')
+            max_ordre = max((t.ordre for t in ticket.taches), default=-1) + 1
+            for i, titre in enumerate(new_taches):
+                titre = titre.strip()
+                if titre:
+                    db.session.add(Tache(ticket_id=ticket.id, titre=titre, ordre=max_ordre + i))
+
+            # Handle new file attachments
+            import os, uuid as uuid_mod
+            from werkzeug.utils import secure_filename
+            from models import PieceJointe
+            UPLOAD_FOLDER = os.path.join(request.root_path, 'static', 'uploads', 'tickets')
+            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+            for f in request.files.getlist('attachments'):
+                if f and f.filename:
+                    nom_original = secure_filename(f.filename)
+                    ext = nom_original.rsplit('.', 1)[1].lower() if '.' in nom_original else 'bin'
+                    nouveau_nom = f"{uuid_mod.uuid4().hex}.{ext}"
+                    chemin = os.path.join(UPLOAD_FOLDER, nouveau_nom)
+                    f.save(chemin)
+                    db.session.add(PieceJointe(
+                        ticket_id=ticket.id,
+                        nom_fichier=nouveau_nom,
+                        nom_original=nom_original,
+                        type_mime=f.content_type,
+                        taille=os.path.getsize(chemin),
+                        chemin=f'uploads/tickets/{nouveau_nom}',
+                        uploade_par_id=current_user.id
+                    ))
+
             db.session.commit()
-            
             flash('Ticket modifié avec succès', 'success')
             logger.info(f'Ticket modifié: {ticket.numero} par {current_user.email}')
-            
             return redirect(url_for('tickets.detail', ticket_id=ticket_id))
-        
+
         except Exception as e:
             db.session.rollback()
             logger.error(f'Erreur lors de la modification du ticket: {str(e)}')
             flash('Erreur lors de la modification', 'danger')
-    
-    departements = Departement.query.filter_by(actif=True).all()
-    categories = CategorieTicket.query.filter_by(actif=True).all()
-    utilisateurs = Utilisateur.query.filter_by(actif=True).all()
-    
+
+    departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
+    utilisateurs = Utilisateur.query.filter_by(actif=True).order_by(Utilisateur.nom).all()
+
     return render_template('tickets/modifier.html',
                          ticket=ticket,
                          departements=departements,
-                         categories=categories,
                          utilisateurs=utilisateurs)
 
 
@@ -408,6 +491,32 @@ def fermer(ticket_id):
         db.session.rollback()
         logger.error(f'Erreur lors de la fermeture du ticket: {str(e)}')
         flash('Erreur lors de la fermeture', 'danger')
+    return redirect(url_for('tickets.detail', ticket_id=ticket_id))
+
+@tickets_bp.route('/<ticket_id>/reouvrir', methods=['POST'])
+@login_required
+def reouvrir(ticket_id):
+    """Réouvrir un ticket fermé"""
+    ticket = Ticket.query.get_or_404(ticket_id)
+    
+    # Vérifier les permissions (idem fermer)
+    if not current_user.has_permission('tickets.fermer'):
+        if ticket.createur_id != current_user.id and ticket.assigne_a_id != current_user.id:
+            flash('Accès non autorisé', 'danger')
+            return redirect(url_for('tickets.detail', ticket_id=ticket_id))
+
+    try:
+        ticket.statut = 'en_cours'
+        ticket.date_fermeture = None
+        db.session.commit()
+        
+        flash('Ticket réouvert avec succès', 'success')
+        logger.info(f'Ticket réouvert: {ticket.numero} par {current_user.email}')
+    
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Erreur lors de la réouverture du ticket: {str(e)}')
+        flash('Erreur lors de la réouverture', 'danger')
     
     return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
