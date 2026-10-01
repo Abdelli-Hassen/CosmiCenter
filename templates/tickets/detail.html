@@ -109,11 +109,11 @@
 
   <!-- 3-Panel Layout -->
   <div class="ticket-detail"
-    style="display:grid;grid-template-columns:220px 1fr 240px;gap:0;min-height:calc(100vh - 160px);align-items:start;">
+    style="display:grid; grid-template-columns:260px 1fr 280px; gap:0; height:calc(100vh - 94px); overflow:hidden; align-items:stretch; background: var(--surface-1);">
 
     <!-- ═══════════ LEFT PANEL ═══════════ -->
     <aside class="ticket-detail-left"
-      style="padding:20px 16px;border-right:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:20px;position:sticky;top:0;max-height:calc(100vh - 160px);overflow-y:auto;">
+      style="padding:24px; border-right:1px solid var(--border-subtle); display:flex; flex-direction:column; gap:24px; height:100%; min-height:0; overflow-y:auto; background: var(--surface-base);">
 
       <!-- Gestion du ticket -->
       <div
@@ -295,15 +295,15 @@
     </aside>
 
     <!-- ═══════════ CENTER PANEL ═══════════ -->
-    <section class="ticket-detail-center" style="display:flex;flex-direction:column;min-height:calc(100vh - 160px);">
+    <section class="ticket-detail-center" style="display:flex; flex-direction:column; height:100%; min-height:0; overflow:hidden; background: var(--surface-1);">
 
       <!-- Thread -->
       <div class="thread-scroll"
-        style="flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px;">
+        style="flex:1; min-height:0; overflow-y:auto; padding:24px 32px; display:flex; flex-direction:column; gap:24px;">
 
         <!-- Processus IT Block -->
         <div class="card card-raised"
-          style="margin-bottom: 24px; border-radius: 16px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); overflow: hidden; position: relative;">
+          style="flex-shrink: 0; margin-bottom: 24px; border-radius: 16px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); overflow: hidden; position: relative;">
           <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: linear-gradient(to bottom, #ec4899, #8b5cf6);"></div>
           
           <div class="card-header"
@@ -369,7 +369,7 @@
         </div>
 
         <!-- Original description as first message -->
-        <div class="thread-message" style="display:flex;gap:12px;">
+        <div class="thread-message" style="flex-shrink: 0; display:flex; gap:12px;">
           <div class="user-avatar avatar-sm" style="flex-shrink:0;margin-top:2px;">
             {% if ticket.createur.photo_profil %}<img
               src="{{ url_for('static', filename='uploads/' + ticket.createur.photo_profil) }}" alt="">{% else %}{{
@@ -389,102 +389,13 @@
           </div>
         </div>
 
-        <!-- Comments -->
-        {% for commentaire in commentaires %}
-        <div
-          class="thread-message {% if commentaire.interne %}internal{% elif commentaire.auteur.id != ticket.createur.id %}agent{% endif %}"
-          style="display:flex;gap:12px;">
-          <div class="user-avatar avatar-sm" style="flex-shrink:0;margin-top:2px;">
-            {% if commentaire.auteur.photo_profil %}<img
-              src="{{ url_for('static', filename='uploads/' + commentaire.auteur.photo_profil) }}" alt="">{% else %}{{
-            commentaire.auteur.prenom[0]|upper }}{% endif %}
-          </div>
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;">
-              <span style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ commentaire.auteur.prenom }} {{
-                commentaire.auteur.nom }}</span>
-              {% if commentaire.interne %}
-              <span
-                style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:rgb(245,158,11);padding:1px 6px;border-radius:3px;background:rgba(245,158,11,.12);">Note
-                interne</span>
-              {% endif %}
-              <span style="font-size:11px;color:var(--text-muted);margin-left:auto;">{{
-                commentaire.date_creation.strftime('%d %b %Y, %H:%M') }}</span>
-            </div>
-            <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;white-space:pre-wrap;">{{
-              commentaire.contenu }}</div>
-          </div>
-        </div>
-        {% endfor %}
-
-        {% if not commentaires %}
-        <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">
-          Aucune réponse pour l'instant — soyez le premier à répondre.
-        </div>
-        {% endif %}
-
       </div><!-- /thread-scroll -->
-
-      <!-- Reply Composer -->
-      <div class="reply-composer"
-        style="border-top:1px solid var(--border-subtle);padding:16px 24px;background:var(--surface-base);">
-
-        <!-- Composer Tabs -->
-        <div class="tabs" style="margin-bottom:12px;">
-          <button type="button" class="tab-btn tab-btn-active" id="tabReply"
-            onclick="switchTab('reply')">Répondre</button>
-          <button type="button" class="tab-btn" id="tabInternal" onclick="switchTab('internal')">Note interne</button>
-          <button type="button" class="tab-btn" id="tabLog" onclick="switchTab('log')">Journaliser l'appel</button>
-        </div>
-
-        <!-- AI Draft Area (hidden, shown by JS) -->
-        <div id="aiDraftArea" class="ai-draft-area"
-          style="display:none;margin-bottom:12px;padding:12px 14px;border-radius:8px;background:var(--surface-raised);border:1px solid var(--border-accent,rgba(220,38,38,.25));">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand,#dc2626)"
-              stroke-width="2">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-            </svg>
-            <span style="font-size:12px;font-weight:600;color:var(--text-primary);">Brouillon IA</span>
-            <span style="font-size:11px;color:var(--text-muted);">Basé sur le contexte du ticket</span>
-            <button type="button" onclick="useDraft()" class="btn btn-primary btn-sm" style="margin-left:auto;">Utiliser
-              le brouillon</button>
-            <button type="button" onclick="document.getElementById('aiDraftArea').style.display='none'"
-              class="btn btn-ghost btn-sm">Ignorer</button>
-          </div>
-          <div id="aiDraftContent" style="font-size:13px;color:var(--text-secondary);line-height:1.5;"></div>
-        </div>
-
-        <form method="POST" action="{{ url_for('tickets.commenter', ticket_id=ticket.id) }}" id="replyForm">
-          <input type="hidden" id="ticketReplyInterne" name="interne" value="0">
-
-          <textarea id="ticketReplyContent" name="contenu" class="textarea" rows="4"
-            placeholder="Saisir une réponse… (Tab pour un brouillon IA)" style="resize:none;margin-bottom:10px;"
-            required></textarea>
-
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div style="display:flex;gap:4px;">
-              <button type="button" title="Gras" class="btn btn-ghost btn-sm"
-                style="padding:5px 8px;font-weight:700;font-size:13px;">B</button>
-              <button type="button" title="Italique" class="btn btn-ghost btn-sm"
-                style="padding:5px 8px;font-style:italic;font-size:13px;">I</button>
-              <button type="button" title="Code" class="btn btn-ghost btn-sm"
-                style="padding:5px 8px;font-family:var(--font-mono);font-size:12px;">`_`</button>
-            </div>
-            <span style="font-size:11px;color:var(--text-muted);">Markdown pris en charge</span>
-            <button type="submit" class="btn btn-primary btn-sm" style="margin-left:auto;">
-              Envoyer la réponse
-              <kbd style="margin-left:6px;font-size:10px;opacity:.7;">⌘↵</kbd>
-            </button>
-          </div>
-        </form>
-      </div><!-- /reply-composer -->
 
     </section><!-- /ticket-detail-center -->
 
     <!-- ═══════════ RIGHT PANEL ═══════════ -->
     <aside class="ticket-detail-right"
-      style="padding:20px 16px;border-left:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:20px;position:sticky;top:0;max-height:calc(100vh - 160px);overflow-y:auto;">
+      style="padding:24px; border-left:1px solid var(--border-subtle); display:flex; flex-direction:column; gap:24px; height:100%; min-height:0; overflow-y:auto; background: var(--surface-base);">
 
       <!-- Reporter Card -->
       <div>
@@ -514,34 +425,7 @@
         {% endif %}
       </div>
 
-      <!-- AI Insights Card -->
-      <div class="ai-card"
-        style="border-radius: 16px; padding: 16px; background: linear-gradient(145deg, rgba(139, 92, 246, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%); border: 1px solid rgba(139, 92, 246, 0.2); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.05);">
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#aiGradient)" stroke-width="2.5">
-            <defs>
-              <linearGradient id="aiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#8b5cf6" />
-                <stop offset="100%" stop-color="#ec4899" />
-              </linearGradient>
-            </defs>
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-          </svg>
-          <span style="font-size:14px; font-weight:800; background: linear-gradient(to right, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Analyse IA</span>
-          <span
-            style="font-size:10px; padding:2px 8px; border-radius:12px; background: linear-gradient(to right, #8b5cf6, #ec4899); color:#fff; font-weight:700; letter-spacing:0.04em;">BÊTA</span>
-        </div>
-        <div style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin-bottom:16px;">
-          L'analyse IA est disponible pour ce ticket. Cliquez ci-dessous pour générer des insights et des suggestions.
-        </div>
-        <button type="button" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;"
-          onclick="this.textContent='Analyse en cours…';this.disabled=true;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-          </svg>
-          Générer l'analyse
-        </button>
-      </div>
+
 
       <!-- Related Tickets placeholder -->
       <div>
@@ -593,65 +477,6 @@
 {% block extra_scripts %}
 <script>
   (function () {
-    // Composer tab switching
-    window.switchTab = function (tab) {
-      var tabs = ['reply', 'internal', 'log'];
-      tabs.forEach(function (t) {
-        var btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
-        if (btn) btn.classList.toggle('tab-btn-active', t === tab);
-      });
-      var interneField = document.getElementById('ticketReplyInterne');
-      var placeholder = document.getElementById('ticketReplyContent');
-      if (tab === 'internal') {
-        interneField.value = '1';
-        placeholder.placeholder = 'Écrire une note interne (non visible par le demandeur)…';
-      } else if (tab === 'log') {
-        interneField.value = '1';
-        placeholder.placeholder = 'Détails de l\'appel — date, durée, résumé…';
-      } else {
-        interneField.value = '0';
-        placeholder.placeholder = 'Saisir une réponse… (Tab pour un brouillon IA)';
-      }
-    };
-
-    // Tab key in reply textarea → show AI draft placeholder
-    var replyArea = document.getElementById('ticketReplyContent');
-    if (replyArea) {
-      replyArea.addEventListener('keydown', function (e) {
-        if (e.key === 'Tab' && !e.shiftKey && this.value.length === 0) {
-          e.preventDefault();
-          var aiArea = document.getElementById('aiDraftArea');
-          var aiContent = document.getElementById('aiDraftContent');
-          if (aiArea && aiContent) {
-            aiContent.textContent = 'Merci de nous avoir contactés. J\'ai examiné votre ticket et vais me pencher sur ce problème. Je vous fournirai une mise à jour dans l\'heure. En attendant, n\'hésitez pas à nous faire part de toute information supplémentaire.';
-            aiArea.style.display = 'block';
-          }
-        }
-      });
-    }
-
-    // Use AI draft
-    window.useDraft = function () {
-      var content = document.getElementById('aiDraftContent');
-      var area = document.getElementById('ticketReplyContent');
-      if (content && area) {
-        area.value = content.textContent;
-        document.getElementById('aiDraftArea').style.display = 'none';
-        area.focus();
-      }
-    };
-
-    // Cmd+Enter to submit reply
-    if (replyArea) {
-      replyArea.addEventListener('keydown', function (e) {
-        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-          e.preventDefault();
-          var form = document.getElementById('replyForm');
-          if (form && replyArea.value.trim()) form.submit();
-        }
-      });
-    }
-
     // More actions dropdown
     var moreBtn = document.getElementById('moreActionsBtn');
     var moreMenu = document.getElementById('moreActionsMenu');

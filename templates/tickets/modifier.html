@@ -8,7 +8,7 @@
 <div class="page">
 
   <!-- Page Header -->
-  <div class="page-header">
+  <div class="page-header" style="max-width: 800px; margin: 0 auto; padding-top: 32px; padding-bottom: 24px;">
     <div class="page-header-left">
       <nav class="breadcrumb" aria-label="Fil d'Ariane">
         <a href="{{ url_for('tickets.liste') }}" class="breadcrumb-link">Tous les tickets</a>
@@ -18,21 +18,14 @@
         <span class="breadcrumb-sep">/</span>
         <span class="breadcrumb-current">Modifier</span>
       </nav>
-      <h1 class="page-title" style="margin-top:4px;">Modifier {{ ticket.numero }}</h1>
-    </div>
-    <div class="page-header-actions">
-      <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-ghost btn-sm">Annuler</a>
-      <button type="submit" form="editForm" class="btn btn-primary btn-sm">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        Enregistrer les modifications
-      </button>
+      <h1 class="page-title" style="margin-top: 8px; font-size: 28px; font-weight: 800; background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-muted) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.02em;">Modifier {{ ticket.numero }}</h1>
     </div>
   </div>
 
   <!-- Form Card -->
-  <div>
-    <div class="card card-raised">
-      <div class="card-body" style="padding:32px;">
+  <div class="page-body" style="max-width: 800px; margin: 0 auto; padding-bottom: 80px;">
+    <div class="card card-raised" style="border-radius: 16px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); overflow: hidden;">
+      <div class="card-body" style="padding: 32px;">
 
         <form method="POST" action="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" id="editForm">
 
@@ -67,11 +60,11 @@
           </div>
 
           <!-- Status + Priority (2 cols) -->
-          <div class="form-row" style="margin-bottom:24px;">
+          <div class="form-row" style="margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
             <div class="form-group">
               <label class="form-label" for="statut">Statut</label>
               <div class="select-wrap">
-                <select id="statut" name="statut" class="select">
+                <select id="statut" name="statut" class="select" style="height:42px; border-radius:10px;">
                   <option value="nouveau"    {% if ticket.statut == 'nouveau' %}selected{% endif %}>Nouveau</option>
                   <option value="ouvert"     {% if ticket.statut == 'ouvert' %}selected{% endif %}>Ouvert</option>
                   <option value="en_cours"   {% if ticket.statut == 'en_cours' %}selected{% endif %}>En cours</option>
@@ -86,7 +79,7 @@
             <div class="form-group">
               <label class="form-label" for="priorite">Priorité</label>
               <div class="select-wrap">
-                <select id="priorite" name="priorite" class="select">
+                <select id="priorite" name="priorite" class="select" style="height:42px; border-radius:10px;">
                   <option value="basse"    {% if ticket.priorite == 'basse' %}selected{% endif %}>Basse</option>
                   <option value="moyenne"  {% if ticket.priorite == 'moyenne' %}selected{% endif %}>Moyenne</option>
                   <option value="haute"    {% if ticket.priorite == 'haute' %}selected{% endif %}>Haute</option>
@@ -98,11 +91,11 @@
           </div>
 
           <!-- Department + Assignee (2 cols) -->
-          <div class="form-row" style="margin-bottom:24px;">
+          <div class="form-row" style="margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
             <div class="form-group">
               <label class="form-label" for="departement_id">Département</label>
               <div class="select-wrap">
-                <select id="departement_id" name="departement_id" class="select">
+                <select id="departement_id" name="departement_id" class="select" style="height:42px; border-radius:10px;">
                   <option value="">Aucun département</option>
                   {% for dept in departements %}
                   <option value="{{ dept.id }}"
@@ -117,7 +110,7 @@
             <div class="form-group">
               <label class="form-label" for="assigne_a_id">Assigné à</label>
               <div class="select-wrap">
-                <select id="assigne_a_id" name="assigne_a_id" class="select">
+                <select id="assigne_a_id" name="assigne_a_id" class="select" style="height:42px; border-radius:10px;">
                   <option value="">Non assigné</option>
                   {% for u in utilisateurs %}
                   <option value="{{ u.id }}"
@@ -135,7 +128,7 @@
           <div class="form-group" style="margin-bottom:32px;">
             <label class="form-label" for="categorie_id">Catégorie</label>
             <div class="select-wrap">
-              <select id="categorie_id" name="categorie_id" class="select">
+              <select id="categorie_id" name="categorie_id" class="select" style="height:42px; border-radius:10px;">
                 <option value="">Aucune catégorie</option>
                 {% for cat in categories %}
                 <option value="{{ cat.id }}"
@@ -148,10 +141,10 @@
           </div>
 
           <!-- Form Actions -->
-          <div class="form-actions" style="display:flex;align-items:center;gap:12px;justify-content:flex-end;padding-top:16px;border-top:1px solid var(--border-subtle);">
-            <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-ghost">Annuler</a>
-            <button type="submit" class="btn btn-primary">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <div class="form-actions" style="position: sticky; bottom: 24px; z-index: 100; display: flex; align-items: center; justify-content: flex-end; gap: 16px; margin-top: 40px; padding: 20px 24px; background: color-mix(in srgb, var(--surface-1) 85%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 16px; border: 1px solid var(--border-subtle); box-shadow: 0 12px 32px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);">
+            <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-ghost" style="color: var(--text-secondary); font-weight: 600;">Annuler</a>
+            <button type="submit" class="btn btn-primary btn-lg" style="box-shadow: 0 8px 16px rgba(220, 38, 38, 0.25); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 12px 20px rgba(220, 38, 38, 0.3)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 16px rgba(220, 38, 38, 0.25)';">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 6px;"><polyline points="20 6 9 17 4 12"/></svg>
               Enregistrer les modifications
             </button>
           </div>
