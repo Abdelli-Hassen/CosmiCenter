@@ -20,21 +20,23 @@
 
   <!-- Ticket Detail Header -->
   <div class="ticket-detail-header"
-    style="display:flex;align-items:center;gap:12px;padding:16px 0 12px;border-bottom:1px solid var(--border-subtle);margin-bottom:0;flex-wrap:wrap;">
-    <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm" style="flex-shrink:0;padding:6px 10px;"
+    style="display:flex; align-items:center; gap:16px; padding:24px; background:var(--surface-base); border-bottom:1px solid var(--border-subtle); margin-bottom:0; flex-wrap:wrap; position:sticky; top:0; z-index:10; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    
+    <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm" style="flex-shrink:0; padding:8px; border-radius:10px; background:var(--surface-1);"
       aria-label="Retour à la liste des tickets">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <polyline points="15 18 9 12 15 6" />
       </svg>
     </a>
 
-    <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0;">{{ ticket.numero
-      }}</span>
-
-    <h1
-      style="font-size:15px;font-weight:600;color:var(--text-primary);flex:1;margin:0;line-height:1.3;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-      {{ ticket.titre }}
-    </h1>
+    <div style="display:flex; flex-direction:column; flex:1; min-width:0; gap:4px;">
+      <span style="font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--color-brand); text-transform:uppercase; letter-spacing:0.05em; background:var(--surface-1); padding:2px 8px; border-radius:12px; width:fit-content;">{{ ticket.numero }}</span>
+      
+      <h1
+        style="font-size:20px; font-weight:800; color:var(--text-primary); margin:0; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:-0.01em;">
+        {{ ticket.titre }}
+      </h1>
+    </div>
 
     <!-- Status badge -->
     {% if ticket.statut in ['nouveau', 'ouvert'] %}
@@ -115,16 +117,19 @@
 
       <!-- Gestion du ticket -->
       <div
-        style="background:var(--surface-raised);padding:16px;border-radius:8px;border:1px solid var(--border-subtle);">
-        <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Gestion du ticket
+        style="background:var(--surface-base); padding:20px; border-radius:16px; border:1px solid var(--border-subtle); box-shadow:var(--shadow-sm); position:relative; overflow:hidden;">
+        <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:linear-gradient(to right, var(--color-brand, #3b82f6), #8b5cf6);"></div>
+        <div style="font-size:14px; font-weight:800; color:var(--text-primary); margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          Gestion du ticket
         </div>
 
         <form method="POST" action="{{ url_for('tickets.changer_statut', ticket_id=ticket.id) }}" id="gestionForm">
           <input type="hidden" name="action" value="gestion">
-          <div style="margin-bottom:12px;">
+          <div style="margin-bottom:16px;">
             <label for="ticketStatut"
-              style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Statut</label>
-            <select id="ticketStatut" name="statut" class="select select-sm" style="width:100%;" onchange="this.form.submit()">
+              style="font-size:12px; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Statut</label>
+            <select id="ticketStatut" name="statut" class="select" style="width:100%; height:36px; border-radius:10px;" onchange="this.form.submit()">
               <option value="ouvert" {% if ticket.statut=='ouvert' %}selected{% endif %}>Ouvert</option>
               <option value="en_cours" {% if ticket.statut=='en_cours' %}selected{% endif %}>En cours</option>
               <option value="en_attente" {% if ticket.statut=='en_attente' %}selected{% endif %}>En attente</option>
@@ -133,11 +138,10 @@
             </select>
           </div>
 
-          <div style="margin-bottom:12px;">
+          <div style="margin-bottom:16px;">
             <label for="ticketAssigne"
-              style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Assigné
-              à</label>
-            <select id="ticketAssigne" name="assigne_a_id" class="select select-sm" style="width:100%;" onchange="this.form.submit()" {% if not current_user.has_permission('tickets.assigner') %}disabled{% endif %}>
+              style="font-size:12px; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Assigné à</label>
+            <select id="ticketAssigne" name="assigne_a_id" class="select" style="width:100%; height:36px; border-radius:10px;" onchange="this.form.submit()" {% if not current_user.has_permission('tickets.assigner') %}disabled{% endif %}>
               <option value="">Non assigné</option>
               {% for u in utilisateurs %}
               <option value="{{ u.id }}" {% if ticket.assigne_a_id == u.id %}selected{% endif %}>{{ u.nom_complet }}</option>
@@ -145,14 +149,14 @@
             </select>
           </div>
 
-          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-subtle);text-align:center;">
-            <button type="button" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <div style="margin-top:20px; padding-top:16px; border-top:1px dashed var(--border-subtle);">
+            <button type="button" class="btn btn-ghost" style="width:100%; justify-content:center; color:var(--text-secondary); font-weight:500;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <polyline points="21 8 21 21 3 21 3 8" />
                 <rect x="1" y="3" width="22" height="5" />
                 <line x1="10" y1="12" x2="14" y2="12" />
               </svg>
-              Archiver
+              Archiver le ticket
             </button>
           </div>
         </form>
@@ -299,38 +303,67 @@
 
         <!-- Processus IT Block -->
         <div class="card card-raised"
-          style="margin-bottom:10px;border-color:var(--color-brand,#dc2626);border-width:2px;">
+          style="margin-bottom: 24px; border-radius: 16px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); overflow: hidden; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: linear-gradient(to bottom, #ec4899, #8b5cf6);"></div>
+          
           <div class="card-header"
-            style="background:rgba(220,38,38,.04);border-bottom:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:center;">
-            <div class="card-title" style="color:var(--color-brand,#dc2626);">Processus IT : Accès Sage 100</div>
-            <button class="btn btn-primary btn-sm">Automatiser</button>
+            style="background: var(--surface-2); padding: 16px 24px 16px 30px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+            <div class="card-title" style="font-size: 15px; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="url(#itGradient)" stroke-width="2.5">
+                <defs>
+                  <linearGradient id="itGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ec4899" />
+                    <stop offset="100%" stop-color="#8b5cf6" />
+                  </linearGradient>
+                </defs>
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+              Processus IT : Accès Sage 100
+            </div>
+            <button class="btn btn-primary btn-sm" style="border-radius: 8px; font-weight: 600;">Automatiser</button>
           </div>
-          <div class="card-body" style="padding:16px;">
+          
+          <div class="card-body" style="padding: 24px 24px 24px 30px;">
             <div
-              style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border-subtle);">
-              <div style="font-size:12px;font-weight:600;color:var(--text-secondary);">Validation hiérarchique :</div>
-              <span class="badge badge-resolved">Validé</span>
+              style="display:flex; align-items:center; gap:12px; margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid var(--border-subtle);">
+              <div style="font-size:13px; font-weight:700; color:var(--text-secondary);">Validation hiérarchique :</div>
+              <span class="badge badge-resolved" style="padding: 4px 10px; font-size: 11px;">Validé</span>
             </div>
-            <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:12px;">Checklist de
-              traitement</div>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <label
-                style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:not-allowed;color:var(--text-muted);"><input
-                  type="checkbox" checked disabled> Accès RDP au serveur applicatif <span
-                  style="color:#10b981;font-size:11px;font-weight:700;">(Succès)</span></label>
-              <label
-                style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:not-allowed;color:var(--text-muted);"><input
-                  type="checkbox" checked disabled> Copie des fichiers de connexion <span
-                  style="color:#10b981;font-size:11px;font-weight:700;">(Succès)</span></label>
-              <label
-                style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:not-allowed;color:var(--text-muted);"><input
-                  type="checkbox" disabled> Création de l'accès SQL Server <span
-                  style="color:#ef4444;font-size:11px;font-weight:700;">(Échec: Identifiant AD manquant)</span></label>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;"><input
-                  type="checkbox"> Création de l'utilisateur dans l'application Sage 100</label>
+            <div style="font-size:14px; font-weight:800; color:var(--text-primary); margin-bottom:16px;">Checklist de traitement</div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              
+              <label style="display:flex; align-items:flex-start; gap:12px; font-size:14px; cursor:not-allowed; color:var(--text-muted); opacity: 0.8;">
+                <input type="checkbox" checked disabled style="margin-top:3px; transform: scale(1.1);"> 
+                <div>
+                  <span style="text-decoration: line-through;">Accès RDP au serveur applicatif</span> 
+                  <span style="color:#10b981; font-size:12px; font-weight:700; margin-left: 8px;">(Succès)</span>
+                </div>
+              </label>
+              
+              <label style="display:flex; align-items:flex-start; gap:12px; font-size:14px; cursor:not-allowed; color:var(--text-muted); opacity: 0.8;">
+                <input type="checkbox" checked disabled style="margin-top:3px; transform: scale(1.1);"> 
+                <div>
+                  <span style="text-decoration: line-through;">Copie des fichiers de connexion</span> 
+                  <span style="color:#10b981; font-size:12px; font-weight:700; margin-left: 8px;">(Succès)</span>
+                </div>
+              </label>
+              
+              <label style="display:flex; align-items:flex-start; gap:12px; font-size:14px; cursor:not-allowed; color:var(--text-primary);">
+                <input type="checkbox" disabled style="margin-top:3px; transform: scale(1.1);"> 
+                <div>
+                  Création de l'accès SQL Server 
+                  <div style="color:#ef4444; font-size:12px; font-weight:700; margin-top: 4px; padding: 4px 8px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; display: inline-block;">⚠️ Échec: Identifiant AD manquant</div>
+                </div>
+              </label>
+              
+              <label style="display:flex; align-items:flex-start; gap:12px; font-size:14px; cursor:pointer; color:var(--text-primary); margin-top: 4px;">
+                <input type="checkbox" style="margin-top:3px; transform: scale(1.1);"> 
+                <span>Création de l'utilisateur dans l'application Sage 100</span>
+              </label>
+              
             </div>
-            <div style="margin-top:20px;text-align:right;">
-              <button class="btn btn-outline btn-sm">Marquer l'original comme archivé</button>
+            <div style="margin-top:24px; text-align:right;">
+              <button class="btn btn-ghost btn-sm" style="color:var(--text-secondary); font-weight:500;">Marquer l'original comme archivé</button>
             </div>
           </div>
         </div>
@@ -344,14 +377,14 @@
           </div>
           <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;">
-              <span style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ ticket.createur.prenom }} {{
+              <span style="font-size:14px;font-weight:700;color:var(--text-primary);">{{ ticket.createur.prenom }} {{
                 ticket.createur.nom }}</span>
-              <span style="font-size:11px;color:var(--text-muted);">Demandeur</span>
-              <span style="font-size:11px;color:var(--text-muted);margin-left:auto;">{{
+              <span style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);">Demandeur</span>
+              <span style="font-size:11px;font-weight:500;color:var(--text-muted);margin-left:auto;">{{
                 ticket.date_creation.strftime('%d %b %Y, %H:%M') }}</span>
             </div>
             <div
-              style="font-size:13px;color:var(--text-secondary);line-height:1.6;white-space:pre-wrap;background:var(--surface-raised);padding:14px 16px;border-radius:8px;border:1px solid var(--border-subtle);">
+              style="font-size:14px;color:var(--text-primary);line-height:1.7;white-space:pre-wrap;background:var(--surface-base);padding:16px 20px;border-radius:0 16px 16px 16px;border:1px solid var(--border-subtle);box-shadow:0 2px 4px rgba(0,0,0,0.02);">
               {{ ticket.description or 'Aucune description fournie.' }}</div>
           </div>
         </div>
@@ -483,18 +516,23 @@
 
       <!-- AI Insights Card -->
       <div class="ai-card"
-        style="border:1px solid var(--border-accent,rgba(220,38,38,.2));border-radius:8px;padding:14px;background:var(--surface-raised);">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand,#dc2626)"
-            stroke-width="2">
+        style="border-radius: 16px; padding: 16px; background: linear-gradient(145deg, rgba(139, 92, 246, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%); border: 1px solid rgba(139, 92, 246, 0.2); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.05);">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#aiGradient)" stroke-width="2.5">
+            <defs>
+              <linearGradient id="aiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8b5cf6" />
+                <stop offset="100%" stop-color="#ec4899" />
+              </linearGradient>
+            </defs>
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
           </svg>
-          <span style="font-size:12px;font-weight:600;color:var(--text-primary);">Analyse IA</span>
+          <span style="font-size:14px; font-weight:800; background: linear-gradient(to right, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Analyse IA</span>
           <span
-            style="font-size:10px;padding:1px 6px;border-radius:10px;background:var(--color-brand,#dc2626);color:#fff;font-weight:600;letter-spacing:.04em;">BÊTA</span>
+            style="font-size:10px; padding:2px 8px; border-radius:12px; background: linear-gradient(to right, #8b5cf6, #ec4899); color:#fff; font-weight:700; letter-spacing:0.04em;">BÊTA</span>
         </div>
-        <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:10px;">
-          Analyse IA disponible pour ce ticket. Cliquez ci-dessous pour générer des insights.
+        <div style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin-bottom:16px;">
+          L'analyse IA est disponible pour ce ticket. Cliquez ci-dessous pour générer des insights et des suggestions.
         </div>
         <button type="button" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;"
           onclick="this.textContent='Analyse en cours…';this.disabled=true;">

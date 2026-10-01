@@ -238,6 +238,7 @@
   --surface-3:      var(--shell-3);
   --surface-4:      var(--space-3);
   --surface-raised: var(--shell-1);
+  --surface-hover:  rgba(255, 255, 255, 0.06);
 
   --text-primary:   #F8FAFC;
   --text-secondary: #CBD5E1;

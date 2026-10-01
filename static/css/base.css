@@ -111,8 +111,11 @@ small  { font-size: var(--text-xs); color: var(--text-muted); }
 .chrome-bar {
   height: var(--chrome-height);
   min-height: var(--chrome-height);
-  background: var(--shell);
-  border-bottom: 1px solid var(--shell-border);
+  background: color-mix(in srgb, var(--shell) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid color-mix(in srgb, var(--shell-border) 80%, transparent);
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   padding: 0 var(--space-4);
@@ -324,8 +327,11 @@ small  { font-size: var(--text-xs); color: var(--text-muted); }
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
   height: 100%;
-  background: var(--shell);
-  border-right: 1px solid var(--shell-border);
+  background: color-mix(in srgb, var(--shell) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right: 1px solid color-mix(in srgb, var(--shell-border) 80%, transparent);
+  box-shadow: 4px 0 24px -4px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   overflow: hidden;
