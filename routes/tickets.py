@@ -154,6 +154,19 @@ def nouveau():
             db.session.add(ticket)
             db.session.flush() # Ensure we have the ticket ID
             
+            # Handle Sub-tasks (Checklist)
+            from models import Tache
+            taches_titres = request.form.getlist('taches[]')
+            for i, titre in enumerate(taches_titres):
+                titre = titre.strip()
+                if titre:
+                    tache = Tache(
+                        ticket_id=ticket.id,
+                        titre=titre,
+                        ordre=i
+                    )
+                    db.session.add(tache)
+            
             # Handle File Attachments
             import os
             import uuid
@@ -410,6 +423,32 @@ def fermer(ticket_id):
     
     return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
+@tickets_bp.route('/tache/<tache_id>/toggle', methods=['POST'])
+@login_required
+def toggle_tache(tache_id):
+    """Marquer une sous-tâche comme terminée ou non"""
+    from models import Tache
+    from flask import jsonify
+    
+    tache = Tache.query.get_or_404(tache_id)
+    ticket = tache.ticket
+    
+    # Check permissions (basic check)
+    if not current_user.has_permission('tickets.voir_tous'):
+        if ticket.createur_id != current_user.id and ticket.assigne_a_id != current_user.id:
+            return jsonify({'error': 'Accès non autorisé'}), 403
+            
+    try:
+        tache.terminee = not tache.terminee
+        if tache.terminee:
+            tache.date_completion = datetime.utcnow()
+        else:
+            tache.date_completion = None
+        db.session.commit()
+        return jsonify({'success': True, 'terminee': tache.terminee})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 # ─── Base de connaissances (FAQ) ────────────────────────────────────────────
 

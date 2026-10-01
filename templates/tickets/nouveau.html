@@ -187,9 +187,37 @@
           </div>
 
           <!-- 4. Description -->
-          <div>
+          <div style="margin-bottom: 28px;">
             <label class="premium-label" for="description">Description détaillée</label>
             <textarea id="description" name="description" class="premium-textarea" rows="8" placeholder="Décrivez le problème. N'hésitez pas à inclure des messages d'erreur, des étapes pour reproduire le bug, ou le comportement attendu..." style="resize:vertical; min-height:150px;"></textarea>
+          </div>
+
+          <!-- 5. Checklist / Sous-tâches -->
+          <div>
+            <label class="premium-label">Checklist de traitement (Processus)</label>
+            <div id="checklistContainer" style="display:flex; flex-direction:column; gap:12px; margin-bottom:12px;">
+              <!-- Dynamic items will be added here -->
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addChecklistItem()" style="font-weight:600;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Ajouter une étape
+            </button>
+            <script>
+              function addChecklistItem() {
+                var container = document.getElementById('checklistContainer');
+                var wrapper = document.createElement('div');
+                wrapper.style.display = 'flex';
+                wrapper.style.gap = '8px';
+                wrapper.innerHTML = `
+                  <input type="text" name="taches[]" class="premium-input" placeholder="Ex: Accès RDP au serveur applicatif" style="flex:1;">
+                  <button type="button" class="btn btn-ghost btn-sm" style="padding:0 10px; color:#ef4444;" onclick="this.parentElement.remove()" title="Supprimer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                `;
+                container.appendChild(wrapper);
+                wrapper.querySelector('input').focus();
+              }
+            </script>
           </div>
 
         </div>
