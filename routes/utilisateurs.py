@@ -90,21 +90,21 @@ def nouveau():
         # Validation
         if not all([nom, prenom, email, password]):
             flash('Tous les champs obligatoires doivent être remplis.', 'danger')
-            return render_template('utilisateurs/formulaire.html',
+            return render_template('utilisateurs/nouveau_utilisateur.html',
                                  roles=Role.query.filter_by(actif=True).all(),
                                  departements=Departement.query.filter_by(actif=True).all())
         
         # Vérifier l'email unique
         if Utilisateur.query.filter_by(email=email).first():
             flash('Un utilisateur avec cet email existe déjà.', 'danger')
-            return render_template('utilisateurs/formulaire.html',
+            return render_template('utilisateurs/nouveau_utilisateur.html',
                                  roles=Role.query.filter_by(actif=True).all(),
                                  departements=Departement.query.filter_by(actif=True).all())
         
         # Vérifier le matricule unique
         if matricule and Utilisateur.query.filter_by(matricule=matricule).first():
             flash('Un utilisateur avec ce matricule existe déjà.', 'danger')
-            return render_template('utilisateurs/formulaire.html',
+            return render_template('utilisateurs/nouveau_utilisateur.html',
                                  roles=Role.query.filter_by(actif=True).all(),
                                  departements=Departement.query.filter_by(actif=True).all())
         
@@ -116,6 +116,11 @@ def nouveau():
             telephone=telephone if telephone else None,
             poste=poste if poste else None,
             matricule=matricule if matricule else None,
+            anydesk_id=request.form.get('anydesk_id', '').strip() or None,
+            anydesk_password=request.form.get('anydesk_password', '').strip() or None,
+            teamviewer_id=request.form.get('teamviewer_id', '').strip() or None,
+            teamviewer_password=request.form.get('teamviewer_password', '').strip() or None,
+            poste_machine=request.form.get('poste_machine', '').strip() or None,
             role_id=role_id,
             departement_id=departement_id,
             actif=True
@@ -133,7 +138,7 @@ def nouveau():
     
     roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
-    return render_template('utilisateurs/formulaire.html',
+    return render_template('utilisateurs/nouveau_utilisateur.html',
                          roles=roles,
                          departements=departements)
 
@@ -204,7 +209,7 @@ def modifier(id):
         # Validation
         if not all([nom, prenom, email]):
             flash('Tous les champs obligatoires doivent être remplis.', 'danger')
-            return render_template('utilisateurs/formulaire.html',
+            return render_template('utilisateurs/modifier_utilisateur.html',
                                  utilisateur=utilisateur,
                                  roles=Role.query.filter_by(actif=True).all(),
                                  departements=Departement.query.filter_by(actif=True).all())
@@ -213,7 +218,7 @@ def modifier(id):
         existing = Utilisateur.query.filter_by(email=email).first()
         if existing and existing.id != utilisateur.id:
             flash('Un utilisateur avec cet email existe déjà.', 'danger')
-            return render_template('utilisateurs/formulaire.html',
+            return render_template('utilisateurs/modifier_utilisateur.html',
                                  utilisateur=utilisateur,
                                  roles=Role.query.filter_by(actif=True).all(),
                                  departements=Departement.query.filter_by(actif=True).all())
@@ -223,7 +228,7 @@ def modifier(id):
             existing = Utilisateur.query.filter_by(matricule=matricule).first()
             if existing and existing.id != utilisateur.id:
                 flash('Un utilisateur avec ce matricule existe déjà.', 'danger')
-                return render_template('utilisateurs/formulaire.html',
+                return render_template('utilisateurs/modifier_utilisateur.html',
                                      utilisateur=utilisateur,
                                      roles=Role.query.filter_by(actif=True).all(),
                                      departements=Departement.query.filter_by(actif=True).all())
@@ -235,6 +240,11 @@ def modifier(id):
         utilisateur.telephone = telephone if telephone else None
         utilisateur.poste = poste if poste else None
         utilisateur.matricule = matricule if matricule else None
+        utilisateur.anydesk_id = request.form.get('anydesk_id', '').strip() or None
+        utilisateur.anydesk_password = request.form.get('anydesk_password', '').strip() or None
+        utilisateur.teamviewer_id = request.form.get('teamviewer_id', '').strip() or None
+        utilisateur.teamviewer_password = request.form.get('teamviewer_password', '').strip() or None
+        utilisateur.poste_machine = request.form.get('poste_machine', '').strip() or None
         utilisateur.role_id = role_id
         utilisateur.departement_id = departement_id
         utilisateur.actif = actif
@@ -252,7 +262,7 @@ def modifier(id):
     
     roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
-    return render_template('utilisateurs/formulaire.html',
+    return render_template('utilisateurs/modifier_utilisateur.html',
                          utilisateur=utilisateur,
                          roles=roles,
                          departements=departements)

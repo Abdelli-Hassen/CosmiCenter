@@ -232,7 +232,7 @@ def modifier(id):
         responsable_id = request.form.get('responsable_id', '').strip() or None
         sla_reponse_heures = int(request.form.get('sla_reponse_heures', 4))
         sla_resolution_heures = int(request.form.get('sla_resolution_heures', 48))
-        actif = request.form.get('actif') == 'on'
+        actif = request.form.get('actif') in ['1', 'on', 'true', 'True']
         
         # Validation
         if not nom:

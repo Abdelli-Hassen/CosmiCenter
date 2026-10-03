@@ -138,6 +138,11 @@ def nouvel_utilisateur():
                 telephone=request.form.get('telephone', '').strip() or None,
                 poste=request.form.get('poste', '').strip() or None,
                 matricule=matricule,
+                anydesk_id=request.form.get('anydesk_id', '').strip() or None,
+                anydesk_password=request.form.get('anydesk_password', '').strip() or None,
+                teamviewer_id=request.form.get('teamviewer_id', '').strip() or None,
+                teamviewer_password=request.form.get('teamviewer_password', '').strip() or None,
+                poste_machine=request.form.get('poste_machine', '').strip() or None,
             )
             utilisateur.set_password(request.form.get('password', 'testtest'))
             
@@ -193,6 +198,11 @@ def modifier_utilisateur(user_id):
             utilisateur.poste = request.form.get('poste', '').strip() or None
             utilisateur.matricule = matricule
             utilisateur.actif = request.form.get('actif') == '1'
+            utilisateur.anydesk_id = request.form.get('anydesk_id', '').strip() or None
+            utilisateur.anydesk_password = request.form.get('anydesk_password', '').strip() or None
+            utilisateur.teamviewer_id = request.form.get('teamviewer_id', '').strip() or None
+            utilisateur.teamviewer_password = request.form.get('teamviewer_password', '').strip() or None
+            utilisateur.poste_machine = request.form.get('poste_machine', '').strip() or None
 
             nouveau_mdp = request.form.get('nouveau_password')
             if nouveau_mdp:

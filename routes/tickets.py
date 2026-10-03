@@ -3,7 +3,7 @@ Routes de gestion des tickets pour CosmittoDesk
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from models import db, Ticket, Utilisateur, Departement, CategorieTicket, Commentaire
+from models import db, Ticket, Utilisateur, Departement, CategorieTicket, Commentaire, HistoriqueTicket
 from datetime import datetime, timedelta
 import logging
 
@@ -444,15 +444,25 @@ def changer_statut(ticket_id):
     try:
         modifie = False
         if nouveau_statut and nouveau_statut in ['nouveau', 'en_cours', 'en_attente', 'resolu', 'ferme', 'annule']:
-            ticket.statut = nouveau_statut
-            if nouveau_statut == 'resolu' and not ticket.date_resolution:
-                ticket.date_resolution = datetime.utcnow()
-            modifie = True
+            if ticket.statut != nouveau_statut:
+                hist = HistoriqueTicket(ticket_id=ticket.id, utilisateur_id=current_user.id, action='Modification de statut', champ_modifie='Statut', ancienne_valeur=ticket.statut, nouvelle_valeur=nouveau_statut)
+                db.session.add(hist)
+                ticket.statut = nouveau_statut
+                if nouveau_statut == 'resolu' and not ticket.date_resolution:
+                    ticket.date_resolution = datetime.utcnow()
+                modifie = True
 
         # Mise à jour de l'assignation si l'utilisateur a le droit
         if nouvel_assigne is not None and current_user.has_permission('tickets.assigner'):
-            ticket.assigne_a_id = nouvel_assigne if nouvel_assigne else None
-            modifie = True
+            nouvel_assigne_val = nouvel_assigne if nouvel_assigne else None
+            if ticket.assigne_a_id != nouvel_assigne_val:
+                ancien_nom = (ticket.assigne_a.prenom + ' ' + ticket.assigne_a.nom) if ticket.assigne_a else 'Non assigné'
+                nouvel_user = Utilisateur.query.get(nouvel_assigne_val) if nouvel_assigne_val else None
+                nouveau_nom = (nouvel_user.prenom + ' ' + nouvel_user.nom) if nouvel_user else 'Non assigné'
+                hist = HistoriqueTicket(ticket_id=ticket.id, utilisateur_id=current_user.id, action='Changement d\'assignation', champ_modifie='Assigné à', ancienne_valeur=ancien_nom, nouvelle_valeur=nouveau_nom)
+                db.session.add(hist)
+                ticket.assigne_a_id = nouvel_assigne_val
+                modifie = True
 
         if modifie:
             db.session.commit()
@@ -480,6 +490,8 @@ def fermer(ticket_id):
             return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
     try:
+        hist = HistoriqueTicket(ticket_id=ticket.id, utilisateur_id=current_user.id, action='Fermeture de ticket', champ_modifie='Statut', ancienne_valeur=ticket.statut, nouvelle_valeur='ferme')
+        db.session.add(hist)
         ticket.statut = 'ferme'
         ticket.date_fermeture = datetime.utcnow()
         db.session.commit()
@@ -506,6 +518,8 @@ def reouvrir(ticket_id):
             return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
     try:
+        hist = HistoriqueTicket(ticket_id=ticket.id, utilisateur_id=current_user.id, action='Réouverture de ticket', champ_modifie='Statut', ancienne_valeur=ticket.statut, nouvelle_valeur='en_cours')
+        db.session.add(hist)
         ticket.statut = 'en_cours'
         ticket.date_fermeture = None
         db.session.commit()

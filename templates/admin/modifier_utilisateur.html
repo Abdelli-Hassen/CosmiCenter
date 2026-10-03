@@ -183,6 +183,47 @@
       </div>
     </div>
 
+    
+    <!-- Section : Accès à distance -->
+    <div class="form-card">
+      <div class="form-header">
+        <h2 class="form-title" style="display:flex; align-items:center; gap:8px;">
+          Accès à distance
+          <span style="background:var(--surface-hover); padding:2px 6px; border-radius:4px; font-size:10px; text-transform:uppercase; color:var(--text-muted); font-weight:800;">Optionnel</span>
+        </h2>
+      </div>
+      <div class="form-body">
+        
+        <div class="input-row" style="margin-bottom:16px;">
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="anydesk_id">ID AnyDesk</label>
+            <input type="text" id="anydesk_id" name="anydesk_id" class="input-field" placeholder="ex. 123 456 789" value="{% if utilisateur is defined %}{{ utilisateur.anydesk_id or '' }}{% endif %}">
+          </div>
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="anydesk_password">Mot de passe AnyDesk</label>
+            <input type="text" id="anydesk_password" name="anydesk_password" class="input-field" placeholder="Mot de passe" value="{% if utilisateur is defined %}{{ utilisateur.anydesk_password or '' }}{% endif %}">
+          </div>
+        </div>
+
+        <div class="input-row" style="margin-bottom:16px;">
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="teamviewer_id">ID TeamViewer</label>
+            <input type="text" id="teamviewer_id" name="teamviewer_id" class="input-field" placeholder="ex. 987 654 321" value="{% if utilisateur is defined %}{{ utilisateur.teamviewer_id or '' }}{% endif %}">
+          </div>
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="teamviewer_password">Mot de passe TeamViewer</label>
+            <input type="text" id="teamviewer_password" name="teamviewer_password" class="input-field" placeholder="Mot de passe" value="{% if utilisateur is defined %}{{ utilisateur.teamviewer_password or '' }}{% endif %}">
+          </div>
+        </div>
+
+        <div class="input-group" style="margin-bottom:0; max-width:400px;">
+          <label class="input-label" for="poste_machine">Poste Machine</label>
+          <input type="text" id="poste_machine" name="poste_machine" class="input-field" placeholder="ex. PC-SUPPORT-01" value="{% if utilisateur is defined %}{{ utilisateur.poste_machine or '' }}{% endif %}">
+        </div>
+
+      </div>
+    </div>
+
     <!-- Submit Actions -->
     <div style="display:flex; justify-content:flex-end; gap:16px; margin-bottom:32px;">
       <button type="submit" class="btn-action primary">

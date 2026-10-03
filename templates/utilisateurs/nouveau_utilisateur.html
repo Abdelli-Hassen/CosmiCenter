@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Nouvel Utilisateur{% endblock %}
+{% block body_class %}page-admin-new-user{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Animations ──────────────────────────────────────────────── */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Page ──────────────────────────────────────────────────── */
+.admin-page { padding: 28px 36px; max-width: 900px; margin: 0 auto; }
+@media (max-width:768px) { .admin-page { padding: 16px 20px; } }
+
+/* ── Hero ──────────────────────────────────────────────────── */
+.at-hero { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:28px; animation: fade-in-up 0.5s ease-out; }
+.at-title-wrap { display:flex; flex-direction:column; gap:4px; }
+.at-title { font-size:24px; font-weight:900; color:var(--text-primary); margin:0; }
+.at-subtitle { font-size:14px; color:var(--text-muted); font-weight:600; margin:0; }
+
+.btn-action {
+  display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--text-primary);
+  text-decoration:none; padding:10px 18px; border-radius:12px; background:var(--surface-1);
+  border:1px solid var(--border-subtle); transition:all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:0 4px 12px rgba(0,0,0,0.02); cursor:pointer;
+}
+.btn-action:hover { background:var(--surface-hover); color:var(--brand); transform: translateY(-2px); box-shadow:0 8px 16px rgba(0,0,0,0.05); }
+.btn-action.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
+.btn-action.primary:hover { background:var(--brand-dark); color:#fff; }
+
+/* ── Cards ─────────────────────────────────────────────────── */
+.form-card {
+  background:var(--surface-1); border-radius:20px; border:1px solid var(--border-subtle);
+  overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.03); margin-bottom:24px;
+  animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.form-card:nth-child(1) { animation-delay: 0.1s; }
+.form-card:nth-child(2) { animation-delay: 0.2s; }
+.form-card:nth-child(3) { animation-delay: 0.3s; }
+.form-card:nth-child(4) { animation-delay: 0.4s; }
+
+.form-header { padding:20px 24px; border-bottom:1px solid var(--border-subtle); background:linear-gradient(to bottom, var(--surface-1), var(--surface-2)); }
+.form-title { font-size:16px; font-weight:800; color:var(--text-primary); margin:0; }
+.form-body { padding:24px; }
+
+/* ── Form Inputs ───────────────────────────────────────────── */
+.input-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+@media (max-width:600px) { .input-row { grid-template-columns:1fr; } }
+.input-group { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
+.input-label { font-size:13px; font-weight:800; color:var(--text-secondary); }
+.input-field, .select-field {
+  width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle);
+  background:var(--surface-base); font-size:14px; font-weight:600; color:var(--text-primary);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,0.02); transition:all 0.2s;
+}
+.input-field:focus, .select-field:focus { border-color:var(--brand); outline:none; box-shadow:0 0 0 4px rgba(var(--brand-rgb, 99, 102, 241), 0.1); }
+.select-field { cursor:pointer; }
+.input-hint { font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:-4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+
+  <!-- Hero Section -->
+  <div class="at-hero">
+    <div class="at-title-wrap">
+      <h1 class="at-title">Créer un Utilisateur</h1>
+      <p class="at-subtitle">Annuaire > Utilisateurs > Nouveau Profil</p>
+    </div>
+    <div class="quick-actions">
+      <a href="{{ url_for('utilisateurs.liste') }}" class="btn-action">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour
+      </a>
+    </div>
+  </div>
+
+  <form method="POST" action="{{ url_for('utilisateurs.nouveau') }}" id="newUserForm" novalidate>
+
+    <!-- Section : Identité -->
+    <div class="form-card">
+      <div class="form-header">
+        <h2 class="form-title">Identité & Contact</h2>
+      </div>
+      <div class="form-body">
+        
+        <div class="input-row" style="margin-bottom:0;">
+          <div class="input-group">
+            <label class="input-label" for="prenom">Prénom <span style="color:#ef4444;">*</span></label>
+            <input type="text" id="prenom" name="prenom" class="input-field" placeholder="ex. Jean" required autofocus autocomplete="given-name" value="{{ request.form.get('prenom', '') }}">
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="nom">Nom <span style="color:#ef4444;">*</span></label>
+            <input type="text" id="nom" name="nom" class="input-field" placeholder="ex. Dupont" required autocomplete="family-name" value="{{ request.form.get('nom', '') }}">
+          </div>
+        </div>
+
+        <div class="input-group" style="margin-bottom:0;">
+          <label class="input-label" for="email">Adresse E-mail <span style="color:#ef4444;">*</span></label>
+          <input type="email" id="email" name="email" class="input-field" placeholder="jean.dupont@entreprise.com" required autocomplete="email" value="{{ request.form.get('email', '') }}">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Section : Sécurité -->
+    <div class="form-card">
+      <div class="form-header">
+        <h2 class="form-title">Sécurité</h2>
+      </div>
+      <div class="form-body">
+        
+        <div class="input-row" style="margin-bottom:0;">
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="password">Mot de passe provisoire <span style="color:#ef4444;">*</span></label>
+            <input type="password" id="password" name="password" class="input-field" placeholder="8 caractères minimum" required autocomplete="new-password" minlength="8">
+            <div class="input-hint">Un mot de passe fort est recommandé.</div>
+          </div>
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="password_confirm">Confirmer le mot de passe <span style="color:#ef4444;">*</span></label>
+            <input type="password" id="password_confirm" name="password_confirm" class="input-field" placeholder="Répéter le mot de passe" required autocomplete="new-password" minlength="8">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Section : Affectation -->
+    <div class="form-card">
+      <div class="form-header">
+        <h2 class="form-title">Autorisations & Affectation</h2>
+      </div>
+      <div class="form-body">
+        
+        <div class="input-row" style="margin-bottom:0;">
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="role_id">Rôle (Permissions) <span style="color:#ef4444;">*</span></label>
+            <select id="role_id" name="role_id" class="select-field" required>
+              <option value="">Choisir un rôle...</option>
+              {% for role in roles %}
+              <option value="{{ role.id }}" {% if request.form.get('role_id')|string == role.id|string %}selected{% endif %}>{{ role.nom }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="departement_id">Département (Équipe)</label>
+            <select id="departement_id" name="departement_id" class="select-field">
+              <option value="">Aucun département</option>
+              {% for dept in departements %}
+              <option value="{{ dept.id }}" {% if request.form.get('departement_id')|string == dept.id|string %}selected{% endif %}>{{ dept.nom }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Section : Informations complémentaires -->
+    <div class="form-card">
+      <div class="form-header">
+        <h2 class="form-title" style="display:flex; align-items:center; gap:8px;">
+          Informations Optionnelles
+          <span style="background:var(--surface-hover); padding:2px 6px; border-radius:4px; font-size:10px; text-transform:uppercase; color:var(--text-muted); font-weight:800;">Optionnel</span>
+        </h2>
+      </div>
+      <div class="form-body">
+        
+        <div class="input-row" style="margin-bottom:16px;">
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="telephone">Téléphone</label>
+            <input type="tel" id="telephone" name="telephone" class="input-field" placeholder="ex. +216 71 000 000" autocomplete="tel" value="{{ request.form.get('telephone', '') }}">
+          </div>
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="poste">Intitulé du poste</label>
+            <input type="text" id="poste" name="poste" class="input-field" placeholder="ex. Ingénieur support" autocomplete="organization-title" value="{{ request.form.get('poste', '') }}">
+          </div>
+        </div>
+
+        <div class="input-group" style="margin-bottom:0; max-width:400px;">
+          <label class="input-label" for="matricule">Identifiant RH / Matricule</label>
+          <input type="text" id="matricule" name="matricule" class="input-field" placeholder="ex. EMP-0042" autocomplete="off" value="{{ request.form.get('matricule', '') }}">
+        </div>
+
+      </div>
+    </div>
+
+    
+    <!-- Section : Accès à distance -->
+    <div class="form-card">
+      <div class="form-header">
+        <h2 class="form-title" style="display:flex; align-items:center; gap:8px;">
+          Accès à distance
+          <span style="background:var(--surface-hover); padding:2px 6px; border-radius:4px; font-size:10px; text-transform:uppercase; color:var(--text-muted); font-weight:800;">Optionnel</span>
+        </h2>
+      </div>
+      <div class="form-body">
+        
+        <div class="input-row" style="margin-bottom:16px;">
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="anydesk_id">ID AnyDesk</label>
+            <input type="text" id="anydesk_id" name="anydesk_id" class="input-field" placeholder="ex. 123 456 789" value="{% if utilisateur is defined %}{{ utilisateur.anydesk_id or '' }}{% endif %}">
+          </div>
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="anydesk_password">Mot de passe AnyDesk</label>
+            <input type="text" id="anydesk_password" name="anydesk_password" class="input-field" placeholder="Mot de passe" value="{% if utilisateur is defined %}{{ utilisateur.anydesk_password or '' }}{% endif %}">
+          </div>
+        </div>
+
+        <div class="input-row" style="margin-bottom:16px;">
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="teamviewer_id">ID TeamViewer</label>
+            <input type="text" id="teamviewer_id" name="teamviewer_id" class="input-field" placeholder="ex. 987 654 321" value="{% if utilisateur is defined %}{{ utilisateur.teamviewer_id or '' }}{% endif %}">
+          </div>
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="teamviewer_password">Mot de passe TeamViewer</label>
+            <input type="text" id="teamviewer_password" name="teamviewer_password" class="input-field" placeholder="Mot de passe" value="{% if utilisateur is defined %}{{ utilisateur.teamviewer_password or '' }}{% endif %}">
+          </div>
+        </div>
+
+        <div class="input-group" style="margin-bottom:0; max-width:400px;">
+          <label class="input-label" for="poste_machine">Poste Machine</label>
+          <input type="text" id="poste_machine" name="poste_machine" class="input-field" placeholder="ex. PC-SUPPORT-01" value="{% if utilisateur is defined %}{{ utilisateur.poste_machine or '' }}{% endif %}">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Submit Actions -->
+    <div style="display:flex; justify-content:flex-end; gap:16px; margin-bottom:32px;">
+      <a href="{{ url_for('utilisateurs.liste') }}" class="btn-action" style="box-shadow:none; background:transparent; border-color:transparent;">Annuler</a>
+      <button type="submit" class="btn-action primary" style="padding:12px 24px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Créer l'utilisateur
+      </button>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  'use strict';
+  var form = document.getElementById('newUserForm');
+  if (!form) return;
+
+  form.addEventListener('submit', function (e) {
+    var pwd  = document.getElementById('password').value;
+    var pwd2 = document.getElementById('password_confirm').value;
+    if (pwd && pwd2 && pwd !== pwd2) {
+      e.preventDefault();
+      alert('Les mots de passe ne correspondent pas.');
+      document.getElementById('password_confirm').focus();
+    }
+  });
+})();
+</script>
+{% endblock %}

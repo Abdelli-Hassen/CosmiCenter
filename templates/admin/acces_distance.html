@@ -20,34 +20,42 @@
     animation: fade-in-up 0.5s ease-out; 
   }
   .at-title { 
-    font-size: 28px; 
+    font-size: 32px; 
     font-weight: 900; 
     color: var(--text-primary); 
     margin: 0 0 12px; 
+    letter-spacing: -0.5px;
   }
   .at-subtitle { 
     font-size: 16px; 
     color: var(--text-muted); 
-    font-weight: 600;
+    font-weight: 500;
     margin: 0; 
   }
   
-  .search-container {
-    max-width: 700px;
+  .controls-container {
+    max-width: 100%;
     margin: 0 auto 40px;
-    position: relative;
+    display: flex;
+    gap: 16px;
+    align-items: center;
     animation: fade-in-up 0.5s ease-out 0.1s both;
+  }
+  
+  .search-container {
+    position: relative;
+    flex: 1;
   }
   .search-input {
     width: 100%;
-    padding: 16px 24px 16px 56px;
+    padding: 14px 24px 14px 52px;
     border-radius: 16px;
     border: 1px solid var(--border-subtle);
     background: var(--surface-1);
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 500;
     color: var(--text-primary);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.03);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .search-input:focus {
@@ -63,16 +71,73 @@
     color: var(--text-muted);
   }
 
-  .results-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 24px;
-    max-width: 1200px;
-    margin: 0 auto;
+  .layout-toggle {
+    display: flex;
+    background: var(--surface-2);
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+  }
+  .layout-btn {
+    background: transparent;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .layout-btn.active {
+    background: var(--surface-1);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+
+  /* ── Layouts ─────────────────────────────────────────────────── */
+  .view-container {
     animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both 0.2s;
   }
   
-  /* Lift-Off Card Style */
+  /* Grid Layout - Horizontal Scroll (Inline) */
+  .view-container.grid-view {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 24px;
+    padding-top: 16px; /* Allow space for translateY hover effect */
+    padding-bottom: 24px; /* Space for horizontal scrollbar */
+    /* Custom scrollbar for webkit */
+    scrollbar-width: thin;
+    scrollbar-color: var(--brand) var(--surface-2);
+  }
+  .view-container.grid-view::-webkit-scrollbar {
+    height: 8px;
+  }
+  .view-container.grid-view::-webkit-scrollbar-track {
+    background: var(--surface-2);
+    border-radius: 8px;
+  }
+  .view-container.grid-view::-webkit-scrollbar-thumb {
+    background-color: var(--brand);
+    border-radius: 8px;
+  }
+  .view-container.grid-view .access-card {
+    flex: 0 0 350px; /* Wider fixed width for cards so buttons don't squash */
+  }
+  
+  /* List Layout */
+  .view-container.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: none !important;
+  }
+  
+  /* ── Card Styles ───────────────────────────────────────────── */
   .access-card {
     background: var(--surface-1);
     border-radius: 20px;
@@ -80,13 +145,14 @@
     padding: 24px;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 8px 16px rgba(0,0,0,0.02);
-    position: relative;
     display: flex;
     flex-direction: column;
+    position: relative;
+    overflow: hidden;
   }
   .access-card:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 0 0 1px var(--brand) inset;
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.08), 0 0 0 1px var(--brand) inset;
   }
   
   .access-card-header {
@@ -97,22 +163,23 @@
     border-bottom: 1px solid var(--border-subtle);
   }
   .access-avatar {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    background: var(--surface-2);
+    background: linear-gradient(135deg, var(--surface-3), var(--surface-2));
     margin-right: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    color: var(--text-secondary);
-    font-size: 18px;
+    color: var(--text-primary);
+    font-size: 16px;
     flex-shrink: 0;
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.5);
   }
   .access-name {
     margin: 0;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 800;
     color: var(--text-primary);
   }
@@ -141,8 +208,8 @@
     color: var(--text-primary);
     font-family: var(--font-mono, monospace);
     background: var(--surface-2);
-    padding: 4px 8px;
-    border-radius: 6px;
+    padding: 4px 10px;
+    border-radius: 8px;
     font-size: 13px;
   }
   
@@ -155,41 +222,127 @@
   
   .btn-action {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--text-primary);
-    text-decoration: none; padding: 12px 16px; border-radius: 12px; background: var(--surface-2);
+    text-decoration: none; padding: 12px 16px; border-radius: 12px; background: var(--surface-1);
     border: 1px solid var(--border-subtle); transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 0 4px 12px rgba(0,0,0,0.02); cursor: pointer;
-    flex: 1;
   }
   .btn-action:hover { background: var(--surface-hover); color: var(--brand); transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,0.05); }
   
-  /* Connection buttons */
-  .btn-action.anydesk { background: rgba(239,68,68,0.1); color: #ef4444; border-color: transparent; }
-  .btn-action.anydesk:hover { background: #ef4444; color: #fff; box-shadow: 0 8px 20px rgba(239,68,68,0.25); }
+  .btn-action.primary { flex: 1; }
   
-  .btn-action.teamviewer { background: rgba(37,99,235,0.1); color: #2563eb; border-color: transparent; }
-  .btn-action.teamviewer:hover { background: #2563eb; color: #fff; box-shadow: 0 8px 20px rgba(37,99,235,0.25); }
+  .btn-action.anydesk { background: rgba(239,68,68,0.05); color: #ef4444; border-color: rgba(239,68,68,0.2); }
+  .btn-action.anydesk:hover { background: #ef4444; color: #fff; }
+  
+  .btn-action.teamviewer { background: rgba(37,99,235,0.05); color: #2563eb; border-color: rgba(37,99,235,0.2); }
+  .btn-action.teamviewer:hover { background: #2563eb; color: #fff; }
   
   .btn-copy {
     flex: 0 0 auto;
     padding: 12px;
+    border-radius: 12px;
+  }
+
+  /* List view overrides */
+  .view-container.list-view .access-card {
+    flex-direction: row;
+    align-items: center;
+    padding: 16px 24px;
+  }
+  .view-container.list-view .access-card-header {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    width: 250px;
+    flex-shrink: 0;
+  }
+  .view-container.list-view .access-details-wrap {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 0 24px;
+    border-left: 1px solid var(--border-subtle);
+  }
+  .view-container.list-view .access-detail {
+    margin-bottom: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .view-container.list-view .access-actions {
+    margin-top: 0;
+    padding-top: 0;
+    margin-left: auto;
+  }
+  
+  /* Edit Button */
+  .btn-edit-user {
+    flex: 0 0 auto;
+    width: 36px; height: 36px;
+    padding: 0;
+    border-radius: 50%;
+    box-shadow: none;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-edit-user:hover {
+    background: var(--surface-2);
+    color: var(--brand);
+  }
+
+
+  .btn-copy.copy-success {
+    background: rgba(16, 185, 129, 0.1) !important;
+    color: #10b981 !important;
+    border-color: rgba(16, 185, 129, 0.2) !important;
+    transform: scale(1.05);
   }
 </style>
 
 <div class="reports-page">
   <div class="at-hero">
     <h1 class="at-title">Accès à Distance</h1>
-    <p class="at-subtitle">Recherchez rapidement les identifiants de connexion d'un collaborateur.</p>
+    <p class="at-subtitle">Recherchez et gérez les identifiants de connexion de vos collaborateurs.</p>
   </div>
 
-  <div class="search-container">
-    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" class="search-input" placeholder="Rechercher par nom, poste, ou société...">
+  <div class="controls-container">
+    <div class="search-container">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="search-input" id="searchInput" placeholder="Rechercher par nom, poste, ou société..." onkeyup="filterUsers()">
+    </div>
+    
+    <div class="layout-toggle">
+      <button class="layout-btn active" id="btn-grid" onclick="setLayout('grid')" title="Vue Grille">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+      </button>
+      <button class="layout-btn" id="btn-list" onclick="setLayout('list')" title="Vue Liste">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+      </button>
+    </div>
   </div>
 
-  <div class="results-grid">
+  <div class="view-container grid-view" id="viewContainer">
     {% for user in users %}
-    <div class="access-card">
-      <div class="access-card-header">
+    <div class="access-card user-item" data-name="{{ user.prenom|lower }} {{ user.nom|lower }} {{ user.poste|lower }}">
+      <div class="access-card-header" onclick="openUserModal({
+          prenom: '{{ user.prenom|replace("'", "\'") if user.prenom else "" }}',
+          nom: '{{ user.nom|replace("'", "\'") if user.nom else "" }}',
+          email: '{{ user.email|replace("'", "\'") if user.email else "" }}',
+          telephone: '{{ user.telephone|replace("'", "\'") if user.telephone else "" }}',
+          poste: '{{ user.poste|replace("'", "\'") if user.poste else "" }}',
+          departement: '{{ user.departement.nom|replace("'", "\'") if user.departement else "Aucun" }}',
+          role: '{{ user.role.nom|replace("'", "\'") if user.role else "Standard" }}',
+          matricule: '{{ user.matricule|replace("'", "\'") if user.matricule else "" }}',
+          photo: '{{ user.photo_profil|replace("'", "\'") if user.photo_profil else "" }}',
+          initials: '{{ (user.prenom[0]|upper ~ user.nom[0]|upper) if user.prenom and user.nom else "" }}',
+          editUrl: '{{ url_for("admin.modifier_utilisateur", user_id=user.id) }}'
+        })">
         <div class="access-avatar">
           {% if user.photo_profil %}
           <img src="{{ url_for('static', filename='uploads/profiles/' + user.photo_profil) }}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
@@ -197,36 +350,25 @@
           {{ user.prenom[0] }}{{ user.nom[0] }}
           {% endif %}
         </div>
-        <div>
+        <div style="flex: 1;">
           <h3 class="access-name">{{ user.prenom }} {{ user.nom }}</h3>
           <p class="access-company">{{ user.poste }} • {{ user.departement.nom if user.departement else 'Aucun' }}</p>
         </div>
       </div>
-      <div>
+      
+      <div class="access-details-wrap">
         {% if user.anydesk_id %}
         <div class="access-detail">
           <span class="access-label">ID AnyDesk</span>
-          <span class="access-value" id="anydesk-{{ user.id }}">{{ user.anydesk_id }}</span>
+          <span class="access-value">{{ user.anydesk_id }}</span>
         </div>
-        {% if user.anydesk_password %}
-        <div class="access-detail">
-          <span class="access-label">Mot de passe</span>
-          <span class="access-value">••••••••</span>
-        </div>
-        {% endif %}
         {% endif %}
         
         {% if user.teamviewer_id %}
         <div class="access-detail">
           <span class="access-label">ID TeamViewer</span>
-          <span class="access-value" id="tv-{{ user.id }}">{{ user.teamviewer_id }}</span>
+          <span class="access-value">{{ user.teamviewer_id }}</span>
         </div>
-        {% if user.teamviewer_password %}
-        <div class="access-detail">
-          <span class="access-label">Mot de passe</span>
-          <span class="access-value">••••••••</span>
-        </div>
-        {% endif %}
         {% endif %}
         
         <div class="access-detail">
@@ -234,34 +376,232 @@
           <span class="access-value">{{ user.poste_machine or 'Non spécifié' }}</span>
         </div>
       </div>
+      
       <div class="access-actions">
         {% if user.anydesk_id %}
-        <a href="anydesk:{{ user.anydesk_id }}" class="btn-action anydesk" title="Lancer AnyDesk">
+        <a href="anydesk:{{ user.anydesk_id }}" class="btn-action primary anydesk" title="Lancer AnyDesk">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           Connecter AnyDesk
         </a>
-        <button class="btn-action btn-copy" title="Copier l'ID AnyDesk" onclick="navigator.clipboard.writeText('{{ user.anydesk_id }}')">
+        <button class="btn-action btn-copy" title="Copier l'adresse AnyDesk" onclick="copyToClipboard(this, '{{ user.anydesk_id }}')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         </button>
         {% elif user.teamviewer_id %}
-        <a href="teamviewer8://control?device={{ user.teamviewer_id }}" class="btn-action teamviewer" title="Lancer TeamViewer">
+        <a href="teamviewer8://control?device={{ user.teamviewer_id }}" class="btn-action primary teamviewer" title="Lancer TeamViewer">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           Connecter TeamViewer
         </a>
-        <button class="btn-action btn-copy" title="Copier l'ID TeamViewer" onclick="navigator.clipboard.writeText('{{ user.teamviewer_id }}')">
+        <button class="btn-action btn-copy" title="Copier l'ID TeamViewer" onclick="copyToClipboard(this, '{{ user.teamviewer_id }}')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         </button>
         {% endif %}
+        <a href="{{ url_for('admin.modifier_utilisateur', user_id=user.id) }}" class="btn-action btn-copy" title="Modifier l'utilisateur">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        </a>
       </div>
     </div>
     {% endfor %}
     
     {% if not users %}
     <div style="text-align:center; padding:40px; grid-column: 1/-1; color:var(--text-muted); font-weight:600;">
-      Aucun identifiant d'accès à distance enregistré pour le moment.
+      Aucun identifiant d'accès à distance enregistré.
     </div>
     {% endif %}
 
   </div>
 </div>
+
+<script>
+function setLayout(mode) {
+  const container = document.getElementById('viewContainer');
+  const btnGrid = document.getElementById('btn-grid');
+  const btnList = document.getElementById('btn-list');
+  
+  if (mode === 'grid') {
+    container.classList.remove('list-view');
+    container.classList.add('grid-view');
+    btnList.classList.remove('active');
+    btnGrid.classList.add('active');
+    localStorage.setItem('remoteAccessLayout', 'grid');
+  } else {
+    container.classList.remove('grid-view');
+    container.classList.add('list-view');
+    btnGrid.classList.remove('active');
+    btnList.classList.add('active');
+    localStorage.setItem('remoteAccessLayout', 'list');
+  }
+}
+
+function filterUsers() {
+  const query = document.getElementById('searchInput').value.toLowerCase();
+  const items = document.querySelectorAll('.user-item');
+  items.forEach(item => {
+    const text = item.getAttribute('data-name');
+    if (text.includes(query)) {
+      item.style.display = '';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+
+// Restore saved layout
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('remoteAccessLayout');
+  if (saved === 'list') {
+    setLayout('list');
+  }
+});
+
+function copyToClipboard(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    // Store original HTML
+    if (!btn.dataset.originalHtml) {
+      btn.dataset.originalHtml = btn.innerHTML;
+    }
+    
+    // Set success state
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    btn.classList.add('copy-success');
+    
+    // Revert after 2 seconds
+    setTimeout(() => {
+      btn.innerHTML = btn.dataset.originalHtml;
+      btn.classList.remove('copy-success');
+    }, 2000);
+  });
+}
+
+</script>
+
+
+
+
+
+<!-- User Info Modal -->
+<div id="userInfoModal" class="user-modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Profil Collaborateur</h2>
+      <button class="modal-close" onclick="closeUserModal()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBodyContent">
+      <!-- Content injected via JS -->
+    </div>
+  </div>
+</div>
+
+<style>
+  .user-modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px);
+    z-index: 1000; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: all 0.3s ease;
+  }
+  .user-modal-overlay.active {
+    opacity: 1; pointer-events: auto;
+  }
+  .user-modal-overlay .modal-content {
+    background: var(--surface-1); border-radius: 24px;
+    width: 90%; max-width: 500px; padding: 32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+    transform: translateY(20px) scale(0.95); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .user-modal-overlay.active .modal-content {
+    transform: translateY(0) scale(1);
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .modal-title { margin: 0; font-size: 20px; font-weight: 800; color: var(--text-primary); }
+  .modal-close { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 50%; transition: all 0.2s; }
+  .modal-close:hover { background: var(--surface-2); color: var(--text-primary); }
+  
+  .profile-header { display: flex; align-items: center; gap: 20px; margin-bottom: 32px; }
+  .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--surface-3), var(--surface-2)); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: var(--text-primary); flex-shrink: 0; }
+  .profile-name { margin: 0; font-size: 24px; font-weight: 900; color: var(--text-primary); }
+  .profile-role { margin: 4px 0 0; font-size: 14px; font-weight: 600; color: var(--brand); }
+  
+  .profile-details { display: grid; gap: 20px; }
+  .profile-detail-item { display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--surface-2); border-radius: 16px; }
+  .profile-icon { color: var(--text-muted); display: flex; }
+  .profile-text-wrap { display: flex; flex-direction: column; }
+  .profile-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--text-muted); margin-bottom: 2px; }
+  .profile-value { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  
+  /* Make header clickable */
+  .access-card-header { cursor: pointer; transition: background 0.2s; border-radius: 12px; padding: 8px; margin: -8px -8px 12px -8px; }
+  .access-card-header:hover { background: rgba(0,0,0,0.02); }
+  @media (prefers-color-scheme: dark) { .access-card-header:hover { background: rgba(255,255,255,0.02); } }
+</style>
+
+<script>
+function openUserModal(user) {
+  const modal = document.getElementById('userInfoModal');
+  const body = document.getElementById('modalBodyContent');
+  
+  const avatarHtml = user.photo ? 
+    `<img src="/static/uploads/profiles/${user.photo}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : 
+    `${user.initials}`;
+    
+  body.innerHTML = `
+    <div class="profile-header">
+      <div class="profile-avatar">${avatarHtml}</div>
+      <div>
+        <h3 class="profile-name">${user.prenom} ${user.nom}</h3>
+        <p class="profile-role">${user.poste} • ${user.departement}</p>
+      </div>
+    </div>
+    
+    <div class="profile-details">
+      <div class="profile-detail-item">
+        <div class="profile-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        </div>
+        <div class="profile-text-wrap">
+          <span class="profile-label">Email Professionnel</span>
+          <span class="profile-value">${user.email || 'Non renseigné'}</span>
+        </div>
+      </div>
+      
+      <div class="profile-detail-item">
+        <div class="profile-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        </div>
+        <div class="profile-text-wrap">
+          <span class="profile-label">Téléphone</span>
+          <span class="profile-value">${user.telephone || 'Non renseigné'}</span>
+        </div>
+      </div>
+      
+      <div class="profile-detail-item">
+        <div class="profile-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        </div>
+        <div class="profile-text-wrap">
+          <span class="profile-label">Matricule / Rôle</span>
+          <span class="profile-value">${user.matricule || 'N/A'} • ${user.role || 'Utilisateur'}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-top: 32px; display: flex; justify-content: stretch;">
+      <a href="${user.editUrl}" class="btn-action primary" style="flex: 1; justify-content: center; padding: 12px; font-weight: 600; border-radius: 12px; text-decoration: none; display: flex; gap: 8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        Voir & Modifier le Profil Complet
+      </a>
+    </div>
+  `;
+  
+  modal.classList.add('active');
+}
+
+function closeUserModal() {
+  document.getElementById('userInfoModal').classList.remove('active');
+}
+
+// Close on escape or outside click
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeUserModal(); });
+document.addEventListener('click', (e) => { if(e.target.id === 'userInfoModal') closeUserModal(); });
+</script>
 {% endblock %}

@@ -98,6 +98,7 @@ class Utilisateur(UserMixin, db.Model):
     # Paramètres
     langue = db.Column(db.String(10), default='fr')
     theme = db.Column(db.String(20), default='light')  # light, dark, auto
+    couleur = db.Column(db.String(20), default='#E8213F')
     notifications_email = db.Column(db.Boolean, default=True)
     notifications_push = db.Column(db.Boolean, default=True)
     

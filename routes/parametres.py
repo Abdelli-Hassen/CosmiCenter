@@ -20,79 +20,176 @@ def profil():
     return render_template('parametres/profil.html', stats=stats)
 
 
-@parametres_bp.route('/profil/modifier', methods=['GET', 'POST'])
+@parametres_bp.route('/profil/modifier', methods=['POST'])
 @login_required
 def modifier_profil():
     """Modifier le profil de l'utilisateur"""
-    if request.method == 'POST':
-        nom = request.form.get('nom', '').strip()
-        prenom = request.form.get('prenom', '').strip()
-        telephone = request.form.get('telephone', '').strip()
-        
-        # Paramètres de notification
-        notifications_email = request.form.get('notifications_email') == 'on'
-        notifications_push = request.form.get('notifications_push') == 'on'
-        
-        # Paramètres d'affichage
-        theme = request.form.get('theme', 'light')
-        langue = request.form.get('langue', 'fr')
-        
-        if not all([nom, prenom]):
-            flash('Le nom et le prénom sont requis.', 'danger')
-            return render_template('parametres/modifier_profil.html')
-        
-        current_user.nom = nom
-        current_user.prenom = prenom
-        current_user.telephone = telephone if telephone else None
-        current_user.notifications_email = notifications_email
-        current_user.notifications_push = notifications_push
-        current_user.theme = theme
-        current_user.langue = langue
-        
-        try:
-            db.session.commit()
-            flash('Profil modifié avec succès!', 'success')
-            return redirect(url_for('parametres.profil'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Erreur lors de la modification: {str(e)}', 'danger')
+    nom = request.form.get('nom', '').strip()
+    prenom = request.form.get('prenom', '').strip()
+    email = request.form.get('email', '').strip()
+    telephone = request.form.get('telephone', '').strip()
+    poste = request.form.get('poste', '').strip()
     
-    return render_template('parametres/modifier_profil.html')
+    anydesk_id = request.form.get('anydesk_id', '').strip()
+    anydesk_password = request.form.get('anydesk_password', '').strip()
+    teamviewer_id = request.form.get('teamviewer_id', '').strip()
+    teamviewer_password = request.form.get('teamviewer_password', '').strip()
+    poste_machine = request.form.get('poste_machine', '').strip()
+    
+    theme_sombre = request.form.get('theme_sombre') == 'on'
+    theme_str = 'dark' if theme_sombre else 'light'
+    langue = request.form.get('langue', 'fr')
+    couleur = request.form.get('couleur', '').strip()
+    
+    if not all([nom, prenom, email]):
+        flash('Le nom, le prénom et l\'email sont requis.', 'danger')
+        return redirect(url_for('parametres.profil'))
+    
+    # Optional: check if email is taken by another user
+    from models import Utilisateur
+    existing_user = Utilisateur.query.filter(Utilisateur.email == email, Utilisateur.id != current_user.id).first()
+    if existing_user:
+        flash('Cet email est déjà utilisé par un autre compte.', 'danger')
+        return redirect(url_for('parametres.profil'))
+        
+    # Handle Photo Upload
+    if 'photo_profil' in request.files:
+        photo = request.files['photo_profil']
+        if photo and photo.filename:
+            from werkzeug.utils import secure_filename
+            import uuid
+            
+            # Secure filename and add unique ID
+            filename = secure_filename(photo.filename)
+            unique_filename = f"{uuid.uuid4()}_{filename}"
+            
+            # Save the file
+            from flask import current_app
+            upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
+            photo.save(upload_path)
+            
+            # Update user
+            current_user.photo_profil = unique_filename
+    
+    current_user.nom = nom
+    current_user.prenom = prenom
+    current_user.email = email
+    current_user.telephone = telephone if telephone else None
+    current_user.poste = poste if poste else None
+    
+    current_user.anydesk_id = anydesk_id if anydesk_id else None
+    current_user.anydesk_password = anydesk_password if anydesk_password else None
+    current_user.teamviewer_id = teamviewer_id if teamviewer_id else None
+    current_user.teamviewer_password = teamviewer_password if teamviewer_password else None
+    current_user.poste_machine = poste_machine if poste_machine else None
+    
+    current_user.theme = theme_str
+    current_user.langue = langue
+    if couleur:
+        current_user.couleur = couleur
+    
+    try:
+        db.session.commit()
+        flash('Profil modifié avec succès!', 'success')
+        
+        from flask import make_response
+        resp = redirect(url_for('parametres.profil'))
+        resp.set_cookie('chub_theme', theme_str, max_age=31536000, path='/')
+        return resp
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erreur lors de la modification: {str(e)}', 'danger')
+        return redirect(url_for('parametres.profil'))
+    
+    # Optional: check if email is taken by another user
+    from models import Utilisateur
+    existing_user = Utilisateur.query.filter(Utilisateur.email == email, Utilisateur.id != current_user.id).first()
+    if existing_user:
+        flash('Cet email est déjà utilisé par un autre compte.', 'danger')
+        return redirect(url_for('parametres.profil'))
+    
+    current_user.nom = nom
+    current_user.prenom = prenom
+    current_user.email = email
+    current_user.telephone = telephone if telephone else None
+    current_user.poste = poste if poste else None
+    
+    current_user.anydesk_id = anydesk_id if anydesk_id else None
+    current_user.anydesk_password = anydesk_password if anydesk_password else None
+    current_user.teamviewer_id = teamviewer_id if teamviewer_id else None
+    current_user.teamviewer_password = teamviewer_password if teamviewer_password else None
+    current_user.poste_machine = poste_machine if poste_machine else None
+    
+    current_user.theme = theme_str
+    current_user.langue = langue
+    if couleur:
+        current_user.couleur = couleur
+    
+    try:
+        db.session.commit()
+        flash('Profil modifié avec succès!', 'success')
+        
+        from flask import make_response
+        resp = redirect(url_for('parametres.profil'))
+        resp.set_cookie('chub_theme', theme_str, max_age=31536000, path='/')
+        return resp
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erreur lors de la modification: {str(e)}', 'danger')
+        return redirect(url_for('parametres.profil'))
+
+
 
 
 @parametres_bp.route('/securite', methods=['GET', 'POST'])
 @login_required
 def securite():
     """Modifier le mot de passe"""
-    if request.method == 'POST':
-        ancien_password = request.form.get('ancien_password', '')
-        nouveau_password = request.form.get('nouveau_password', '')
-        confirmation_password = request.form.get('confirmation_password', '')
-        
-        # Validation
-        if not current_user.check_password(ancien_password):
-            flash('Ancien mot de passe incorrect.', 'danger')
-            return render_template('parametres/securite.html')
-        
-        if len(nouveau_password) < 8:
-            flash('Le nouveau mot de passe doit contenir au moins 8 caractères.', 'danger')
-            return render_template('parametres/securite.html')
-        
-        if nouveau_password != confirmation_password:
-            flash('Les mots de passe ne correspondent pas.', 'danger')
-            return render_template('parametres/securite.html')
-        
-        current_user.set_password(nouveau_password)
-        
-        try:
-            db.session.commit()
-            flash('Mot de passe modifié avec succès!', 'success')
-            return redirect(url_for('parametres.profil'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Erreur: {str(e)}', 'danger')
+    stats = {
+        'tickets_crees': len(current_user.tickets_crees),
+        'tickets_assignes': len([t for t in current_user.tickets_assignes if t.statut not in ['resolu', 'ferme']]),
+        'tickets_resolus': len([t for t in current_user.tickets_assignes if t.statut == 'resolu']),
+    }
     
-    return render_template('parametres/securite.html')
+    if request.method == 'POST':
+        action = request.form.get('action', 'change_password')
+        
+        if action == 'revoke_all_sessions':
+            flash('Toutes les autres sessions ont été déconnectées (simulation).', 'success')
+            return redirect(url_for('parametres.securite'))
+            
+        elif action == 'change_password':
+            ancien_password = request.form.get('ancien_password', '')
+            nouveau_password = request.form.get('nouveau_password', '')
+            confirmation_password = request.form.get('confirmation_password', '')
+            
+            # Validation
+            if not current_user.check_password(ancien_password):
+                flash('Ancien mot de passe incorrect.', 'danger')
+                return render_template('parametres/securite.html', stats=stats)
+            
+            if len(nouveau_password) < 8:
+                flash('Le nouveau mot de passe doit contenir au moins 8 caractères.', 'danger')
+                return render_template('parametres/securite.html', stats=stats)
+            
+            if nouveau_password != confirmation_password:
+                flash('Les mots de passe ne correspondent pas.', 'danger')
+                return render_template('parametres/securite.html', stats=stats)
+            
+            current_user.set_password(nouveau_password)
+            
+            try:
+                db.session.commit()
+                flash('Mot de passe modifié avec succès!', 'success')
+                return redirect(url_for('parametres.profil'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Erreur: {str(e)}', 'danger')
+
+    return render_template('parametres/securite.html', stats=stats)
+
 
 
 @parametres_bp.route('/notifications')
@@ -100,6 +197,11 @@ def securite():
 def notifications():
     """Gérer les notifications"""
     from models import Notification
+    stats = {
+        'tickets_crees': len(current_user.tickets_crees),
+        'tickets_assignes': len([t for t in current_user.tickets_assignes if t.statut not in ['resolu', 'ferme']]),
+        'tickets_resolus': len([t for t in current_user.tickets_assignes if t.statut == 'resolu']),
+    }
     
     page = request.args.get('page', 1, type=int)
     per_page = 20
@@ -111,7 +213,7 @@ def notifications():
         Notification.date_creation.desc()
     ).paginate(page=page, per_page=per_page, error_out=False)
     
-    return render_template('parametres/notifications.html', notifications=notifications)
+    return render_template('parametres/notifications.html', notifications=notifications, stats=stats)
 
 
 @parametres_bp.route('/notifications/<string:id>/marquer-lue', methods=['POST'])

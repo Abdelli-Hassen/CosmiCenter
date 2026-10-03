@@ -2,234 +2,365 @@
 
 {% block title %}Paramètres du profil{% endblock %}
 
+{% block extra_head %}
+<style>
+  .profile-hero {
+    background: linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--brand) 60%, var(--surface-1)));
+    border-radius: 24px;
+    padding: 40px !important;
+    min-height: 180px;
+    box-sizing: border-box;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    color: white;
+    box-shadow: 0 20px 40px rgba(var(--brand-rgb, 99, 102, 241), 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+  .profile-hero::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M0,50 C25,0 75,100 100,50" stroke="rgba(255,255,255,0.1)" stroke-width="2" fill="none"/></svg>') no-repeat center;
+    background-size: cover;
+    pointer-events: none;
+  }
+  
+  .profile-avatar-large {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: white;
+    color: var(--brand);
+    font-size: 36px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+    border: 4px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .profile-avatar-large img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+  
+  .profile-hero-info { flex: 1; z-index: 1; }
+  .profile-hero-name { color: white !important; font-size: 32px; font-weight: 900; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+  .profile-hero-role { color: rgba(255, 255, 255, 0.9) !important; font-size: 15px; font-weight: 600; opacity: 0.9; margin: 0; display:flex; align-items:center; gap:8px; }
+  
+  .hero-stats {
+    display: flex;
+    gap: 24px;
+    z-index: 1;
+    background: rgba(255,255,255,0.1);
+    padding: 16px 32px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat-val { color: white !important; font-size: 24px; font-weight: 900; margin-bottom: 4px; }
+  .hero-stat-label { color: rgba(255, 255, 255, 0.9) !important; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
+  
+  .settings-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    max-width: 800px;
+  }
+  
+  .settings-card {
+    background: var(--surface-1);
+    border-radius: 20px;
+    border: 1px solid var(--border-subtle);
+    padding: 32px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.02);
+  }
+  .settings-card-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 24px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .settings-card-title svg { color: var(--brand); }
+  
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  
+  .tab-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+    padding: 4px;
+    background: var(--surface-2);
+    border-radius: 16px;
+    display: inline-flex;
+  }
+  .tab-nav-item {
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tab-nav-item:hover { color: var(--text-primary); }
+  .tab-nav-item.active { background: var(--surface-1); color: var(--brand); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="page">
+<div class="page" style="padding: 32px; max-width: 1200px; margin: 0 auto;">
 
-  <!-- Page Header -->
-  <div class="page-header">
-    <div class="page-header-left">
-      <h1 class="page-title">Paramètres</h1>
-      <span class="page-subtitle">Gérez votre compte et vos préférences</span>
+  <div class="profile-hero">
+    <div class="profile-avatar-large" style="position:relative; cursor:pointer; overflow:hidden;" onclick="document.getElementById('photoUpload').click()">
+      {% if current_user.photo_profil %}
+        <img id="avatarPreview" src="{{ url_for('static', filename='uploads/' + current_user.photo_profil) }}" alt="{{ current_user.prenom }} {{ current_user.nom }}" style="width:100%; height:100%; object-fit:cover;">
+      {% else %}
+        <div id="avatarInitials" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">{{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}</div>
+        <img id="avatarPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
+      {% endif %}
+      <div style="position:absolute; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
     </div>
-  </div>
-
-  <div class="page-body">
-    <!-- Profile Header Card -->
-    <div class="card card-raised" style="margin-bottom:32px;">
-    <div class="card-body" style="padding:32px 32px 36px 32px;">
-      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-
-        <!-- Avatar -->
-        <div style="position:relative;flex-shrink:0;">
-          <div class="avatar avatar-lg" style="width:72px;height:72px;border-radius:50%;background:var(--surface-raised);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:var(--text-primary);overflow:hidden;">
-            {% if current_user.photo_profil %}
-              <img src="{{ url_for('static', filename='uploads/' + current_user.photo_profil) }}" alt="{{ current_user.prenom }} {{ current_user.nom }}" style="width:100%;height:100%;object-fit:cover;">
-            {% else %}
-              {{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}
-            {% endif %}
-          </div>
-        </div>
-
-        <!-- Name / Role / Email -->
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">
-            {{ current_user.prenom }} {{ current_user.nom }}
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
-            {% if current_user.role %}
-              {% if current_user.role.nom in ['Administrateur', 'Admin'] %}
-                <span class="badge badge-error">{{ current_user.role.nom }}</span>
-              {% elif current_user.role.nom in ['Manager', 'Responsable'] %}
-                <span class="badge badge-warning">{{ current_user.role.nom }}</span>
-              {% elif current_user.role.nom == 'Agent' %}
-                <span class="badge badge-success">{{ current_user.role.nom }}</span>
-              {% else %}
-                <span class="badge badge-neutral">{{ current_user.role.nom }}</span>
-              {% endif %}
-            {% endif %}
-            {% if current_user.departement %}
-              <span style="font-size:12px;color:var(--text-muted);">{{ current_user.departement.nom }}</span>
-            {% endif %}
-          </div>
-          <div style="font-size:13px;color:var(--text-muted);">{{ current_user.email }}</div>
-        </div>
-
-        <!-- Quick stats -->
-        <div style="display:flex;gap:24px;flex-shrink:0;">
-          <div style="text-align:center;">
-            <div style="font-size:22px;font-weight:700;color:var(--text-primary);">{{ stats.tickets_crees }}</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Créés</div>
-          </div>
-          <div style="text-align:center;">
-            <div style="font-size:22px;font-weight:700;color:var(--text-primary);">{{ stats.tickets_resolus }}</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Résolus</div>
-          </div>
-          <div style="text-align:center;">
-            <div style="font-size:22px;font-weight:700;color:var(--text-primary);">{{ stats.tickets_assignes }}</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Assignés</div>
-          </div>
-        </div>
-
+    
+    <div class="profile-hero-info">
+      <h1 class="profile-hero-name">{{ current_user.prenom }} {{ current_user.nom }}</h1>
+      <p class="profile-hero-role">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        {{ current_user.poste or (current_user.role.nom if current_user.role else 'Utilisateur') }}
+        {% if current_user.departement %} • {{ current_user.departement.nom }}{% endif %}
+      </p>
+    </div>
+    
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-val">{{ stats.tickets_crees }}</div>
+        <div class="hero-stat-label">Créés</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">{{ stats.tickets_resolus }}</div>
+        <div class="hero-stat-label">Résolus</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">{{ stats.tickets_assignes }}</div>
+        <div class="hero-stat-label">Assignés</div>
       </div>
     </div>
   </div>
 
-  <!-- Settings Tabs -->
-  <div class="tabs" style="margin-bottom:20px;">
-    <a href="{{ url_for('parametres.profil') }}" class="tab-btn tab-btn-active" aria-current="page">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Profil
+    <div class="tab-nav">
+    <a href="{{ url_for('parametres.profil') }}" class="tab-nav-item active">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Informations
     </a>
-    <a href="{{ url_for('parametres.securite') }}" class="tab-btn">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <a href="{{ url_for('parametres.securite') }}" class="tab-nav-item ">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       Sécurité
-    </a>
-    <a href="{{ url_for('parametres.notifications') }}" class="tab-btn">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      Notifications
     </a>
   </div>
 
-  <!-- Profile Tab Panel -->
-  <div class="tab-panel" id="tab-profile">
-    <div style="max-width:600px;">
-
-      <form method="POST" action="{{ url_for('parametres.modifier_profil') }}" id="profileForm">
-
-        <!-- Personal Info -->
-        <div class="card card-raised" style="margin-bottom:20px;">
-          <div class="card-header">
-            <div class="card-title">Informations personnelles</div>
-          </div>
-          <div class="card-body" style="padding:24px;">
-
-            <div class="form-row" style="margin-bottom:16px;">
-              <div class="form-group">
-                <label class="form-label" for="prenom">Prénom</label>
-                <input type="text" id="prenom" name="prenom" class="input" autocomplete="given-name"
-                       value="{{ request.form.get('prenom', current_user.prenom) }}">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="nom">Nom</label>
-                <input type="text" id="nom" name="nom" class="input" autocomplete="family-name"
-                       value="{{ request.form.get('nom', current_user.nom) }}">
-              </div>
-            </div>
-
-            <div class="form-group" style="margin-bottom:16px;">
-              <label class="form-label" for="email">Adresse e-mail</label>
-              <input type="email" id="email" name="email" class="input" autocomplete="email"
-                     value="{{ request.form.get('email', current_user.email) }}">
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label" for="telephone">Numéro de téléphone</label>
-                <input type="tel" id="telephone" name="telephone" class="input" autocomplete="tel"
-                       placeholder="+33 6 00 00 00 00"
-                       value="{{ request.form.get('telephone', current_user.telephone if current_user.telephone is defined else '') }}">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="poste">Intitulé du poste</label>
-                <input type="text" id="poste" name="poste" class="input" autocomplete="organization-title"
-                       placeholder="ex. Ingénieur support"
-                       value="{{ request.form.get('poste', current_user.poste or '') }}">
-              </div>
-            </div>
-
-          </div>
+  <form method="POST" action="{{ url_for('parametres.modifier_profil') }}" class="settings-grid" enctype="multipart/form-data">
+    
+    <input type="file" id="photoUpload" name="photo_profil" accept="image/*" style="display:none;">
+    <!-- Informations Personnelles -->
+    <div class="settings-card">
+      <h2 class="settings-card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Identité & Contact
+      </h2>
+      
+      <div class="form-row-2">
+        <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Prénom</label>
+          <input type="text" name="prenom" required value="{{ request.form.get('prenom', current_user.prenom) }}" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); font-weight:600; color:var(--text-primary);">
         </div>
-
-        <!-- Preferences -->
-        <div class="card card-raised" style="margin-bottom:24px;">
-          <div class="card-header">
-            <div class="card-title">Préférences</div>
-          </div>
-          <div class="card-body" style="padding:24px;">
-
-            <!-- Language -->
-            <div class="form-group" style="margin-bottom:20px;">
-              <label class="form-label" for="langue">Langue</label>
-              <div class="select-wrap">
-                <select id="langue" name="langue" class="select">
-                  {% set cur_lang = request.form.get('langue', current_user.langue if current_user.langue is defined else 'fr') %}
-                  <option value="fr" {% if cur_lang == 'fr' %}selected{% endif %}>Français</option>
-                  <option value="en" {% if cur_lang == 'en' %}selected{% endif %}>English</option>
-                  <option value="ar" {% if cur_lang == 'ar' %}selected{% endif %}>العربية</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Theme toggle -->
-            <div class="form-group">
-              <label class="form-label">Thème de l'interface</label>
-              <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
-                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-                  <input type="checkbox" name="theme_sombre" id="themeToggle"
-                         {% if request.form.get('theme_sombre') or (current_user.theme is defined and current_user.theme == 'dark') %}checked{% endif %}
-                         style="display:none;">
-                  <div class="toggle-track" id="themeTrack"
-                       style="position:relative;width:44px;height:24px;border-radius:12px;background:var(--surface-4);transition:background .2s;cursor:pointer;"
-                       onclick="toggleThemePref()">
-                    <div class="toggle-thumb" id="themeThumb"
-                         style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
-                  </div>
-                  <span style="font-size:13px;color:var(--text-secondary);" id="themeLabel">Mode sombre</span>
-                </label>
-              </div>
-            </div>
-
-          </div>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Nom</label>
+          <input type="text" name="nom" required value="{{ request.form.get('nom', current_user.nom) }}" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); font-weight:600; color:var(--text-primary);">
         </div>
-
-        <!-- Form Actions -->
-        <div class="form-actions" style="display:flex;align-items:center;gap:12px;justify-content:flex-end;">
-          <button type="reset" class="btn btn-ghost">Réinitialiser</button>
-          <button type="submit" class="btn btn-primary">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            Enregistrer le profil
-          </button>
+      </div>
+      
+      <div class="form-row-2">
+        <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Adresse Email</label>
+          <input type="email" name="email" required value="{{ request.form.get('email', current_user.email) }}" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); font-weight:600; color:var(--text-primary);">
         </div>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Numéro de téléphone</label>
+          <input type="tel" name="telephone" value="{{ request.form.get('telephone', current_user.telephone or '') }}" placeholder="ex. +33 6 00 00 00 00" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); font-weight:600; color:var(--text-primary);">
+        </div>
+      </div>
 
-      </form>
-
+      <div class="form-row-2">
+        <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Poste / Fonction</label>
+          <input type="text" name="poste" value="{{ request.form.get('poste', current_user.poste or '') }}" placeholder="ex. Agent Support Technique" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); font-weight:600; color:var(--text-primary);">
+        </div>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Matricule (Lecture seule)</label>
+          <input type="text" value="{{ current_user.matricule or 'Non défini' }}" readonly style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-3); font-weight:600; color:var(--text-muted); cursor:not-allowed;">
+        </div>
+      </div>
     </div>
-  </div><!-- /page-body -->
+    
+    <!-- Accès à Distance -->
+    <div class="settings-card">
+      <h2 class="settings-card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Outils d'Accès à Distance
+      </h2>
+      
+      <div class="form-row-2">
+        <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">AnyDesk ID</label>
+          <input type="text" name="anydesk_id" value="{{ request.form.get('anydesk_id', current_user.anydesk_id or '') }}" placeholder="ex. 123 456 789" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); font-weight:600; color:var(--text-primary);">
+        </div>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">AnyDesk Mot de passe</label>
+          <input type="text" name="anydesk_password" value="{{ request.form.get('anydesk_password', current_user.anydesk_password or '') }}" placeholder="Mot de passe AnyDesk" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); font-weight:600; color:var(--text-primary);">
+        </div>
+      </div>
 
-</div><!-- /page -->
+      <div class="form-row-2">
+        <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">TeamViewer ID</label>
+          <input type="text" name="teamviewer_id" value="{{ request.form.get('teamviewer_id', current_user.teamviewer_id or '') }}" placeholder="ex. 987 654 321" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); font-weight:600; color:var(--text-primary);">
+        </div>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">TeamViewer Mot de passe</label>
+          <input type="text" name="teamviewer_password" value="{{ request.form.get('teamviewer_password', current_user.teamviewer_password or '') }}" placeholder="Mot de passe TeamViewer" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); font-weight:600; color:var(--text-primary);">
+        </div>
+      </div>
 
+      <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+        <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Nom de l'ordinateur (Poste Machine)</label>
+        <input type="text" name="poste_machine" value="{{ request.form.get('poste_machine', current_user.poste_machine or '') }}" placeholder="ex. PC-SUPPORT-01" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); font-weight:600; color:var(--text-primary);">
+      </div>
+    </div>
+    
+    <!-- Préférences -->
+    <div class="settings-card">
+      <h2 class="settings-card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Préférences & Interface
+      </h2>
+      
+      <div class="form-row-2">
+        <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Langue de l'interface</label>
+          <select name="langue" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); font-weight:600; color:var(--text-primary); appearance:none;">
+            {% set cur_lang = request.form.get('langue', current_user.langue or 'fr') %}
+            <option value="fr" {% if cur_lang == 'fr' %}selected{% endif %}>Français</option>
+            <option value="en" {% if cur_lang == 'en' %}selected{% endif %}>English</option>
+            <option value="ar" {% if cur_lang == 'ar' %}selected{% endif %}>العربية</option>
+          </select>
+        </div>
+        
+        <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Thème de l'interface</label>
+          <div style="display:flex; align-items:center; height:100%; padding:0 8px;">
+            <label style="display:flex; align-items:center; gap:12px; cursor:pointer;">
+              <input type="checkbox" name="theme_sombre" id="themeToggle" style="display:none;"
+                     {% if request.form.get('theme_sombre') or current_user.theme == 'dark' %}checked{% endif %}>
+              <div id="themeTrack" style="position:relative; width:48px; height:26px; border-radius:13px; background:var(--surface-4); transition:background 0.3s;">
+                <div id="themeThumb" style="position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow:0 2px 5px rgba(0,0,0,0.2);"></div>
+              </div>
+              <span id="themeLabel" style="font-size:14px; font-weight:700; color:var(--text-primary);">Mode Clair</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-row-2" style="margin-top:16px;">
+        <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Couleur d'accentuation</label>
+          <div style="display:flex; gap:12px;">
+            <input type="color" id="couleur" name="couleur" value="{{ request.form.get('couleur', current_user.couleur or '#E8213F') }}" style="width:48px; height:48px; padding:0; border:none; border-radius:12px; cursor:pointer; background:none;">
+            <input type="text" id="couleurHex" value="{{ request.form.get('couleur', current_user.couleur or '#E8213F') }}" oninput="document.getElementById('couleur').value=this.value" style="flex:1; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); font-weight:600; color:var(--text-primary); font-family:var(--font-mono);">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Actions -->
+    <div style="display:flex; gap:16px; justify-content:flex-end; margin-top:16px;">
+      <a href="{{ url_for('tickets.tableau_bord') }}" class="btn" style="padding:12px 24px; border-radius:12px; background:var(--surface-2); color:var(--text-primary); font-weight:700; text-decoration:none;">Annuler</a>
+      <button type="submit" class="btn primary" style="padding:12px 24px; border-radius:12px; background:var(--brand); color:white; font-weight:700; border:none; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 8px 16px rgba(var(--brand-rgb, 99, 102, 241), 0.3);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Enregistrer le profil
+      </button>
+    </div>
+
+  </form>
+
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-(function () {
-  var toggle = document.getElementById('themeToggle');
-  var track = document.getElementById('themeTrack');
-  var thumb = document.getElementById('themeThumb');
-  var label = document.getElementById('themeLabel');
+document.addEventListener('DOMContentLoaded', function() {
+  const toggle = document.getElementById('themeToggle');
+  const track = document.getElementById('themeTrack');
+  const thumb = document.getElementById('themeThumb');
+  const label = document.getElementById('themeLabel');
 
-  // Init state from checkbox
-  function syncToggleUI() {
-    if (toggle && toggle.checked) {
+  function updateThemeUI() {
+    if (toggle.checked) {
       track.style.background = 'var(--brand)';
-      thumb.style.left = '23px';
-      label.textContent = 'Mode sombre (activé)';
+      thumb.style.left = '25px';
+      label.textContent = 'Mode Sombre';
     } else {
       track.style.background = 'var(--surface-4)';
       thumb.style.left = '3px';
-      label.textContent = 'Mode sombre (désactivé)';
+      label.textContent = 'Mode Clair';
     }
-  }
-  if (toggle) {
-    syncToggleUI();
   }
 
-  window.toggleThemePref = function () {
-    if (toggle) {
-      toggle.checked = !toggle.checked;
-      syncToggleUI();
+  updateThemeUI();
+
+  toggle.addEventListener('change', function() {
+    updateThemeUI();
+    // Use the site's built-in theme manager to sync everything properly
+    if (window.CHUB && window.CHUB.theme) {
+      if(toggle.checked) {
+        window.CHUB.theme.set('dark');
+      } else {
+        window.CHUB.theme.set('light');
+      }
     }
-  };
-})();
+  });
+
+  const couleurInput = document.getElementById('couleur');
+  const couleurHex = document.getElementById('couleurHex');
+  if (couleurInput && couleurHex) {
+    couleurInput.addEventListener('input', function() {
+      couleurHex.value = this.value.toUpperCase();
+    });
+  }
+
+  document.getElementById('photoUpload').addEventListener('change', function(e) {
+    if (this.files && this.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const preview = document.getElementById('avatarPreview');
+        const initials = document.getElementById('avatarInitials');
+        if (initials) initials.style.display = 'none';
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      }
+      reader.readAsDataURL(this.files[0]);
+    }
+  });
+});
 </script>
 {% endblock %}
