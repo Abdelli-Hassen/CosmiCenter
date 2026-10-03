@@ -1,4 +1,4 @@
-"""
+﻿"""
 Routes d'administration pour CosmittoDesk
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
@@ -8,17 +8,17 @@ from models import db, Utilisateur, Departement, CategorieTicket, Ticket, Statis
 from datetime import datetime, timedelta
 import logging
 
-# Créer le blueprint
+# CrÃ©er le blueprint
 admin_bp = Blueprint('admin', __name__)
 logger = logging.getLogger(__name__)
 
 
 def admin_required(f):
-    """Décorateur pour restreindre l'accès aux administrateurs (niveau >= 90)"""
+    """DÃ©corateur pour restreindre l'accÃ¨s aux administrateurs (niveau >= 90)"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or not current_user.role or current_user.role.niveau < 90:
-            flash('Accès réservé aux administrateurs', 'danger')
+            flash('AccÃ¨s rÃ©servÃ© aux administrateurs', 'danger')
             return redirect(url_for('tickets.tableau_bord'))
         return f(*args, **kwargs)
     return decorated_function
@@ -45,7 +45,7 @@ def tableau_bord():
         Ticket.statut, db.func.count(Ticket.id).label('total_count')
     ).group_by(Ticket.statut).all()
     
-    # Tickets par priorité
+    # Tickets par prioritÃ©
     tickets_par_priorite = db.session.query(
         Ticket.priorite, db.func.count(Ticket.id).label('total_count')
     ).group_by(Ticket.priorite).all()
@@ -110,21 +110,21 @@ def utilisateurs():
 @login_required
 @admin_required
 def nouvel_utilisateur():
-    """Créer un nouvel utilisateur"""
+    """CrÃ©er un nouvel utilisateur"""
     if request.method == 'POST':
         try:
             email = request.form.get('email', '').strip()
             matricule = request.form.get('matricule', '').strip() or None
             
-            # Vérifier l'unicité de l'email
+            # VÃ©rifier l'unicitÃ© de l'email
             if Utilisateur.query.filter_by(email=email).first():
-                flash(f"L'adresse email {email} est déjà utilisée par un autre compte.", 'danger')
+                flash(f"L'adresse email {email} est dÃ©jÃ  utilisÃ©e par un autre compte.", 'danger')
                 from models import Role
                 return render_template('admin/nouvel_utilisateur.html', departements=Departement.query.filter_by(actif=True).all(), roles=Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all())
             
-            # Vérifier l'unicité du matricule
+            # VÃ©rifier l'unicitÃ© du matricule
             if matricule and Utilisateur.query.filter_by(matricule=matricule).first():
-                flash(f"Le matricule {matricule} est déjà utilisé.", 'danger')
+                flash(f"Le matricule {matricule} est dÃ©jÃ  utilisÃ©.", 'danger')
                 from models import Role
                 return render_template('admin/nouvel_utilisateur.html', departements=Departement.query.filter_by(actif=True).all(), roles=Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all())
 
@@ -144,15 +144,15 @@ def nouvel_utilisateur():
             db.session.add(utilisateur)
             db.session.commit()
             
-            flash('Utilisateur créé avec succès', 'success')
-            logger.info(f'Nouvel utilisateur créé: {utilisateur.email} par {current_user.email}')
+            flash('Utilisateur crÃ©Ã© avec succÃ¨s', 'success')
+            logger.info(f'Nouvel utilisateur crÃ©Ã©: {utilisateur.email} par {current_user.email}')
             
             return redirect(url_for('admin.utilisateurs'))
         
         except Exception as e:
             db.session.rollback()
-            logger.error(f'Erreur lors de la création de l\'utilisateur: {str(e)}')
-            flash('Erreur lors de la création de l\'utilisateur', 'danger')
+            logger.error(f'Erreur lors de la crÃ©ation de l\'utilisateur: {str(e)}')
+            flash('Erreur lors de la crÃ©ation de l\'utilisateur', 'danger')
     
     from models import Role
     departements = Departement.query.filter_by(actif=True).all()
@@ -172,16 +172,16 @@ def modifier_utilisateur(user_id):
             email = request.form.get('email', '').strip()
             matricule = request.form.get('matricule', '').strip() or None
             
-            # Vérifier l'unicité
+            # VÃ©rifier l'unicitÃ©
             existing_email = Utilisateur.query.filter_by(email=email).first()
             if existing_email and existing_email.id != utilisateur.id:
-                flash(f"L'adresse email {email} est déjà utilisée par un autre compte.", 'danger')
+                flash(f"L'adresse email {email} est dÃ©jÃ  utilisÃ©e par un autre compte.", 'danger')
                 return redirect(url_for('admin.modifier_utilisateur', user_id=user_id))
                 
             if matricule:
                 existing_mat = Utilisateur.query.filter_by(matricule=matricule).first()
                 if existing_mat and existing_mat.id != utilisateur.id:
-                    flash(f"Le matricule {matricule} est déjà utilisé.", 'danger')
+                    flash(f"Le matricule {matricule} est dÃ©jÃ  utilisÃ©.", 'danger')
                     return redirect(url_for('admin.modifier_utilisateur', user_id=user_id))
 
             utilisateur.nom = request.form.get('nom')
@@ -200,8 +200,8 @@ def modifier_utilisateur(user_id):
 
             db.session.commit()
 
-            flash('Utilisateur modifié avec succès', 'success')
-            logger.info(f'Utilisateur modifié: {utilisateur.email} par {current_user.email}')
+            flash('Utilisateur modifiÃ© avec succÃ¨s', 'success')
+            logger.info(f'Utilisateur modifiÃ©: {utilisateur.email} par {current_user.email}')
 
             return redirect(url_for('admin.utilisateurs'))
 
@@ -223,9 +223,9 @@ def modifier_utilisateur(user_id):
 @login_required
 @admin_required
 def desactiver_utilisateur(user_id):
-    """Désactiver un utilisateur"""
+    """DÃ©sactiver un utilisateur"""
     if user_id == current_user.id:
-        flash('Vous ne pouvez pas vous désactiver vous-même', 'danger')
+        flash('Vous ne pouvez pas vous dÃ©sactiver vous-mÃªme', 'danger')
         return redirect(url_for('admin.utilisateurs'))
     
     utilisateur = Utilisateur.query.get_or_404(user_id)
@@ -234,13 +234,13 @@ def desactiver_utilisateur(user_id):
         utilisateur.actif = False
         db.session.commit()
         
-        flash('Utilisateur désactivé', 'success')
-        logger.info(f'Utilisateur désactivé: {utilisateur.email} par {current_user.email}')
+        flash('Utilisateur dÃ©sactivÃ©', 'success')
+        logger.info(f'Utilisateur dÃ©sactivÃ©: {utilisateur.email} par {current_user.email}')
     
     except Exception as e:
         db.session.rollback()
-        logger.error(f'Erreur lors de la désactivation: {str(e)}')
-        flash('Erreur lors de la désactivation', 'danger')
+        logger.error(f'Erreur lors de la dÃ©sactivation: {str(e)}')
+        flash('Erreur lors de la dÃ©sactivation', 'danger')
     
     return redirect(url_for('admin.utilisateurs'))
 
@@ -249,19 +249,19 @@ def desactiver_utilisateur(user_id):
 @login_required
 @admin_required
 def reactiver_utilisateur(user_id):
-    """Réactiver un utilisateur désactivé"""
+    """RÃ©activer un utilisateur dÃ©sactivÃ©"""
     utilisateur = Utilisateur.query.get_or_404(user_id)
     try:
         utilisateur.actif = True
         utilisateur.verrouille = False
         utilisateur.tentatives_connexion = 0
         db.session.commit()
-        flash(f'{utilisateur.prenom} {utilisateur.nom} a été réactivé', 'success')
-        logger.info(f'Utilisateur réactivé: {utilisateur.email} par {current_user.email}')
+        flash(f'{utilisateur.prenom} {utilisateur.nom} a Ã©tÃ© rÃ©activÃ©', 'success')
+        logger.info(f'Utilisateur rÃ©activÃ©: {utilisateur.email} par {current_user.email}')
     except Exception as e:
         db.session.rollback()
-        logger.error(f'Erreur lors de la réactivation: {str(e)}')
-        flash('Erreur lors de la réactivation', 'danger')
+        logger.error(f'Erreur lors de la rÃ©activation: {str(e)}')
+        flash('Erreur lors de la rÃ©activation', 'danger')
     return redirect(url_for('admin.utilisateurs'))
 
 
@@ -269,7 +269,7 @@ def reactiver_utilisateur(user_id):
 @login_required
 @admin_required
 def roles():
-    """Gestion des rôles et permissions"""
+    """Gestion des rÃ´les et permissions"""
     from models import Role, Permission
     roles = Role.query.order_by(Role.niveau.desc()).all()
     permissions = Permission.query.order_by(Permission.categorie, Permission.nom).all()
@@ -278,21 +278,62 @@ def roles():
         perms_by_cat.setdefault(p.categorie, []).append(p)
     return render_template('admin/roles.html', roles=roles, perms_by_cat=perms_by_cat)
 
+@admin_bp.route('/permissions')
+@login_required
+@admin_required
+def permissions():
+    """Liste de toutes les permissions systÃ¨me"""
+    from models import Permission
+    permissions_list = Permission.query.order_by(Permission.categorie, Permission.nom).all()
+    perms_by_cat = {}
+    for p in permissions_list:
+        perms_by_cat.setdefault(p.categorie, []).append(p)
+    return render_template('admin/permissions.html', perms_by_cat=perms_by_cat)
+
+@admin_bp.route('/permissions/creer', methods=['POST'])
+@login_required
+@admin_required
+def creer_permission():
+    from models import Permission
+    nom = request.form.get('nom')
+    code = request.form.get('code')
+    description = request.form.get('description')
+    categorie = request.form.get('categorie')
+    if not nom or not code:
+        flash("Le nom et le code sont obligatoires.", "error")
+        return redirect(url_for('admin.permissions'))
+    if Permission.query.filter_by(code=code).first():
+        flash("Ce code de permission existe dÃ©jÃ .", "error")
+        return redirect(url_for('admin.permissions'))
+    p = Permission(nom=nom, code=code, description=description, categorie=categorie)
+    db.session.add(p)
+    db.session.commit()
+    flash(f"Permission {code} crÃ©Ã©e avec succÃ¨s.", "success")
+    return redirect(url_for('admin.permissions'))
+
+@admin_bp.route('/permissions/<string:id>/supprimer', methods=['POST'])
+@login_required
+@admin_required
+def supprimer_permission(id):
+    from models import Permission
+    p = Permission.query.get_or_404(id)
+    db.session.delete(p)
+    db.session.commit()
+    flash("Permission supprimÃ©e.", "success")
+    return redirect(url_for('admin.permissions'))
+
 
 @admin_bp.route('/roles/<role_id>/permissions', methods=['POST'])
 @login_required
 @admin_required
 def modifier_permissions_role(role_id):
-    """Modifier les permissions d'un rôle"""
+    """Modifier les permissions d'un rÃ´le"""
     from models import Role, Permission
     role = Role.query.get_or_404(role_id)
-    if role.systeme:
-        flash('Les rôles système ne peuvent pas être modifiés.', 'warning')
-        return redirect(url_for('admin.roles'))
     perm_ids = request.form.getlist('permissions')
     role.permissions = Permission.query.filter(Permission.id.in_(perm_ids)).all()
     db.session.commit()
-    flash(f'Permissions du rôle "{role.nom}" mises à jour.', 'success')
+    flash(f'Permissions du rÃ´le "{role.nom}" mises Ã  jour.', 'success')
     return redirect(url_for('admin.roles'))
 
 
@@ -303,10 +344,10 @@ def creer_role():
     from models import Role
     nom = request.form.get('nom', '').strip()
     if not nom:
-        flash('Le nom du rôle est requis.', 'danger')
+        flash('Le nom du rÃ´le est requis.', 'danger')
         return redirect(url_for('admin.roles'))
     if Role.query.filter_by(nom=nom).first():
-        flash(f'Un rôle nommé "{nom}" existe déjà.', 'danger')
+        flash(f'Un rÃ´le nommÃ© "{nom}" existe dÃ©jÃ .', 'danger')
         return redirect(url_for('admin.roles'))
     role = Role(
         nom=nom,
@@ -318,7 +359,7 @@ def creer_role():
     )
     db.session.add(role)
     db.session.commit()
-    flash(f'Rôle "{nom}" créé avec succès.', 'success')
+    flash(f'RÃ´le "{nom}" crÃ©Ã© avec succÃ¨s.', 'success')
     return redirect(url_for('admin.roles'))
 
 
@@ -329,14 +370,14 @@ def modifier_role(role_id):
     from models import Role
     role = Role.query.get_or_404(role_id)
     if role.systeme:
-        flash('Les rôles système ne peuvent pas être modifiés.', 'warning')
+        flash('Les rÃ´les systÃ¨me ne peuvent pas Ãªtre modifiÃ©s.', 'warning')
         return redirect(url_for('admin.roles'))
     role.nom = request.form.get('nom', role.nom).strip()
     role.description = request.form.get('description', '').strip()
     role.couleur = request.form.get('couleur', role.couleur)
     role.niveau = int(request.form.get('niveau', role.niveau))
     db.session.commit()
-    flash(f'Rôle "{role.nom}" mis à jour.', 'success')
+    flash(f'RÃ´le "{role.nom}" mis Ã  jour.', 'success')
     return redirect(url_for('admin.roles'))
 
 
@@ -344,7 +385,7 @@ def modifier_role(role_id):
 @login_required
 @admin_required
 def categories():
-    """Gestion des catégories de tickets"""
+    """Gestion des catÃ©gories de tickets"""
     categories = CategorieTicket.query.order_by(CategorieTicket.nom).all()
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
     return render_template('admin/categories.html', categories=categories, departements=departements)
@@ -354,10 +395,10 @@ def categories():
 @login_required
 @admin_required
 def creer_categorie():
-    """Créer une nouvelle catégorie de ticket"""
+    """CrÃ©er une nouvelle catÃ©gorie de ticket"""
     nom = request.form.get('nom', '').strip()
     if not nom:
-        flash('Le nom de la catégorie est requis.', 'danger')
+        flash('Le nom de la catÃ©gorie est requis.', 'danger')
         return redirect(url_for('admin.categories'))
     try:
         cat = CategorieTicket(
@@ -371,12 +412,12 @@ def creer_categorie():
         )
         db.session.add(cat)
         db.session.commit()
-        flash(f'Catégorie « {nom} » créée avec succès.', 'success')
-        logger.info(f'Catégorie créée: {nom} par {current_user.email}')
+        flash(f'CatÃ©gorie Â« {nom} Â» crÃ©Ã©e avec succÃ¨s.', 'success')
+        logger.info(f'CatÃ©gorie crÃ©Ã©e: {nom} par {current_user.email}')
     except Exception as e:
         db.session.rollback()
-        logger.error(f'Erreur création catégorie: {e}')
-        flash('Erreur lors de la création de la catégorie.', 'danger')
+        logger.error(f'Erreur crÃ©ation catÃ©gorie: {e}')
+        flash('Erreur lors de la crÃ©ation de la catÃ©gorie.', 'danger')
     return redirect(url_for('admin.categories'))
 
 
@@ -384,7 +425,7 @@ def creer_categorie():
 @login_required
 @admin_required
 def toggle_categorie(cat_id):
-    """Activer/désactiver une catégorie"""
+    """Activer/dÃ©sactiver une catÃ©gorie"""
     cat = CategorieTicket.query.get_or_404(cat_id)
     cat.actif = not cat.actif
     db.session.commit()
@@ -395,7 +436,7 @@ def toggle_categorie(cat_id):
 @login_required
 @admin_required
 def parametres_systeme():
-    """Paramètres système"""
+    """ParamÃ¨tres systÃ¨me"""
     return render_template('admin/parametres.html')
 
 
@@ -403,8 +444,8 @@ def parametres_systeme():
 @login_required
 @admin_required
 def logs():
-    """Visualisation des logs système"""
-    # TODO: Implémenter la lecture des fichiers de logs
+    """Visualisation des logs systÃ¨me"""
+    # TODO: ImplÃ©menter la lecture des fichiers de logs
     return render_template('admin/logs.html')
 
 
@@ -412,13 +453,152 @@ def logs():
 @login_required
 @admin_required
 def plan_action():
-    """Plan d'action — calendrier et projets IT"""
-    return render_template('admin/plan_action.html')
+    """Plan d'action - calendrier et projets IT"""
+    from models import PlanActionTask, Utilisateur
+    tasks = PlanActionTask.query.order_by(PlanActionTask.date_debut).all()
+    utilisateurs = Utilisateur.query.filter_by(actif=True).all()
+    return render_template('admin/plan_action.html', tasks=tasks, utilisateurs=utilisateurs)
+
+@admin_bp.route('/api/plan-action/tasks')
+@login_required
+@admin_required
+def api_plan_action_tasks():
+    from models import PlanActionTask
+    from flask import jsonify
+    tasks = PlanActionTask.query.all()
+    events = []
+    for t in tasks:
+        events.append({
+            'id': t.id,
+            'title': t.titre,
+            'start': t.date_debut.isoformat(),
+            'end': t.date_fin.isoformat() if t.date_fin else None,
+            'description': t.description,
+            'statut': t.statut,
+            'assigne_nom': f'{t.assigne_a.prenom} {t.assigne_a.nom}' if t.assigne_a else 'Non assigné',
+            'className': 'urgent' if t.urgent else '',
+            'backgroundColor': '#ef4444' if t.urgent else '#6366f1',
+            'borderColor': '#ef4444' if t.urgent else '#6366f1',
+            'allDay': True if not t.date_fin else False
+        })
+    return jsonify(events)
+
+@admin_bp.route('/plan-action/creer', methods=['POST'])
+@login_required
+@admin_required
+def creer_plan_action():
+    from models import PlanActionTask
+    from datetime import datetime
+    from flask import request, flash, redirect, url_for
+    from app import db
+    from flask_login import current_user
+    
+    titre = request.form.get('titre')
+    description = request.form.get('description')
+    date_debut_str = request.form.get('date_debut')
+    date_fin_str = request.form.get('date_fin')
+    urgent = request.form.get('urgent') == 'on'
+    assigne_a_id = request.form.get('assigne_a_id')
+    
+    if not titre or not date_debut_str:
+        flash("Titre et Date de dÃ©but sont obligatoires.", "error")
+        return redirect(url_for('admin.plan_action'))
+        
+    date_debut = datetime.fromisoformat(date_debut_str) if date_debut_str else datetime.utcnow()
+    date_fin = datetime.fromisoformat(date_fin_str) if date_fin_str else None
+    
+    task = PlanActionTask(
+        titre=titre,
+        description=description,
+        date_debut=date_debut,
+        date_fin=date_fin,
+        urgent=urgent,
+        statut='planned',
+        createur_id=current_user.id,
+        assigne_a_id=assigne_a_id if assigne_a_id else None
+    )
+    db.session.add(task)
+    db.session.commit()
+    flash("TÃ¢che ajoutÃ©e au plan d'action.", "success")
+    return redirect(url_for('admin.plan_action'))
+
+@admin_bp.route('/plan-action/<string:id>/terminer', methods=['POST'])
+@login_required
+@admin_required
+def terminer_plan_action(id):
+    from models import PlanActionTask
+    from app import db
+    from flask import flash, redirect, url_for
+    task = PlanActionTask.query.get_or_404(id)
+    task.statut = 'completed'
+    db.session.commit()
+    flash('Tâche marquée comme terminée.', 'success')
+    return redirect(url_for('admin.plan_action'))
+
+@admin_bp.route('/plan-action/<string:id>/annuler-terminer', methods=['POST'])
+@login_required
+@admin_required
+def annuler_terminer_plan_action(id):
+    from models import PlanActionTask
+    from app import db
+    from flask import flash, redirect, url_for
+    task = PlanActionTask.query.get_or_404(id)
+    task.statut = 'planned'
+    db.session.commit()
+    flash('Le statut de la tâche a été réinitialisé.', 'success')
+    return redirect(url_for('admin.plan_action'))
+
+@admin_bp.route('/plan-action/<string:id>/modifier', methods=['POST'])
+@login_required
+@admin_required
+def modifier_plan_action(id):
+    from models import PlanActionTask
+    from datetime import datetime
+    from app import db
+    from flask import request, flash, redirect, url_for
+    task = PlanActionTask.query.get_or_404(id)
+    
+    task.titre = request.form.get('titre') or task.titre
+    task.description = request.form.get('description')
+    
+    date_debut_str = request.form.get('date_debut')
+    if date_debut_str:
+        task.date_debut = datetime.fromisoformat(date_debut_str)
+        
+    date_fin_str = request.form.get('date_fin')
+    task.date_fin = datetime.fromisoformat(date_fin_str) if date_fin_str else None
+    
+    task.urgent = request.form.get('urgent') == 'on'
+    
+    assigne_a_id = request.form.get('assigne_a_id')
+    task.assigne_a_id = assigne_a_id if assigne_a_id else None
+    
+    db.session.commit()
+    flash('Tâche modifiée avec succès.', 'success')
+    return redirect(url_for('admin.plan_action'))
+
+@admin_bp.route('/plan-action/<string:id>/supprimer', methods=['POST'])
+@login_required
+@admin_required
+def supprimer_plan_action(id):
+    from models import PlanActionTask
+    from app import db
+    from flask import flash, redirect, url_for
+    task = PlanActionTask.query.get_or_404(id)
+    db.session.delete(task)
+    db.session.commit()
+    flash("TÃ¢che supprimÃ©e.", "success")
+    return redirect(url_for('admin.plan_action'))
 
 
 @admin_bp.route('/acces-distance')
 @login_required
 @admin_required
 def acces_distance():
-    """Accès à distance — identifiants AnyDesk/TeamViewer"""
-    return render_template('admin/acces_distance.html')
+    from models import Utilisateur, db
+    users = Utilisateur.query.filter(db.or_(Utilisateur.anydesk_id.isnot(None), Utilisateur.teamviewer_id.isnot(None))).all()
+    return render_template('admin/acces_distance.html', users=users)
+
+
+
+

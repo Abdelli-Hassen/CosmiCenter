@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+
+{% block title %}Rapport de {{ agent.prenom }} {{ agent.nom }}{% endblock %}
+{% block body_class %}page-agent-tickets{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Animations ──────────────────────────────────────────────── */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Page ──────────────────────────────────────────────────── */
+.agent-tickets-page { padding: 28px 36px; max-width: 100%; }
+@media (max-width:768px) { .agent-tickets-page { padding: 16px 20px; } }
+
+/* ── Hero ──────────────────────────────────────────────────── */
+.at-hero { display:flex; align-items:center; gap:24px; margin-bottom:28px; animation: fade-in-up 0.5s ease-out; }
+.at-back-btn {
+  display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; color:var(--text-muted);
+  text-decoration:none; padding:8px 16px; border-radius:10px; background:var(--surface-1);
+  border:1px solid var(--border-subtle); transition:all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.at-back-btn:hover { background:var(--surface-hover); color:var(--brand); transform: translateX(-4px); box-shadow:0 4px 12px rgba(0,0,0,0.05); }
+
+.at-avatar {
+  width:64px; height:64px; border-radius:50%; background:var(--surface-2); border:2px solid var(--border-subtle);
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+  font-weight:800; font-size:24px; color:var(--text-secondary); flex-shrink:0;
+  box-shadow:0 4px 12px rgba(0,0,0,0.05); transition:transform 0.3s ease;
+}
+.at-avatar:hover { transform: scale(1.1) rotate(5deg); border-color:var(--brand); }
+.at-title { font-size:24px; font-weight:900; color:var(--text-primary); margin:0 0 4px 0; }
+.at-subtitle { font-size:14px; color:var(--text-muted); font-weight:600; margin:0; }
+
+/* ── KPIs ──────────────────────────────────────────────────── */
+.kpi-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; margin-bottom:28px; animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.1s; }
+@media (max-width:1100px) { .kpi-grid { grid-template-columns:repeat(2, 1fr); } }
+@media (max-width:600px) { .kpi-grid { grid-template-columns:1fr; } }
+
+.kpi-card {
+  background:var(--surface-1); border-radius:20px; border:1px solid var(--border-subtle);
+  padding:22px 24px; position:relative; overflow:hidden;
+  transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1); display:flex; flex-direction:column; gap:16px;
+  box-shadow:0 8px 16px rgba(0,0,0,0.02);
+}
+.kpi-card::before {
+  content:''; position:absolute; inset:0; border-radius:20px; padding:2px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none; opacity:0; transition:opacity 0.4s ease;
+}
+.kpi-card:hover { transform:translateY(-4px) scale(1.02); box-shadow:0 20px 40px rgba(0,0,0,0.08), 0 0 0 1px var(--brand) inset; }
+.kpi-card:hover::before { opacity:1; }
+
+.kpi-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.kpi-label { font-size:13px; font-weight:600; color:var(--text-secondary); margin:0; }
+.kpi-icon-wrap {
+  width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+  transition: transform 0.3s ease;
+}
+.kpi-card:hover .kpi-icon-wrap { transform: scale(1.1) rotate(5deg); }
+.kpi-value { font-size:32px; font-weight:900; color:var(--text-primary); letter-spacing:-0.03em; line-height:1; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.kpi-card:hover .kpi-value { transform: translateY(-2px); }
+
+/* ── Table Container ───────────────────────────────────────── */
+.table-card {
+  background:var(--surface-1); border-radius:20px; border:1px solid var(--border-subtle);
+  overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.03);
+  animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.2s;
+}
+.table-header { padding:20px 24px; border-bottom:1px solid var(--border-subtle); background:linear-gradient(to bottom, var(--surface-1), var(--surface-2)); }
+.table-title { font-size:16px; font-weight:800; color:var(--text-primary); margin:0; }
+
+.tickets-table { width:100%; border-collapse:collapse; text-align:left; }
+.tickets-table th {
+  padding:16px 24px; font-size:12px; font-weight:800; color:var(--text-muted);
+  text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid var(--border-subtle);
+  background:var(--surface-2); white-space:nowrap; position:sticky; top:0; z-index:10;
+}
+.tickets-table td { padding:16px 24px; border-bottom:1px solid var(--border-subtle); vertical-align:middle; transition:all 0.25s ease; }
+.tickets-table tr:last-child td { border-bottom:none; }
+
+.tickets-table tr.main-row { cursor:pointer; transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1); position:relative; }
+.tickets-table tr.main-row::after {
+  content: '→';
+  position: absolute; right: 24px; top: 50%; transform: translateY(-50%) translateX(-10px);
+  color: var(--brand); font-weight: 900; font-size: 18px;
+  opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events:none;
+}
+.tickets-table tr.main-row:hover { 
+  background:var(--surface-hover); 
+  transform: scale(1.01) translateX(4px); 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05); z-index:2; position:relative;
+  border-radius:12px;
+}
+.tickets-table tr.main-row:hover td { border-bottom-color:transparent; background:transparent; }
+.tickets-table tr.main-row:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+.tickets-table tr.main-row:hover .ticket-title { color:var(--brand); }
+
+.ticket-title { transition:color 0.2s ease; }
+
+/* Badges */
+.status-badge {
+  display:inline-flex; align-items:center; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em;
+  transition:transform 0.2s ease, box-shadow 0.2s ease;
+}
+.tickets-table tr.main-row:hover .status-badge { transform:scale(1.05); box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+
+.status-badge.nouveau { background:rgba(59,130,246,0.1); color:#3b82f6; }
+.status-badge.ouvert { background:rgba(59,130,246,0.1); color:#3b82f6; }
+.status-badge.en_cours { background:rgba(245,158,11,0.1); color:#f59e0b; }
+.status-badge.en_attente { background:rgba(139,92,246,0.1); color:#8b5cf6; }
+.status-badge.resolu { background:rgba(16,185,129,0.1); color:#10b981; }
+.status-badge.ferme { background:rgba(107,114,128,0.1); color:#6b7280; }
+.status-badge.annule { background:rgba(239,68,68,0.1); color:#ef4444; }
+
+.prio-badge {
+  display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:800; transition:transform 0.2s ease;
+}
+.tickets-table tr.main-row:hover .prio-badge { transform:scale(1.05); }
+.prio-dot { width:8px; height:8px; border-radius:50%; }
+.prio-critique { color:#ef4444; } .prio-critique .prio-dot { background:#ef4444; }
+.prio-urgente { color:#f97316; } .prio-urgente .prio-dot { background:#f97316; }
+.prio-haute { color:#eab308; } .prio-haute .prio-dot { background:#eab308; }
+.prio-moyenne { color:#3b82f6; } .prio-moyenne .prio-dot { background:#3b82f6; }
+.prio-basse { color:#6b7280; } .prio-basse .prio-dot { background:#6b7280; }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="agent-tickets-page">
+
+  <div class="at-hero">
+    <a href="{{ url_for('rapports.performance_agents', periode=periode) }}" class="at-back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Retour aux performances
+    </a>
+    
+    <div class="at-avatar">
+      {% if agent.photo_profil %}
+      <img src="{{ url_for('static', filename='uploads/' + agent.photo_profil) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
+      {% else %}
+      {{ (agent.prenom[0]|upper) ~ (agent.nom[0]|upper) }}
+      {% endif %}
+    </div>
+    
+    <div>
+      <h1 class="at-title">Profil d'Agent : {{ agent.prenom }} {{ agent.nom }}</h1>
+      <p class="at-subtitle">
+        {{ agent.departement.nom if agent.departement else 'Aucun département' }} • 
+        Période : {% if periode == '7j' %}7 derniers jours{% elif periode == '90j' %}90 derniers jours{% elif periode == '1a' %}12 derniers mois{% else %}30 derniers jours{% endif %}
+      </p>
+      <div style="display:flex; align-items:center; gap:12px; margin-top:10px;">
+        <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; background:rgba(245,158,11,0.1); color:#f59e0b; border-radius:8px; font-size:13px; font-weight:800; box-shadow:0 2px 8px rgba(245,158,11,0.1);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Classement Général : #{{ stats.rank }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent KPI Row -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <h3 class="kpi-label">Tickets résolus</h3>
+        <div class="kpi-icon-wrap" style="background:rgba(16,185,129,0.1); color:#10b981;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+      </div>
+      <div>
+        <div class="kpi-value">{{ stats.resolus }}</div>
+      </div>
+      <div><span style="font-size:11px;color:var(--text-muted);font-weight:600;">/ {{ stats.total }} assignés</span></div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <h3 class="kpi-label">Taux de résolution</h3>
+        <div class="kpi-icon-wrap" style="background:rgba(59,130,246,0.1); color:#3b82f6;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </div>
+      </div>
+      <div>
+        <div class="kpi-value">{{ stats.taux_resolution|round(1) }}%</div>
+      </div>
+      <div><span style="font-size:11px;color:var(--text-muted);font-weight:600;">Efficacité globale</span></div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <h3 class="kpi-label">Temps Moyen (Rés.)</h3>
+        <div class="kpi-icon-wrap" style="background:rgba(245,158,11,0.1); color:#f59e0b;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+      </div>
+      <div>
+        <div class="kpi-value">
+          {% if stats.temps_moyen %}
+            {% if stats.temps_moyen < 1 %}{{ (stats.temps_moyen * 60)|round(0)|int }}m
+            {% else %}{{ stats.temps_moyen|round(1) }}h{% endif %}
+          {% else %}—{% endif %}
+        </div>
+      </div>
+      <div><span style="font-size:11px;color:var(--text-muted);font-weight:600;">par ticket</span></div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <h3 class="kpi-label">Satisfaction CSAT</h3>
+        <div class="kpi-icon-wrap" style="background:rgba(139,92,246,0.1); color:#8b5cf6;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+      </div>
+      <div>
+        <div class="kpi-value">
+          {% if stats.satisfaction %}{{ stats.satisfaction|round(1) }}{% else %}—{% endif %}
+        </div>
+      </div>
+      <div><span style="font-size:11px;color:var(--text-muted);font-weight:600;">/ 5.0 score</span></div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header" style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between;">
+      <h2 class="table-title">Tous les tickets de la période ({{ tickets|length }})</h2>
+      <div style="position:relative; width:100%; max-width:300px;">
+        <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="ticketSearch" onkeyup="filterTickets()" placeholder="Rechercher par titre ou statut..." style="padding:10px 16px 10px 36px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-base); font-size:13px; font-weight:600; color:var(--text-primary); width:100%; box-shadow:inset 0 2px 4px rgba(0,0,0,0.02);">
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="tickets-table">
+        <thead>
+          <tr>
+            <th onclick="sortTicketsTable(this, 0, 'string')" style="cursor:pointer; transition:color 0.2s;">ID ↕</th>
+            <th onclick="sortTicketsTable(this, 1, 'string')" style="cursor:pointer; transition:color 0.2s;">Titre du ticket ↕</th>
+            <th onclick="sortTicketsTable(this, 2, 'string')" style="cursor:pointer; transition:color 0.2s;">Statut ↕</th>
+            <th onclick="sortTicketsTable(this, 3, 'string')" style="cursor:pointer; transition:color 0.2s;">Priorité ↕</th>
+            <th onclick="sortTicketsTable(this, 4, 'string')" style="cursor:pointer; transition:color 0.2s;">Date Création ↕</th>
+            <th onclick="sortTicketsTable(this, 5, 'string')" style="cursor:pointer; transition:color 0.2s;">Date Résolution ↕</th>
+            <th onclick="sortTicketsTable(this, 6, 'time')" style="text-align:right; padding-right:40px; cursor:pointer; transition:color 0.2s;">Temps (H) ↕</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in tickets %}
+          <tr class="main-row" onclick="window.location.href='{{ url_for('tickets.detail', ticket_id=t.id) }}'">
+            <td style="font-weight:700; color:var(--text-muted);">{{ t.numero }}</td>
+            <td style="font-weight:800; color:var(--text-primary);">
+              <span class="ticket-title">{{ t.titre }}</span>
+            </td>
+            <td>
+              <span class="status-badge {{ t.statut }}">{{ t.statut|replace('_', ' ')|title }}</span>
+            </td>
+            <td>
+              <span class="prio-badge prio-{{ t.priorite }}">
+                <span class="prio-dot"></span>
+                {{ t.priorite|title }}
+              </span>
+            </td>
+            <td style="font-size:13px; font-weight:600; color:var(--text-secondary);">
+              {{ t.date_creation.strftime('%d/%m/%Y %H:%M') }}
+            </td>
+            <td style="font-size:13px; font-weight:600; color:var(--text-secondary);">
+              {% if t.date_resolution %}
+              {{ t.date_resolution.strftime('%d/%m/%Y %H:%M') }}
+              {% else %}
+              —
+              {% endif %}
+            </td>
+            <td style="text-align:right; padding-right:40px;">
+              {% if t.temps_resolution_minutes is not none %}
+              <span style="font-weight:900; color:#f59e0b;">{{ (t.temps_resolution_minutes / 60)|round(1) }}h</span>
+              {% else %}
+              <span style="color:var(--text-muted);">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not tickets %}
+          <tr>
+            <td colspan="7" style="text-align:center; padding:60px 40px; color:var(--text-muted); font-size:15px; font-weight:600;">
+              <div style="font-size:32px; margin-bottom:16px; opacity:0.5;">📭</div>
+              Aucun ticket trouvé pour cet agent sur cette période.
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let sortDirTickets = {};
+function sortTicketsTable(th, colIndex, type) {
+  const table = th.closest('table');
+  const tbody = table.querySelector('tbody');
+  let rows = Array.from(tbody.querySelectorAll('tr.main-row'));
+  if(rows.length === 0) return;
+
+  sortDirTickets[colIndex] = !sortDirTickets[colIndex];
+  const isAsc = sortDirTickets[colIndex];
+
+  table.querySelectorAll('th').forEach(h => h.style.color = 'var(--text-muted)');
+  th.style.color = 'var(--brand)';
+
+  rows.sort((a, b) => {
+    let valA = a.cells[colIndex].textContent.trim();
+    let valB = b.cells[colIndex].textContent.trim();
+
+    if (type === 'time') {
+      const parseTime = (str) => {
+        if(str.includes('h')) return parseFloat(str.replace(/[^0-9.-]+/g,""));
+        return 0;
+      };
+      valA = parseTime(valA);
+      valB = parseTime(valB);
+      return isAsc ? valA - valB : valB - valA;
+    } else {
+      return isAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+  });
+
+  rows.forEach(row => tbody.appendChild(row));
+}
+
+function filterTickets() {
+  const input = document.getElementById('ticketSearch');
+  const filter = input.value.toLowerCase();
+  const tbody = document.querySelector('.tickets-table tbody');
+  const rows = tbody.querySelectorAll('tr.main-row');
+
+  rows.forEach(row => {
+    const textContent = row.textContent || row.innerText;
+    if (textContent.toLowerCase().indexOf(filter) > -1) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
+}
+</script>
+{% endblock %}

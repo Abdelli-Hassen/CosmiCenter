@@ -1,0 +1,134 @@
+# CosmittoHUB - Premium Design System Guidelines
+
+This document outlines the core aesthetic principles, CSS structures, and interactive patterns used in the new "Performance des Agents" and "Agent Profile" dashboards. 
+
+This design system is intended to serve as the blueprint for upgrading the rest of the application to a premium, modern, and highly interactive standard.
+
+## 1. Core Aesthetic Principles
+The new design language moves away from flat, static interfaces towards a highly tactile, "glassmorphic" and deeply interactive experience. It relies on:
+- **Depth & Elevation**: Elements don't just sit flat; they lift off the page using soft, layered box-shadows.
+- **Dynamic Micro-Interactions**: Every actionable element (cards, rows, buttons) reacts to the user's cursor with smooth scaling, translation, and color shifts.
+- **Subtle Gradients & Glass Borders**: Heavy borders are replaced with subtle `rgba()` borders and gradient masking on hover.
+- **Rich Typography**: High contrast between font weights (e.g., `800` or `900` for metrics and titles, `500` or `600` for subtitles) to establish a crystal-clear visual hierarchy.
+
+## 2. Global CSS Variables Reference
+Always use these variables (defined in `variables.css`) rather than hardcoding hex colors to ensure dark-mode compatibility and consistency:
+
+```css
+/* Backgrounds */
+--surface-base:   /* The main body background */
+--surface-1:      /* Primary card/container background */
+--surface-2:      /* Secondary background (headers, avatars, muted areas) */
+--surface-hover:  /* Background color when hovering over lists/buttons */
+
+/* Borders */
+--border-subtle:  /* Very light borders for structural separation */
+
+/* Text */
+--text-primary:   /* Main high-contrast text */
+--text-secondary: /* Sub-text */
+--text-muted:     /* Gray/Muted text for labels */
+
+/* Brand & Accents */
+--brand:          /* The primary brand color */
+```
+
+## 3. Reusable Components & Patterns
+
+### 3.1 KPI Cards (The "Lift-Off" Effect)
+Cards must feel tactile. When hovered, they should scale up slightly, lift up (translateY), cast a deeper shadow, and reveal a subtle glowing border.
+
+**CSS Implementation:**
+```css
+.kpi-card {
+  background: var(--surface-1); 
+  border-radius: 20px; 
+  border: 1px solid var(--border-subtle);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.02);
+  position: relative;
+}
+.kpi-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 0 0 1px var(--brand) inset;
+}
+```
+
+### 3.2 Magnetic Data Tables
+Tables should no longer be boring grids. Rows act as interactive links. 
+- Use `padding: 16px 24px` for cells.
+- The row itself scales and indents when hovered.
+- An animated arrow (`→`) slides in from the right to indicate clickability.
+
+**CSS Implementation:**
+```css
+.table-card {
+  border-radius: 20px;
+  background: var(--surface-1);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.03);
+}
+tr.main-row {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  cursor: pointer;
+}
+tr.main-row::after {
+  content: '→';
+  position: absolute; right: 24px; top: 50%; transform: translateY(-50%) translateX(-10px);
+  color: var(--brand); font-weight: 900; font-size: 18px;
+  opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+tr.main-row:hover {
+  background: var(--surface-hover);
+  transform: scale(1.01) translateX(4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border-radius: 12px;
+}
+tr.main-row:hover::after {
+  opacity: 1; transform: translateY(-50%) translateX(0);
+}
+```
+
+### 3.3 Dynamic Status Badges (Pills)
+Instead of solid blocks of color, use a 10% opacity background of the target color with a solid color text. This looks far more modern and prevents the UI from becoming visually overwhelming.
+
+**Example Implementation:**
+```css
+.status-badge {
+  display: inline-flex; align-items: center; padding: 4px 10px; 
+  border-radius: 6px; font-size: 11px; font-weight: 800; 
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+/* Resolus (Green) */
+.status-badge.resolu { background: rgba(16,185,129,0.1); color: #10b981; }
+/* En cours (Orange) */
+.status-badge.en_cours { background: rgba(245,158,11,0.1); color: #f59e0b; }
+```
+
+### 3.4 Page Load Animations
+Elements should not instantly appear; they should cascade into view.
+Always include these keyframes at the top of the stylesheet and apply them to major structural containers:
+
+```css
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Usage */
+.reports-hero { animation: fade-in-up 0.5s ease-out; }
+.kpi-grid { animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both 0.1s; }
+.table-card { animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both 0.2s; }
+```
+
+## 4. Reusing this Design
+When updating a new page (e.g., `inbox.html` or the admin dashboard):
+1. Wrap the main content in a container with padding (e.g., `.reports-page`).
+2. Build the Hero header section using `.at-hero` styles.
+3. Replace all standard tables with the `.table-card` and `.agents-table` classes defined above.
+4. Replace raw text statuses with the `.status-badge` pills.
+5. Inject the `@keyframes` block to ensure the page glides smoothly into view upon load.

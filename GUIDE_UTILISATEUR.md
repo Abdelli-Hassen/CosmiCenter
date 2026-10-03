@@ -236,9 +236,21 @@ La section **Rapports** permet d'analyser les performances et l'activité de la 
 - **Volume de tickets** : évolution dans le temps, par département ou catégorie
 - **Temps de résolution** : délai moyen de traitement par priorité ou équipe
 - **Taux de résolution** : pourcentage de tickets résolus dans les délais SLA
-- **Performance par agent** : nombre de tickets traités, délai moyen
 
-Utilisez les **filtres de période** (semaine, mois, trimestre) pour affiner l'analyse.
+#### Performance des Agents (Nouveau Dashboard)
+
+La section **Performance des Agents** offre un espace dédié au suivi et à la gamification des équipes :
+- **Le Podium (Top 3)** : mise en valeur visuelle immédiate des 3 meilleurs agents du mois (ou de la période).
+- **Tableau Global et Classement** : liste de tous les agents avec leur **Rang (Classement Général)**, taux de résolution, temps moyen et score CSAT.
+- **Filtres & Tri en temps réel** : barre de recherche dynamique et possibilité de cliquer sur chaque en-tête de colonne pour trier.
+
+**Profil Individuel d'Agent :**
+En cliquant sur un agent depuis le tableau, vous accédez à son **Profil dédié**. Ce tableau de bord personnel affiche :
+- Son badge de classement général (Gamification).
+- Ses 4 KPI personnels (Résolus, Taux de résolution, Temps Moyen, CSAT).
+- L'historique complet, triable et filtrable de tous les tickets qu'il a traités sur la période avec le temps précis passé sur chacun.
+
+Utilisez les **filtres de période** (semaine, mois, trimestre) pour affiner l'analyse globale et individuelle.
 
 ---
 

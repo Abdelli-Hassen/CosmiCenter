@@ -161,9 +161,13 @@
           <div class="nav-group">
             <span class="nav-group-label">Intelligence</span>
             {% if current_user.has_permission('rapports.voir') %}
-            <a href="{{ url_for('rapports.tableau_bord') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('rapports.') %}active{% endif %}">
+            <a href="{{ url_for('rapports.tableau_bord') }}" class="nav-item {% if request.endpoint == 'rapports.tableau_bord' %}active{% endif %}">
               <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-              <span class="nav-item-label">Rapports</span>
+              <span class="nav-item-label">Rapports globaux</span>
+            </a>
+            <a href="{{ url_for('rapports.performance_agents') }}" class="nav-item {% if request.endpoint == 'rapports.performance_agents' %}active{% endif %}">
+              <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+              <span class="nav-item-label">Performance Agents</span>
             </a>
             {% endif %}
           </div>

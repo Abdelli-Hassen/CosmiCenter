@@ -1,9 +1,11 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from models import db, Departement, Utilisateur, CategorieTicket, Ticket
 from functools import wraps
 from sqlalchemy import func
 from datetime import datetime, timedelta
+import os
+from werkzeug.utils import secure_filename
 
 departements_bp = Blueprint('departements', __name__)
 
@@ -53,14 +55,35 @@ def liste():
         page=page, per_page=per_page, error_out=False
     )
     
-    # Statistiques pour chaque département
+    # Statistiques détaillées pour chaque département
+    STATUTS_NON_TERMINES = ['nouveau', 'en_cours', 'en_attente']
     for dept in departements.items:
+        # Tickets reçus = assignés à ce département, pas terminés
+        tickets_recus_ouverts = Ticket.query.filter(
+            Ticket.departement_id == dept.id,
+            Ticket.statut.in_(STATUTS_NON_TERMINES)
+        ).count()
+
+        # Tickets envoyés = créés par un membre de ce département, assignés à un autre département, pas terminés
+        membres_ids = [m.id for m in dept.membres]
+        if membres_ids:
+            tickets_envoyes_ouverts = Ticket.query.filter(
+                Ticket.createur_id.in_(membres_ids),
+                Ticket.departement_id != dept.id,
+                Ticket.statut.in_(STATUTS_NON_TERMINES)
+            ).count()
+        else:
+            tickets_envoyes_ouverts = 0
+
+        # Agents actifs dans ce département
+        agents_actifs = sum(1 for m in dept.membres if m.actif)
+
         dept.stats = {
-            'membres': len(dept.membres),
-            'tickets_actifs': sum(1 for cat in dept.categories for ticket in cat.tickets 
-                                 if ticket.statut not in ['resolu', 'ferme']),
-            'tickets_total': sum(len(cat.tickets) for cat in dept.categories),
-            'categories': len(dept.categories)
+            'membres_actifs': agents_actifs,
+            'membres_total': len(dept.membres),
+            'tickets_recus_ouverts': tickets_recus_ouverts,
+            'tickets_envoyes_ouverts': tickets_envoyes_ouverts,
+            'tickets_total': Ticket.query.filter_by(departement_id=dept.id).count(),
         }
     
     return render_template('departements/liste.html', 
@@ -82,7 +105,17 @@ def nouveau():
         telephone = request.form.get('telephone', '').strip()
         localisation = request.form.get('localisation', '').strip()
         couleur = request.form.get('couleur', '#3B82F6')
+        
+        # Gestion du logo (enregistré dans la colonne icone)
         icone = request.form.get('icone', 'building')
+        logo_file = request.files.get('logo')
+        if logo_file and logo_file.filename:
+            filename = secure_filename(logo_file.filename)
+            upload_folder = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static/uploads'))
+            os.makedirs(upload_folder, exist_ok=True)
+            logo_file.save(os.path.join(upload_folder, filename))
+            icone = filename
+            
         responsable_id = request.form.get('responsable_id', '').strip() or None
         sla_reponse_heures = int(request.form.get('sla_reponse_heures', 4))
         sla_resolution_heures = int(request.form.get('sla_resolution_heures', 48))
@@ -185,7 +218,17 @@ def modifier(id):
         telephone = request.form.get('telephone', '').strip()
         localisation = request.form.get('localisation', '').strip()
         couleur = request.form.get('couleur', '#3B82F6')
-        icone = request.form.get('icone', 'building')
+        
+        # Gestion du logo (enregistré dans la colonne icone)
+        icone = request.form.get('icone', departement.icone)
+        logo_file = request.files.get('logo')
+        if logo_file and logo_file.filename:
+            filename = secure_filename(logo_file.filename)
+            upload_folder = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static/uploads'))
+            os.makedirs(upload_folder, exist_ok=True)
+            logo_file.save(os.path.join(upload_folder, filename))
+            icone = filename
+            
         responsable_id = request.form.get('responsable_id', '').strip() or None
         sla_reponse_heures = int(request.form.get('sla_reponse_heures', 4))
         sla_resolution_heures = int(request.form.get('sla_resolution_heures', 48))

@@ -1,485 +1,369 @@
 {% extends "base.html" %}
 
 {% block title %}Gestion des utilisateurs{% endblock %}
+{% block body_class %}page-admin-users{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Animations ──────────────────────────────────────────────── */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Page ──────────────────────────────────────────────────── */
+.admin-page { padding: 28px 36px; max-width: 100%; }
+@media (max-width:768px) { .admin-page { padding: 16px 20px; } }
+
+/* ── Hero ──────────────────────────────────────────────────── */
+.at-hero { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:28px; animation: fade-in-up 0.5s ease-out; }
+.at-title-wrap { display:flex; flex-direction:column; gap:4px; }
+.at-title { font-size:24px; font-weight:900; color:var(--text-primary); margin:0; }
+.at-subtitle { font-size:14px; color:var(--text-muted); font-weight:600; margin:0; }
+
+.quick-actions { display:flex; gap:12px; align-items:center; }
+.btn-action {
+  display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--text-primary);
+  text-decoration:none; padding:10px 18px; border-radius:12px; background:var(--surface-1);
+  border:1px solid var(--border-subtle); transition:all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:0 4px 12px rgba(0,0,0,0.02);
+}
+.btn-action:hover { background:var(--surface-hover); color:var(--brand); transform: translateY(-2px); box-shadow:0 8px 16px rgba(0,0,0,0.05); }
+.btn-action.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
+.btn-action.primary:hover { background:var(--brand-dark); color:#fff; }
+
+/* ── Filter Bar ────────────────────────────────────────────── */
+.filter-bar {
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:24px;
+  animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.1s;
+}
+.search-wrap { position:relative; flex:1; min-width:240px; max-width:400px; }
+.search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); }
+.search-input {
+  width:100%; padding:10px 16px 10px 36px; border-radius:10px; border:1px solid var(--border-subtle);
+  background:var(--surface-base); font-size:13px; font-weight:600; color:var(--text-primary);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,0.02); transition:border-color 0.2s;
+}
+.search-input:focus { border-color:var(--brand); outline:none; }
+.filter-select {
+  padding:10px 14px; border-radius:10px; border:1px solid var(--border-subtle);
+  background:var(--surface-base); font-size:13px; font-weight:600; color:var(--text-primary);
+  cursor:pointer; transition:border-color 0.2s;
+}
+.filter-select:hover { border-color:var(--text-muted); }
+
+/* ── Table Container ───────────────────────────────────────── */
+.table-card {
+  background:var(--surface-1); border-radius:20px; border:1px solid var(--border-subtle);
+  overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.03);
+  animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.2s;
+}
+.table-header { padding:20px 24px; border-bottom:1px solid var(--border-subtle); background:linear-gradient(to bottom, var(--surface-1), var(--surface-2)); display:flex; justify-content:space-between; align-items:center; }
+.table-title { font-size:16px; font-weight:800; color:var(--text-primary); margin:0; display:flex; align-items:center; gap:12px; }
+
+/* Stat mini chips inside title */
+.mini-stat { display:inline-flex; align-items:center; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:800; }
+.mini-stat.total { background:rgba(107,114,128,0.1); color:#6b7280; }
+.mini-stat.active { background:rgba(16,185,129,0.1); color:#10b981; }
+.mini-stat.inactive { background:rgba(239,68,68,0.1); color:#ef4444; }
+
+.data-table { width:100%; border-collapse:collapse; text-align:left; }
+.data-table th {
+  padding:16px 24px; font-size:12px; font-weight:800; color:var(--text-muted);
+  text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid var(--border-subtle);
+  background:var(--surface-2); white-space:nowrap;
+}
+.data-table td { padding:14px 24px; border-bottom:1px solid var(--border-subtle); vertical-align:middle; transition:all 0.25s ease; }
+.data-table tr:last-child td { border-bottom:none; }
+
+.data-table tr.main-row { transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1); position:relative; }
+.data-table tr.main-row:hover { 
+  background:var(--surface-hover); 
+  transform: scale(1.01) translateX(4px); 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05); z-index:2; position:relative;
+  border-radius:12px;
+}
+.data-table tr.main-row:hover td { border-bottom-color:transparent; background:transparent; }
+.data-table tr.main-row.inactive-row { opacity: 0.6; }
+.data-table tr.main-row.inactive-row:hover { opacity: 0.9; }
+
+/* ── Badges ────────────────────────────────────────────────── */
+.status-badge {
+  display:inline-flex; align-items:center; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em;
+  transition:transform 0.2s ease, box-shadow 0.2s ease;
+}
+.data-table tr.main-row:hover .status-badge { transform:scale(1.05); box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+
+.badge-admin { background:rgba(239,68,68,0.1); color:#ef4444; }
+.badge-manager { background:rgba(245,158,11,0.1); color:#f59e0b; }
+.badge-agent { background:rgba(16,185,129,0.1); color:#10b981; }
+.badge-user { background:rgba(107,114,128,0.1); color:#6b7280; }
+
+.user-avatar {
+  width:36px; height:36px; border-radius:50%; background:var(--surface-2);
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+  font-weight:800; font-size:12px; flex-shrink:0;
+}
+.user-identity { display:flex; flex-direction:column; min-width:0; }
+.user-name { font-weight:800; font-size:13px; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-poste { font-size:11px; color:var(--text-muted); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* ── Pagination ────────────────────────────────────────────── */
+.pagination { display:flex; gap:6px; align-items:center; }
+.page-btn {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:32px; height:32px; padding:0 10px; border-radius:8px;
+  font-size:13px; font-weight:700; color:var(--text-secondary); text-decoration:none;
+  background:var(--surface-1); border:1px solid var(--border-subtle);
+  transition:all 0.2s ease;
+}
+.page-btn:hover:not(.page-btn-disabled) { background:var(--surface-hover); color:var(--brand); border-color:var(--brand); }
+.page-btn.page-btn-active { background:var(--brand); color:#fff; border-color:var(--brand); }
+.page-btn-disabled { opacity:0.5; cursor:not-allowed; }
+
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="page">
+<div class="admin-page">
 
-  <!-- Page Header -->
-  <div class="page-header">
-    <div class="page-header-left">
-      <nav class="breadcrumb" aria-label="Fil d'Ariane">
-        <a href="{{ url_for('admin.tableau_bord') }}" class="breadcrumb-link">Admin</a>
-        <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">Utilisateurs</span>
-      </nav>
-      <h1 class="page-title" style="margin-top:4px;">Utilisateurs</h1>
+  <!-- Hero Section -->
+  <div class="at-hero">
+    <div class="at-title-wrap">
+      <h1 class="at-title">Gestion des Utilisateurs</h1>
+      <p class="at-subtitle">Consultez, ajoutez et configurez les membres de la plateforme.</p>
     </div>
-    <div class="page-header-actions">
-      <a href="{{ url_for('admin.nouvel_utilisateur') }}" class="btn btn-primary btn-sm">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
+    
+    <div class="quick-actions">
+      <a href="{{ url_for('admin.tableau_bord') }}" class="btn-action">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Retour
+      </a>
+      <a href="{{ url_for('admin.nouvel_utilisateur') }}" class="btn-action primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Nouvel utilisateur
       </a>
     </div>
   </div>
 
-  <!-- Stat chips -->
-  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
-    <div class="stat-chip">
-      <span class="stat-chip-value">{{ total_actifs + total_inactifs }}</span>
-      <span class="stat-chip-label">Total</span>
+  <!-- Filter Bar -->
+  <form method="GET" action="{{ url_for('admin.utilisateurs') }}" id="filterForm" class="filter-bar">
+    <div class="search-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" name="search" class="search-input" placeholder="Rechercher (Nom, email...)" value="{{ request.args.get('search', '') }}" autocomplete="off" onchange="this.form.submit()">
     </div>
-    <div class="stat-chip stat-chip-green">
-      <span class="stat-chip-value">{{ total_actifs }}</span>
-      <span class="stat-chip-label">Actifs</span>
-    </div>
-    {% if total_inactifs > 0 %}
-    <div class="stat-chip stat-chip-red">
-      <span class="stat-chip-value">{{ total_inactifs }}</span>
-      <span class="stat-chip-label">Inactifs</span>
-    </div>
+
+    <select name="role_id" class="filter-select" onchange="this.form.submit()">
+      <option value="">Tous les rôles</option>
+      {% for r in roles %}
+      <option value="{{ r.id }}" {% if request.args.get('role_id')==r.id %}selected{% endif %}>{{ r.nom }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="departement_id" class="filter-select" onchange="this.form.submit()">
+      <option value="">Tous les départements</option>
+      {% for d in departements %}
+      <option value="{{ d.id }}" {% if request.args.get('departement_id')==d.id %}selected{% endif %}>{{ d.nom }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="actif" class="filter-select" onchange="this.form.submit()">
+      <option value="">Tous les statuts</option>
+      <option value="1" {% if request.args.get('actif')=='1' %}selected{% endif %}>Actif</option>
+      <option value="0" {% if request.args.get('actif')=='0' %}selected{% endif %}>Inactif</option>
+    </select>
+
+    {% if request.args.get('search') or request.args.get('role_id') or request.args.get('actif') or request.args.get('departement_id') %}
+    <a href="{{ url_for('admin.utilisateurs') }}" class="btn-action" style="box-shadow:none; border:none; background:transparent;">Effacer filtres</a>
     {% endif %}
-  </div>
-
-  <!-- Search + Filter Bar -->
-  <form method="GET" action="{{ url_for('admin.utilisateurs') }}" id="filterForm">
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:24px;">
-
-      <div style="position:relative;flex:1;min-width:200px;max-width:320px;">
-        <svg
-          style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;"
-          width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-        <input type="text" name="search" class="input" style="padding-left:32px;" placeholder="Nom, e-mail, poste…"
-          value="{{ request.args.get('search', '') }}" autocomplete="off">
-      </div>
-
-      <div class="select-wrap" style="min-width:150px;">
-        <select name="role_id" class="select select-sm" onchange="this.form.submit()">
-          <option value="">Tous les rôles</option>
-          {% for r in roles %}
-          <option value="{{ r.id }}" {% if request.args.get('role_id')==r.id %}selected{% endif %}>{{ r.nom }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="select-wrap" style="min-width:160px;">
-        <select name="departement_id" class="select select-sm" onchange="this.form.submit()">
-          <option value="">Tous les départements</option>
-          {% for d in departements %}
-          <option value="{{ d.id }}" {% if request.args.get('departement_id')==d.id %}selected{% endif %}>{{ d.nom }}
-          </option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="select-wrap" style="min-width:140px;">
-        <select name="actif" class="select select-sm" onchange="this.form.submit()">
-          <option value="">Tous les statuts</option>
-          <option value="1" {% if request.args.get('actif')=='1' %}selected{% endif %}>Actif</option>
-          <option value="0" {% if request.args.get('actif')=='0' %}selected{% endif %}>Inactif</option>
-        </select>
-      </div>
-
-      <button type="submit" class="btn btn-secondary btn-sm">Rechercher</button>
-
-      {% if request.args.get('search') or request.args.get('role_id') or request.args.get('actif') or
-      request.args.get('departement_id') %}
-      <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost btn-sm">Effacer</a>
-      {% endif %}
-
-    </div>
   </form>
 
-  <!-- User List -->
-  {% if utilisateurs.items %}
-  <div class="user-list">
-    <!-- Header -->
-    <div class="user-row" style="background: var(--surface-2); font-weight: 600; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; padding-top: 8px; padding-bottom: 8px; border-bottom: 2px solid var(--border-default);">
-      <div></div> <!-- Avatar -->
-      <div>Utilisateur</div>
-      <div>Email</div>
-      <div>Rôle</div>
-      <div>Département</div>
-      <div>Statut</div>
-      <div>Connexion</div>
-      <div style="text-align: right;">Actions</div>
+  <!-- Users Table -->
+  <div class="table-card">
+    <div class="table-header">
+      <h2 class="table-title">
+        Annuaire
+        <span class="mini-stat total">{{ total_actifs + total_inactifs }} total</span>
+        <span class="mini-stat active">{{ total_actifs }} actifs</span>
+        {% if total_inactifs > 0 %}<span class="mini-stat inactive">{{ total_inactifs }} inactifs</span>{% endif %}
+      </h2>
     </div>
     
-    {% for u in utilisateurs.items %}
-    {% set initials = (u.prenom[0]|upper) + (u.nom[0]|upper) %}
-    {% set dept_color = u.departement.couleur if u.departement and u.departement.couleur else '#6366F1' %}
-    {% set nb_tickets = u.tickets_crees|length %}
-
-    <div class="user-row {% if not u.actif %}user-row-inactive{% endif %}">
-
-      <!-- Avatar -->
-      <div class="user-avatar" {{ 'styl' ~ 'e="--dept-color:' ~ dept_color ~ ';"' |safe }}>
-        {% if u.photo_profil %}
-        <img src="{{ url_for('static', filename='uploads/' + u.photo_profil) }}" alt="{{ u.prenom }} {{ u.nom }}">
-        {% else %}
-        {{ initials }}
-        {% endif %}
-      </div>
-
-      <!-- Name + poste -->
-      <div class="user-row-identity">
-        <div class="user-row-name">{{ u.prenom }} {{ u.nom }}</div>
-        {% if u.poste %}<div class="user-row-poste">{{ u.poste }}</div>{% endif %}
-        {% if u.matricule %}<div class="user-row-matricule">{{ u.matricule }}</div>{% endif %}
-      </div>
-
-      <!-- Email -->
-      <div class="user-row-email">
-        <a href="mailto:{{ u.email }}" title="{{ u.email }}">{{ u.email }}</a>
-      </div>
-
-      <!-- Role -->
-      <div class="user-row-role">
-        {% if u.role %}
-        {% set rnl = u.role.nom|lower %}
-        {% if 'admin' in rnl %}
-        <span class="badge badge-error">{{ u.role.nom }}</span>
-        {% elif 'manager' in rnl or 'responsable' in rnl %}
-        <span class="badge badge-warning">{{ u.role.nom }}</span>
-        {% elif 'agent' in rnl %}
-        <span class="badge badge-success">{{ u.role.nom }}</span>
-        {% else %}
-        <span class="badge badge-neutral">{{ u.role.nom }}</span>
-        {% endif %}
-        {% else %}
-        <span style="color:var(--text-muted);font-size:12px;">—</span>
-        {% endif %}
-      </div>
-
-      <!-- Department -->
-      <div class="user-row-dept">
-        {% if u.departement %}
-        <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">
-          <span {{ 'styl' ~ 'e="width:7px;height:7px;border-radius:50%;background:' ~ dept_color ~ ';flex-shrink:0;"'
-            |safe }}></span>
-          {{ u.departement.nom }}
-        </span>
-        {% else %}
-        <span style="color:var(--text-muted);font-size:12px;">—</span>
-        {% endif %}
-      </div>
-
-      <!-- Status -->
-      <div class="user-row-status">
-        {% if u.verrouille %}
-        <span class="badge badge-warning">Verrouillé</span>
-        {% elif u.actif %}
-        <span class="badge badge-success">Actif</span>
-        {% else %}
-        <span class="badge badge-error">Inactif</span>
-        {% endif %}
-      </div>
-
-      <!-- Last login -->
-      <div class="user-row-login">
-        {% if u.derniere_connexion %}
-        <span title="{{ u.derniere_connexion.strftime('%d/%m/%Y %H:%M') }}">{{ u.derniere_connexion.strftime('%d %b %Y')
-          }}</span>
-        {% else %}
-        Jamais
-        {% endif %}
-      </div>
-
-      <!-- Actions -->
-      <div class="user-row-actions">
-        <a href="{{ url_for('admin.modifier_utilisateur', user_id=u.id) }}" class="btn btn-ghost btn-sm"
-          title="Modifier">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-          </svg>
-        </a>
-        {% if u.id != current_user.id %}
-        {% if u.actif %}
-        <form method="POST" action="{{ url_for('admin.desactiver_utilisateur', user_id=u.id) }}" style="display:inline;"
-          onsubmit="return confirm('Désactiver {{ u.prenom }} {{ u.nom }} ?');">
-          <button type="submit" class="btn btn-ghost btn-sm" title="Désactiver" style="color:var(--error);">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-            </svg>
-          </button>
-        </form>
-        {% else %}
-        <form method="POST" action="{{ url_for('admin.reactiver_utilisateur', user_id=u.id) }}" style="display:inline;"
-          onsubmit="return confirm('Réactiver {{ u.prenom }} {{ u.nom }} ?');">
-          <button type="submit" class="btn btn-ghost btn-sm" title="Réactiver" style="color:#10B981;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 11 12 14 22 4" />
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-            </svg>
-          </button>
-        </form>
-        {% endif %}
-        {% endif %}
-      </div>
-
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:40px;"></th>
+            <th>Utilisateur</th>
+            <th>Email</th>
+            <th>Rôle</th>
+            <th>Département</th>
+            <th>Statut</th>
+            <th>Connexion</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in utilisateurs.items %}
+          {% set dept_color = u.departement.couleur if u.departement and u.departement.couleur else '#6366F1' %}
+          
+          <tr class="main-row {% if not u.actif %}inactive-row{% endif %}" onclick="window.location='{{ url_for('admin.modifier_utilisateur', user_id=u.id) }}'" style="cursor: pointer;">
+            
+            <!-- Avatar -->
+            <td>
+              <div class="user-avatar" style="color:{{ dept_color }}; background:{{ dept_color }}20; border:2px solid {{ dept_color }}40;">
+                {% if u.photo_profil %}
+                <img src="{{ url_for('static', filename='uploads/' + u.photo_profil) }}" style="width:100%;height:100%;object-fit:cover;">
+                {% else %}
+                {{ (u.prenom[0]|upper) ~ (u.nom[0]|upper) }}
+                {% endif %}
+              </div>
+            </td>
+            
+            <!-- Identity -->
+            <td>
+              <div class="user-identity">
+                <span class="user-name">{{ u.prenom }} {{ u.nom }}</span>
+                <span class="user-poste">{{ u.poste or '—' }} {% if u.matricule %}• {{ u.matricule }}{% endif %}</span>
+              </div>
+            </td>
+            
+            <!-- Email -->
+            <td style="font-size:13px; font-weight:600;">
+              <a href="mailto:{{ u.email }}" style="color:var(--text-secondary); text-decoration:none;">{{ u.email }}</a>
+            </td>
+            
+            <!-- Role -->
+            <td>
+              {% if u.role %}
+                {% set rnl = u.role.nom|lower %}
+                {% if 'admin' in rnl %}
+                <span class="status-badge badge-admin">{{ u.role.nom }}</span>
+                {% elif 'manager' in rnl or 'responsable' in rnl %}
+                <span class="status-badge badge-manager">{{ u.role.nom }}</span>
+                {% elif 'agent' in rnl or 'technicien' in rnl %}
+                <span class="status-badge badge-agent">{{ u.role.nom }}</span>
+                {% else %}
+                <span class="status-badge badge-user">{{ u.role.nom }}</span>
+                {% endif %}
+              {% else %}
+                <span style="color:var(--text-muted); font-weight:600;">—</span>
+              {% endif %}
+            </td>
+            
+            <!-- Dept -->
+            <td>
+              {% if u.departement %}
+              <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--text-secondary);">
+                <span style="width:8px; height:8px; border-radius:50%; background:{{ dept_color }};"></span>
+                {{ u.departement.nom }}
+              </div>
+              {% else %}
+              <span style="color:var(--text-muted); font-weight:600;">—</span>
+              {% endif %}
+            </td>
+            
+            <!-- Status -->
+            <td>
+              {% if u.verrouille %}
+              <span class="status-badge badge-manager">Verrouillé</span>
+              {% elif u.actif %}
+              <span class="status-badge badge-agent">Actif</span>
+              {% else %}
+              <span class="status-badge badge-admin">Inactif</span>
+              {% endif %}
+            </td>
+            
+            <!-- Login -->
+            <td style="font-size:12px; font-weight:600; color:var(--text-muted);">
+              {% if u.derniere_connexion %}
+              {{ u.derniere_connexion.strftime('%d %b %Y') }}
+              {% else %}
+              Jamais
+              {% endif %}
+            </td>
+            
+            <!-- Actions -->
+            <td style="text-align:right;">
+              <div style="display:flex; justify-content:flex-end; gap:4px;">
+                <a href="{{ url_for('admin.modifier_utilisateur', user_id=u.id) }}" class="btn-action" style="padding:6px; border-radius:8px;" title="Modifier" onclick="event.stopPropagation();">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </a>
+                {% if u.id != current_user.id %}
+                  {% if u.actif %}
+                  <form method="POST" action="{{ url_for('admin.desactiver_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm('Désactiver {{ u.prenom }} {{ u.nom }} ?');">
+                    <button type="submit" class="btn-action" style="padding:6px; border-radius:8px; color:#ef4444;" title="Désactiver" onclick="event.stopPropagation();">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                    </button>
+                  </form>
+                  {% else %}
+                  <form method="POST" action="{{ url_for('admin.reactiver_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm('Réactiver {{ u.prenom }} {{ u.nom }} ?');">
+                    <button type="submit" class="btn-action" style="padding:6px; border-radius:8px; color:#10b981;" title="Réactiver" onclick="event.stopPropagation();">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    </button>
+                  </form>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </td>
+            
+          </tr>
+          {% endfor %}
+          
+          {% if not utilisateurs.items %}
+          <tr>
+            <td colspan="8" style="text-align:center; padding:60px 40px; color:var(--text-muted);">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:12px; opacity:0.5;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <div style="font-weight:700; font-size:15px; color:var(--text-primary);">Aucun utilisateur trouvé</div>
+              <div style="font-size:13px; margin-top:4px;">Modifiez vos filtres ou ajoutez un nouvel utilisateur.</div>
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
     </div>
-    {% endfor %}
-  </div>
 
-  <!-- Result count + Pagination -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:24px;flex-wrap:wrap;gap:10px;">
-    <span style="font-size:12px;color:var(--text-muted);">
-      {{ utilisateurs.total }} résultat{{ 's' if utilisateurs.total != 1 else '' }}
-      {% if utilisateurs.pages > 1 %}· page {{ utilisateurs.page }}/{{ utilisateurs.pages }}{% endif %}
-    </span>
-
+    <!-- Pagination -->
     {% if utilisateurs.pages > 1 %}
-    <div class="pagination">
-      {% if utilisateurs.has_prev %}
-      <a href="{{ url_for('admin.utilisateurs', page=utilisateurs.prev_num, search=request.args.get('search',''), role_id=request.args.get('role_id',''), actif=request.args.get('actif',''), departement_id=request.args.get('departement_id','')) }}"
-        class="page-btn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      </a>
-      {% else %}
-      <span class="page-btn page-btn-disabled"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2">
-          <polyline points="15 18 9 12 15 6" />
-        </svg></span>
-      {% endif %}
-      {% for p in range(1, utilisateurs.pages + 1) %}
-      {% if p == utilisateurs.page %}
-      <span class="page-btn page-btn-active">{{ p }}</span>
-      {% elif p == 1 or p == utilisateurs.pages or (p >= utilisateurs.page - 2 and p <= utilisateurs.page + 2) %} <a
-        href="{{ url_for('admin.utilisateurs', page=p, search=request.args.get('search',''), role_id=request.args.get('role_id',''), actif=request.args.get('actif',''), departement_id=request.args.get('departement_id','')) }}"
-        class="page-btn">{{ p }}</a>
-        {% elif p == utilisateurs.page - 3 or p == utilisateurs.page + 3 %}
-        <span class="page-btn page-btn-ellipsis">…</span>
-        {% endif %}
-        {% endfor %}
-        {% if utilisateurs.has_next %}
-        <a href="{{ url_for('admin.utilisateurs', page=utilisateurs.next_num, search=request.args.get('search',''), role_id=request.args.get('role_id',''), actif=request.args.get('actif',''), departement_id=request.args.get('departement_id','')) }}"
-          class="page-btn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
+    <div style="padding:16px 24px; border-top:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:12px; font-weight:600; color:var(--text-muted);">
+        Affichage de {{ utilisateurs.items|length }} sur {{ utilisateurs.total }} utilisateurs (Page {{ utilisateurs.page }}/{{ utilisateurs.pages }})
+      </span>
+      <div class="pagination">
+        {% if utilisateurs.has_prev %}
+        <a href="{{ url_for('admin.utilisateurs', page=utilisateurs.prev_num, search=request.args.get('search',''), role_id=request.args.get('role_id',''), actif=request.args.get('actif',''), departement_id=request.args.get('departement_id','')) }}" class="page-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </a>
         {% else %}
-        <span class="page-btn page-btn-disabled"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6" />
-          </svg></span>
+        <span class="page-btn page-btn-disabled"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></span>
         {% endif %}
+        
+        {% for p in range(1, utilisateurs.pages + 1) %}
+          {% if p == utilisateurs.page %}
+          <span class="page-btn page-btn-active">{{ p }}</span>
+          {% elif p == 1 or p == utilisateurs.pages or (p >= utilisateurs.page - 2 and p <= utilisateurs.page + 2) %}
+          <a href="{{ url_for('admin.utilisateurs', page=p, search=request.args.get('search',''), role_id=request.args.get('role_id',''), actif=request.args.get('actif',''), departement_id=request.args.get('departement_id','')) }}" class="page-btn">{{ p }}</a>
+          {% elif p == utilisateurs.page - 3 or p == utilisateurs.page + 3 %}
+          <span class="page-btn page-btn-disabled" style="border:none; background:transparent;">…</span>
+          {% endif %}
+        {% endfor %}
+
+        {% if utilisateurs.has_next %}
+        <a href="{{ url_for('admin.utilisateurs', page=utilisateurs.next_num, search=request.args.get('search',''), role_id=request.args.get('role_id',''), actif=request.args.get('actif',''), departement_id=request.args.get('departement_id','')) }}" class="page-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+        {% else %}
+        <span class="page-btn page-btn-disabled"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>
+        {% endif %}
+      </div>
     </div>
     {% endif %}
-  </div>
 
-  {% else %}
-  <div class="empty-state" style="padding:80px 32px;">
-    <svg class="empty-icon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-    <p class="empty-title">Aucun utilisateur trouvé</p>
-    <p class="empty-desc">
-      {% if request.args.get('search') or request.args.get('role_id') or request.args.get('actif') or
-      request.args.get('departement_id') %}
-      Aucun utilisateur ne correspond à ces filtres.
-      {% else %}
-      Commencez par créer le premier compte utilisateur.
-      {% endif %}
-    </p>
-    <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;">
-      {% if request.args.get('search') or request.args.get('role_id') or request.args.get('actif') or
-      request.args.get('departement_id') %}
-      <a href="{{ url_for('admin.utilisateurs') }}" class="btn btn-ghost btn-sm">Effacer les filtres</a>
-      {% endif %}
-      <a href="{{ url_for('admin.nouvel_utilisateur') }}" class="btn btn-primary btn-sm">Nouvel utilisateur</a>
-    </div>
   </div>
-  {% endif %}
 
 </div>
-
-<style>
-  /* ── Stat chips ───────────────────────────────────── */
-  .stat-chip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    border-radius: 8px;
-    background: var(--surface-raised);
-    border: 1px solid var(--border-subtle);
-  }
-
-  .stat-chip-green {
-    background: rgba(16, 185, 129, .08);
-    border-color: rgba(16, 185, 129, .2);
-  }
-
-  .stat-chip-red {
-    background: rgba(239, 68, 68, .08);
-    border-color: rgba(239, 68, 68, .2);
-  }
-
-  .stat-chip-value {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-
-  .stat-chip-green .stat-chip-value {
-    color: #10B981;
-  }
-
-  .stat-chip-red .stat-chip-value {
-    color: #EF4444;
-  }
-
-  .stat-chip-label {
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-
-  .stat-chip-green .stat-chip-label {
-    color: #10B981;
-  }
-
-  .stat-chip-red .stat-chip-label {
-    color: #EF4444;
-  }
-
-  /* ── User list ────────────────────────────────────── */
-  .user-list {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    overflow: hidden;
-    background: var(--surface-raised);
-  }
-
-  .user-row {
-    display: grid;
-    grid-template-columns: 44px 220px 1fr 130px 150px 90px 120px 80px;
-    align-items: center;
-    gap: 0 16px;
-    padding: 12px 20px;
-    border-bottom: 1px solid var(--border-subtle);
-    transition: background .1s;
-  }
-
-  .user-row:last-child {
-    border-bottom: none;
-  }
-
-  .user-row:hover {
-    background: var(--surface-hover, rgba(255, 255, 255, .03));
-  }
-
-  .user-row-inactive {
-    opacity: .5;
-  }
-
-  .user-row-inactive:hover {
-    opacity: .75;
-  }
-
-  /* Avatar */
-  .user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    background: color-mix(in srgb, var(--dept-color) 18%, transparent);
-    border: 1.5px solid color-mix(in srgb, var(--dept-color) 35%, transparent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--dept-color);
-    letter-spacing: .03em;
-    overflow: hidden;
-  }
-
-  .user-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  /* Identity */
-  .user-row-identity {
-    min-width: 0;
-  }
-
-  .user-row-name {
-    font-weight: 600;
-    font-size: 13px;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .user-row-poste {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 1px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .user-row-matricule {
-    font-size: 10px;
-    color: var(--text-muted);
-    font-family: 'IBM Plex Mono', monospace;
-    opacity: .6;
-  }
-
-  /* Email */
-  .user-row-email {
-    min-width: 0;
-  }
-
-  .user-row-email a {
-    font-size: 12px;
-    color: var(--text-secondary);
-    text-decoration: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
-    transition: color .12s;
-  }
-
-  .user-row-email a:hover {
-    color: var(--text-primary);
-  }
-
-  /* Role / dept / status / login */
-  .user-row-login {
-    font-size: 11px;
-    color: var(--text-muted);
-    white-space: nowrap;
-  }
-
-  /* Actions */
-  .user-row-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 2px;
-  }
-</style>
 {% endblock %}

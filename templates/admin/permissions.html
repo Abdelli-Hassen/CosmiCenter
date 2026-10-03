@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Permissions système{% endblock %}
+{% block body_class %}page-admin-permissions{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Animations ──────────────────────────────────────────────── */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Page ──────────────────────────────────────────────────── */
+.admin-page { padding: 28px 36px; max-width: 1400px; margin: 0 auto; }
+@media (max-width:768px) { .admin-page { padding: 16px 20px; } }
+
+/* ── Hero ──────────────────────────────────────────────────── */
+.at-hero { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:28px; animation: fade-in-up 0.5s ease-out; }
+.at-title-wrap { display:flex; flex-direction:column; gap:4px; }
+.at-title { font-size:24px; font-weight:900; color:var(--text-primary); margin:0; }
+.at-subtitle { font-size:14px; color:var(--text-muted); font-weight:600; margin:0; }
+
+.btn-action {
+  display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--text-primary);
+  text-decoration:none; padding:10px 18px; border-radius:12px; background:var(--surface-1);
+  border:1px solid var(--border-subtle); transition:all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:0 4px 12px rgba(0,0,0,0.02); cursor:pointer;
+}
+.btn-action:hover { background:var(--surface-hover); color:var(--brand); transform: translateY(-2px); box-shadow:0 8px 16px rgba(0,0,0,0.05); }
+.btn-action.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
+.btn-action.primary:hover { background:var(--brand-dark); color:#fff; }
+.btn-action.danger { background:rgba(239,68,68,0.1); color:#ef4444; border-color:transparent; padding:6px 10px; border-radius:8px;}
+.btn-action.danger:hover { background:#ef4444; color:#fff; transform:scale(1.05); box-shadow:0 4px 12px rgba(239,68,68,0.2); }
+
+/* ── Table Container ───────────────────────────────────────── */
+.table-card {
+  background:var(--surface-1); border-radius:20px; border:1px solid var(--border-subtle);
+  overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.03);
+  animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.2s;
+}
+
+.data-table { width:100%; border-collapse:collapse; text-align:left; }
+.data-table th {
+  padding:16px 24px; font-size:12px; font-weight:800; color:var(--text-muted);
+  text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid var(--border-subtle);
+  background:var(--surface-2); white-space:nowrap;
+}
+.data-table td { padding:16px 24px; border-bottom:1px solid var(--border-subtle); vertical-align:middle; transition:all 0.25s ease; }
+.data-table tr:last-child td { border-bottom:none; }
+
+.data-table tr.main-row { transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1); position:relative; }
+.data-table tr.main-row:hover { 
+  background:var(--surface-hover); 
+  transform: scale(1.01) translateX(4px); 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05); z-index:2; position:relative;
+  border-radius:12px;
+}
+.data-table tr.main-row:hover td { border-bottom-color:transparent; background:transparent; }
+
+.perm-code { font-size:11px; color:var(--brand); font-family:'IBM Plex Mono', monospace; font-weight:700; background:var(--brand-subtle, rgba(99, 102, 241, 0.1)); padding:4px 8px; border-radius:6px; display:inline-block; }
+.perm-cat { font-size:11px; font-weight:800; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em; }
+
+/* ── Modals ────────────────────────────────────────────────── */
+.modal-overlay {
+  display:none; position:fixed; inset:0; z-index:400; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px);
+  align-items:center; justify-content:center;
+}
+.modal-card {
+  background:var(--surface-1); width:100%; max-width:480px; border-radius:24px; border:1px solid var(--border-subtle);
+  box-shadow:0 24px 48px rgba(0,0,0,0.1); overflow:hidden;
+  transform:scale(0.95); opacity:0; transition:all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-overlay.active .modal-card { transform:scale(1); opacity:1; }
+
+.modal-header { padding:24px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; }
+.modal-title { font-size:18px; font-weight:800; color:var(--text-primary); margin:0; }
+.modal-close { background:transparent; border:none; color:var(--text-muted); cursor:pointer; transition:color 0.2s; padding:4px; border-radius:8px; }
+.modal-close:hover { color:var(--error); background:rgba(239,68,68,0.1); }
+
+.modal-body { padding:24px; display:flex; flex-direction:column; gap:20px; }
+.modal-footer { padding:20px 24px; border-top:1px solid var(--border-subtle); display:flex; justify-content:flex-end; gap:12px; background:var(--surface-2); }
+
+.input-group { display:flex; flex-direction:column; gap:8px; }
+.input-label { font-size:13px; font-weight:800; color:var(--text-secondary); }
+.input-field {
+  width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle);
+  background:var(--surface-base); font-size:14px; font-weight:600; color:var(--text-primary);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,0.02); transition:all 0.2s;
+}
+.input-field:focus { border-color:var(--brand); outline:none; box-shadow:0 0 0 4px rgba(var(--brand-rgb, 99, 102, 241), 0.1); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+
+  <div class="at-hero">
+    <div class="at-title-wrap">
+      <h1 class="at-title">Permissions Système</h1>
+      <p class="at-subtitle">Gérez le dictionnaire des autorisations globales du système.</p>
+    </div>
+    <div class="quick-actions">
+      <a href="{{ url_for('admin.roles') }}" class="btn-action">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour aux rôles
+      </a>
+      <button class="btn-action primary" onclick="openModal('createPermModal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouvelle Permission
+      </button>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Code Technique</th>
+          <th>Nom affiché</th>
+          <th>Description</th>
+          <th>Catégorie</th>
+          <th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if perms_by_cat %}
+          {% for cat, perms in perms_by_cat.items() %}
+            {% for p in perms %}
+            <tr class="main-row">
+              <td>
+                <span class="perm-code">{{ p.code }}</span>
+              </td>
+              <td style="font-weight:800; color:var(--text-primary);">{{ p.nom }}</td>
+              <td style="font-size:13px; color:var(--text-muted); font-weight:500;">{{ p.description or '—' }}</td>
+              <td><span class="perm-cat">{{ p.categorie or 'Général' }}</span></td>
+              <td style="text-align:right;">
+                <form method="POST" action="{{ url_for('admin.supprimer_permission', id=p.id) }}" onsubmit="return confirm('Supprimer définitivement la permission {{ p.code }} ? Cela la retirera de tous les rôles associés.');">
+                  <button type="submit" class="btn-action danger" title="Supprimer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="5" style="text-align:center; padding:60px; color:var(--text-muted);">
+              <div style="font-weight:700; font-size:15px; color:var(--text-primary); margin-bottom:8px;">Aucune permission trouvée</div>
+              <p style="font-size:13px; margin:0;">Utilisez le bouton "Nouvelle Permission" pour créer des droits granulaires.</p>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Modal: Créer une permission -->
+<div id="createPermModal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">Nouvelle Permission</h3>
+      <button type="button" class="modal-close" onclick="closeModal('createPermModal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form method="POST" action="{{ url_for('admin.creer_permission') }}">
+      <div class="modal-body">
+        <div class="input-group">
+          <label class="input-label">Code technique <span style="color:#ef4444;">*</span></label>
+          <input type="text" name="code" class="input-field" required placeholder="ex: tickets.supprimer">
+          <span style="font-size:11px; color:var(--text-muted); margin-top:-4px; font-weight:600;">Utilisé par le code source. Évitez les espaces.</span>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Nom affiché <span style="color:#ef4444;">*</span></label>
+          <input type="text" name="nom" class="input-field" required placeholder="ex: Supprimer des tickets">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Catégorie</label>
+          <input type="text" name="categorie" class="input-field" placeholder="ex: Tickets" list="cat-list">
+          <datalist id="cat-list">
+            <option value="Administration">
+            <option value="Tickets">
+            <option value="Rapports">
+            <option value="Système">
+          </datalist>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Description</label>
+          <input type="text" name="description" class="input-field" placeholder="Description de la permission...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-action" style="box-shadow:none; border-color:transparent; background:transparent;" onclick="closeModal('createPermModal')">Annuler</button>
+        <button type="submit" class="btn-action primary">Ajouter au dictionnaire</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function openModal(id) {
+    var m = document.getElementById(id);
+    m.style.display = 'flex';
+    requestAnimationFrame(() => m.classList.add('active'));
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id) {
+    var m = document.getElementById(id);
+    m.classList.remove('active');
+    setTimeout(() => {
+      m.style.display = 'none';
+      document.body.style.overflow = '';
+    }, 300);
+  }
+  document.getElementById('createPermModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal('createPermModal');
+  });
+</script>
+{% endblock %}

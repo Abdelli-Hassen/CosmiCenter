@@ -1,22 +1,540 @@
 {% extends "base.html" %}
-{% block title %}Détails Département{% endblock %}
+
+{% block title %}Détails Département - {{ departement.nom }}{% endblock %}
+
 {% block body_class %}page-department-detail{% endblock %}
 
+{% block extra_head %}
+{% if departement.couleur %}
+<style>
+  :root {
+    --brand: {{ departement.couleur }};
+    --brand-hover: color-mix(in srgb, {{ departement.couleur }} 85%, black);
+    --brand-active: color-mix(in srgb, {{ departement.couleur }} 75%, black);
+    --brand-light: color-mix(in srgb, {{ departement.couleur }} 15%, transparent);
+    --brand-subtle: color-mix(in srgb, {{ departement.couleur }} 8%, transparent);
+    --text-brand: {{ departement.couleur }};
+    --color-brand: {{ departement.couleur }};
+  }
+</style>
+{% endif %}
+<style>
+/* ── Layout & Core ───────────────────────────────────────── */
+.dept-detail-container {
+  padding: 24px 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.dept-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.dept-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dept-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--fast);
+}
+.dept-breadcrumb:hover { color: var(--brand); }
+.dept-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.dept-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--r-md);
+  background: var(--brand-light);
+  color: var(--brand);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(var(--brand-rgb), 0.15);
+}
+
+/* ── Stats Grid ──────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.stat-card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--fast), box-shadow var(--fast);
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+}
+.stat-card.total::before { background: var(--text-muted); }
+.stat-card.new::before { background: var(--brand); }
+.stat-card.progress::before { background: #F59E0B; }
+.stat-card.resolved::before { background: var(--success); }
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.stat-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.stat-icon {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.stat-card.total .stat-icon { background: var(--surface-2); color: var(--text-secondary); }
+.stat-card.new .stat-icon { background: var(--brand-light); color: var(--brand); }
+.stat-card.progress .stat-icon { background: rgba(245, 158, 11, 0.12); color: #F59E0B; }
+.stat-card.resolved .stat-icon { background: rgba(16, 185, 129, 0.12); color: var(--success); }
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+/* ── Content Grid (Tickets / Members) ────────────────────── */
+.content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+/* ── Sections ────────────────────────────────────────────── */
+.section-block {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+.section-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-1);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+.section-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-body {
+  padding: 0;
+}
+
+/* ── Recent Tickets List ─────────────────────────────────── */
+.ticket-list {
+  display: flex;
+  flex-direction: column;
+}
+.ticket-row {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  text-decoration: none;
+  transition: background var(--fast);
+}
+.ticket-row:last-child { border-bottom: none; }
+.ticket-row:hover { background: var(--surface-2); }
+
+.ticket-id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand);
+  background: var(--brand-subtle);
+  border: 1px solid var(--brand-light);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+.ticket-info {
+  flex: 1;
+  min-width: 0;
+}
+.ticket-title {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ticket-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ticket-status {
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
+/* ── Members List ────────────────────────────────────────── */
+.member-list {
+  padding: 8px 0;
+}
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.member-row:last-child { border-bottom: none; }
+
+.member-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 2px solid var(--surface-1);
+}
+.member-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.member-info {
+  flex: 1;
+  min-width: 0;
+}
+.member-name {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.member-role {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── Empty States ────────────────────────────────────────── */
+.empty-box {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .content-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .dept-detail-container { padding: 16px; }
+}
+/* ── Dialog ──────────────────────────────────────────────── */
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="page">
-  <div class="page-header">
-    <div class="page-header-left">
-      <a href="{{ url_for('departements.liste') }}" class="breadcrumb-link" style="color:var(--text-muted);font-size:var(--text-sm);text-decoration:none;">← Retour aux départements</a>
-      <h1 class="page-title" style="margin-top:var(--space-2);">{{ departement.nom if departement else 'Détail Département' }}</h1>
+<div class="dept-detail-container">
+
+  <!-- Header -->
+  <div class="dept-header">
+    <div class="dept-title-group">
+      <a href="{{ url_for('departements.liste') }}" class="dept-breadcrumb">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour aux départements
+      </a>
+      <h1 class="dept-title">
+        <div class="dept-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        </div>
+        {{ departement.nom }}
+      </h1>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn btn-ghost" onclick="document.getElementById('deptInfoDialog').showModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Infos
+      </button>
+      {% if current_user.has_permission('departements.modifier') %}
+      <a href="{{ url_for('departements.modifier', id=departement.id) }}" class="btn btn-secondary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Modifier
+      </a>
+      {% endif %}
     </div>
   </div>
 
-  <div class="empty-state" style="padding: 80px 32px;">
-    <svg class="empty-icon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-    </svg>
-    <p class="empty-title">En construction</p>
-    <p class="empty-desc">La vue détaillée pour ce département sera bientôt disponible.</p>
+  <!-- Infos Dialog -->
+  <dialog id="deptInfoDialog" style="padding:0; border:none; border-radius:var(--r-lg); box-shadow:var(--shadow-xl); background:var(--surface-base); max-width:700px; width:95%; margin:auto;">
+    <div style="padding:20px 24px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; background:var(--surface-1);">
+      <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Informations du département
+      </h3>
+      <form method="dialog">
+        <button type="submit" style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:4px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </form>
+    </div>
+    <div style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+      <div>
+        <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">Description</div>
+        <div style="font-size:14px; color:var(--text-primary); line-height:1.5;">{{ departement.description or 'Aucune description' }}</div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:24px;">
+        <div>
+          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">Code</div>
+          <div style="font-size:14px; color:var(--text-primary); font-weight:500;">{{ departement.code or 'N/A' }}</div>
+        </div>
+        <div>
+          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">Localisation</div>
+          <div style="font-size:14px; color:var(--text-primary); font-weight:500;">{{ departement.localisation or 'N/A' }}</div>
+        </div>
+        <div>
+          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">Email</div>
+          <div style="font-size:14px; color:var(--text-primary); font-weight:500;">{{ departement.email or 'N/A' }}</div>
+        </div>
+        <div>
+          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">Téléphone</div>
+          <div style="font-size:14px; color:var(--text-primary); font-weight:500;">{{ departement.telephone or 'N/A' }}</div>
+        </div>
+        <div>
+          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">SLA Réponse</div>
+          <div style="font-size:14px; color:var(--text-primary); font-weight:500;">{{ departement.sla_reponse_heures }} h</div>
+        </div>
+        <div>
+          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">SLA Résolution</div>
+          <div style="font-size:14px; color:var(--text-primary); font-weight:500;">{{ departement.sla_resolution_heures }} h</div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card total">
+      <div class="stat-header">
+        <span class="stat-label">Total Tickets</span>
+        <div class="stat-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+      </div>
+      <div class="stat-value">{{ stats.tickets_total }}</div>
+    </div>
+    <div class="stat-card new">
+      <div class="stat-header">
+        <span class="stat-label">Nouveaux</span>
+        <div class="stat-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+      </div>
+      <div class="stat-value">{{ stats.tickets_nouveaux }}</div>
+    </div>
+    <div class="stat-card progress">
+      <div class="stat-header">
+        <span class="stat-label">En Cours</span>
+        <div class="stat-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+      </div>
+      <div class="stat-value">{{ stats.tickets_en_cours }}</div>
+    </div>
+    <div class="stat-card resolved">
+      <div class="stat-header">
+        <span class="stat-label">Résolus</span>
+        <div class="stat-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+      </div>
+      <div class="stat-value">{{ stats.tickets_resolus }}</div>
+    </div>
+  </div>
+
+  <!-- Content Grid -->
+  <div class="content-grid">
+    
+    <!-- Tickets Récents -->
+    <div class="section-block">
+      <div class="section-header" style="flex-wrap:wrap; gap:12px;">
+        <h2 class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Tickets
+        </h2>
+        <!-- Filter pills -->
+        <div id="ticketFilters" style="display:flex; gap:4px; flex-wrap:wrap; background:var(--surface-2); padding:3px; border-radius:10px; border:1px solid var(--border-default);">
+          <button class="tfilter active" data-filter="all" onclick="filterTickets('all', this)" style="padding:4px 12px; border-radius:7px; font-size:12px; font-weight:700; border:none; cursor:pointer; background:var(--brand); color:#fff; transition:all .15s;">Tous</button>
+          <button class="tfilter" data-filter="nouveau" onclick="filterTickets('nouveau', this)" style="padding:4px 12px; border-radius:7px; font-size:12px; font-weight:700; border:none; cursor:pointer; background:transparent; color:var(--text-muted); transition:all .15s;">Nouveau</button>
+          <button class="tfilter" data-filter="en_cours" onclick="filterTickets('en_cours', this)" style="padding:4px 12px; border-radius:7px; font-size:12px; font-weight:700; border:none; cursor:pointer; background:transparent; color:var(--text-muted); transition:all .15s;">En cours</button>
+          <button class="tfilter" data-filter="en_attente" onclick="filterTickets('en_attente', this)" style="padding:4px 12px; border-radius:7px; font-size:12px; font-weight:700; border:none; cursor:pointer; background:transparent; color:var(--text-muted); transition:all .15s;">En attente</button>
+          <button class="tfilter" data-filter="resolu" onclick="filterTickets('resolu', this)" style="padding:4px 12px; border-radius:7px; font-size:12px; font-weight:700; border:none; cursor:pointer; background:transparent; color:var(--text-muted); transition:all .15s;">Résolu</button>
+          <button class="tfilter" data-filter="ferme" onclick="filterTickets('ferme', this)" style="padding:4px 12px; border-radius:7px; font-size:12px; font-weight:700; border:none; cursor:pointer; background:transparent; color:var(--text-muted); transition:all .15s;">Fermé</button>
+        </div>
+        {% if tickets_recents|length > 0 %}
+        <span id="ticketCount" class="badge badge-default" style="font-size:11px; margin-left:auto;">{{ tickets_recents|length }} tickets</span>
+        {% endif %}
+      </div>
+      <div class="section-body">
+        {% if tickets_recents %}
+        <div class="ticket-list" id="ticketList">
+          {% for t in tickets_recents %}
+          <a href="{{ url_for('tickets.detail', ticket_id=t.id) }}" class="ticket-row" data-statut="{{ t.statut }}">
+            <span class="ticket-id">{{ t.numero }}</span>
+            <div class="ticket-info">
+              <div class="ticket-title">{{ t.titre }}</div>
+              <div class="ticket-meta">
+                <span>Créé le {{ t.date_creation.strftime('%d %b %Y') }}</span>
+                <span>•</span>
+                <span>Par {{ t.createur.nom_complet }}</span>
+              </div>
+            </div>
+            <div class="ticket-status">
+              {% if t.statut in ['nouveau', 'ouvert'] %}
+              <span class="badge badge-new">{{ 'Ouvert' if t.statut == 'ouvert' else 'Nouveau' }}</span>
+              {% elif t.statut == 'en_cours' %}
+              <span class="badge badge-progress">En cours</span>
+              {% elif t.statut == 'en_attente' %}
+              <span class="badge badge-waiting">En attente</span>
+              {% elif t.statut == 'resolu' %}
+              <span class="badge badge-resolved">Résolu</span>
+              {% elif t.statut == 'ferme' %}
+              <span class="badge badge-closed">Fermé</span>
+              {% elif t.statut == 'annule' %}
+              <span class="badge badge-cancelled">Annulé</span>
+              {% endif %}
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        <div id="ticketEmptyFilter" style="display:none; padding:32px; text-align:center; color:var(--text-muted); font-size:13px;">
+          Aucun ticket pour ce filtre.
+        </div>
+        <script>
+        function filterTickets(filter, btn) {
+          // Update button styles
+          document.querySelectorAll('.tfilter').forEach(b => {
+            b.style.background = 'transparent';
+            b.style.color = 'var(--text-muted)';
+          });
+          btn.style.background = 'var(--brand)';
+          btn.style.color = '#fff';
+
+          const rows = document.querySelectorAll('#ticketList .ticket-row');
+          let visible = 0;
+          rows.forEach(row => {
+            const match = filter === 'all' || row.dataset.statut === filter;
+            row.style.display = match ? '' : 'none';
+            if (match) visible++;
+          });
+
+          // Update count badge
+          const badge = document.getElementById('ticketCount');
+          if (badge) badge.textContent = visible + ' ticket' + (visible !== 1 ? 's' : '');
+
+          // Show/hide empty state
+          document.getElementById('ticketEmptyFilter').style.display = visible === 0 ? 'block' : 'none';
+        }
+        </script>
+        {% else %}
+        <div class="empty-box">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px; opacity:0.5;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div>Aucun ticket récent dans ce département.</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Membres -->
+    <div class="section-block">
+      <div class="section-header">
+        <h2 class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Agents du département
+        </h2>
+        <span class="badge badge-default" style="font-size:11px;">{{ membres|length }} membre(s)</span>
+      </div>
+      <div class="section-body">
+        {% if membres %}
+        <div class="member-list">
+          {% for m in membres %}
+          <div class="member-row">
+            <div class="member-avatar">
+              {% if m.photo_profil %}
+              <img src="{{ url_for('static', filename='uploads/' + m.photo_profil) }}" alt="">
+              {% else %}
+              {{ m.prenom[0]|upper }}{{ m.nom[0]|upper }}
+              {% endif %}
+            </div>
+            <div class="member-info">
+              <div class="member-name">{{ m.nom_complet }}</div>
+              <div class="member-role">{{ m.role.nom if m.role else 'Sans rôle' }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-box">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px; opacity:0.5;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <div>Aucun membre assigné.</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
   </div>
 </div>
 {% endblock %}

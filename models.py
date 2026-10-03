@@ -84,6 +84,13 @@ class Utilisateur(UserMixin, db.Model):
     matricule = db.Column(db.String(50), unique=True)
     photo_profil = db.Column(db.String(255))
     
+    # Remote Access
+    anydesk_id = db.Column(db.String(50))
+    anydesk_password = db.Column(db.String(100))
+    teamviewer_id = db.Column(db.String(50))
+    teamviewer_password = db.Column(db.String(100))
+    poste_machine = db.Column(db.String(100))
+    
     # Rôle
     role_id = db.Column(db.String(36), db.ForeignKey('roles.id', ondelete='SET NULL'), index=True)
     departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='SET NULL'), index=True)
@@ -493,3 +500,25 @@ class Message(db.Model):
             'timestamp': self.timestamp.isoformat() + 'Z',
             'is_read': self.is_read
         }
+
+class PlanActionTask(db.Model):
+    """Tâches pour le plan d'action (Projets IT, Interventions, etc)"""
+    __tablename__ = 'plan_action_tasks'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    titre = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    statut = db.Column(db.String(50), default='planned') # planned, progress, completed
+    urgent = db.Column(db.Boolean, default=False)
+    
+    date_debut = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    date_fin = db.Column(db.DateTime, nullable=True)
+    
+    createur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), nullable=False)
+    assigne_a_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), nullable=True)
+
+    createur = db.relationship('Utilisateur', foreign_keys=[createur_id])
+    assigne_a = db.relationship('Utilisateur', foreign_keys=[assigne_a_id])
+
+    def __repr__(self):
+        return f'<PlanActionTask {self.titre}>'

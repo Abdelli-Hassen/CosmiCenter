@@ -2,9 +2,31 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
-## [2.0.0] - 2026-02-09
+## [2.1.0] - 2026-10-01
 
-### 🎉 Nouvelle Version Majeure
+### 🚀 Améliorations UX/UI & Gamification
+
+#### Ajouté
+- ✨ **Nouveau Design System Premium**
+  - Ajout d'interactions de survol (lift-off, ombres dynamiques)
+  - Intégration de badges de statut et de priorité repensés
+  - Création d'un référentiel `DESIGN_SYSTEM.md` pour l'interface
+- 🏆 **Gamification des Performances**
+  - Tableau "Le Podium (Top 3)" sur la page des performances
+  - Classement général (#) visible dans le tableau global
+  - Badges de classement dorés sur les profils d'agents
+- 📈 **Profils d'Agents Détaillés**
+  - Nouvelle page dédiée pour le tableau de bord individuel des agents
+  - Cartes KPI spécifiques à l'agent (Résolus, Taux de résolution, Temps moyen, CSAT)
+  - Historique complet des tickets traités par l'agent
+- 🔍 **Recherche et Tri Côté Client**
+  - Barre de recherche instantanée (par nom/département ou par titre de ticket)
+  - Tri dynamique en cliquant sur les en-têtes de colonnes des tableaux
+  - Animations de chargement et de filtrage (`slide-up`, `fade-in-up`)
+
+---
+
+## [2.0.0] - 2026-02-09
 
 #### Ajouté
 - ✨ **Système de rôles et permissions granulaire**

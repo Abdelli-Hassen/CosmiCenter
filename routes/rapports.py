@@ -180,7 +180,6 @@ def tableau_bord():
 @manager_required
 def performance_agents():
     """Rapport de performance des agents"""
-    # Période
     periode = request.args.get('periode', '30j')
     date_fin = datetime.now()
     
@@ -193,10 +192,9 @@ def performance_agents():
     else:
         date_debut = date_fin - timedelta(days=365)
     
-    # Statistiques par agent
     agents = Utilisateur.query.filter_by(actif=True).all()
-    
     stats_agents = []
+    
     for agent in agents:
         tickets_assignes = Ticket.query.filter(
             Ticket.assigne_a_id == agent.id,
@@ -206,12 +204,20 @@ def performance_agents():
         tickets_resolus = [t for t in tickets_assignes if t.statut == 'resolu']
         tickets_en_cours = [t for t in tickets_assignes if t.statut in ['nouveau', 'en_cours', 'en_attente']]
         
-        # Temps moyen de résolution pour cet agent
-        temps_resolution = [t.temps_resolution_minutes for t in tickets_resolus 
-                          if t.temps_resolution_minutes is not None]
+        tickets_details = []
+        for t in sorted(tickets_resolus, key=lambda x: x.date_resolution or datetime.min, reverse=True)[:5]:
+            heures_resolution = round(t.temps_resolution_minutes / 60, 1) if t.temps_resolution_minutes else 0
+            tickets_details.append({
+                'id': t.id,
+                'titre': t.titre,
+                'date_creation': t.date_creation.strftime('%d/%m/%Y %H:%M'),
+                'date_resolution': t.date_resolution.strftime('%d/%m/%Y %H:%M') if t.date_resolution else 'N/A',
+                'heures': heures_resolution
+            })
+
+        temps_resolution = [t.temps_resolution_minutes for t in tickets_resolus if t.temps_resolution_minutes is not None]
         temps_moyen = sum(temps_resolution) / len(temps_resolution) if temps_resolution else 0
         
-        # Satisfaction moyenne
         satisfactions = [t.satisfaction for t in tickets_resolus if t.satisfaction is not None]
         satisfaction_moyenne = sum(satisfactions) / len(satisfactions) if satisfactions else 0
         
@@ -222,18 +228,89 @@ def performance_agents():
             'tickets_en_cours': len(tickets_en_cours),
             'temps_moyen_resolution': temps_moyen,
             'satisfaction_moyenne': satisfaction_moyenne,
-            'taux_resolution': (len(tickets_resolus) / len(tickets_assignes) * 100) 
-                              if tickets_assignes else 0
+            'taux_resolution': (len(tickets_resolus) / len(tickets_assignes) * 100) if tickets_assignes else 0,
+            'tickets_details': tickets_details
         })
     
-    # Trier par nombre de tickets résolus
     stats_agents.sort(key=lambda x: x['tickets_resolus'], reverse=True)
+    for i, stat in enumerate(stats_agents):
+        stat['rank'] = i + 1
+        
+    top_3_agents = stats_agents[:3]
     
     return render_template('rapports/performance_agents.html',
                          stats_agents=stats_agents,
+                         top_3_agents=top_3_agents,
                          periode=periode,
                          date_debut=date_debut,
                          date_fin=date_fin)
+
+
+@rapports_bp.route('/performance-agents/<string:agent_id>/tickets')
+@login_required
+@manager_required
+def agent_tickets(agent_id):
+    """Vue détaillée de tous les tickets d'un agent"""
+    agent = Utilisateur.query.get_or_404(agent_id)
+    
+    periode = request.args.get('periode', '30j')
+    date_fin = datetime.now()
+    if periode == '7j':
+        date_debut = date_fin - timedelta(days=7)
+    elif periode == '30j':
+        date_debut = date_fin - timedelta(days=30)
+    elif periode == '90j':
+        date_debut = date_fin - timedelta(days=90)
+    else:
+        date_debut = date_fin - timedelta(days=365)
+        
+    tickets = Ticket.query.filter(
+        Ticket.assigne_a_id == agent_id,
+        Ticket.date_creation >= date_debut
+    ).order_by(Ticket.date_creation.desc()).all()
+    
+    tickets_resolus = [t for t in tickets if t.statut == 'resolu']
+    tickets_en_cours = [t for t in tickets if t.statut in ['nouveau', 'en_cours', 'en_attente']]
+    
+    temps_resolution = [t.temps_resolution_minutes for t in tickets_resolus if t.temps_resolution_minutes is not None]
+    temps_moyen = sum(temps_resolution) / len(temps_resolution) if temps_resolution else 0
+    
+    satisfactions = [t.satisfaction for t in tickets_resolus if t.satisfaction is not None]
+    satisfaction_moyenne = sum(satisfactions) / len(satisfactions) if satisfactions else 0
+    
+    # Calcul du classement (Rank) par rapport aux autres agents
+    tous_agents = Utilisateur.query.filter_by(actif=True).all()
+    agent_scores = []
+    for a in tous_agents:
+        resolus_count = Ticket.query.filter(
+            Ticket.assigne_a_id == a.id,
+            Ticket.statut == 'resolu',
+            Ticket.date_creation >= date_debut
+        ).count()
+        agent_scores.append({'id': a.id, 'resolus': resolus_count})
+        
+    agent_scores.sort(key=lambda x: x['resolus'], reverse=True)
+    rank = 0
+    for index, score in enumerate(agent_scores):
+        if score['id'] == agent_id:
+            rank = index + 1
+            break
+    
+    stats = {
+        'total': len(tickets),
+        'resolus': len(tickets_resolus),
+        'en_cours': len(tickets_en_cours),
+        'temps_moyen': temps_moyen,
+        'satisfaction': satisfaction_moyenne,
+        'taux_resolution': (len(tickets_resolus) / len(tickets) * 100) if tickets else 0,
+        'rank': rank
+    }
+    
+    return render_template('rapports/agent_tickets.html', 
+                         agent=agent, 
+                         tickets=tickets,
+                         periode=periode,
+                         stats=stats)
 
 
 @rapports_bp.route('/satisfaction-client')

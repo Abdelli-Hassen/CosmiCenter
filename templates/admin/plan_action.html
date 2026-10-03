@@ -1,256 +1,746 @@
 {% extends "base.html" %}
+
 {% block title %}Plan d'action & Calendrier{% endblock %}
-{% block content %}
+{% block body_class %}page-admin-plan{% endblock %}
+
+{% block extra_head %}
+<!-- FullCalendar via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/locales/fr.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.8/index.global.min.js"></script>
+
 <style>
-  .admin-header {
-    margin-bottom: 24px;
-  }
-  .admin-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0 0 8px;
-  }
-  .admin-subtitle {
-    font-size: 14px;
-    color: #64748b;
-    margin: 0;
-  }
-  .dashboard-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 24px;
-  }
-  .card-premium {
-    background: white;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-    overflow: hidden;
-  }
-  .card-premium-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid #e2e8f0;
-    background: #f8fafc;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .card-premium-title {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #0f172a;
-  }
-  .card-premium-body {
-    padding: 24px;
-  }
-  
-  /* Mock Calendar Styles */
-  .calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-  .calendar-nav {
-    display: flex;
-    gap: 8px;
-  }
-  .calendar-nav button {
-    background: white;
-    border: 1px solid #e2e8f0;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #475569;
-  }
-  .calendar-nav button:hover {
-    background: #f1f5f9;
-  }
-  .calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 1px;
-    background: #e2e8f0;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .calendar-day-header {
-    background: #f8fafc;
-    padding: 12px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: #64748b;
-    text-transform: uppercase;
-  }
-  .calendar-day {
-    background: white;
-    min-height: 100px;
-    padding: 8px;
-  }
-  .calendar-date {
-    font-size: 14px;
-    color: #475569;
-    font-weight: 500;
-    margin-bottom: 8px;
-  }
-  .calendar-event {
-    background: #e0e7ff;
-    color: #4338ca;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    margin-bottom: 4px;
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .calendar-event.urgent {
-    background: #fee2e2;
-    color: #b91c1c;
-  }
+/* ── Animations ──────────────────────────────────────────────── */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-  /* Table Styles */
-  .project-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  .project-table th {
-    text-align: left;
-    padding: 12px 16px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #64748b;
-    border-bottom: 1px solid #e2e8f0;
-    text-transform: uppercase;
-  }
-  .project-table td {
-    padding: 16px;
-    font-size: 14px;
-    color: #334155;
-    border-bottom: 1px solid #e2e8f0;
-  }
-  .project-table tr:last-child td {
-    border-bottom: none;
-  }
-  .status-badge {
-    padding: 4px 8px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-  .status-badge.progress { background: #dbeafe; color: #1d4ed8; }
-  .status-badge.planned { background: #f1f5f9; color: #475569; }
+/* ── Page ──────────────────────────────────────────────────── */
+.admin-page { padding: 28px 36px; max-width: 1400px; margin: 0 auto; }
+@media (max-width:768px) { .admin-page { padding: 16px 20px; } }
+
+/* ── Hero ──────────────────────────────────────────────────── */
+.at-hero { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:28px; animation: fade-in-up 0.5s ease-out; }
+.at-title-wrap { display:flex; flex-direction:column; gap:4px; }
+.at-title { font-size:24px; font-weight:900; color:var(--text-primary); margin:0; }
+.at-subtitle { font-size:14px; color:var(--text-muted); font-weight:600; margin:0; }
+
+.btn-action {
+  display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--text-primary);
+  text-decoration:none; padding:10px 18px; border-radius:12px; background:var(--surface-1);
+  border:1px solid var(--border-subtle); transition:all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:0 4px 12px rgba(0,0,0,0.02); cursor:pointer;
+}
+.btn-action:hover { background:var(--surface-hover); color:var(--brand); transform: translateY(-2px); box-shadow:0 8px 16px rgba(0,0,0,0.05); }
+.btn-action.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
+.btn-action.primary:hover { background:var(--brand-dark); color:#fff; }
+.btn-action.danger { background:rgba(239,68,68,0.1); color:#ef4444; border-color:transparent; padding:6px 10px; border-radius:8px;}
+.btn-action.danger:hover { background:#ef4444; color:#fff; transform:scale(1.05); box-shadow:0 4px 12px rgba(239,68,68,0.2); }
+.btn-action.success { background:rgba(16,185,129,0.1); color:#10b981; border-color:transparent; padding:6px 10px; border-radius:8px;}
+.btn-action.success:hover { background:#10b981; color:#fff; transform:scale(1.05); box-shadow:0 4px 12px rgba(16,185,129,0.2); }
+
+/* ── Cards ─────────────────────────────────────────────────── */
+.dashboard-grid { display:grid; grid-template-columns:2.5fr 1.5fr; gap:24px; }
+@media (max-width:1100px) { .dashboard-grid { grid-template-columns:1fr; } }
+
+.form-card {
+  background:var(--surface-1); border-radius:20px; border:1px solid var(--border-subtle);
+  overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.04);
+  animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.form-card:nth-child(1) { animation-delay: 0.1s; }
+.form-card:nth-child(2) { animation-delay: 0.2s; }
+
+.form-header { padding:24px; border-bottom:1px solid var(--border-subtle); background:linear-gradient(to bottom, var(--surface-1), var(--surface-2)); display:flex; justify-content:space-between; align-items:center; }
+.form-title { font-size:16px; font-weight:900; color:var(--text-primary); margin:0; }
+.form-body { padding:24px; }
+
+/* ── FullCalendar Overrides ────────────────────────────────── */
+#calendar { font-family: 'Inter', sans-serif; min-height: 600px; }
+.fc-toolbar-title { font-size: 18px !important; font-weight: 800 !important; color: var(--text-primary) !important; text-transform: capitalize; }
+.fc-button-primary {
+    background: var(--surface-base) !important;
+    border: 1px solid var(--border-subtle) !important;
+    color: var(--text-secondary) !important;
+    box-shadow: none !important;
+    font-weight: 700 !important;
+    text-transform: capitalize;
+    border-radius: 8px !important;
+}
+.fc-button-primary:hover { background: var(--surface-hover) !important; color: var(--brand) !important; }
+.fc-button-active { background: var(--brand) !important; color: white !important; border-color: var(--brand) !important; }
+.fc-col-header-cell { background: var(--surface-2); padding: 8px 0; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; border-color: var(--border-subtle) !important;}
+.fc-daygrid-day { transition: background 0.2s, border-color 0.2s; border-color: var(--border-subtle) !important; cursor:pointer; }
+.fc-daygrid-day:hover { background: var(--surface-hover); }
+.fc-daygrid-day-number { font-size: 13px; font-weight: 700; color: var(--text-secondary); padding: 8px; }
+.fc-day-today { background: var(--brand-subtle, rgba(99,102,241,0.05)) !important; }
+.fc-day-today .fc-daygrid-day-number { background: var(--brand); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 4px; }
+
+/* ── Event Dots (Custom) ── */
+.fc-daygrid-event-harness {
+    position: static !important;
+    display: inline-block !important;
+    margin: 2px !important;
+}
+.fc-daygrid-day-events {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-content: flex-start !important;
+    padding-bottom: 4px;
+    position: static !important;
+}
+.fc-event {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 8px !important;
+    overflow: hidden !important;
+    border: none !important;
+    display: block !important;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fc-event:hover { transform: scale(1.5); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+.fc-event-main, .fc-event-title, .fc-event-time { display: none !important; }
+.fc-daygrid-day-bottom { display: none !important; } /* Hide +more link */
+
+.highlighted-day {
+    background-color: rgba(99,102,241,0.1) !important;
+    border: 2px solid var(--brand) !important;
+}
+
+/* ── Table ─────────────────────────────────────────────────── */
+.data-table { width:100%; border-collapse:collapse; text-align:left; }
+.data-table th { padding:16px 24px; font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid var(--border-subtle); background:var(--surface-2); }
+.data-table td { padding:16px 24px; border-bottom:1px solid var(--border-subtle); vertical-align:middle; transition:all 0.2s ease; }
+.data-table tr:last-child td { border-bottom:none; }
+
+.data-table tr.main-row { transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; }
+.data-table tr.main-row:hover { background:var(--surface-hover); transform: translateX(4px); border-radius:12px; }
+.data-table tr.main-row.active-task { background: var(--surface-hover); border-left: 4px solid var(--brand); transform: translateX(4px); }
+.task-completed { opacity: 0.5; filter: grayscale(1); }
+.task-completed .task-title-text { text-decoration: line-through; }
+
+.status-badge { display:inline-flex; align-items:center; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
+.badge-progress { background:rgba(59,130,246,0.1); color:#3b82f6; }
+.badge-planned { background:rgba(100,116,139,0.1); color:#64748b; }
+.badge-completed { background:rgba(16,185,129,0.1); color:#10b981; }
+
+/* ── Modals ────────────────────────────────────────────────── */
+.modal-overlay {
+  display:none; position:fixed; inset:0; z-index:400; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px);
+  align-items:center; justify-content:center;
+}
+.modal-card {
+  background:var(--surface-1); width:100%; max-width:480px; border-radius:24px; border:1px solid var(--border-subtle);
+  box-shadow:0 24px 48px rgba(0,0,0,0.1); overflow:hidden;
+  transform:scale(0.95); opacity:0; transition:all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); display:flex; flex-direction:column; max-height:90vh;
+}
+.modal-overlay.active .modal-card { transform:scale(1); opacity:1; }
+
+.modal-header { padding:24px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+.modal-title { font-size:18px; font-weight:800; color:var(--text-primary); margin:0; }
+.modal-close { background:transparent; border:none; color:var(--text-muted); cursor:pointer; transition:color 0.2s; padding:4px; border-radius:8px; }
+.modal-close:hover { color:var(--error); background:rgba(239,68,68,0.1); }
+
+.modal-body { padding:24px; display:flex; flex-direction:column; gap:20px; overflow-y:auto; }
+.modal-footer { padding:20px 24px; border-top:1px solid var(--border-subtle); display:flex; justify-content:flex-end; gap:12px; background:var(--surface-2); flex-shrink:0; }
+
+.input-group { display:flex; flex-direction:column; gap:8px; }
+.input-label { font-size:13px; font-weight:800; color:var(--text-secondary); }
+.input-field {
+  width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle);
+  background:var(--surface-base); font-size:14px; font-weight:600; color:var(--text-primary);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,0.02); transition:all 0.2s;
+}
+.input-field:focus { border-color:var(--brand); outline:none; box-shadow:0 0 0 4px rgba(var(--brand-rgb, 99, 102, 241), 0.1); }
+.input-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+.detail-row { display:flex; align-items:flex-start; gap:12px; margin-bottom:16px; }
+.detail-icon { color:var(--brand); padding-top:2px; }
+.detail-label { font-size:12px; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:4px; }
+.detail-value { font-size:14px; color:var(--text-primary); font-weight:600; }
+
+.search-container { position:relative; display:flex; align-items:center; }
+.search-icon { position:absolute; left:12px; color:var(--text-muted); }
+.search-input { padding:8px 12px 8px 36px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-base); font-size:13px; outline:none; transition:0.2s; width:220px; }
+.search-input:focus { border-color:var(--brand); }
+
+.day-task-item { padding:16px; border-radius:12px; border:1px solid var(--border-subtle); cursor:pointer; transition:all 0.2s; margin-bottom:12px; background:var(--surface-base); }
+.day-task-item:hover { background:var(--surface-hover); transform:translateX(4px); border-color:var(--brand); }
 </style>
+{% endblock %}
 
-<div class="page" style="padding: 32px; max-width: 1400px; margin: 0 auto;">
-  <div class="admin-header">
-    <h1 class="admin-title">Plan d'action de l'équipe</h1>
-    <p class="admin-subtitle">Suivez les tâches planifiées et l'avancement des projets IT en cours.</p>
+{% block content %}
+<div class="admin-page">
+
+  <div class="at-hero">
+    <div class="at-title-wrap">
+      <h1 class="at-title">Plan d'action de l'équipe</h1>
+      <p class="at-subtitle">Gérez et planifiez vos tâches et projets IT en temps réel.</p>
+    </div>
+    <div class="quick-actions">
+      <button class="btn-action primary" onclick="openModal('createTaskModal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouvelle Tâche
+      </button>
+    </div>
   </div>
 
   <div class="dashboard-grid">
-    <!-- Calendar Card -->
-    <div class="card-premium">
-      <div class="card-premium-header">
-        <h2 class="card-premium-title">Calendrier des interventions</h2>
-        <div class="calendar-nav">
-          <button>Aujourd'hui</button>
-          <button>&lt;</button>
-          <button>&gt;</button>
-        </div>
+    
+    <!-- Left Column: Calendar -->
+    <div class="form-card">
+      <div class="form-header">
+        <h2 class="form-title">Calendrier Interactif</h2>
       </div>
-      <div class="card-premium-body">
-        <div class="calendar-header">
-          <h3 style="margin: 0; font-size: 18px; color: #0f172a;">Octobre 2026</h3>
-        </div>
-        <div class="calendar-grid">
-          <div class="calendar-day-header">Lun</div>
-          <div class="calendar-day-header">Mar</div>
-          <div class="calendar-day-header">Mer</div>
-          <div class="calendar-day-header">Jeu</div>
-          <div class="calendar-day-header">Ven</div>
-          <div class="calendar-day-header">Sam</div>
-          <div class="calendar-day-header">Dim</div>
-          
-          <!-- Mock Days -->
-          <div class="calendar-day"><div class="calendar-date" style="color: #cbd5e1;">28</div></div>
-          <div class="calendar-day"><div class="calendar-date" style="color: #cbd5e1;">29</div></div>
-          <div class="calendar-day"><div class="calendar-date" style="color: #cbd5e1;">30</div></div>
-          <div class="calendar-day">
-            <div class="calendar-date">1</div>
-            <div class="calendar-event">Intervention réseau #104</div>
-          </div>
-          <div class="calendar-day"><div class="calendar-date">2</div></div>
-          <div class="calendar-day"><div class="calendar-date">3</div></div>
-          <div class="calendar-day"><div class="calendar-date">4</div></div>
-          
-          <div class="calendar-day">
-            <div class="calendar-date">5</div>
-            <div class="calendar-event urgent">Maintenance Serveur Sage</div>
-          </div>
-          <div class="calendar-day"><div class="calendar-date">6</div></div>
-          <div class="calendar-day"><div class="calendar-date">7</div></div>
-          <div class="calendar-day">
-            <div class="calendar-date" style="background: #dc2626; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">8</div>
-            <div class="calendar-event">Onboarding - J. Dupont</div>
-          </div>
-          <div class="calendar-day"><div class="calendar-date">9</div></div>
-          <div class="calendar-day"><div class="calendar-date">10</div></div>
-          <div class="calendar-day"><div class="calendar-date">11</div></div>
-        </div>
+      <div class="form-body">
+        <div id="calendar"></div>
       </div>
     </div>
 
-    <!-- Projects Table -->
-    <div class="card-premium">
-      <div class="card-premium-header">
-        <h2 class="card-premium-title">Projets IT</h2>
-        <button class="btn btn-primary btn-sm">Nouveau projet</button>
+    <!-- Right Column: Projects/Tasks List -->
+    <div class="form-card">
+      <div class="form-header">
+        <h2 class="form-title">Tâches Récentes</h2>
+        <div class="search-container">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="taskSearchInput" class="search-input" placeholder="Rechercher une tâche...">
+        </div>
       </div>
-      <div class="card-premium-body" style="padding: 0;">
-        <table class="project-table">
+      <div class="form-body" style="padding:0; max-height:800px; overflow-y:auto;">
+        <table class="data-table" id="tasksTable">
           <thead>
             <tr>
-              <th>Projet</th>
-              <th>Statut</th>
-              <th>Échéance</th>
+              <th>Détails de la tâche</th>
+              <th style="text-align:right;">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
+            {% for task in tasks %}
+            <tr class="main-row task-row {% if task.statut == 'completed' %}task-completed{% endif %}" data-task-id="{{ task.id }}">
               <td>
-                <div style="font-weight: 600; color: #0f172a;">Migration Office 365</div>
-                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Phase 2 - Utilisateurs VIP</div>
+                <div style="font-size:14px; font-weight:800; color:var(--text-primary);">
+                  <span class="task-title-text">{{ task.titre }}</span>
+                  {% if task.urgent %}
+                    <span style="margin-left:6px; color:#ef4444; font-size:12px; text-decoration:none;">🔥 Urgent</span>
+                  {% endif %}
+                  {% if task.statut == 'completed' %}
+                    <span class="status-badge badge-completed" style="margin-left:6px; font-size:10px;">Terminé</span>
+                  {% endif %}
+                </div>
+                {% if task.description %}
+                <div style="font-size:12px; color:var(--text-muted); margin-top:4px; font-weight:600;" class="task-desc-text">{{ task.description[:60] }}{% if task.description|length > 60 %}...{% endif %}</div>
+                {% endif %}
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:6px; display:flex; gap:12px;">
+                  <span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    {% if task.date_fin %}
+                      Du {{ task.date_debut.strftime('%d/%m') }} au {{ task.date_fin.strftime('%d/%m') }}
+                    {% else %}
+                      Le {{ task.date_debut.strftime('%d/%m/%Y') }}
+                    {% endif %}
+                  </span>
+                  {% if task.assigne_a %}
+                  <span style="color:var(--brand);" class="task-assignee-text">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    {{ task.assigne_a.prenom }} {{ task.assigne_a.nom }}
+                  </span>
+                  {% endif %}
+                </div>
               </td>
-              <td><span class="status-badge progress">En cours</span></td>
-              <td>15 Oct 2026</td>
+              <td style="vertical-align:middle; text-align:right;">
+                <div style="display:flex; gap:8px; justify-content:flex-end;">
+                  <button type="button" class="btn-action btn-info-task" data-task-id="{{ task.id }}" title="Détails" style="background:var(--surface-2); padding:6px 10px; border-radius:8px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                  </button>
+                  {% if task.statut != 'completed' %}
+                  <form method="POST" action="{{ url_for('admin.terminer_plan_action', id=task.id) }}" class="confirm-form" data-msg="Êtes-vous sûr de vouloir marquer cette tâche comme terminée ?">
+                    <button type="submit" class="btn-action success" title="Marquer comme terminé">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </button>
+                  </form>
+                  {% else %}
+                  <form method="POST" action="{{ url_for('admin.annuler_terminer_plan_action', id=task.id) }}" class="confirm-form" data-msg="Voulez-vous annuler l'état terminé de cette tâche ?">
+                    <button type="submit" class="btn-action" style="background:var(--surface-2);" title="Annuler (Remettre en cours)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                    </button>
+                  </form>
+                  {% endif %}
+                  <form method="POST" action="{{ url_for('admin.supprimer_plan_action', id=task.id) }}" class="confirm-form" data-msg="Supprimer définitivement cette tâche ?">
+                    <button type="submit" class="btn-action danger" title="Supprimer">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
             </tr>
+            {% else %}
             <tr>
-              <td>
-                <div style="font-weight: 600; color: #0f172a;">Renouvellement Parc PC</div>
-                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Achat et préparation 50 postes</div>
+              <td colspan="2" style="text-align:center; padding:40px; color:var(--text-muted); font-size:13px; font-weight:600;">
+                Aucune tâche planifiée.
               </td>
-              <td><span class="status-badge planned">Planifié</span></td>
-              <td>01 Nov 2026</td>
             </tr>
-            <tr>
-              <td>
-                <div style="font-weight: 600; color: #0f172a;">Audit Cybersécurité</div>
-                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Tests d'intrusion réseau interne</div>
-              </td>
-              <td><span class="status-badge progress">En cours</span></td>
-              <td>31 Oct 2026</td>
-            </tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
+
   </div>
 </div>
+
+<!-- Custom Confirmation Modal -->
+<div id="customConfirmModal" class="modal-overlay" style="z-index:9999;">
+  <div class="modal-card" style="max-width:400px; text-align:center; padding-top:20px;">
+    <div class="modal-body" style="align-items:center;">
+      <div style="width:64px; height:64px; background:rgba(239,68,68,0.1); color:#ef4444; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:8px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h3 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0;">Confirmation requise</h3>
+      <p id="confirmMessage" style="font-size:14px; color:var(--text-secondary); margin:0;">Êtes-vous sûr ?</p>
+    </div>
+    <div class="modal-footer" style="justify-content:center; gap:16px;">
+      <button type="button" class="btn-action" onclick="closeModal('customConfirmModal')">Annuler</button>
+      <button type="button" class="btn-action primary" id="confirmProceedBtn">Oui, continuer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Day Tasks List -->
+<div id="dayTasksModal" class="modal-overlay" style="z-index:500;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title" id="dayTasksTitle">Tâches du jour</h3>
+      <button type="button" class="modal-close" onclick="closeModal('dayTasksModal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="dayTasksContainer" style="background:var(--surface-2);">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Créer une tâche -->
+<div id="createTaskModal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">Nouvelle Tâche</h3>
+      <button type="button" class="modal-close" onclick="closeModal('createTaskModal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form method="POST" action="{{ url_for('admin.creer_plan_action') }}">
+      <div class="modal-body">
+        <div class="input-group">
+          <label class="input-label">Titre de la tâche <span style="color:#ef4444;">*</span></label>
+          <input type="text" name="titre" class="input-field" required placeholder="ex: Migration Serveur">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Description</label>
+          <textarea name="description" class="input-field" rows="3" placeholder="Détails de l'intervention..."></textarea>
+        </div>
+        <div class="input-row">
+          <div class="input-group">
+            <label class="input-label">Date de début <span style="color:#ef4444;">*</span></label>
+            <input type="datetime-local" name="date_debut" class="input-field" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Date de fin (Optionnel)</label>
+            <input type="datetime-local" name="date_fin" class="input-field">
+          </div>
+        </div>
+        <div class="input-row">
+          <div class="input-group">
+            <label class="input-label">Assigner à</label>
+            <select name="assigne_a_id" class="input-field" style="cursor:pointer;">
+              <option value="">Non assigné</option>
+              {% for u in utilisateurs %}
+              <option value="{{ u.id }}">{{ u.prenom }} {{ u.nom }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="input-group" style="justify-content:flex-end;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700; font-size:13px; padding:12px; border-radius:12px; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);">
+              <input type="checkbox" name="urgent" style="width:16px; height:16px; accent-color:#ef4444;">
+              Marquer comme Urgent 🔥
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-action" style="box-shadow:none; border-color:transparent; background:transparent;" onclick="closeModal('createTaskModal')">Annuler</button>
+        <button type="submit" class="btn-action primary">Enregistrer la tâche</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Éditer une tâche -->
+<div id="editTaskModal" class="modal-overlay" style="z-index:600;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">Modifier la tâche</h3>
+      <button type="button" class="modal-close" onclick="closeModal('editTaskModal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form method="POST" action="" id="editTaskForm">
+      <div class="modal-body">
+        <div class="input-group">
+          <label class="input-label">Titre de la tâche <span style="color:#ef4444;">*</span></label>
+          <input type="text" name="titre" id="editTitre" class="input-field" required>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Description</label>
+          <textarea name="description" id="editDesc" class="input-field" rows="3"></textarea>
+        </div>
+        <div class="input-row">
+          <div class="input-group">
+            <label class="input-label">Date de début <span style="color:#ef4444;">*</span></label>
+            <input type="datetime-local" name="date_debut" id="editDebut" class="input-field" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Date de fin (Optionnel)</label>
+            <input type="datetime-local" name="date_fin" id="editFin" class="input-field">
+          </div>
+        </div>
+        <div class="input-row">
+          <div class="input-group">
+            <label class="input-label">Assigner à</label>
+            <select name="assigne_a_id" id="editAssigne" class="input-field" style="cursor:pointer;">
+              <option value="">Non assigné</option>
+              {% for u in utilisateurs %}
+              <option value="{{ u.id }}">{{ u.prenom }} {{ u.nom }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="input-group" style="justify-content:flex-end;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700; font-size:13px; padding:12px; border-radius:12px; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);">
+              <input type="checkbox" name="urgent" id="editUrgent" style="width:16px; height:16px; accent-color:#ef4444;">
+              Marquer comme Urgent 🔥
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-action" style="box-shadow:none; border-color:transparent; background:transparent;" onclick="closeModal('editTaskModal')">Annuler</button>
+        <button type="submit" class="btn-action primary">Mettre à jour</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Détails de la tâche -->
+<div id="viewTaskModal" class="modal-overlay" style="z-index:700;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title" id="viewTaskTitle">Détails de la tâche</h3>
+      <button type="button" class="modal-close" onclick="closeModal('viewTaskModal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" style="gap:0;">
+      <div class="detail-row">
+        <div class="detail-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div>
+          <div class="detail-label">Assigné à</div>
+          <div class="detail-value" id="viewTaskAssignee">...</div>
+        </div>
+      </div>
+      
+      <div class="detail-row">
+        <div class="detail-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div>
+          <div class="detail-label">Période</div>
+          <div class="detail-value" id="viewTaskDates">...</div>
+        </div>
+      </div>
+
+      <div class="detail-row" style="margin-bottom:0;">
+        <div class="detail-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg></div>
+        <div>
+          <div class="detail-label">Description</div>
+          <div class="detail-value" id="viewTaskDesc" style="font-weight:500; font-size:13px; line-height:1.6; white-space:pre-wrap; color:var(--text-secondary);">...</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between; align-items:center;">
+      <span class="status-badge" id="viewTaskStatusBadge" style="font-size:12px;"></span>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn-action" id="btnOpenEdit" style="background:var(--surface-base);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          Éditer
+        </button>
+        <button type="button" class="btn-action" onclick="closeModal('viewTaskModal')">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Search Functionality
+  const searchInput = document.getElementById('taskSearchInput');
+  const taskRows = document.querySelectorAll('.task-row');
+  
+  if (searchInput) {
+    searchInput.addEventListener('input', function(e) {
+      const term = e.target.value.toLowerCase();
+      taskRows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(term) ? '' : 'none';
+      });
+    });
+  }
+
+  // Modal Functionality
+  function openModal(id) {
+    var m = document.getElementById(id);
+    m.style.display = 'flex';
+    requestAnimationFrame(() => m.classList.add('active'));
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id) {
+    var m = document.getElementById(id);
+    m.classList.remove('active');
+    setTimeout(() => {
+      m.style.display = 'none';
+      document.body.style.overflow = '';
+    }, 300);
+  }
+  
+  // Close modals on outside click
+  document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', function(e) {
+      if (e.target === this) closeModal(this.id);
+    });
+  });
+
+  // Custom Confirmation Dialog Interception
+  let pendingForm = null;
+  document.querySelectorAll('.confirm-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const msg = this.getAttribute('data-msg') || 'Êtes-vous sûr ?';
+      document.getElementById('confirmMessage').innerText = msg;
+      pendingForm = this;
+      openModal('customConfirmModal');
+    });
+  });
+  document.getElementById('confirmProceedBtn').addEventListener('click', function() {
+    if (pendingForm) {
+      pendingForm.submit();
+    }
+  });
+
+  // Open Edit Modal from View Modal
+  document.getElementById('btnOpenEdit').addEventListener('click', function() {
+    closeModal('viewTaskModal');
+    setTimeout(() => {
+      openModal('editTaskModal');
+    }, 300);
+  });
+
+  // Setup FullCalendar
+  let cachedEvents = [];
+  document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    
+    // Format date string for datetime-local input
+    function formatForInput(date) {
+      if (!date) return '';
+      const tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
+      return (new Date(date.getTime() - tzoffset)).toISOString().slice(0, 16);
+    }
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      locale: 'fr',
+      initialView: 'dayGridMonth',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+      },
+      events: function(info, successCallback, failureCallback) {
+        fetch('{{ url_for("admin.api_plan_action_tasks") }}')
+          .then(res => res.json())
+          .then(data => {
+            cachedEvents = data;
+            successCallback(data);
+          })
+          .catch(err => failureCallback(err));
+      },
+      eventDataTransform: function(eventData) {
+        if (eventData.statut === 'completed') {
+          eventData.backgroundColor = 'rgba(16,185,129,0.1)';
+          eventData.borderColor = 'rgba(16,185,129,0.2)';
+          eventData.textColor = '#10b981';
+          eventData.className = eventData.className + ' fc-event-completed';
+        }
+        return eventData;
+      },
+      dateClick: function(info) {
+        // Filter task list when day is clicked
+        const clickedDate = info.dateStr; // format YYYY-MM-DD
+        const clickedTime = new Date(clickedDate).getTime();
+        
+        const dayEventIds = cachedEvents.filter(ev => {
+          if (!ev.end) {
+            return ev.start.startsWith(clickedDate);
+          }
+          const evStart = new Date(ev.start.split('T')[0]).getTime();
+          const evEnd = new Date(ev.end.split('T')[0]).getTime();
+          return clickedTime >= evStart && clickedTime <= evEnd;
+        }).map(ev => String(ev.id));
+        
+        // Clear highlights
+        document.querySelectorAll('.fc-daygrid-day').forEach(el => {
+            el.classList.remove('highlighted-day');
+        });
+        document.querySelectorAll('.task-row').forEach(row => {
+            row.classList.remove('active-task');
+        });
+        
+        if (window.selectedDate === clickedDate) {
+            // Deselect
+            window.selectedDate = null;
+            filterTasksList(null);
+        } else {
+            window.selectedDate = clickedDate;
+            info.dayEl.classList.add('highlighted-day');
+            filterTasksList(dayEventIds);
+        }
+      },
+      eventClick: function(info) {
+        info.jsEvent.preventDefault();
+        // Fallback: view details if clicking a specific dot
+        showEventDetails(info.event);
+      },
+      buttonText: {
+        today: "Aujourd'hui",
+        month: 'Mois',
+        week: 'Semaine',
+        day: 'Jour'
+      }
+    });
+    calendar.render();
+
+    function showEventDetails(eventObj) {
+      var props = eventObj.extendedProps;
+      
+      // Setup View Modal
+      document.getElementById('viewTaskTitle').innerText = eventObj.title;
+      document.getElementById('viewTaskAssignee').innerText = props.assigne_nom || 'Non assigné';
+      var startStr = eventObj.start.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}).replace(',', ' à');
+      var endStr = eventObj.end ? eventObj.end.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}).replace(',', ' à') : '';
+      document.getElementById('viewTaskDates').innerText = endStr ? `Du ${startStr} au ${endStr}` : `Le ${startStr}`;
+      document.getElementById('viewTaskDesc').innerText = props.description || 'Aucune description fournie.';
+      
+      var badge = document.getElementById('viewTaskStatusBadge');
+      if (props.statut === 'completed') {
+        badge.className = 'status-badge badge-completed';
+        badge.innerText = 'Terminé';
+      } else {
+        badge.className = 'status-badge badge-progress';
+        badge.innerText = 'En cours / Planifié';
+      }
+
+      // Setup Edit Modal Pre-fill
+      document.getElementById('editTaskForm').action = "/admin/plan-action/" + eventObj.id + "/modifier";
+      document.getElementById('editTitre').value = eventObj.title;
+      document.getElementById('editDesc').value = props.description || '';
+      document.getElementById('editDebut').value = formatForInput(eventObj.start);
+      document.getElementById('editFin').value = formatForInput(eventObj.end);
+      
+      // Select correct option if assigned
+      let selectAssigne = document.getElementById('editAssigne');
+      for (let i = 0; i < selectAssigne.options.length; i++) {
+         if (selectAssigne.options[i].text === props.assigne_nom) {
+             selectAssigne.selectedIndex = i;
+             break;
+         } else {
+             selectAssigne.selectedIndex = 0; // Default Non assigné
+         }
+      }
+      
+      document.getElementById('editUrgent').checked = props.urgent || eventObj.classNames.includes('urgent');
+      
+      openModal('viewTaskModal');
+    }
+
+    function filterTasksList(eventIds) {
+        const rows = document.querySelectorAll('.task-row');
+        rows.forEach(row => {
+            if (!eventIds) {
+                row.style.display = '';
+            } else {
+                const taskId = String(row.getAttribute('data-task-id'));
+                if (eventIds.includes(taskId)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    // Handle clicking a task in the list to highlight days
+    document.querySelectorAll('.task-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            // Ignore clicks on buttons/forms inside the row
+            if (e.target.closest('button') || e.target.closest('form')) return;
+            
+            const taskId = String(this.getAttribute('data-task-id'));
+            
+            // Highlight row
+            document.querySelectorAll('.task-row').forEach(r => r.classList.remove('active-task'));
+            this.classList.add('active-task');
+            
+            // Clear calendar highlights
+            document.querySelectorAll('.fc-daygrid-day').forEach(el => el.classList.remove('highlighted-day'));
+            
+            // Find event
+            const ev = cachedEvents.find(e => String(e.id) === taskId);
+            if (ev) {
+                let start = new Date(ev.start.split('T')[0]);
+                let end = ev.end ? new Date(ev.end.split('T')[0]) : start;
+                
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    let dateStr = d.toISOString().split('T')[0];
+                    let dayCell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
+                    if (dayCell) {
+                        dayCell.classList.add('highlighted-day');
+                    }
+                }
+                
+                // Go to month if not visible
+                calendar.gotoDate(start);
+            }
+        });
+    });
+
+    // Handle clicking the info button
+    document.querySelectorAll('.btn-info-task').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const taskId = String(this.getAttribute('data-task-id'));
+            const calendarEvent = calendar.getEventById(taskId);
+            if (calendarEvent) showEventDetails(calendarEvent);
+        });
+    });
+
+  });
+</script>
 {% endblock %}
