@@ -196,6 +196,10 @@ Les **catégories** permettent de classer précisément chaque ticket et de déf
 - **Délai de résolution** en jours (SLA indicatif)
 - **Statut** actif/inactif
 
+**Catégories prédéfinies :** les incidents et demandes courants (stock, qualité, finance, RH, maintenance, IT) sont chargés avec `python scripts/seed_incidents.py`. Tout ce qui est technique (SI, caisse, TPE, WiFi, messagerie) est rattaché au département **IT**.
+
+**Utilisation à la création d'un ticket :** choisissez d'abord le **département** ; la liste **Catégorie** apparaît juste en dessous avec uniquement les catégories de ce département. La catégorie pré-remplit la priorité et l'échéance (le type de ticket reste au choix de l'utilisateur). La catégorie est aussi modifiable depuis la page de modification et visible sur le détail du ticket.
+
 #### Créer une catégorie
 
 Cliquez sur **Nouvelle catégorie** et renseignez :
@@ -225,10 +229,10 @@ Les **rôles** définissent ce que chaque utilisateur peut faire dans CosmittoHU
 
 **Personnalisation granulaire des rôles (Interface Admin) :**
 
-Dans l'onglet "Rôles", l'interface de gestion est divisée en deux onglets :
-- **Pages** : Vous décidez quelles vues (parmi les 14 pages de la barre latérale) sont visibles pour le rôle. Si un rôle n'a aucune page activée dans une section (ex. "Intelligence"), la section entière est masquée de sa navigation.
-- **Actions (Autorisations)** : Vous définissez les droits de modification (Créer, Modifier, Supprimer).
-*La logique est hiérarchique* : si vous décochez l'accès à une page (ex. "Nouveau ticket"), les actions liées (ex. "Créer un ticket") se désactivent et se verrouillent automatiquement.
+L'interface de gestion des permissions affiche toutes les pages disponibles.
+- **Pages principales** : Vous décidez quelles vues (parmi les pages de la barre latérale) sont visibles pour le rôle.
+- **Actions (Autorisations en accordéon)** : Si une page possède des sous-actions (ex: "Modifier un ticket", "Supprimer un département"), une petite flèche (chevron) apparaît à droite de la page. Cliquez dessus pour dévoiler le menu déroulant des actions liées.
+*La logique est intelligente et hiérarchique* : si vous décochez l'accès à une page parente, les actions enfants associées se grisent et se désactivent automatiquement, empêchant toute incohérence.
 
 ---
 

@@ -76,7 +76,9 @@ Route : `GET/POST /tickets/nouveau`
 
 **Champs disponibles**
 - Titre, description
-- Type et catégorie (groupées par département, attribution automatique du département)
+- Type, département puis catégorie : la liste des catégories s'affiche sous le département et ne montre que celles du département choisi
+- Le type de ticket (Incident, Demande, etc.) reste choisi manuellement par l'utilisateur ; choisir une catégorie pré-remplit la priorité et calcule l'échéance (date de création + délai de résolution de la catégorie)
+- Tout ce qui touche à la technologie (SI, informatique, caisse, TPE, WiFi, messagerie) est rattaché au département IT
 - Priorité (basse / moyenne / haute / urgente / critique) — pré-remplie par la catégorie, modifiable
 - Impact et urgence → calcul automatique de priorité via matrice Impact × Urgence
 - Champs spécifiques par type : article demandé, quantité, unité, nature du besoin, personne concernée, date et lieu d'incident
@@ -96,9 +98,9 @@ Route : `GET /tickets/<id>`
 
 Route : `GET/POST /tickets/<id>/modifier`
 
-- Modification du titre, description, priorité, statut
+- Modification du titre, description, priorité, statut, type, département et catégorie (filtrée par département)
 - Assignation (réservée aux admins/managers)
-- Enregistrement automatique dans l'historique
+- Enregistrement automatique dans l'historique : titre, type, priorité, statut, description, département, catégorie et assignation
 
 ### 3.5 Commenter un ticket
 
@@ -219,9 +221,10 @@ Routes : `GET/POST /departements/nouveau` · `GET/POST /departements/<id>/modifi
 | SLA résolution | Délai de résolution (heures, défaut : 48h) |
 | Horaires de travail | JSON (jours, heures) |
 
-### 5.4 Activer / Désactiver / Supprimer
+### 5.4 Activer / Désactiver / Archiver / Supprimer
 
 - Toggle actif : `POST /departements/<id>/toggle-actif`
+- Archiver : Permission `departements.archiver`
 - Suppression : bloquée si des membres ou catégories sont rattachés
 
 ---
@@ -255,12 +258,13 @@ Route : `GET /admin/utilisateurs`
 Route : `GET /admin/roles`
 
 - Liste des rôles avec niveau hiérarchique et couleur
-- Permissions organisées par catégorie
+- Permissions organisées par catégorie dans une interface en accordéon.
 - Rôles système (non modifiables) vs rôles personnalisés
+- Les actions enfants sont grisées et désactivées si la page parente est décochée.
 
 **Créer un rôle** : `POST /admin/roles/creer` — nom, niveau, couleur, description
 **Modifier un rôle** : `POST /admin/roles/<id>/modifier`
-**Modifier les permissions** : `POST /admin/roles/<id>/permissions` — cases à cocher par permission
+**Modifier les permissions** : `POST /admin/roles/<id>/permissions` — cases à cocher hiérarchisées.
 
 ### 6.4 Catégories de tickets
 
@@ -453,9 +457,9 @@ Le système de permissions est divisé en deux catégories :
 
 *14 Pages disponibles :* `dashboard.voir`, `tickets_tous.voir`, `tickets_mes.voir`, `tickets_nouveau.voir`, `messagerie.voir`, `departements.voir`, `utilisateurs.voir`, `rapports_globaux.voir`, `rapports_performance.voir`, `base_connaissance.voir`, `admin_dashboard.voir`, `admin_roles.voir`, `admin_plan_action.voir`, `admin_acces.voir`.
 
-*Actions associées :* `tickets.creer`, `tickets.modifier`, `tickets.supprimer`, `departements.creer`, `departements.modifier`, `utilisateurs.creer`, `utilisateurs.modifier`, `utilisateurs.supprimer`.
+*Actions associées :* `tickets.creer`, `tickets.modifier`, `tickets.supprimer`, `departements.creer`, `departements.modifier`, `departements.archiver`, `utilisateurs.creer`, `utilisateurs.modifier`, `utilisateurs.supprimer`.
 
-*Note: La désactivation d'une page (ex. `tickets_tous.voir`) désactive automatiquement et en cascade les actions enfants (ex. `tickets.modifier`) pour ce rôle.*
+*Note: La désactivation d'une page (ex. `tickets_tous.voir`) désactive automatiquement et en cascade (UI grisée) les actions enfants (ex. `tickets.modifier`) pour ce rôle.*
 ---
 
 ## 12. Architecture technique

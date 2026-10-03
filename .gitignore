@@ -54,9 +54,7 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Uploads
-static/uploads/*
-!static/uploads/.gitkeep
+# Uploads — all files tracked by git (no ignore rules)
 
 # Temporary files
 *.tmp

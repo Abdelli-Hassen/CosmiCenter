@@ -90,9 +90,7 @@ def tableau_bord():
         Departement.nom,
         func.count(Ticket.id)
     ).join(
-        CategorieTicket, Ticket.categorie_id == CategorieTicket.id
-    ).join(
-        Departement, CategorieTicket.departement_id == Departement.id
+        Departement, Ticket.departement_id == Departement.id
     ).filter(
         Ticket.date_creation >= date_debut
     ).group_by(Departement.nom).all()

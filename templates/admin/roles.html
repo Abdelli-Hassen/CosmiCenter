@@ -249,9 +249,8 @@
         </div>
 
         <form method="POST" id="permsForm" action="">
-          <div style="display:flex; border-bottom:1px solid var(--border-subtle);">
-            <button type="button" class="tab-btn active" data-tab="pages" style="flex:1; padding:16px; background:none; border:none; border-bottom:2px solid var(--brand); font-size:14px; font-weight:700; color:var(--text-primary); cursor:pointer;">Pages</button>
-            <button type="button" class="tab-btn" data-tab="actions" style="flex:1; padding:16px; background:none; border:none; border-bottom:2px solid transparent; font-size:14px; font-weight:700; color:var(--text-muted); cursor:pointer;">Autorisations</button>
+          <div style="padding:16px; border-bottom:1px solid var(--border-subtle); background:var(--surface-50);">
+            <h3 style="font-size:14px; font-weight:700; color:var(--text-primary); margin:0;">Autorisations par Page</h3>
           </div>
           
           <div class="panel-body">
@@ -259,56 +258,65 @@
             <div id="tab-pages" class="tab-content" style="display:block;">
               {% for categorie, perms in perms_by_cat.items() %}
               {% set page_perms = [] %}
+              {% set action_perms = [] %}
               {% for p in perms %}
                 {% if p.code.endswith('.voir') %}
                   {% set _ = page_perms.append(p) %}
-                {% endif %}
-              {% endfor %}
-              {% if page_perms %}
-              <div class="perm-cat">
-                <div class="perm-cat-title">{{ categorie or 'Général' }}</div>
-                <div style="display:flex;flex-direction:column;gap:4px;">
-                  {% for perm in page_perms %}
-                  <label class="perm-row" onmouseover="if(!this.querySelector('input').disabled)this.style.background='var(--surface-hover)'" onmouseout="this.style.background=''">
-                    <input type="checkbox" name="permissions" value="{{ perm.id }}" class="perm-checkbox perm-page" data-perm-id="{{ perm.id }}" data-perm-code="{{ perm.code }}">
-                    <div class="perm-info">
-                      <div class="perm-name">{{ perm.nom }}</div>
-                      {% if perm.description %}
-                      <div class="perm-desc">{{ perm.description }}</div>
-                      {% endif %}
-                      <div class="perm-code">{{ perm.code }}</div>
-                    </div>
-                  </label>
-                  {% endfor %}
-                </div>
-              </div>
-              {% endif %}
-              {% endfor %}
-            </div>
-            
-            <div id="tab-actions" class="tab-content" style="display:none;">
-              {% for categorie, perms in perms_by_cat.items() %}
-              {% set action_perms = [] %}
-              {% for p in perms %}
-                {% if not p.code.endswith('.voir') %}
+                {% else %}
                   {% set _ = action_perms.append(p) %}
                 {% endif %}
               {% endfor %}
-              {% if action_perms %}
-              <div class="perm-cat">
-                <div class="perm-cat-title">{{ categorie or 'Général' }}</div>
-                <div style="display:flex;flex-direction:column;gap:4px;">
-                  {% for perm in action_perms %}
-                  <label class="perm-row action-row" onmouseover="if(!this.querySelector('input').disabled)this.style.background='var(--surface-hover)'" onmouseout="this.style.background=''">
-                    <input type="checkbox" name="permissions" value="{{ perm.id }}" class="perm-checkbox perm-action" data-perm-id="{{ perm.id }}" data-perm-code="{{ perm.code }}">
-                    <div class="perm-info">
-                      <div class="perm-name">{{ perm.nom }}</div>
-                      {% if perm.description %}
-                      <div class="perm-desc">{{ perm.description }}</div>
+              
+              {% if page_perms %}
+              <div class="perm-cat" style="margin-bottom: 24px;">
+                <div class="perm-cat-title" style="margin-bottom:12px;">{{ categorie or 'Général' }}</div>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                  {% for page_perm in page_perms %}
+                  <div style="border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden; background: var(--surface-1);">
+                    {% set child_actions = [] %}
+                    {% for ap in action_perms %}
+                       {% if (ap.code == 'tickets.creer' and page_perm.code == 'tickets_nouveau.voir') or 
+                             (ap.code in ['tickets.modifier', 'tickets.supprimer'] and page_perm.code in ['tickets_tous.voir', 'tickets_mes.voir']) or 
+                             (page_perm.code == (ap.code.split('.')[0] ~ '.voir')) %}
+                          {% set _ = child_actions.append(ap) %}
+                       {% endif %}
+                    {% endfor %}
+
+                    <div style="display: flex; align-items: center; background: var(--surface-50); border-bottom: 1px solid var(--border-subtle);" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='var(--surface-50)'">
+                      <label class="perm-row" style="margin:0; flex: 1; border-bottom: none; background: transparent !important; padding-right: 8px;">
+                        <input type="checkbox" name="permissions" value="{{ page_perm.id }}" class="perm-checkbox perm-page" data-perm-id="{{ page_perm.id }}" data-perm-code="{{ page_perm.code }}">
+                        <div class="perm-info">
+                          <div class="perm-name" style="font-size:14px;">{{ page_perm.nom }}</div>
+                          {% if page_perm.description %}
+                          <div class="perm-desc">{{ page_perm.description }}</div>
+                          {% endif %}
+                          <div class="perm-code">{{ page_perm.code }}</div>
+                        </div>
+                      </label>
+                      {% if child_actions %}
+                      <button type="button" onclick="toggleActions(this, 'actions-{{ page_perm.id }}')" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; padding: 16px; display:flex; align-items:center; justify-content:center; transition: transform 0.2s;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                      </button>
                       {% endif %}
-                      <div class="perm-code">{{ perm.code }}</div>
                     </div>
-                  </label>
+                    
+                    {% if child_actions %}
+                    <div id="actions-{{ page_perm.id }}" style="display: none; padding: 8px 16px 8px 48px; flex-direction:column; gap:4px; background: var(--surface-0);">
+                      {% for perm in child_actions %}
+                      <label class="perm-row action-row" style="padding:8px; margin:0; border-radius:6px;" onmouseover="if(!this.querySelector('input').disabled)this.style.background='var(--surface-hover)'" onmouseout="this.style.background=''">
+                        <input type="checkbox" name="permissions" value="{{ perm.id }}" class="perm-checkbox perm-action" data-perm-id="{{ perm.id }}" data-perm-code="{{ perm.code }}">
+                        <div class="perm-info">
+                          <div class="perm-name">{{ perm.nom }}</div>
+                          {% if perm.description %}
+                          <div class="perm-desc">{{ perm.description }}</div>
+                          {% endif %}
+                          <div class="perm-code">{{ perm.code }}</div>
+                        </div>
+                      </label>
+                      {% endfor %}
+                    </div>
+                    {% endif %}
+                  </div>
                   {% endfor %}
                 </div>
               </div>
@@ -478,6 +486,10 @@
 
     document.getElementById('panelEmpty').style.display  = 'none';
     document.getElementById('panelEditor').style.display = 'block';
+
+    if (window.updateDependencies) {
+        window.updateDependencies();
+    }
   }
 
   function toggleAll(state) {
@@ -565,46 +577,57 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Dependency logic
-    const dependencies = {
-        'tickets.creer': 'tickets_nouveau.voir',
-        'tickets.modifier': 'tickets_tous.voir', // can also be tickets_mes.voir, but we just link to one for the UI
-        'tickets.supprimer': 'tickets_tous.voir',
-        'departements.creer': 'departements.voir',
-        'departements.modifier': 'departements.voir',
-        'utilisateurs.creer': 'utilisateurs.voir',
-        'utilisateurs.modifier': 'utilisateurs.voir',
-        'utilisateurs.supprimer': 'utilisateurs.voir',
-        'base_connaissance.creer': 'base_connaissance.voir',
-        'base_connaissance.modifier': 'base_connaissance.voir'
-    };
+    // Sync duplicate checkboxes
+    document.querySelectorAll('.perm-action').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const sameIds = document.querySelectorAll(`.perm-action[value="${this.value}"]`);
+            sameIds.forEach(other => other.checked = this.checked);
+        });
+    });
 
     const pageCheckboxes = document.querySelectorAll('.perm-page');
     const actionCheckboxes = document.querySelectorAll('.perm-action');
-    
-    function updateDependencies() {
-        actionCheckboxes.forEach(actionCb => {
-            const code = actionCb.dataset.permCode;
-            let parentPageCode = dependencies[code] || null;
-            
-            if (parentPageCode) {
-                const parentCb = document.querySelector(`.perm-page[data-perm-code="${parentPageCode}"]`);
-                if (parentCb && !parentCb.checked) {
-                    actionCb.checked = false;
-                    actionCb.disabled = true;
-                    actionCb.closest('.perm-row').style.opacity = '0.5';
-                    actionCb.closest('.perm-row').style.cursor = 'not-allowed';
-                } else {
-                    actionCb.disabled = false;
-                    actionCb.closest('.perm-row').style.opacity = '1';
-                    actionCb.closest('.perm-row').style.cursor = 'pointer';
-                }
+
+    window.toggleActions = function(btn, targetId) {
+        const container = document.getElementById(targetId);
+        if (container.style.display === 'none') {
+            container.style.display = 'flex';
+            btn.style.transform = 'rotate(180deg)';
+        } else {
+            container.style.display = 'none';
+            btn.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    window.updateDependencies = function() {
+        document.querySelectorAll('.perm-page').forEach(pageCb => {
+            const isChecked = pageCb.checked;
+            // The wrapper div that contains the page label and its actions
+            const wrapper = pageCb.closest('div[style*="border-radius: 8px"]');
+            if (wrapper) {
+                const actions = wrapper.querySelectorAll('.perm-action');
+                actions.forEach(actionCb => {
+                    const row = actionCb.closest('.perm-row');
+                    if (!isChecked) {
+                        actionCb.disabled = true;
+                        if (row) {
+                            row.style.opacity = '0.4';
+                            row.style.pointerEvents = 'none';
+                        }
+                    } else {
+                        actionCb.disabled = false;
+                        if (row) {
+                            row.style.opacity = '1';
+                            row.style.pointerEvents = 'auto';
+                        }
+                    }
+                });
             }
         });
     }
 
     pageCheckboxes.forEach(cb => {
-        cb.addEventListener('change', updateDependencies);
+        cb.addEventListener('change', window.updateDependencies);
     });
     
     // Initial call will be made when a role is clicked and permissions are checked by existing code

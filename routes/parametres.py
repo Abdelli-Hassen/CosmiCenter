@@ -63,13 +63,15 @@ def modifier_profil():
             filename = secure_filename(photo.filename)
             unique_filename = f"{uuid.uuid4()}_{filename}"
             
-            # Save the file
+            # Save the file in the dedicated profile pictures folder
             from flask import current_app
-            upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
+            profiles_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'profiles')
+            os.makedirs(profiles_folder, exist_ok=True)
+            upload_path = os.path.join(profiles_folder, unique_filename)
             photo.save(upload_path)
             
-            # Update user
-            current_user.photo_profil = unique_filename
+            # Update user (stored relative to static/uploads/)
+            current_user.photo_profil = f'profiles/{unique_filename}'
     
     current_user.nom = nom
     current_user.prenom = prenom

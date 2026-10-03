@@ -89,8 +89,28 @@
           <svg id="themeIconLight" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
 
-        <a href="{{ url_for('parametres.profil') }}" class="chrome-btn" title="Profil & Paramètres">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <div style="display: flex; align-items: center; margin-left: 12px; border-left: 1px solid var(--border-color); padding-left: 12px;">
+          <div title="Rôle: {{ current_user.role.nom }}" style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(220,38,38,0.1); color: var(--color-brand, #dc2626); border: 1px solid rgba(220,38,38,0.2);">
+            {% if 'Administrateur' in current_user.role.nom %}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            {% elif 'Manager' in current_user.role.nom %}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            {% elif 'Agent' in current_user.role.nom %}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            {% else %}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            {% endif %}
+          </div>
+        </div>
+
+        <a href="{{ url_for('parametres.profil') }}" class="chrome-btn" title="Profil & Paramètres" style="padding: 0;">
+          <div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(220,38,38,0.1); color: var(--color-brand, #dc2626); border: 1px solid rgba(220,38,38,0.2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-family: var(--font-sans); overflow: hidden;">
+            {% if current_user.photo_profil %}
+            <img src="{{ url_for('static', filename='uploads/' + current_user.photo_profil) }}" alt="{{ current_user.prenom }}" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; this.outerHTML='{{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}';">
+            {% else %}
+            {{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}
+            {% endif %}
+          </div>
         </a>
         <a href="{{ url_for('parametres.securite') }}" class="chrome-btn" title="Sécurité">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -151,7 +171,7 @@
           </div>
           {% endif %}
 
-          {% if current_user.has_permission('departements.voir') or current_user.has_permission('utilisateurs.voir') %}
+          {% if current_user.has_permission('departements.voir') or current_user.has_permission('utilisateurs.voir') or current_user.has_permission('admin_plan_action.voir') or current_user.has_permission('base_connaissance.voir') %}
           <div class="nav-divider"></div>
 
           <div class="nav-group">
@@ -167,6 +187,20 @@
             <a href="{{ url_for('utilisateurs.liste') }}" class="nav-item {% if request.endpoint and (request.endpoint.startswith('utilisateurs.') or request.endpoint == 'admin.utilisateurs' or request.endpoint == 'admin.modifier_utilisateur' or request.endpoint == 'admin.nouvel_utilisateur') %}active{% endif %}">
               <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               <span class="nav-item-label">Utilisateurs</span>
+            </a>
+            {% endif %}
+            
+            {% if current_user.has_permission('admin_plan_action.voir') %}
+            <a href="{{ url_for('admin.plan_action') }}" class="nav-item {% if request.endpoint and 'plan_action' in request.endpoint %}active{% endif %}">
+              <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span class="nav-item-label">Plan d'action</span>
+            </a>
+            {% endif %}
+            
+            {% if current_user.has_permission('base_connaissance.voir') %}
+            <a href="{{ url_for('base_connaissance.index') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('base_connaissance') %}active{% endif %}">
+              <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+              <span class="nav-item-label">Base de connaissance</span>
             </a>
             {% endif %}
           </div>
@@ -193,7 +227,7 @@
           </div>
           {% endif %}
 
-          {% if current_user.has_permission('admin_dashboard.voir') or current_user.has_permission('admin_roles.voir') or current_user.has_permission('admin_plan_action.voir') or current_user.has_permission('admin_acces.voir') %}
+          {% if current_user.has_permission('admin_dashboard.voir') or current_user.has_permission('admin_roles.voir') or current_user.has_permission('admin_acces.voir') %}
           <div class="nav-divider"></div>
           <div class="nav-group">
             <span class="nav-group-label">Admin</span>
@@ -210,13 +244,7 @@
               <span class="nav-item-label">Rôles</span>
             </a>
             {% endif %}
-            
-            {% if current_user.has_permission('admin_plan_action.voir') %}
-            <a href="{{ url_for('admin.plan_action') }}" class="nav-item {% if request.endpoint and 'plan_action' in request.endpoint %}active{% endif %}">
-              <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              <span class="nav-item-label">Plan d'action</span>
-            </a>
-            {% endif %}
+
             
             {% if current_user.has_permission('admin_acces.voir') %}
             <a href="{{ url_for('admin.acces_distance') }}" class="nav-item {% if request.endpoint == 'admin.acces_distance' %}active{% endif %}">
@@ -304,5 +332,26 @@
   <script src="{{ url_for('static', filename='js/tickets.js') }}?v=102"></script>
 
   {% block extra_scripts %}{% endblock %}
+
+  <script>
+    // Auto-scroll sidebar to the active navigation item
+    document.addEventListener('DOMContentLoaded', () => {
+      const activeNav = document.querySelector('.nav-item.active');
+      const navScroll = document.querySelector('.nav-scroll');
+      
+      if (activeNav && navScroll) {
+        // Calculate position to center the active item in the scrollable area
+        const scrollPos = activeNav.offsetTop - navScroll.offsetTop - (navScroll.clientHeight / 2) + (activeNav.clientHeight / 2);
+        
+        // Only scroll if it's actually outside or near the edge of the visible area
+        if (activeNav.offsetTop > navScroll.clientHeight / 1.5 || activeNav.offsetTop < navScroll.scrollTop) {
+          navScroll.scrollTo({
+            top: scrollPos,
+            behavior: 'smooth'
+          });
+        }
+      }
+    });
+  </script>
 </body>
 </html>

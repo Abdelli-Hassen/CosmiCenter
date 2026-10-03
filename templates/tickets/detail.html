@@ -456,6 +456,18 @@
             <div class="prop-label">Département</div>
             <div class="prop-val">{{ ticket.departement.nom if ticket.departement else '—' }}</div>
           </div>
+
+          <div class="prop-row">
+            <div class="prop-label">Catégorie</div>
+            <div class="prop-val">{{ ticket.categorie.nom if ticket.categorie else '—' }}</div>
+          </div>
+
+          {% if ticket.date_echeance %}
+          <div class="prop-row">
+            <div class="prop-label">Échéance</div>
+            <div class="prop-val">{{ ticket.date_echeance.strftime('%d/%m/%Y') }}</div>
+          </div>
+          {% endif %}
         </div>
       </form>
 

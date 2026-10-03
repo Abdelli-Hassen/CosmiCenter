@@ -139,7 +139,7 @@ The content canvas is a 100% viewport-height scrollable area with a stable, non-
 
 **Center zone (flexible)**: Intentionally left empty to maintain a clean, distraction-free premium aesthetic.
 
-**Right zone (fixed)**: Left to right — AI status indicator (small dot: green = AI active, amber = processing, gray = unavailable) → Notification bell (badge with count, max "99+") → Help icon → Theme toggle (sun/moon, 24px) → Profile icon → Security icon → Logout icon. All user actions are explicitly exposed as direct 1-click icons without requiring a dropdown menu.
+**Right zone (fixed)**: Left to right — AI status indicator (small dot: green = AI active, amber = processing, gray = unavailable) → User Role Icon (dynamic SVG icon based on role: shield for Admin, headset for Agent, user for Manager/Standard, in a circular badge) → Notification bell (badge with count, max "99+") → Help icon → Theme toggle (sun/moon, 24px) → Profile icon (circular badge with user initials, e.g. "JD") → Security icon → Logout icon. All user actions are explicitly exposed as direct 1-click icons without requiring a dropdown menu.
 
 **Top bar background**: `rgba(8, 11, 16, 0.92)` in dark mode with `backdrop-filter: blur(12px) saturate(150%)`. This creates the premium frosted glass effect used by Linear, Vercel, and Stripe — the content below is barely visible through the blur, providing depth without opacity.
 

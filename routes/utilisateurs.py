@@ -9,27 +9,34 @@ from datetime import datetime
 utilisateurs_bp = Blueprint('utilisateurs', __name__)
 
 
-def admin_required(f):
-    """Décorateur pour restreindre l'accès aux administrateurs"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.has_permission('admin.utilisateurs'):
-            flash('Accès non autorisé.', 'danger')
-            return redirect(url_for('tickets.tableau_bord'))
-        return f(*args, **kwargs)
-    return decorated_function
+from functools import wraps
 
+def require_permission(permission_code):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated or not current_user.has_permission(permission_code):
+                flash('Accès non autorisé.', 'danger')
+                return redirect(url_for('tickets.tableau_bord'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 @utilisateurs_bp.route('/')
 @login_required
-@admin_required
+@require_permission('utilisateurs.voir')
 def liste():
     """Liste tous les utilisateurs"""
     page = request.args.get('page', 1, type=int)
     per_page = 50
     
+    
     query = Utilisateur.query
     
+    # Enforce department restriction if they don't have full view and DO have dept view
+    if current_user.has_permission('utilisateurs.voir_dept') and not current_user.role.nom == 'Super Administrateur':
+        query = query.filter_by(departement_id=current_user.departement_id)
+        
     # Filtres
     search = request.args.get('search', '')
     if search:
@@ -73,7 +80,7 @@ def liste():
 
 @utilisateurs_bp.route('/nouveau', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@require_permission('utilisateurs.creer')
 def nouveau():
     """Créer un nouvel utilisateur"""
     if request.method == 'POST':
@@ -180,7 +187,7 @@ def modifier(id):
     utilisateur = Utilisateur.query.get_or_404(id)
     
     # Vérifier les permissions
-    if not current_user.has_permission('admin.utilisateurs'):
+    if not current_user.has_permission('utilisateurs.modifier'):
         if current_user.id != utilisateur.id:
             flash('Accès non autorisé.', 'danger')
             return redirect(url_for('tickets.tableau_bord'))
@@ -194,7 +201,7 @@ def modifier(id):
         matricule = request.form.get('matricule', '').strip()
         
         # Les admins peuvent modifier plus de champs
-        if current_user.has_permission('admin.utilisateurs'):
+        if current_user.has_permission('utilisateurs.modifier'):
             role_id = request.form.get('role_id', '').strip() or None
             departement_id = request.form.get('departement_id', '').strip() or None
             actif = request.form.get('actif') == 'on'
@@ -270,7 +277,7 @@ def modifier(id):
 
 @utilisateurs_bp.route('/<string:id>/toggle-actif', methods=['POST'])
 @login_required
-@admin_required
+@require_permission('utilisateurs.modifier')
 def toggle_actif(id):
     """Activer/Désactiver un utilisateur"""
     utilisateur = Utilisateur.query.get_or_404(id)
@@ -295,7 +302,7 @@ def toggle_actif(id):
 
 @utilisateurs_bp.route('/<string:id>/supprimer', methods=['POST'])
 @login_required
-@admin_required
+@require_permission('utilisateurs.supprimer')
 def supprimer(id):
     """Supprimer un utilisateur"""
     utilisateur = Utilisateur.query.get_or_404(id)

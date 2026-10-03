@@ -14,15 +14,17 @@ DEPARTEMENTS_NOUVEAUX = [
     {'nom': 'Stock',        'code': 'STK', 'couleur': '#F59E0B', 'description': 'Gestion des stocks et approvisionnements'},
     {'nom': 'Qualité',      'code': 'QUA', 'couleur': '#8B5CF6', 'description': 'Contrôle et assurance qualité'},
     {'nom': 'Maintenance',  'code': 'MAI', 'couleur': '#EF4444', 'description': 'Maintenance et infrastructure'},
-    {'nom': 'SI',           'code': 'SI',  'couleur': '#6366F1', 'description': "Système d'information"},
 ]
 
 # Mapping nom Excel → nom BD (pour les départements qui existent déjà sous un autre nom)
 ALIAS_DEPARTEMENTS = {
     'Finance':      'Finances',            # Finances (FIN) existe déjà
     'RH':           'Ressources Humaines', # Ressources Humaines (RH) existe déjà
-    'Informatique': 'Support IT',          # Support IT (IT) existe déjà
 }
+
+# Tout ce qui touche à la technologie (SI, Informatique...) appartient au département IT (code 'IT')
+CODE_IT = 'IT'
+NOMS_EXCEL_IT = ('Informatique', 'SI')
 
 # (nom incident, département Excel, délai_jours, vis-à-vis)
 INCIDENTS = [
@@ -40,9 +42,9 @@ INCIDENTS = [
     ('Coupure électricité',                        'Maintenance',  1, 'Responsable Maintenance'),
     ('Coupure eau',                                'Maintenance',  1, 'Responsable Maintenance'),
     ('Facture impayée',                            'Finance',      1, 'Équipe Finance'),
-    ('Caisse non fonctionnelle',                   'Maintenance',  1, 'Responsable Maintenance'),
+    ('Caisse non fonctionnelle',                   'Informatique', 1, 'Équipe IT'),
     ('Fausse manipulation paiement en carte',      'Finance',      1, 'Équipe Finance'),
-    ('Problème de code caisse',                    'RH',           1, 'Chargé RH'),
+    ('Problème de code caisse',                    'Informatique', 1, 'Équipe IT'),
     ('Dysfonctionnement des caisses',              'Informatique', 1, 'Équipe IT'),
     ('Erreurs de passation de commande / client',  'Stock',        1, 'Gestionnaire de Stock'),
     ('SI Dysfonctionnel',                          'SI',           1, 'Équipe IT'),
@@ -52,6 +54,46 @@ INCIDENTS = [
     ('Boîte mail dysfonctionnelle',                'Informatique', 1, 'Équipe IT'),
     ('Wifi dysfonctionnel',                        'Informatique', 1, 'Équipe IT'),
 ]
+
+# Second tableau (par département) : (nom, département Excel, type, délai_jours, vis-à-vis)
+# I = incident, D = demande
+PAR_DEPARTEMENT = [
+    # RH
+    ('Problème lié au comportement (collègue, client...)', 'RH', 'incident', 1, 'Chargé RH'),
+    ('Demande attestation de travail',   'RH', 'demande', 2, 'Chargé RH'),
+    ('Demande attestation de salaire',   'RH', 'demande', 2, 'Chargé RH'),
+    ('Demande fiche de paie',            'RH', 'demande', 2, 'Chargé RH'),
+    # Maintenance
+    ('Problème SI (OPOZ, outil de ticketing, système fidélité...)', 'Informatique', 'incident', 1, 'Équipe IT'),
+    ('Équipement défectueux (machine à cafés, moulin, frigo, etc.)', 'Maintenance', 'incident', 1, 'Responsable Maintenance'),
+    ('Électricité (coupure, lampe défectueuse...)', 'Maintenance', 'incident', 1, 'Responsable Maintenance'),
+    ('Plomberie',                        'Maintenance', 'incident', 1, 'Responsable Maintenance'),
+    ('Climatisation',                    'Maintenance', 'incident', 1, 'Responsable Maintenance'),
+    ('Problème Caisse',                  'Informatique', 'incident', 1, 'Équipe IT'),
+    ('Problème WIFI',                    'Informatique', 'incident', 1, 'Équipe IT'),
+    ('Réclamation code caisse',          'Informatique', 'incident', 1, 'Équipe IT'),
+    ('Besoins équipements',              'Maintenance', 'demande',  2, 'Responsable Maintenance'),
+    # Qualité
+    ('Réclamation client',               'Qualité', 'incident', 2, 'Responsable Qualité'),
+    ('Réclamation non conformité produit', 'Qualité', 'incident', 2, 'Responsable Qualité'),
+    ('Accident de travail',              'Qualité', 'incident', 1, 'Responsable Qualité'),
+    ('Inspection autorité',              'Qualité', 'incident', 1, 'Responsable Qualité'),
+    ('Besoins fiches de suivi qualité',  'Qualité', 'demande',  2, 'Responsable Qualité'),
+    ('Besoins fiches techniques produits', 'Qualité', 'demande', 2, 'Responsable Qualité'),
+    # Finance
+    ('Feuille de route & keep safe manquants', 'Finance', 'demande', 2, 'Équipe Finance'),
+    ('Enveloppes manquantes',            'Finance', 'demande',  2, 'Équipe Finance'),
+    ('Problème TPE',                     'Informatique', 'incident', 1, 'Équipe IT'),
+    # Stock
+    ('Besoins Produits Food & boissons', 'Stock', 'demande',  2, 'Gestionnaire de Stock'),
+    ('Besoins Emballages',               'Stock', 'demande',  2, 'Gestionnaire de Stock'),
+    ('Besoins factures/BL',              'Stock', 'demande',  2, 'Gestionnaire de Stock'),
+    ("Besoins Produits d'hygiène",       'Stock', 'demande',  2, 'Gestionnaire de Stock'),
+    ('Non conformité réception marchandises', 'Stock', 'incident', 1, 'Gestionnaire de Stock'),
+]
+
+TOUTES = [(n, d, 'incident', j, v) for (n, d, j, v) in INCIDENTS] + PAR_DEPARTEMENT
+
 
 
 def seed_incidents():
@@ -95,9 +137,37 @@ def seed_incidents():
             if dept:
                 dept_map[d['nom']] = dept
 
+        # Département IT (SI + Informatique)
+        it_dept = Departement.query.filter_by(code=CODE_IT).first()
+        if it_dept:
+            for n in NOMS_EXCEL_IT:
+                dept_map[n] = it_dept
+
+            # Nettoyage : l'ancien département 'SI' n'existe pas → on déplace ses catégories vers IT
+            si_dept = Departement.query.filter(Departement.code == 'SI', Departement.id != it_dept.id).first()
+            if si_dept:
+                for cat in list(si_dept.categories):
+                    cat.departement_id = it_dept.id
+                if not si_dept.membres:
+                    db.session.delete(si_dept)
+                    print('  [supprimé] ancien département SI (catégories déplacées vers IT)')
+                else:
+                    si_dept.actif = False
+                    print('  [désactivé] ancien département SI (a des membres)')
+            # Catégories techniques déjà créées dans un autre département → déplacées vers IT
+            noms_it = [n for (n, d, *_r) in TOUTES if d in NOMS_EXCEL_IT]
+            for cat in CategorieTicket.query.filter(
+                    CategorieTicket.nom.in_(noms_it),
+                    CategorieTicket.departement_id != it_dept.id).all():
+                print(f'  [déplacé]  {cat.nom} → {it_dept.nom}')
+                cat.departement_id = it_dept.id
+            db.session.commit()
+        else:
+            print(f"  [WARN] Département IT (code '{CODE_IT}') introuvable")
+
         print(f'\n── Catégories d\'incidents ────────────────────')
         created = skipped = 0
-        for nom, dept_nom, delai, vis_a_vis in INCIDENTS:
+        for nom, dept_nom, type_t, delai, vis_a_vis in TOUTES:
             dept = dept_map.get(dept_nom)
             if not dept:
                 print(f'  [SKIP] Département introuvable : {dept_nom}')
@@ -111,7 +181,7 @@ def seed_incidents():
             cat = CategorieTicket(
                 nom=nom,
                 description=f'Vis-à-vis : {vis_a_vis}',
-                type_ticket='incident',
+                type_ticket=type_t,
                 departement_id=dept.id,
                 priorite_defaut='haute' if delai <= 1 else 'moyenne',
                 delai_resolution_jours=delai,

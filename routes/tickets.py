@@ -73,7 +73,7 @@ def liste():
     if priorite:
         query = query.filter_by(priorite=priorite)
     if departement_id:
-        query = query.join(CategorieTicket).filter(CategorieTicket.departement_id == departement_id)
+        query = query.filter(Ticket.departement_id == departement_id)
     
     # Tri et pagination
     sort_by = request.args.get('sort_by', 'date_creation')
@@ -125,7 +125,7 @@ def mes_tickets():
     if priorite:
         query = query.filter_by(priorite=priorite)
     if departement_id:
-        query = query.join(CategorieTicket).filter(CategorieTicket.departement_id == departement_id)
+        query = query.filter(Ticket.departement_id == departement_id)
     
     # Tri et pagination
     sort_by = request.args.get('sort_by', 'date_creation')
@@ -177,6 +177,15 @@ def nouveau():
             
             if routing_type == 'specific':
                 ticket.assigne_a_id = request.form.get('assigne_a_id') or None
+
+            categorie_id = request.form.get('categorie_id') or None
+            if categorie_id:
+                cat = CategorieTicket.query.get(categorie_id)
+                if cat:
+                    ticket.categorie_id = cat.id
+                    if cat.delai_resolution_jours:
+                        from datetime import datetime, timedelta
+                        ticket.date_echeance = datetime.utcnow() + timedelta(days=cat.delai_resolution_jours)
             
             db.session.add(ticket)
             db.session.flush() # Ensure we have the ticket ID
@@ -261,8 +270,11 @@ def nouveau():
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
     utilisateurs = Utilisateur.query.filter_by(actif=True).order_by(Utilisateur.nom).all()
     
+    categories = CategorieTicket.query.filter_by(actif=True).order_by(CategorieTicket.nom).all()
+    
     return render_template('tickets/nouveau.html',
                          departements=departements,
+                         categories=categories,
                          utilisateurs=utilisateurs)
 
 
@@ -319,6 +331,31 @@ def modifier(ticket_id):
                 changes.append(('Priorité', ticket.priorite, request.form.get('priorite')))
             if ticket.statut != request.form.get('statut'):
                 changes.append(('Statut', ticket.statut, request.form.get('statut')))
+            if (ticket.description or '') != (request.form.get('description') or ''):
+                changes.append(('Description', 'Modifiée', 'Nouvelle description'))
+
+            new_dept_id = request.form.get('departement_id') or None
+            new_cat_id = request.form.get('categorie_id') or None
+            if str(ticket.categorie_id or '') != str(new_cat_id or ''):
+                new_cat = CategorieTicket.query.get(new_cat_id) if new_cat_id else None
+                old_cat = ticket.categorie.nom if ticket.categorie else 'Aucune'
+                changes.append(('Catégorie', old_cat, new_cat.nom if new_cat else 'Aucune'))
+                ticket.categorie_id = new_cat_id
+                if new_cat and new_cat.delai_resolution_jours and not ticket.date_echeance:
+                    ticket.date_echeance = datetime.utcnow() + timedelta(days=new_cat.delai_resolution_jours)
+            if str(ticket.departement_id or '') != str(new_dept_id or ''):
+                new_dept = Departement.query.get(new_dept_id) if new_dept_id else None
+                old_dept = ticket.departement_associe.nom if ticket.departement_associe else None
+                changes.append(('Département', old_dept, new_dept.nom if new_dept else None))
+
+            if request.form.get('routing_type', 'all') == 'specific':
+                new_ass_id = request.form.get('assigne_a_id') or None
+            else:
+                new_ass_id = None
+            if str(ticket.assigne_a_id or '') != str(new_ass_id or ''):
+                new_ass = Utilisateur.query.get(new_ass_id) if new_ass_id else None
+                old_ass = (ticket.assigne_a.prenom + ' ' + ticket.assigne_a.nom) if ticket.assigne_a else 'Non assigné'
+                changes.append(('Assigné à', old_ass, (new_ass.prenom + ' ' + new_ass.nom) if new_ass else 'Non assigné'))
 
             for champ, old_val, new_val in changes:
                 db.session.add(HistoriqueTicket(
@@ -435,10 +472,12 @@ def modifier(ticket_id):
 
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
     utilisateurs = Utilisateur.query.filter_by(actif=True).order_by(Utilisateur.nom).all()
+    categories = CategorieTicket.query.filter_by(actif=True).order_by(CategorieTicket.nom).all()
 
     return render_template('tickets/modifier.html',
                          ticket=ticket,
                          departements=departements,
+                         categories=categories,
                          utilisateurs=utilisateurs)
 
 

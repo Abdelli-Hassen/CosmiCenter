@@ -346,13 +346,43 @@ textarea.fi { resize: vertical; min-height: 140px; }
           <div class="edit-section-body">
             <div style="margin-bottom: 18px;">
               <label class="fl">Departement</label>
-              <select name="departement_id" class="fi">
+              <select name="departement_id" id="departementSelect" class="fi">
                 <option value="">-- Aucun departement --</option>
                 {% for dept in departements %}
-                <option value="{{ dept.id }}" {% if ticket.departement and ticket.departement.id == dept.id %}selected{% endif %}>{{ dept.nom }}</option>
+                <option value="{{ dept.id }}" {% if ticket.departement_id == dept.id %}selected{% endif %}>{{ dept.nom }}</option>
                 {% endfor %}
               </select>
             </div>
+
+            <div id="categorieWrapper" style="margin-bottom: 18px;">
+              <label class="fl">Categorie</label>
+              <select name="categorie_id" id="categorieSelect" class="fi">
+                <option value="">-- Aucune categorie --</option>
+                {% for c in categories %}
+                <option value="{{ c.id }}" data-dept="{{ c.departement_id }}" {% if ticket.categorie_id == c.id %}selected{% endif %}>{{ c.nom }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <script>
+              (function () {
+                var dept = document.getElementById('departementSelect');
+                var cat = document.getElementById('categorieSelect');
+                var wrap = document.getElementById('categorieWrapper');
+                function filter(reset) {
+                  var visible = 0;
+                  if (reset) cat.value = '';
+                  Array.prototype.forEach.call(cat.options, function (o) {
+                    if (!o.value) return;
+                    var show = o.dataset.dept === dept.value;
+                    o.hidden = !show; o.disabled = !show;
+                    if (show) visible++;
+                  });
+                  wrap.style.display = (dept.value && visible) ? 'block' : 'none';
+                }
+                dept.addEventListener('change', function () { filter(true); });
+                filter(false);
+              })();
+            </script>
 
             <div style="padding-top: 16px; border-top: 1px solid var(--border-subtle);">
               <label class="fl" style="margin-bottom: 10px;">Routage</label>

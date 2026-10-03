@@ -2,9 +2,36 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
-## [2.1.0] - 2026-10-01
+## [2.2.0] - 2026-10-03
 
-### 🚀 Améliorations UX/UI & Gamification
+### 🚀 Nouveautés & Améliorations UI
+
+#### Ajouté
+- 📚 **Base de Connaissance (Fondations)**
+  - Création de la route `/base_connaissance` et du template de base.
+  - Ajout du lien dans la barre de navigation sous "Opérations".
+  - Intégration de la permission `base_connaissance.voir`.
+- 🔐 **Nouvelles Permissions**
+  - Ajout de la permission `departements.archiver` pour archiver les départements au lieu de les supprimer.
+- ✨ **Améliorations de l'Interface Utilisateur (UI/UX)**
+  - **Filtres Avancés (Accès à Distance)** : Remplacement du menu déroulant textuel par un élégant système de filtres à icônes (Tous, Avec Identifiant, Sans Identifiant).
+  - **Gestion des Rôles** : Refonte de l'interface des permissions. Utilisation d'un accordéon (chevron) pour masquer/afficher les actions enfants d'une page.
+  - **Logique UI Intelligente** : Désactivation et grisage automatique des actions enfants (ex: Modifier) si la page parente est décochée.
+  - **Navigation Fluide** : Ajout d'un script d'auto-scroll qui centre automatiquement l'élément actif dans la barre de navigation latérale au chargement de la page.
+  - **Nettoyage** : Suppression du bouton "Nouvelle Permission" pour simplifier l'interface.
+- 🗂️ **Catégories de tickets**
+  - Liste déroulante de catégorie sous le département (création et modification), filtrée selon le département choisi.
+  - La catégorie pré-remplit la **priorité** et l'**échéance** (délai de résolution) — le type de ticket reste choisi manuellement par l'utilisateur. Affichage de la catégorie et de l'échéance sur le détail du ticket.
+  - Script `scripts/seed_incidents.py` : charge tous les incidents et demandes des tableaux fournis ; SI, informatique, caisse, TPE et WiFi sont rattachés au département IT (le département « SI » n'existe pas).
+- 🧾 **Historique d'audit enrichi** : la modification d'un ticket enregistre aussi description, département, catégorie et assignation.
+
+#### Corrigé
+- Le département d'un ticket n'était pas affiché (liste, détail) ni pré-sélectionné à la modification ; ajout de l'alias `Ticket.departement`.
+- Le filtre par département ignorait les tickets sans catégorie ; le rapport « tickets par département » aussi.
+
+---
+
+## [2.1.0] - 2026-10-01
 
 #### Ajouté
 - ✨ **Nouveau Design System Premium**

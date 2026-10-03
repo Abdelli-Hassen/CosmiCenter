@@ -272,6 +272,11 @@ class Ticket(db.Model):
                                 order_by='HistoriqueTicket.date_creation.desc()')
     taches = db.relationship('Tache', backref='ticket', cascade='all, delete-orphan')
     departement_associe = db.relationship('Departement', foreign_keys=[departement_id])
+
+    @property
+    def departement(self):
+        """Alias utilisé par les templates (liste, détail, modification)."""
+        return self.departement_associe
     
     # Collaborations
     collaborateurs = db.relationship('Utilisateur', secondary=ticket_collaborateurs, lazy='subquery',

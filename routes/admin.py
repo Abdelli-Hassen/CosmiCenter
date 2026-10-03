@@ -1,4 +1,4 @@
-﻿"""
+"""
 Routes d'administration pour CosmittoDesk
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
@@ -606,7 +606,8 @@ def supprimer_plan_action(id):
 @admin_required
 def acces_distance():
     from models import Utilisateur, db
-    users = Utilisateur.query.filter(db.or_(Utilisateur.anydesk_id.isnot(None), Utilisateur.teamviewer_id.isnot(None))).all()
+    # Fetch all active users, sorted by name, so the admin can add IDs for new users
+    users = Utilisateur.query.filter_by(actif=True).order_by(Utilisateur.nom, Utilisateur.prenom).all()
     return render_template('admin/acces_distance.html', users=users)
 
 

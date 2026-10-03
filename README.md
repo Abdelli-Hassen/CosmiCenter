@@ -72,7 +72,7 @@ Cosmitto Coffee opère plusieurs points de vente (POS). CosmittoHUB permet à ch
 
 ### Administration
 - Gestion des utilisateurs avec filtres avancés et stat chips (total / actifs / inactifs)
-- Gestion des rôles et permissions par cases à cocher
+- Gestion des rôles et permissions par cases à cocher hiérarchisées (interface en accordéon avec logique de désactivation en cascade)
 - Gestion des catégories de tickets (type, priorité par défaut, délai SLA, couleur)
 - Logs système et paramètres (en cours)
 
@@ -112,7 +112,6 @@ python app.py
 ```
 
 Accès : `http://127.0.0.1:5000`  
-Compte par défaut : `admin@example.com` / `testtest`
 
 > ⚠️ Changer le mot de passe admin à la première connexion.
 
@@ -135,7 +134,7 @@ CosmittoHUB/
 ├── app.py              # Point d'entrée Flask
 ├── config.py           # Configuration par environnement
 ├── models.py           # 14 modèles SQLAlchemy
-├── routes/             # 8 blueprints — 57 routes HTTP
+├── routes/             # 9 blueprints — 58 routes HTTP
 │   ├── auth.py
 │   ├── tickets.py
 │   ├── admin.py
@@ -143,7 +142,8 @@ CosmittoHUB/
 │   ├── departements.py
 │   ├── rapports.py
 │   ├── parametres.py
-│   └── api.py
+│   ├── api.py
+│   └── base_connaissance.py
 ├── templates/          # 30 templates Jinja2
 ├── static/             # CSS, JS, images, guide
 └── scripts/            # init_db.py, seed_incidents.py
