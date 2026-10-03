@@ -445,13 +445,17 @@ Toutes les routes API requièrent `@login_required`.
 | Agent | 50 | Traitement des tickets assignés, commentaires |
 | Utilisateur | 10 | Création et suivi de ses propres tickets |
 
-### Permissions disponibles
+**Architecture des permissions (Séparation Pages / Actions)**
 
-**Tickets** : `tickets.creer`, `tickets.voir_tous`, `tickets.modifier`, `tickets.supprimer`  
-**Administration** : `admin.utilisateurs`, `admin.departements`, `admin.categories`, `admin.roles`  
-**Rapports** : `rapports.voir`, `rapports.exporter`  
-**Base de connaissances** : `kb.creer`, `kb.modifier`, `kb.voir`
+Le système de permissions est divisé en deux catégories :
+1. **Pages (`.voir`)** : Détermine l'accès au menu et la visibilité d'une vue (ex. `tickets_tous.voir`, `admin_roles.voir`).
+2. **Actions** : Détermine les opérations spécifiques possibles sur une page (ex. `tickets.creer`, `tickets.modifier`).
 
+*14 Pages disponibles :* `dashboard.voir`, `tickets_tous.voir`, `tickets_mes.voir`, `tickets_nouveau.voir`, `messagerie.voir`, `departements.voir`, `utilisateurs.voir`, `rapports_globaux.voir`, `rapports_performance.voir`, `base_connaissance.voir`, `admin_dashboard.voir`, `admin_roles.voir`, `admin_plan_action.voir`, `admin_acces.voir`.
+
+*Actions associées :* `tickets.creer`, `tickets.modifier`, `tickets.supprimer`, `departements.creer`, `departements.modifier`, `utilisateurs.creer`, `utilisateurs.modifier`, `utilisateurs.supprimer`.
+
+*Note: La désactivation d'une page (ex. `tickets_tous.voir`) désactive automatiquement et en cascade les actions enfants (ex. `tickets.modifier`) pour ce rôle.*
 ---
 
 ## 12. Architecture technique

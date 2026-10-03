@@ -14,7 +14,7 @@ def admin_required(f):
     """Décorateur pour restreindre l'accès aux administrateurs"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.has_permission('admin.departements'):
+        if not current_user.is_authenticated or not current_user.has_permission('departements.gerer'):
             flash('Accès non autorisé.', 'danger')
             return redirect(url_for('tickets.tableau_bord'))
         return f(*args, **kwargs)
@@ -31,7 +31,7 @@ def liste():
     query = Departement.query
     
     # Filtres
-    if not current_user.has_permission('admin.departements') and not current_user.has_permission('departements.voir'):
+    if not current_user.has_permission('departements.gerer'):
         # Les utilisateurs normaux ne voient que leur département
         if current_user.departement_id:
             query = query.filter_by(id=current_user.departement_id)

@@ -137,9 +137,9 @@ The content canvas is a 100% viewport-height scrollable area with a stable, non-
 
 **Left zone (240px)**: The Cosmitto wordmark (SVG, 20px tall, red + white) with a workspace switcher chevron to its right. Clicking the chevron opens a full dropdown showing all workspaces the user has access to, their avatar, name, and role within each. The active workspace has a subtle left-border indicator.
 
-**Center zone (flexible)**: Global search bar. Placeholder: "Search tickets, agents, articles... ⌘K". Clicking or pressing ⌘K morphs the bar into the command palette (see §2.5). The search bar has a subtle keyboard shortcut indicator that pulses once on first login to teach the shortcut.
+**Center zone (flexible)**: Intentionally left empty to maintain a clean, distraction-free premium aesthetic.
 
-**Right zone (fixed)**: Left to right — AI status indicator (small dot: green = AI active, amber = processing, gray = unavailable) → Notification bell (badge with count, max "99+") → Help icon → Theme toggle (sun/moon, 24px, toggling triggers a smooth 300ms CSS theme transition) → User avatar (32px circle, click = profile dropdown).
+**Right zone (fixed)**: Left to right — AI status indicator (small dot: green = AI active, amber = processing, gray = unavailable) → Notification bell (badge with count, max "99+") → Help icon → Theme toggle (sun/moon, 24px) → Profile icon → Security icon → Logout icon. All user actions are explicitly exposed as direct 1-click icons without requiring a dropdown menu.
 
 **Top bar background**: `rgba(8, 11, 16, 0.92)` in dark mode with `backdrop-filter: blur(12px) saturate(150%)`. This creates the premium frosted glass effect used by Linear, Vercel, and Stripe — the content below is barely visible through the blur, providing depth without opacity.
 
@@ -149,8 +149,6 @@ The content canvas is a 100% viewport-height scrollable area with a stable, non-
 
 ```
 [Cosmitto Logo + Workspace]
-━━━━━━━━━━━━━━━━━━━
-[search bar: "Filter nav..." ]
 ━━━━━━━━━━━━━━━━━━━
 WORKSPACE
   📊 Dashboard
@@ -174,9 +172,10 @@ SETTINGS
   🔐 Security
   🔗 Integrations
 ━━━━━━━━━━━━━━━━━━━
-[User avatar | Name | Role]
-[⌘ shortcuts] [? help]
+━━━━━━━━━━━━━━━━━━━
 ```
+
+**Section Rendering Strategy**: Sections (like "Operations" or "Intelligence") and their dividing lines are strictly conditional. If a user does not have at least one `.voir` permission for any page inside a section, the entire section title and divider are hidden to prevent empty UI blocks.
 
 **Navigation item anatomy** (36px height):
 - 16px icon (from Cosmitto icon set, monochrome, 1.5px stroke)
@@ -193,7 +192,7 @@ SETTINGS
 
 **Pinned items**: Users can right-click any nav item and "Pin to top" — creating a personalized quick-access section above the navigation groups. Pinned items are stored in localStorage and sync to the user profile.
 
-**Nav filter bar**: A mini search input at the top of the nav (only in expanded state). Typing filters visible nav items in real time, including pinned views and saved searches. This is how power users navigate enormous workspaces — not by scrolling, but by typing.
+**Nav filter bar**: Intentionally removed from the sidebar to enforce clean visuals. Search operations are handled globally via the command palette.
 
 ### 2.4 Workspace Switcher
 

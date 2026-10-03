@@ -16,20 +16,29 @@ logger = logging.getLogger(__name__)
 @login_required
 def tableau_bord():
     """Tableau de bord principal"""
-    # Statistiques globales
+    
+    # Query de base
+    from sqlalchemy import or_
+    if current_user.has_permission('tickets.voir_tous'):
+        base_query = Ticket.query
+    else:
+        base_query = Ticket.query.filter(
+            or_(
+                Ticket.createur_id == current_user.id,
+                Ticket.assigne_a_id == current_user.id,
+                Ticket.departement_id == current_user.departement_id
+            )
+        )
+        
     stats = {
-        'total': Ticket.query.count(),
-        'ouvert': Ticket.query.filter_by(statut='ouvert').count(),
-        'en_cours': Ticket.query.filter_by(statut='en_cours').count(),
-        'resolu': Ticket.query.filter_by(statut='resolu').count(),
+        'total': base_query.count(),
+        'ouvert': base_query.filter_by(statut='ouvert').count(),
+        'en_cours': base_query.filter_by(statut='en_cours').count(),
+        'resolu': base_query.filter_by(statut='resolu').count(),
     }
     
     # Tickets récents
-    if current_user.has_permission('tickets.voir_tous'):
-        tickets_recents = Ticket.query.order_by(Ticket.date_creation.desc()).limit(10).all()
-    else:
-        tickets_recents = Ticket.query.filter_by(createur_id=current_user.id)\
-            .order_by(Ticket.date_creation.desc()).limit(10).all()
+    tickets_recents = base_query.order_by(Ticket.date_creation.desc()).limit(100).all()
     
     return render_template('tickets/tableau_bord.html', 
                          stats=stats, 
@@ -49,7 +58,14 @@ def liste():
     if current_user.has_permission('tickets.voir_tous'):
         query = Ticket.query
     else:
-        query = Ticket.query.filter_by(createur_id=current_user.id)
+        from sqlalchemy import or_
+        query = Ticket.query.filter(
+            or_(
+                Ticket.createur_id == current_user.id,
+                Ticket.assigne_a_id == current_user.id,
+                Ticket.departement_id == current_user.departement_id
+            )
+        )
     
     # Appliquer les filtres
     if statut:
@@ -93,8 +109,15 @@ def mes_tickets():
     priorite = request.args.get('priorite')
     departement_id = request.args.get('departement_id')
     
-    # Query de base: créé par ou assigné à
-    query = Ticket.query.filter((Ticket.createur_id == current_user.id) | (Ticket.assigne_a_id == current_user.id))
+    # Query de base: créé par, assigné à, ou département
+    from sqlalchemy import or_
+    query = Ticket.query.filter(
+        or_(
+            Ticket.createur_id == current_user.id,
+            Ticket.assigne_a_id == current_user.id,
+            Ticket.departement_id == current_user.departement_id
+        )
+    )
     
     # Appliquer les filtres
     if statut:
@@ -285,6 +308,27 @@ def modifier(ticket_id):
             type_ticket = request.form.get('type_ticket', 'demande')
             if type_ticket == 'autre':
                 type_ticket = request.form.get('custom_type', 'Autre')
+
+            # Track changes
+            changes = []
+            if ticket.titre != request.form.get('titre'):
+                changes.append(('Titre', ticket.titre, request.form.get('titre')))
+            if ticket.type_ticket != type_ticket:
+                changes.append(('Type', ticket.type_ticket, type_ticket))
+            if ticket.priorite != request.form.get('priorite'):
+                changes.append(('Priorité', ticket.priorite, request.form.get('priorite')))
+            if ticket.statut != request.form.get('statut'):
+                changes.append(('Statut', ticket.statut, request.form.get('statut')))
+
+            for champ, old_val, new_val in changes:
+                db.session.add(HistoriqueTicket(
+                    ticket_id=ticket.id,
+                    utilisateur_id=current_user.id,
+                    action=f"Modification: {champ}",
+                    champ_modifie=champ,
+                    ancienne_valeur=old_val,
+                    nouvelle_valeur=new_val
+                ))
 
             ticket.titre = request.form.get('titre')
             ticket.description = request.form.get('description')

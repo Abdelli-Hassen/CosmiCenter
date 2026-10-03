@@ -209,7 +209,7 @@
       </div>
 
       {% if tickets %}
-      <div class="premium-table-wrapper">
+      <div class="premium-table-wrapper" style="max-height: 400px; overflow-y: auto;">
         <table class="premium-table">
           <thead>
             <tr>
@@ -221,7 +221,7 @@
             </tr>
           </thead>
           <tbody>
-            {% for ticket in tickets[:10] %}
+            {% for ticket in tickets %}
             <tr onclick="window.location.href='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'">
               <td>
                 <span style="font-family: var(--font-mono, monospace); font-size: 12px; color: var(--text-muted); font-weight: 500;">

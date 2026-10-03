@@ -223,6 +223,13 @@ Les **rôles** définissent ce que chaque utilisateur peut faire dans CosmittoHU
 | **Agent** | Traitement des tickets assignés, commentaires, changement de statut |
 | **Utilisateur** | Création et suivi de ses propres tickets uniquement |
 
+**Personnalisation granulaire des rôles (Interface Admin) :**
+
+Dans l'onglet "Rôles", l'interface de gestion est divisée en deux onglets :
+- **Pages** : Vous décidez quelles vues (parmi les 14 pages de la barre latérale) sont visibles pour le rôle. Si un rôle n'a aucune page activée dans une section (ex. "Intelligence"), la section entière est masquée de sa navigation.
+- **Actions (Autorisations)** : Vous définissez les droits de modification (Créer, Modifier, Supprimer).
+*La logique est hiérarchique* : si vous décochez l'accès à une page (ex. "Nouveau ticket"), les actions liées (ex. "Créer un ticket") se désactivent et se verrouillent automatiquement.
+
 ---
 
 ### 5.6 Rapports
