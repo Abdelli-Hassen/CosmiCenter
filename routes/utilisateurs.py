@@ -31,11 +31,17 @@ def liste():
     per_page = 50
     
     
-    query = Utilisateur.query
+    base_query = Utilisateur.query
     
     # Enforce department restriction if they don't have full view and DO have dept view
     if current_user.has_permission('utilisateurs.voir_dept') and not current_user.role.nom == 'Super Administrateur':
-        query = query.filter_by(departement_id=current_user.departement_id)
+        base_query = base_query.filter_by(departement_id=current_user.departement_id)
+
+    # Counts for header stats (before filters)
+    total_actifs = base_query.filter_by(actif=True).count()
+    total_inactifs = base_query.filter_by(actif=False).count()
+
+    query = base_query
         
     # Filtres
     search = request.args.get('search', '')
@@ -75,7 +81,9 @@ def liste():
                          search=search,
                          role_filter=role_filter,
                          dept_filter=dept_filter,
-                         actif_filter=actif_filter)
+                         actif_filter=actif_filter,
+                         total_actifs=total_actifs,
+                         total_inactifs=total_inactifs)
 
 
 @utilisateurs_bp.route('/nouveau', methods=['GET', 'POST'])
@@ -187,7 +195,7 @@ def modifier(id):
     utilisateur = Utilisateur.query.get_or_404(id)
     
     # Vérifier les permissions
-    if not current_user.has_permission('utilisateurs.modifier'):
+    if not current_user.has_permission('admin.utilisateurs'):
         if current_user.id != utilisateur.id:
             flash('Accès non autorisé.', 'danger')
             return redirect(url_for('tickets.tableau_bord'))
@@ -201,10 +209,10 @@ def modifier(id):
         matricule = request.form.get('matricule', '').strip()
         
         # Les admins peuvent modifier plus de champs
-        if current_user.has_permission('utilisateurs.modifier'):
+        if current_user.has_permission('admin.utilisateurs'):
             role_id = request.form.get('role_id', '').strip() or None
             departement_id = request.form.get('departement_id', '').strip() or None
-            actif = request.form.get('actif') == 'on'
+            actif = request.form.get('actif') == '1'
         else:
             role_id = utilisateur.role_id
             departement_id = utilisateur.departement_id
@@ -277,27 +285,38 @@ def modifier(id):
 
 @utilisateurs_bp.route('/<string:id>/toggle-actif', methods=['POST'])
 @login_required
-@require_permission('utilisateurs.modifier')
+@require_permission('admin.utilisateurs')
 def toggle_actif(id):
     """Activer/Désactiver un utilisateur"""
     utilisateur = Utilisateur.query.get_or_404(id)
-    
+
     # Ne pas se désactiver soi-même
     if utilisateur.id == current_user.id:
-        flash('Vous ne pouvez pas vous désactiver vous-même.', 'danger')
+        msg = 'Vous ne pouvez pas vous désactiver vous-même.'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'error': msg}), 403
+        flash(msg, 'danger')
         return redirect(url_for('utilisateurs.detail', id=id))
-    
+
     utilisateur.actif = not utilisateur.actif
-    
+
     try:
         db.session.commit()
-        status = 'activé' if utilisateur.actif else 'désactivé'
-        flash(f'Utilisateur "{utilisateur.nom_complet}" {status} avec succès!', 'success')
+        status = 'réactivé' if utilisateur.actif else 'désactivé'
+        msg = f'Utilisateur « {utilisateur.nom_complet} » {status} avec succès.'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'actif': utilisateur.actif, 'message': msg})
+        flash(msg, 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Erreur: {str(e)}', 'danger')
-    
-    return redirect(url_for('utilisateurs.detail', id=id))
+        err = f'Erreur : {str(e)}'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'error': err}), 500
+        flash(err, 'danger')
+
+    # Non-AJAX: stay on same page via referrer
+    return redirect(request.referrer or url_for('utilisateurs.detail', id=id))
+
 
 
 @utilisateurs_bp.route('/<string:id>/supprimer', methods=['POST'])

@@ -43,6 +43,14 @@ class Config:
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'noreply@example.com')
     
+    # IMAP (Pour l'intégration Email-to-Ticket)
+    IMAP_SERVER = os.getenv('IMAP_SERVER', 'imap.gmail.com')
+    IMAP_PORT = int(os.getenv('IMAP_PORT', 993))
+    IMAP_USE_SSL = os.getenv('IMAP_USE_SSL', 'true').lower() == 'true'
+    IMAP_USERNAME = os.getenv('IMAP_USERNAME', MAIL_USERNAME) # Souvent le même que MAIL_USERNAME
+    IMAP_PASSWORD = os.getenv('IMAP_PASSWORD', MAIL_PASSWORD)
+    IMAP_POLL_INTERVAL = int(os.getenv('IMAP_POLL_INTERVAL', 60)) # en secondes
+    
     # Pagination
     TICKETS_PER_PAGE = 25
     USERS_PER_PAGE = 50
@@ -53,7 +61,7 @@ class Config:
     LOCKOUT_DURATION_MINUTES = 30
     
     # Application
-    APP_NAME = 'CosmittoHUB'
+    APP_NAME = 'CosHub'
     APP_VERSION = '2.0.0'
     SUPPORT_EMAIL = 'support@example.com'
     
@@ -79,10 +87,10 @@ class ProductionConfig(Config):
     """Configuration de production"""
     DEBUG = False
     TESTING = False
-    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = False  # Set to True when you actually have HTTPS (SSL) configured
     
     # Forcer HTTPS
-    PREFERRED_URL_SCHEME = 'https'
+    PREFERRED_URL_SCHEME = 'http'
 
 
 class TestingConfig(Config):

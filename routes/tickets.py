@@ -4,6 +4,8 @@ Routes de gestion des tickets pour CosmittoDesk
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from models import db, Ticket, Utilisateur, Departement, CategorieTicket, Commentaire, HistoriqueTicket
+from services.email_service import send_email_notification
+from flask import current_app
 from datetime import datetime, timedelta
 import logging
 
@@ -40,9 +42,16 @@ def tableau_bord():
     # Tickets récents
     tickets_recents = base_query.order_by(Ticket.date_creation.desc()).limit(100).all()
     
+    # Tickets urgents (Priorité haute/critique et non résolus)
+    tickets_urgents = base_query.filter(
+        Ticket.statut != 'resolu',
+        Ticket.priorite.in_(['haute', 'critique'])
+    ).order_by(Ticket.date_creation.desc()).limit(5).all()
+    
     return render_template('tickets/tableau_bord.html', 
                          stats=stats, 
-                         tickets=tickets_recents)
+                         tickets=tickets_recents,
+                         tickets_urgents=tickets_urgents)
 
 
 @tickets_bp.route('/liste')
@@ -259,6 +268,32 @@ def nouveau():
             flash('Ticket créé avec succès', 'success')
             logger.info(f'Nouveau ticket créé: {ticket.numero} par {current_user.email}')
             
+            # Envoyer un email de notification au créateur et à l'assigné (si applicable)
+            recipients = [current_user.email]
+            if ticket.assigne_a:
+                if ticket.assigne_a.email not in recipients:
+                    recipients.append(ticket.assigne_a.email)
+            
+            send_email_notification(
+                current_app._get_current_object(),
+                f"Nouveau Ticket : [{ticket.numero}] {ticket.titre}",
+                recipients,
+                f"<p>Le ticket <b>{ticket.numero}</b> a été créé avec succès.</p><p>Description: {ticket.description}</p><p><a href='{url_for('tickets.detail', ticket_id=ticket.id, _external=True)}'>Voir le ticket</a></p>"
+            )
+            
+            # Create UI notification for assignee
+            if ticket.assigne_a and ticket.assigne_a.id != current_user.id:
+                from models import Notification
+                notif = Notification(
+                    utilisateur_id=ticket.assigne_a.id,
+                    titre="Nouveau ticket assigné",
+                    message=f"Le ticket {ticket.numero} vous a été assigné.",
+                    type_notification="ticket",
+                    lien=url_for('tickets.detail', ticket_id=ticket.id)
+                )
+                db.session.add(notif)
+                db.session.commit()
+            
             return redirect(url_for('tickets.detail', ticket_id=ticket.id))
         
         except Exception as e:
@@ -283,6 +318,43 @@ def nouveau():
 def detail(ticket_id):
     """Détail d'un ticket"""
     ticket = Ticket.query.get_or_404(ticket_id)
+    
+    from models import Notification, db
+    from datetime import datetime
+    
+    # Mark any notifications related to this ticket as read for the current user
+    # We can match by checking if the ticket id is in the lien, or just use url_for
+    from flask import url_for
+    notifs = Notification.query.filter_by(
+        utilisateur_id=current_user.id,
+        lue=False
+    ).all()
+    
+    ticket_url = url_for('tickets.detail', ticket_id=ticket.id)
+    marked_any = False
+    for notif in notifs:
+        if notif.lien and ticket_url in notif.lien:
+            notif.lue = True
+            notif.date_lecture = datetime.utcnow()
+            marked_any = True
+            
+    # Auto-transition from nouveau to ouvert when someone views it
+    if ticket.statut == 'nouveau':
+        from models import HistoriqueTicket
+        ticket.statut = 'ouvert'
+        hist = HistoriqueTicket(
+            ticket_id=ticket.id, 
+            utilisateur_id=current_user.id, 
+            action='Consultation', 
+            champ_modifie='Statut', 
+            ancienne_valeur='nouveau', 
+            nouvelle_valeur='ouvert'
+        )
+        db.session.add(hist)
+        marked_any = True
+            
+    if marked_any:
+        db.session.commit()
     
     # Vérifier les permissions
     if not current_user.has_permission('tickets.voir_tous'):
@@ -356,6 +428,16 @@ def modifier(ticket_id):
                 new_ass = Utilisateur.query.get(new_ass_id) if new_ass_id else None
                 old_ass = (ticket.assigne_a.prenom + ' ' + ticket.assigne_a.nom) if ticket.assigne_a else 'Non assigné'
                 changes.append(('Assigné à', old_ass, (new_ass.prenom + ' ' + new_ass.nom) if new_ass else 'Non assigné'))
+                if new_ass and str(new_ass.id) != str(current_user.id):
+                    from models import Notification
+                    notif = Notification(
+                        utilisateur_id=new_ass.id,
+                        titre="Nouveau ticket assigné",
+                        message=f"Le ticket {ticket.numero} vous a été assigné.",
+                        type_notification="ticket",
+                        lien=url_for('tickets.detail', ticket_id=ticket.id)
+                    )
+                    db.session.add(notif)
 
             for champ, old_val, new_val in changes:
                 db.session.add(HistoriqueTicket(
@@ -496,10 +578,51 @@ def commenter(ticket_id):
         )
         
         db.session.add(commentaire)
+        db.session.flush() # Ensure we have the ticket ID and comment ID (though pieces jointes attach to ticket)
+
+        # Handle File Attachments
+        import os, uuid as uuid_mod
+        from werkzeug.utils import secure_filename
+        from models import PieceJointe
+        
+        UPLOAD_FOLDER = os.path.join(request.root_path, 'static', 'uploads', 'tickets')
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        
+        for f in request.files.getlist('attachments'):
+            if f and f.filename:
+                nom_original = secure_filename(f.filename)
+                ext = nom_original.rsplit('.', 1)[1].lower() if '.' in nom_original else 'bin'
+                nouveau_nom = f"{uuid_mod.uuid4().hex}.{ext}"
+                chemin = os.path.join(UPLOAD_FOLDER, nouveau_nom)
+                f.save(chemin)
+                db.session.add(PieceJointe(
+                    ticket_id=ticket.id,
+                    commentaire_id=commentaire.id,
+                    nom_fichier=nouveau_nom,
+                    nom_original=nom_original,
+                    type_mime=f.content_type,
+                    taille=os.path.getsize(chemin),
+                    chemin=f'uploads/tickets/{nouveau_nom}',
+                    uploade_par_id=current_user.id
+                ))
+
         db.session.commit()
         
         flash('Commentaire ajouté', 'success')
         logger.info(f'Commentaire ajouté au ticket {ticket.numero} par {current_user.email}')
+        
+        recipients = set([ticket.createur.email])
+        if ticket.assigne_a:
+            recipients.add(ticket.assigne_a.email)
+        recipients.discard(current_user.email) # Ne pas s'envoyer à soi-même
+        
+        if recipients:
+            send_email_notification(
+                current_app._get_current_object(),
+                f"Nouveau commentaire : [{ticket.numero}] {ticket.titre}",
+                list(recipients),
+                f"<p>Un nouveau commentaire a été ajouté au ticket <b>{ticket.numero}</b> par {current_user.prenom}.</p><p><i>{commentaire.contenu}</i></p><p><a href='{url_for('tickets.detail', ticket_id=ticket.id, _external=True)}'>Voir le ticket</a></p>"
+            )
     
     except Exception as e:
         db.session.rollback()
@@ -542,6 +665,17 @@ def changer_statut(ticket_id):
                 ancien_nom = (ticket.assigne_a.prenom + ' ' + ticket.assigne_a.nom) if ticket.assigne_a else 'Non assigné'
                 nouvel_user = Utilisateur.query.get(nouvel_assigne_val) if nouvel_assigne_val else None
                 nouveau_nom = (nouvel_user.prenom + ' ' + nouvel_user.nom) if nouvel_user else 'Non assigné'
+                
+                if nouvel_user and str(nouvel_user.id) != str(current_user.id):
+                    from models import Notification
+                    notif = Notification(
+                        utilisateur_id=nouvel_user.id,
+                        titre="Nouveau ticket assigné",
+                        message=f"Le ticket {ticket.numero} vous a été assigné.",
+                        type_notification="ticket",
+                        lien=url_for('tickets.detail', ticket_id=ticket.id)
+                    )
+                    db.session.add(notif)
                 hist = HistoriqueTicket(ticket_id=ticket.id, utilisateur_id=current_user.id, action='Changement d\'assignation', champ_modifie='Assigné à', ancienne_valeur=ancien_nom, nouvelle_valeur=nouveau_nom)
                 db.session.add(hist)
                 ticket.assigne_a_id = nouvel_assigne_val
@@ -666,4 +800,20 @@ def faq_detail(article_id):
 @login_required
 def chat_inbox():
     """Centre de messagerie"""
+    from models import Notification, db
+    from datetime import datetime
+    
+    # Mark all chat notifications as read for this user
+    unread_chat_notifs = Notification.query.filter_by(
+        utilisateur_id=current_user.id,
+        type_notification='chat',
+        lue=False
+    ).all()
+    
+    if unread_chat_notifs:
+        for notif in unread_chat_notifs:
+            notif.lue = True
+            notif.date_lecture = datetime.utcnow()
+        db.session.commit()
+        
     return render_template('chat/inbox.html')

@@ -96,6 +96,18 @@ def send_message():
         content=content
     )
     db.session.add(msg)
+    
+    # Create notification for chat
+    from models import Notification
+    from flask import url_for
+    notif = Notification(
+        utilisateur_id=receiver_id,
+        titre="Nouveau message",
+        message=f"{current_user.prenom} {current_user.nom} vous a envoyé un message.",
+        type_notification="chat",
+        lien=url_for('chat.inbox')
+    )
+    db.session.add(notif)
     db.session.commit()
     
     return jsonify(msg.to_dict())

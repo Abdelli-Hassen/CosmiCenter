@@ -7,16 +7,6 @@ Ce document liste les fonctionnalités restantes pour finaliser la version 1.0, 
 ## 🚧 1. Les Indispensables (Pour finaliser la V1)
 *Ces éléments sont déjà prévus dans l'architecture mais nécessitent d'être codés.*
 
-- [ ] **Historique d'Audit (Logs des Tickets)**
-  - Implémenter le système `HistoriqueTicket`.
-  - Enregistrer chaque changement de statut, de priorité ou d'assignation.
-  - Afficher l'historique de manière chronologique dans la page de détail d'un ticket.
-
-- [ ] **Base de Connaissance (Knowledge Base)**
-  - Développer l'interface pour créer, éditer et supprimer des articles.
-  - Ajouter un éditeur de texte riche (WYSIWYG) pour la rédaction.
-  - Implémenter un moteur de recherche par mots-clés.
-  - (Optionnel) Permettre aux agents de lier un article directement dans une réponse de ticket.
 
 - [ ] **Paramètres et Logs Système**
   - Rendre fonctionnelles les pages d'administration "Paramètres" et "Logs système" qui sont actuellement des espaces réservés.

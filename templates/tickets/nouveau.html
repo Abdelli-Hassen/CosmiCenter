@@ -209,10 +209,10 @@
 
                 <div id="routingSpecificUI" style="display:none; padding: 16px; background: var(--surface-base); border-radius: 8px; border: 1px solid var(--border-subtle);">
                   <label class="premium-label">Sélectionner l'agent (Optionnel)</label>
-                  <select name="assigne_a_id" class="premium-input">
+                  <select name="assigne_a_id" id="agentSelect" class="premium-input">
                     <option value="">Sélectionner une personne...</option>
                     {% for u in utilisateurs %}
-                    <option value="{{ u.id }}">{{ u.prenom }} {{ u.nom }} ({{ u.departement.nom if u.departement else 'Sans Dpt' }})</option>
+                    <option value="{{ u.id }}" data-dept="{{ u.departement_id if u.departement_id else '' }}">{{ u.prenom }} {{ u.nom }} ({{ u.departement.nom if u.departement else 'Sans Dpt' }})</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -426,18 +426,35 @@
     catWrapper.style.display = (deptId && visible) ? 'block' : 'none';
   }
 
-  if (catSelect && deptSelect) {
-    deptSelect.addEventListener('change', filterCategories);
-    filterCategories();
-
-    catSelect.addEventListener('change', function () {
-      var opt = catSelect.options[catSelect.selectedIndex];
-      if (!opt || !opt.value) { catHint.style.display = 'none'; return; }
-      if (opt.dataset.prio) setPriority(opt.dataset.prio);
-      var d = opt.dataset.delai;
-      catHint.textContent = d ? 'Délai de résolution : ' + d + ' jour(s). L\'échéance sera calculée automatiquement.' : '';
-      catHint.style.display = d ? 'inline-block' : 'none';
+  var agentSelect = document.getElementById('agentSelect');
+  function filterAgents() {
+    if (!agentSelect) return;
+    var deptId = deptSelect.value;
+    agentSelect.value = '';
+    Array.prototype.forEach.call(agentSelect.options, function (o) {
+      if (!o.value) return;
+      var show = o.dataset.dept === deptId;
+      o.hidden = !show;
+      o.disabled = !show;
     });
+  }
+
+  if (deptSelect) {
+    if (catSelect) deptSelect.addEventListener('change', filterCategories);
+    deptSelect.addEventListener('change', filterAgents);
+    if (catSelect) filterCategories();
+    filterAgents();
+
+    if (catSelect) {
+      catSelect.addEventListener('change', function () {
+        var opt = catSelect.options[catSelect.selectedIndex];
+        if (!opt || !opt.value) { catHint.style.display = 'none'; return; }
+        if (opt.dataset.prio) setPriority(opt.dataset.prio);
+        var d = opt.dataset.delai;
+        catHint.textContent = d ? 'Délai de résolution : ' + d + ' jour(s). L\'échéance sera calculée automatiquement.' : '';
+        catHint.style.display = d ? 'inline-block' : 'none';
+      });
+    }
   }
 
   /* ── 3. Priority Buttons Logic ── */

@@ -168,15 +168,15 @@
         <div class="input-group" style="margin-bottom:0;">
           <label class="input-label">Statut du compte</label>
           <div style="display:flex; align-items:center; margin-top:4px;">
-            <label style="display:inline-flex; align-items:center; gap:12px; cursor:pointer;">
-              <input type="checkbox" name="actif" value="1" {% if utilisateur.actif %}checked{% endif %} style="display:none;" id="actifToggle">
-              <div id="toggleTrack" style="position:relative; width:48px; height:26px; border-radius:13px; background:{{ '#10b981' if utilisateur.actif else 'var(--surface-4)' }}; transition:background 0.3s; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onclick="toggleActive()">
+            <div style="display:inline-flex; align-items:center; gap:12px; cursor:pointer;" onclick="updateToggle()">
+              <input type="hidden" name="actif" value="{{ '1' if utilisateur.actif else '0' }}" id="actifToggle">
+              <div id="toggleTrack" style="position:relative; width:48px; height:26px; border-radius:13px; background:{{ '#10b981' if utilisateur.actif else 'var(--surface-4)' }}; transition:background 0.3s; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);">
                 <div id="toggleThumb" style="position:absolute; top:3px; left:{{ '25px' if utilisateur.actif else '3px' }}; width:20px; height:20px; border-radius:50%; background:#fff; transition:left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow:0 2px 5px rgba(0,0,0,0.2);"></div>
               </div>
               <span id="toggleLabel" style="font-size:14px; font-weight:800; color:{{ '#10b981' if utilisateur.actif else 'var(--text-muted)' }};">
                 {% if utilisateur.actif %}Compte Opérationnel{% else %}Compte Désactivé{% endif %}
               </span>
-            </label>
+            </div>
           </div>
         </div>
 
@@ -270,23 +270,27 @@
 {% block extra_scripts %}
 <script>
 (function () {
-  var checkbox = document.getElementById('actifToggle');
+  var hiddenInput = document.getElementById('actifToggle');
   var track = document.getElementById('toggleTrack');
   var thumb = document.getElementById('toggleThumb');
   var label = document.getElementById('toggleLabel');
 
-  window.toggleActive = function () {
-    checkbox.checked = !checkbox.checked;
-    if (checkbox.checked) {
-      track.style.background = '#10b981';
-      thumb.style.left = '25px';
-      label.textContent = 'Compte Opérationnel';
-      label.style.color = '#10b981';
-    } else {
+  window.updateToggle = function () {
+    var isActive = hiddenInput.value === '1';
+    
+    // Toggle state
+    if (isActive) {
+      hiddenInput.value = '0';
       track.style.background = 'var(--surface-4)';
       thumb.style.left = '3px';
       label.textContent = 'Compte Désactivé';
       label.style.color = 'var(--text-muted)';
+    } else {
+      hiddenInput.value = '1';
+      track.style.background = '#10b981';
+      thumb.style.left = '25px';
+      label.textContent = 'Compte Opérationnel';
+      label.style.color = '#10b981';
     }
   };
 })();

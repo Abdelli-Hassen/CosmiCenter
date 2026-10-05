@@ -8,10 +8,11 @@
 <style>
   /* Premium Welcome Strip */
   .premium-welcome {
-    background: linear-gradient(135deg, rgba(220, 38, 38, 0.05) 0%, rgba(220, 38, 38, 0) 100%), var(--surface-base, #ffffff);
-    border: 1px solid var(--border-subtle, #e5e7eb);
-    border-radius: 16px;
-    padding: 32px;
+    background-color: var(--surface-base);
+    background-image: linear-gradient(135deg, rgba(220, 38, 38, 0.05) 0%, rgba(220, 38, 38, 0) 100%);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 16px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -22,14 +23,14 @@
   .premium-welcome-left h1 {
     font-size: 28px;
     font-weight: 700;
-    color: var(--text-primary, #111827);
+    color: var(--text-primary);
     margin: 0 0 8px 0;
     letter-spacing: -0.02em;
   }
   
   .premium-welcome-left p {
     font-size: 15px;
-    color: var(--text-secondary, #4b5563);
+    color: var(--text-secondary);
     margin: 0;
   }
 
@@ -42,8 +43,8 @@
   }
   
   .premium-kpi {
-    background: var(--surface-base, #ffffff);
-    border: 1px solid var(--border-subtle, #e5e7eb);
+    background: var(--surface-base);
+    border: 1px solid var(--border-subtle);
     border-radius: 16px;
     padding: 24px;
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -2px rgba(0,0,0,0.02);
@@ -67,7 +68,7 @@
   .premium-kpi-label {
     font-size: 13px;
     font-weight: 600;
-    color: var(--text-secondary, #4b5563);
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -84,7 +85,7 @@
   .premium-kpi-value {
     font-size: 36px;
     font-weight: 700;
-    color: var(--text-primary, #111827);
+    color: var(--text-primary);
     line-height: 1;
     letter-spacing: -0.02em;
     margin-top: 4px;
@@ -92,24 +93,24 @@
 
   /* Premium Tables & Badges (Copied from liste.html) */
   .premium-table-wrapper {
-    background: var(--surface-base, #ffffff);
-    border: 1px solid var(--border-subtle, #e5e7eb);
+    background: var(--surface-base);
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     overflow-x: auto;
   }
   .premium-table { width: 100%; min-width: 700px; border-collapse: collapse; text-align: left; }
   .premium-table th {
-    background: var(--surface-raised, #f9fafb);
+    background: var(--surface-raised);
     padding: 14px 20px; font-size: 11px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.05em; color: var(--text-muted, #6b7280);
-    border-bottom: 1px solid var(--border-subtle, #e5e7eb); white-space: nowrap;
+    letter-spacing: 0.05em; color: var(--text-muted);
+    border-bottom: 1px solid var(--border-subtle); white-space: nowrap;
   }
   .premium-table td {
-    padding: 16px 20px; font-size: 13px; border-bottom: 1px solid var(--border-subtle, #e5e7eb); vertical-align: middle;
+    padding: 16px 20px; font-size: 13px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle;
   }
   .premium-table tbody tr { transition: background-color 0.15s ease; cursor: pointer; }
-  .premium-table tbody tr:hover { background-color: var(--surface-hover, #f3f4f6); }
+  .premium-table tbody tr:hover { background-color: var(--surface-hover, rgba(0,0,0,0.02)); }
   .premium-table tr:last-child td { border-bottom: none; }
 
   .badge-premium {
@@ -132,22 +133,12 @@
 {% endblock %}
 
 {% block content %}
-<div class="page" style="padding: 24px 32px; max-width: 1400px; margin: 0 auto;">
+<div class="page" style="padding: 24px 32px; max-width: 1400px; margin: 0 auto 32px auto;">
 
-  <!-- Premium Welcome Strip -->
   <div class="premium-welcome">
     <div class="premium-welcome-left">
-      <h1>Bon retour, {{ current_user.prenom }}</h1>
-      <p>Voici un aperçu de l'activité de votre espace de travail aujourd'hui.</p>
-    </div>
-    <div style="display: flex; gap: 12px; align-items: center;">
-      <a href="{{ url_for('tickets.liste') }}" class="btn btn-ghost btn-sm" style="padding: 10px 16px; border-radius: 10px; font-weight: 500;">
-        Voir tous les Tickets
-      </a>
-      <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm" style="display:flex; align-items:center; gap:8px; padding: 10px 20px; border-radius: 10px; font-weight: 600; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nouveau Ticket
-      </a>
+      <h1 style="font-size: 24px;">Bon retour, {{ current_user.prenom }}</h1>
+      <p style="font-size: 14px;">Voici un aperçu de l'activité de votre espace de travail aujourd'hui.</p>
     </div>
   </div>
 
@@ -197,7 +188,7 @@
   </div>
 
   <!-- Content Grid -->
-  <div style="display: grid; grid-template-columns: 2.5fr 1fr; gap: 24px; align-items: start;">
+  <div style="display: grid; grid-template-columns: 2.5fr 1fr; gap: 24px; align-items: start; margin-bottom: 48px; padding-bottom: 24px;">
     
     <!-- Recent Tickets Section -->
     <div>
@@ -290,35 +281,40 @@
       {% endif %}
     </div>
 
-    <!-- News Feed Sidebar -->
+    <!-- Urgent Tickets Sidebar -->
     <div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0;">Quoi de neuf ?</h2>
+        <h2 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0;">Urgences & Priorités</h2>
       </div>
       
-      <div style="background: var(--surface-base); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+      <div style="background: var(--surface-base); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); max-height: 400px; overflow-y: auto;" class="premium-scrollbar">
         <div style="display: flex; flex-direction: column; gap: 20px;">
           
-          <div style="position: relative; padding-left: 16px;">
-            <div style="position: absolute; left: 0; top: 4px; bottom: 0; width: 3px; background: #dc2626; border-radius: 4px;"></div>
-            <div style="font-size: 11px; color: #dc2626; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">Cybersécurité</div>
-            <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">Sensibilisation au Phishing</div>
-            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">Un nouveau module de formation est disponible. Rappelez-vous de ne jamais partager vos mots de passe avec qui que ce soit.</div>
-          </div>
-
-          <div style="position: relative; padding-left: 16px;">
-            <div style="position: absolute; left: 0; top: 4px; bottom: 0; width: 3px; background: #2563eb; border-radius: 4px;"></div>
-            <div style="font-size: 11px; color: #2563eb; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">Mise à jour</div>
-            <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">Nouvelle version v2.1</div>
-            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">La gestion des tickets intègre désormais les checklists pour les processus automatisés.</div>
-          </div>
-
-          <div style="position: relative; padding-left: 16px;">
-            <div style="position: absolute; left: 0; top: 4px; bottom: 0; width: 3px; background: #16a34a; border-radius: 4px;"></div>
-            <div style="font-size: 11px; color: #16a34a; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">Infrastructure</div>
-            <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">Maintenance Serveur</div>
-            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">Une maintenance aura lieu ce vendredi à 20h00. Veuillez enregistrer votre travail.</div>
-          </div>
+          {% if tickets_urgents %}
+            {% for u_ticket in tickets_urgents %}
+            <div style="position: relative; padding-left: 16px; cursor: pointer; transition: transform 0.2s; padding-bottom: 4px;" onclick="window.location.href='{{ url_for('tickets.detail', ticket_id=u_ticket.id) }}'" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
+              <div style="position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; background: {% if u_ticket.priorite == 'critique' %}#dc2626{% else %}#ea580c{% endif %}; border-radius: 4px;"></div>
+              <div style="font-size: 11px; color: {% if u_ticket.priorite == 'critique' %}#dc2626{% else %}#ea580c{% endif %}; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">
+                {{ u_ticket.priorite }} - {{ u_ticket.numero }}
+              </div>
+              <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">{{ u_ticket.titre }}</div>
+              <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                {{ u_ticket.description[:80] if u_ticket.description else '' }}...
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div style="text-align: center; padding: 20px 0;">
+              <div style="width: 48px; height: 48px; background: rgba(16, 185, 129, 0.1); color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Aucune urgence en cours</div>
+              <div style="font-size: 13px; color: var(--text-secondary);">Tout est sous contrôle.</div>
+            </div>
+          {% endif %}
 
         </div>
       </div>

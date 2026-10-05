@@ -26,16 +26,16 @@
 
   const ICONS = {
     success: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-    error:   '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    error: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
     warning: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2L14 13H2L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6v3M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
-    info:    '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    info: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
   };
 
   const DEFAULT_DURATIONS = {
     success: 4000,
-    error:   8000,
+    error: 8000,
     warning: 6000,
-    info:    5000,
+    info: 5000,
   };
 
   const MAX_TOASTS = 3;
@@ -55,9 +55,9 @@
    * @param {Object} [opts.action] - { label: string, onClick: fn }
    */
   function show(opts) {
-    const type     = opts.type || 'info';
+    const type = opts.type || 'info';
     const duration = (opts.duration !== undefined) ? opts.duration : (DEFAULT_DURATIONS[type] || 5000);
-    const c        = getContainer();
+    const c = getContainer();
 
     // Enforce max — dismiss oldest
     while (activeToasts.length >= MAX_TOASTS) {
@@ -82,14 +82,14 @@
     toast.innerHTML =
       '<span class="toast-icon">' + (ICONS[type] || ICONS.info) + '</span>' +
       '<div class="toast-content">' +
-        '<div class="toast-title">' + escapeHtml(opts.title || '') + '</div>' +
-        (opts.message ? '<div class="toast-message">' + escapeHtml(opts.message) + '</div>' : '') +
-        actionHTML +
+      '<div class="toast-title">' + escapeHtml(opts.title || '') + '</div>' +
+      (opts.message ? '<div class="toast-message">' + escapeHtml(opts.message) + '</div>' : '') +
+      actionHTML +
       '</div>' +
       '<button class="toast-close" type="button" aria-label="Close notification">' +
-        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none">' +
-        '<path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
-        '</svg>' +
+      '<svg width="14" height="14" viewBox="0 0 14 14" fill="none">' +
+      '<path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
+      '</svg>' +
       '</button>' +
       '<div class="toast-progress"></div>';
 
@@ -114,9 +114,9 @@
 
     // Progress bar animation using requestAnimationFrame
     const progressBar = toast.querySelector('.toast-progress');
-    let startTime  = null;
-    let pausedAt   = null;
-    let rafId      = null;
+    let startTime = null;
+    let pausedAt = null;
+    let rafId = null;
 
     function animateProgress(ts) {
       if (startTime === null) startTime = ts;
@@ -149,8 +149,8 @@
 
     toast.addEventListener('mouseenter', pauseProgress);
     toast.addEventListener('mouseleave', resumeProgress);
-    toast.addEventListener('focusin',    pauseProgress);
-    toast.addEventListener('focusout',   resumeProgress);
+    toast.addEventListener('focusin', pauseProgress);
+    toast.addEventListener('focusout', resumeProgress);
 
     if (duration > 0) {
       rafId = requestAnimationFrame(animateProgress);
@@ -283,9 +283,9 @@
       if (Array.isArray(messages)) {
         messages.forEach(function (m) {
           show({
-            title:   m.message || m.title || '',
-            message: m.detail  || m.body  || '',
-            type:    flashCategoryToType(m.category || m.type || 'info'),
+            title: m.message || m.title || '',
+            message: m.detail || m.body || '',
+            type: flashCategoryToType(m.category || m.type || 'info'),
           });
         });
       }
@@ -297,7 +297,7 @@
   // ─── Notification Panel ────────────────────────────────────────────────────
 
   function initNotificationPanel() {
-    const notifBtn   = document.getElementById('notif-btn');
+    const notifBtn = document.getElementById('notif-btn');
     const notifPanel = document.getElementById('notifPanel');
 
     if (!notifBtn || !notifPanel) return;
@@ -323,31 +323,72 @@
     const markAllRead = document.getElementById('mark-all-read');
     if (markAllRead) {
       markAllRead.addEventListener('click', function () {
-        const unreadItems = notifPanel.querySelectorAll('.notif-item.unread');
-        unreadItems.forEach(function (item) {
-          item.classList.remove('unread', 'unread-info', 'unread-success', 'unread-warning');
-          const dot = item.querySelector('.notif-unread-dot');
-          if (dot) dot.remove();
-        });
+        fetch('/api/notifications/marquer-lues', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }).then(res => res.json()).then(data => {
+          if (data.success) {
+            const unreadItems = notifPanel.querySelectorAll('.notif-item.unread');
+            unreadItems.forEach(function (item) {
+              item.classList.remove('unread', 'unread-info', 'unread-success', 'unread-warning');
+              const dot = item.querySelector('.notif-unread-dot');
+              if (dot) dot.remove();
+            });
 
-        // Update badge count
-        const badge = notifBtn.querySelector('.notif-badge, [data-badge], .badge');
-        if (badge) {
-          badge.textContent = '0';
-          badge.style.display = 'none';
-        }
-
-        info('Notifications', 'All notifications marked as read.');
+            // Update badge count
+            const badge = notifBtn.querySelector('.badge-count');
+            if (badge) {
+              badge.textContent = '0';
+              badge.style.display = 'none';
+            }
+          }
+        }).catch(err => console.error(err));
       });
     }
   }
 
   // ─── Initialise on DOM ready ───────────────────────────────────────────────
 
+  function startPollingNotifications() {
+    setInterval(function () {
+      fetch('/api/notifications/poll')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            const notifs = data.data.unread_notifications;
+            const msgs = data.data.unread_messages;
+
+            // Top Bell Badge
+            const topBadge = document.getElementById('notifBadge');
+            if (topBadge) {
+              topBadge.textContent = notifs > 99 ? '99+' : notifs;
+              topBadge.style.display = notifs > 0 ? 'inline-flex' : 'none';
+            }
+
+            // Tickets nav badge
+            const ticketsBadge = document.getElementById('navTicketsBadge');
+            if (ticketsBadge) {
+              ticketsBadge.textContent = notifs;
+              ticketsBadge.style.display = notifs > 0 ? 'inline-block' : 'none';
+            }
+
+            // Messagerie nav badge
+            const msgBadge = document.getElementById('navMessagesBadge');
+            if (msgBadge) {
+              msgBadge.style.display = msgs > 0 ? 'inline-block' : 'none';
+            }
+          }
+        }).catch(err => console.error(err));
+    }, 1000); // 1 second polling for instant updates
+  }
+
   function init() {
     convertFlashAlerts();
     processDataFlash();
     initNotificationPanel();
+    startPollingNotifications();
   }
 
   if (document.readyState === 'loading') {
@@ -360,10 +401,10 @@
 
   window.CHUB = window.CHUB || {};
   window.CHUB.toast = {
-    show:    show,
+    show: show,
     success: success,
-    error:   error,
+    error: error,
     warning: warning,
-    info:    info,
+    info: info,
   };
 })();

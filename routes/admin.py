@@ -442,21 +442,69 @@ def toggle_categorie(cat_id):
     return redirect(url_for('admin.categories'))
 
 
-@admin_bp.route('/parametres')
+@admin_bp.route('/parametres', methods=['GET', 'POST'])
 @login_required
-@admin_required
 def parametres_systeme():
-    """ParamÃ¨tres systÃ¨me"""
-    return render_template('admin/parametres.html')
+    if not current_user.has_permission('admin_parametres.voir'):
+        flash("Accès non autorisé.", "error")
+        return redirect(url_for('tickets.tous'))
+    """Paramètres système"""
+    import os
+    from dotenv import dotenv_values, set_key
+    
+    dotenv_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '.env')
+    
+    if request.method == 'POST':
+        try:
+            # Update values
+            keys_to_update = [
+                'MAIL_SERVER', 'MAIL_PORT', 'MAIL_USE_TLS', 'MAIL_USERNAME', 'MAIL_PASSWORD', 'MAIL_DEFAULT_SENDER',
+                'IMAP_SERVER', 'IMAP_PORT', 'IMAP_USE_SSL', 'IMAP_USERNAME', 'IMAP_PASSWORD', 'IMAP_POLL_INTERVAL',
+                'TIMEZONE'
+            ]
+            for key in keys_to_update:
+                val = request.form.get(key, '')
+                # Handle checkboxes
+                if key in ['MAIL_USE_TLS', 'IMAP_USE_SSL']:
+                    val = 'True' if request.form.get(key) else 'False'
+                
+                set_key(dotenv_path, key, val)
+                
+            flash('Paramètres mis à jour avec succès. Un redémarrage du serveur peut être nécessaire pour appliquer certains changements.', 'success')
+            return redirect(url_for('admin.parametres_systeme'))
+        except Exception as e:
+            logger.error(f"Erreur lors de la mise à jour des paramètres: {str(e)}")
+            flash("Erreur lors de l'enregistrement des paramètres.", "danger")
+
+    # Read current values
+    config_vals = dotenv_values(dotenv_path) if os.path.exists(dotenv_path) else {}
+    
+    return render_template('admin/parametres.html', config=config_vals)
 
 
 @admin_bp.route('/logs')
 @login_required
-@admin_required
 def logs():
-    """Visualisation des logs systÃ¨me"""
-    # TODO: ImplÃ©menter la lecture des fichiers de logs
-    return render_template('admin/logs.html')
+    if not current_user.has_permission('admin_logs.voir'):
+        flash("Accès non autorisé.", "error")
+        return redirect(url_for('tickets.tous'))
+    """Visualisation des logs système"""
+    import os
+    log_file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'logs', 'app.log')
+    logs_content = []
+    
+    if os.path.exists(log_file_path):
+        try:
+            with open(log_file_path, 'r', encoding='utf-8', errors='replace') as f:
+                lines = f.readlines()
+                logs_content = lines[-500:]
+                logs_content.reverse()
+        except Exception as e:
+            logs_content = [f"Erreur lors de la lecture des logs: {str(e)}"]
+    else:
+        logs_content = ["Aucun fichier de log trouvé."]
+        
+    return render_template('admin/logs.html', logs=logs_content)
 
 
 @admin_bp.route('/plan-action')
@@ -597,8 +645,183 @@ def supprimer_plan_action(id):
     task = PlanActionTask.query.get_or_404(id)
     db.session.delete(task)
     db.session.commit()
-    flash("TÃ¢che supprimÃ©e.", "success")
+    flash("Tâche supprimée.", "success")
     return redirect(url_for('admin.plan_action'))
+
+
+@admin_bp.route('/plan-action/export-excel')
+@login_required
+@admin_required
+def export_plan_action_excel():
+    """Export du plan d'action en fichier Excel formaté"""
+    from models import PlanActionTask
+    from flask import request, send_file
+    import openpyxl
+    from openpyxl.styles import (Font, PatternFill, Alignment, Border, Side,
+                                  GradientFill)
+    from openpyxl.utils import get_column_letter
+    from datetime import datetime, date
+    import io
+
+    # ── Paramètres de filtrage ──────────────────────────────────
+    mode      = request.args.get('mode', 'all')      # all | day | periode
+    date_jour = request.args.get('date_jour', '')
+    date_from = request.args.get('date_from', '')
+    date_to   = request.args.get('date_to', '')
+
+    query = PlanActionTask.query
+
+    if mode == 'day' and date_jour:
+        try:
+            d = datetime.fromisoformat(date_jour).date()
+            query = query.filter(
+                db.func.date(PlanActionTask.date_debut) == d
+            )
+        except ValueError:
+            pass
+    elif mode == 'periode' and date_from:
+        try:
+            df = datetime.fromisoformat(date_from)
+            query = query.filter(PlanActionTask.date_debut >= df)
+            if date_to:
+                dt = datetime.fromisoformat(date_to)
+                query = query.filter(PlanActionTask.date_debut <= dt)
+        except ValueError:
+            pass
+
+    tasks = query.order_by(PlanActionTask.date_debut).all()
+
+    # ── Workbook & styles ───────────────────────────────────────
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Plan d'action"
+
+    # Palette
+    COLOR_HEADER_BG  = "1E1B4B"   # deep indigo
+    COLOR_HEADER_FG  = "FFFFFF"
+    COLOR_URGENT     = "FEE2E2"   # light red tint
+    COLOR_COMPLETED  = "D1FAE5"   # light green tint
+    COLOR_PLANNED    = "F1F5F9"   # light slate
+    COLOR_ALT        = "F8FAFC"
+
+    thin = Side(style='thin', color="E2E8F0")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    header_font    = Font(bold=True, color=COLOR_HEADER_FG, size=11, name="Calibri")
+    header_fill    = PatternFill("solid", fgColor=COLOR_HEADER_BG)
+    header_align   = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    title_font     = Font(bold=True, size=16, color=COLOR_HEADER_BG, name="Calibri")
+    subtitle_font  = Font(size=10, color="64748B", name="Calibri")
+    cell_font      = Font(size=10, name="Calibri")
+    bold_font      = Font(bold=True, size=10, name="Calibri")
+
+    center = Alignment(horizontal="center", vertical="center")
+    left   = Alignment(horizontal="left", vertical="center", wrap_text=True)
+
+    # ── Title block ─────────────────────────────────────────────
+    ws.merge_cells("A1:H1")
+    ws["A1"] = "Plan d'Action — CosmittoHUB"
+    ws["A1"].font = title_font
+    ws["A1"].alignment = Alignment(horizontal="left", vertical="center")
+    ws.row_dimensions[1].height = 32
+
+    ws.merge_cells("A2:H2")
+    label_map = {
+        'all':     'Toutes les tâches',
+        'day':     f'Jour : {date_jour}',
+        'periode': f'Période : {date_from} → {date_to or "…"}',
+    }
+    ws["A2"] = f"Exporté le {datetime.now().strftime('%d/%m/%Y à %H:%M')}  |  Filtre : {label_map.get(mode, mode)}  |  {len(tasks)} tâche(s)"
+    ws["A2"].font = subtitle_font
+    ws["A2"].alignment = Alignment(horizontal="left", vertical="center")
+    ws.row_dimensions[2].height = 18
+
+    ws.row_dimensions[3].height = 10   # spacer
+
+    # ── Column headers (row 4) ───────────────────────────────────
+    headers = ["#", "Titre", "Description", "Statut", "Urgent", "Date début", "Date fin", "Assigné à"]
+    widths  = [5,    35,      45,            12,        10,       14,           14,          22]
+
+    for col, (h, w) in enumerate(zip(headers, widths), start=1):
+        cell = ws.cell(row=4, column=col, value=h)
+        cell.font      = header_font
+        cell.fill      = header_fill
+        cell.alignment = header_align
+        cell.border    = border
+        ws.column_dimensions[get_column_letter(col)].width = w
+
+    ws.row_dimensions[4].height = 28
+
+    # ── Data rows ────────────────────────────────────────────────
+    statut_labels = {'planned': 'Planifiée', 'progress': 'En cours', 'completed': 'Terminée'}
+
+    for i, task in enumerate(tasks, start=1):
+        row = 4 + i
+
+        # Row background
+        if task.statut == 'completed':
+            row_fill = PatternFill("solid", fgColor=COLOR_COMPLETED)
+        elif task.urgent:
+            row_fill = PatternFill("solid", fgColor=COLOR_URGENT)
+        elif i % 2 == 0:
+            row_fill = PatternFill("solid", fgColor=COLOR_ALT)
+        else:
+            row_fill = PatternFill("solid", fgColor="FFFFFF")
+
+        values = [
+            i,
+            task.titre,
+            task.description or "",
+            statut_labels.get(task.statut, task.statut),
+            "🔥 Oui" if task.urgent else "Non",
+            task.date_debut.strftime('%d/%m/%Y') if task.date_debut else "",
+            task.date_fin.strftime('%d/%m/%Y') if task.date_fin else "—",
+            f"{task.assigne_a.prenom} {task.assigne_a.nom}" if task.assigne_a else "Non assigné",
+        ]
+        aligns = [center, left, left, center, center, center, center, left]
+
+        for col, (val, aln) in enumerate(zip(values, aligns), start=1):
+            cell = ws.cell(row=row, column=col, value=val)
+            cell.font      = bold_font if col == 2 else cell_font
+            cell.fill      = row_fill
+            cell.alignment = aln
+            cell.border    = border
+
+        ws.row_dimensions[row].height = 22
+
+    # Freeze header
+    ws.freeze_panes = "A5"
+
+    # ── Summary row ─────────────────────────────────────────────
+    summary_row = 4 + len(tasks) + 2
+    ws.merge_cells(f"A{summary_row}:C{summary_row}")
+    ws[f"A{summary_row}"] = f"Total : {len(tasks)} tâche(s)"
+    ws[f"A{summary_row}"].font = bold_font
+    ws[f"A{summary_row}"].fill = PatternFill("solid", fgColor="E2E8F0")
+
+    completed_count = sum(1 for t in tasks if t.statut == 'completed')
+    urgent_count    = sum(1 for t in tasks if t.urgent)
+    ws.merge_cells(f"D{summary_row}:F{summary_row}")
+    ws[f"D{summary_row}"] = f"Terminées : {completed_count}  |  Urgentes : {urgent_count}"
+    ws[f"D{summary_row}"].font = bold_font
+    ws[f"D{summary_row}"].fill = PatternFill("solid", fgColor="E2E8F0")
+    ws[f"D{summary_row}"].alignment = center
+
+    # ── Stream to browser ────────────────────────────────────────
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+
+    now_str  = datetime.now().strftime('%Y%m%d_%H%M')
+    filename = f"plan_action_{now_str}.xlsx"
+
+    return send_file(
+        buf,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
 
 
 @admin_bp.route('/acces-distance')
@@ -611,5 +834,12 @@ def acces_distance():
     return render_template('admin/acces_distance.html', users=users)
 
 
-
-
+@admin_bp.route('/api/migrate_db')
+def migrate_db():
+    from models import db
+    try:
+        db.session.execute('ALTER TABLE pieces_jointes ADD COLUMN commentaire_id VARCHAR(36) REFERENCES commentaires(id) ON DELETE CASCADE;')
+        db.session.commit()
+        return "Migration successful"
+    except Exception as e:
+        return f"Migration failed: {str(e)}"

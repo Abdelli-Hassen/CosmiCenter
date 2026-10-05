@@ -325,11 +325,13 @@
           {% if ticket.pieces_jointes %}
           <div class="attach-grid">
             {% for pj in ticket.pieces_jointes %}
+            {% if not pj.commentaire_id %}
             <a href="{{ url_for('static', filename=pj.chemin) }}" target="_blank" class="attach-item">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
               <span>{{ pj.nom_original }}</span>
               <span style="color:var(--text-faint);">{{ (pj.taille/1024)|round(0)|int }}Ko</span>
             </a>
+            {% endif %}
             {% endfor %}
           </div>
           {% endif %}
@@ -363,6 +365,22 @@
             <span class="modern-msg-time">{{ msg.date_creation.strftime('%d %b %Y, %H:%M') }}</span>
           </div>
           <div class="modern-msg-body">{{ msg.contenu }}</div>
+          {% set msg_pjs = ticket.pieces_jointes|selectattr('commentaire_id', 'equalto', msg.id)|list %}
+          {% if msg_pjs %}
+          <div class="attach-grid" style="margin-top:12px;">
+            {% for pj in msg_pjs %}
+            <a href="{{ url_for('static', filename=pj.chemin) }}" target="_blank" class="attach-item" style="background:var(--surface-raised); border-color:var(--border-subtle);">
+              {% if pj.type_mime and 'image' in pj.type_mime %}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--brand);"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              {% else %}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+              {% endif %}
+              <span>{{ pj.nom_original }}</span>
+              <span style="color:var(--text-faint);">{{ (pj.taille/1024)|round(0)|int }}Ko</span>
+            </a>
+            {% endfor %}
+          </div>
+          {% endif %}
         </div>
       </div>
       {% endfor %}
@@ -377,13 +395,18 @@
           </div>
         </div>
         
-        <form method="POST" action="{{ url_for('tickets.commenter', ticket_id=ticket.id) }}" style="margin:0;">
-          <textarea id="comment-textarea" name="contenu" rows="4" placeholder="Type a response... (or press Tab for AI draft)" required style="width: 100%; border: none; padding: 16px; font-size: 14px; color: var(--text-primary); background: transparent; resize: vertical; min-height: 100px; outline: none;"></textarea>
+        <form method="POST" action="{{ url_for('tickets.commenter', ticket_id=ticket.id) }}" enctype="multipart/form-data" style="margin:0;">
+          <textarea id="comment-textarea" name="contenu" rows="4" placeholder="Glissez des fichiers ici ou tapez votre réponse..." required style="width: 100%; border: none; padding: 16px; font-size: 14px; color: var(--text-primary); background: transparent; resize: vertical; min-height: 100px; outline: none;" ondragover="event.preventDefault(); this.style.background='var(--surface-hover)';" ondragleave="this.style.background='transparent';" ondrop="event.preventDefault(); this.style.background='transparent'; handleCommentDrop(event);"></textarea>
           
+          <div id="commentFileList" style="display:flex; flex-wrap:wrap; gap:8px; padding: 0 16px 12px; background:transparent;"></div>
+          <input type="file" id="commentFileInput" name="attachments" multiple accept="image/*,.pdf,.zip,.txt,.log" style="display:none;">
+
           <!-- Toolbar -->
           <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 16px; border-top: 1px solid var(--border-subtle); background: var(--surface-1);">
             <div style="display:flex; gap:8px; color:var(--text-muted); align-items:center;">
-              <!-- Toolbar buttons removed -->
+              <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('commentFileInput').click()" title="Joindre un fichier" style="padding:6px; color:var(--text-muted);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              </button>
             </div>
             
             <button type="submit" class="btn btn-primary" style="background:#dc3545; border-color:#dc3545; border-radius:6px; padding:8px 20px; font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px;">
@@ -393,6 +416,66 @@
           </div>
         </form>
       </div>
+
+<script>
+  var commentDt = new DataTransfer();
+  
+  function handleCommentDrop(e) {
+    var files = e.dataTransfer.files;
+    if (files.length) { addCommentFiles(files); }
+  }
+
+  document.getElementById('commentFileInput').addEventListener('change', function(e) {
+    addCommentFiles(e.target.files);
+  });
+
+  function addCommentFiles(files) {
+    for (var i = 0; i < files.length; i++) {
+        commentDt.items.add(files[i]);
+    }
+    document.getElementById('commentFileInput').files = commentDt.files;
+    renderCommentFiles();
+  }
+
+  window.removeCommentFile = function(index) {
+    commentDt.items.remove(index);
+    document.getElementById('commentFileInput').files = commentDt.files;
+    renderCommentFiles();
+  };
+
+  function renderCommentFiles() {
+    var list = document.getElementById('commentFileList');
+    list.innerHTML = '';
+    var files = commentDt.files;
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      var isImage = f.type.startsWith('image/');
+      var previewHtml = '';
+      if (isImage) {
+        var objectUrl = URL.createObjectURL(f);
+        previewHtml = '<img src="' + objectUrl + '" style="width: 30px; height: 30px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-subtle); flex-shrink: 0;" />';
+      } else {
+        previewHtml = '<div style="width:30px; height:30px; background:var(--surface-raised); border-radius:4px; border:1px solid var(--border-subtle); display:flex; align-items:center; justify-content:center; flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg></div>';
+      }
+      
+      var sizeText = (f.size / 1024).toFixed(0) + ' Ko';
+      if (f.size > 1024*1024) sizeText = (f.size / (1024*1024)).toFixed(1) + ' Mo';
+      
+      var chip = document.createElement('div');
+      chip.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px; background:var(--surface-raised); border:1px solid var(--border-subtle); border-radius:8px; max-width:200px;';
+      chip.innerHTML = previewHtml +
+        '<div style="display:flex; flex-direction:column; overflow:hidden; flex:1;">' +
+        '  <div style="font-size:12px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + f.name + '</div>' +
+        '  <div style="font-size:10px; color:var(--text-muted);">' + sizeText + '</div>' +
+        '</div>' +
+        '<button type="button" class="btn btn-ghost btn-sm" style="padding:0 4px; color:#ef4444;" onclick="removeCommentFile(' + i + ')" title="Retirer">' +
+        '  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+        '</button>';
+        
+      list.appendChild(chip);
+    }
+  }
+</script>
 
     </div>
 

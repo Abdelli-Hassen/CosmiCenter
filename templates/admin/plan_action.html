@@ -187,7 +187,11 @@
       <h1 class="at-title">Plan d'action de l'équipe</h1>
       <p class="at-subtitle">Gérez et planifiez vos tâches et projets IT en temps réel.</p>
     </div>
-    <div class="quick-actions">
+    <div class="quick-actions" style="display:flex; gap:10px; align-items:center;">
+      <button class="btn-action" id="exportExcelBtn" onclick="openExportModal()" style="background:rgba(16,185,129,0.1); color:#10b981; border-color:rgba(16,185,129,0.2);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Exporter Excel
+      </button>
       <button class="btn-action primary" onclick="openModal('createTaskModal')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Nouvelle Tâche
@@ -743,4 +747,190 @@
 
   });
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     EXPORT EXCEL MODAL
+═══════════════════════════════════════════════════════════ -->
+<div id="exportModal" style="display:none; position:fixed; inset:0; z-index:9000; background:rgba(0,0,0,0.55); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:24px;" onclick="if(event.target===this) closeExportModal()">
+  <div style="background:var(--surface-1); border:1px solid var(--border-subtle); border-radius:24px; width:100%; max-width:480px; overflow:hidden; box-shadow:0 32px 64px rgba(0,0,0,0.3); animation:exportModalIn .25s cubic-bezier(.16,1,.3,1);">
+
+    <!-- Header -->
+    <div style="padding:24px 28px 20px; border-bottom:1px solid var(--border-subtle); display:flex; align-items:center; justify-content:space-between; background:linear-gradient(135deg, rgba(16,185,129,0.08), transparent);">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="width:44px; height:44px; border-radius:13px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.25); display:flex; align-items:center; justify-content:center; color:#10b981;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div>
+          <h3 style="margin:0; font-size:17px; font-weight:800; color:var(--text-primary);">Exporter en Excel</h3>
+          <p style="margin:0; font-size:12px; color:var(--text-muted); font-weight:500;">Choisissez les données à exporter</p>
+        </div>
+      </div>
+      <button onclick="closeExportModal()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; padding:6px; border-radius:8px; display:flex;" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='transparent'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Mode Tabs -->
+    <div style="padding:20px 28px 0;">
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:24px;">
+        <button class="export-tab active" id="tab-all" onclick="setExportMode('all')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Tout
+        </button>
+        <button class="export-tab" id="tab-day" onclick="setExportMode('day')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Jour
+        </button>
+        <button class="export-tab" id="tab-periode" onclick="setExportMode('periode')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Période
+        </button>
+      </div>
+
+      <!-- Mode: All -->
+      <div id="panel-all" class="export-panel" style="display:block;">
+        <div style="padding:20px; background:var(--surface-2); border:1px solid var(--border-subtle); border-radius:14px; text-align:center;">
+          <div style="font-size:32px; margin-bottom:8px;">📊</div>
+          <p style="margin:0; font-size:14px; font-weight:700; color:var(--text-primary);">Toutes les tâches</p>
+          <p style="margin:4px 0 0; font-size:12px; color:var(--text-muted);">Exporte l'intégralité du plan d'action sans filtre de date.</p>
+        </div>
+      </div>
+
+      <!-- Mode: Day -->
+      <div id="panel-day" class="export-panel" style="display:none;">
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <label style="font-size:12px; font-weight:800; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.06em;">Sélectionner un jour</label>
+          <input type="date" id="export-date-jour" class="export-input"
+                 value="{{ '' }}"
+                 style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-base); font-size:14px; font-weight:600; color:var(--text-primary); outline:none;"
+                 onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16,185,129,0.15)'"
+                 onblur="this.style.borderColor='var(--border-subtle)'; this.style.boxShadow='none'">
+          <p style="margin:4px 0 0; font-size:12px; color:var(--text-muted);">Exporte uniquement les tâches débutant ce jour-là.</p>
+        </div>
+      </div>
+
+      <!-- Mode: Période -->
+      <div id="panel-periode" class="export-panel" style="display:none;">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <label style="font-size:12px; font-weight:800; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.06em;">Du</label>
+              <input type="date" id="export-date-from" class="export-input"
+                     style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-base); font-size:13px; font-weight:600; color:var(--text-primary); outline:none;"
+                     onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16,185,129,0.15)'"
+                     onblur="this.style.borderColor='var(--border-subtle)'; this.style.boxShadow='none'">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <label style="font-size:12px; font-weight:800; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.06em;">Au</label>
+              <input type="date" id="export-date-to" class="export-input"
+                     style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-base); font-size:13px; font-weight:600; color:var(--text-primary); outline:none;"
+                     onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16,185,129,0.15)'"
+                     onblur="this.style.borderColor='var(--border-subtle)'; this.style.boxShadow='none'">
+            </div>
+          </div>
+          <p style="margin:0; font-size:12px; color:var(--text-muted);">Exporte toutes les tâches dont la date de début est dans cette plage.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:20px 28px 24px; display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
+      <button onclick="closeExportModal()" style="padding:11px 22px; border-radius:11px; border:1px solid var(--border-subtle); background:var(--surface-2); color:var(--text-secondary); font-size:13px; font-weight:700; cursor:pointer; transition:all .15s;" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='var(--surface-2)'">Annuler</button>
+      <button id="exportConfirmBtn" onclick="doExport()" style="padding:11px 24px; border-radius:11px; border:none; background:#10b981; color:white; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:8px; transition:all .15s; box-shadow:0 4px 12px rgba(16,185,129,0.3);" onmouseover="this.style.background='#059669'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#10b981'; this.style.transform='none'">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Télécharger .xlsx
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes exportModalIn {
+  from { opacity:0; transform:scale(.93) translateY(12px); }
+  to   { opacity:1; transform:scale(1) translateY(0); }
+}
+.export-tab {
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  padding:10px 12px; border-radius:10px; font-size:12px; font-weight:700;
+  border:1px solid var(--border-subtle); background:var(--surface-2);
+  color:var(--text-muted); cursor:pointer; transition:all .18s;
+}
+.export-tab:hover { background:var(--surface-hover); color:var(--text-primary); }
+.export-tab.active {
+  background:rgba(16,185,129,0.12); color:#10b981;
+  border-color:rgba(16,185,129,0.3); box-shadow:0 2px 8px rgba(16,185,129,0.12);
+}
+</style>
+
+<script>
+let _exportMode = 'all';
+
+function openExportModal() {
+  document.getElementById('exportModal').style.display = 'flex';
+  // Pre-fill today's date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('export-date-jour').value = today;
+  document.getElementById('export-date-from').value = today;
+}
+
+function closeExportModal() {
+  document.getElementById('exportModal').style.display = 'none';
+}
+
+function setExportMode(mode) {
+  _exportMode = mode;
+  // Update tabs
+  document.querySelectorAll('.export-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + mode).classList.add('active');
+  // Update panels
+  document.querySelectorAll('.export-panel').forEach(p => p.style.display = 'none');
+  document.getElementById('panel-' + mode).style.display = 'block';
+}
+
+function doExport() {
+  const btn = document.getElementById('exportConfirmBtn');
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path d="M21 12a9 9 0 1 1-18 0"/></svg> Génération...';
+  btn.disabled = true;
+
+  let url = '/admin/plan-action/export-excel?mode=' + _exportMode;
+
+  if (_exportMode === 'day') {
+    const d = document.getElementById('export-date-jour').value;
+    if (!d) { showExportError('Veuillez sélectionner un jour.'); btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Télécharger .xlsx'; btn.disabled = false; return; }
+    url += '&date_jour=' + d;
+  } else if (_exportMode === 'periode') {
+    const df = document.getElementById('export-date-from').value;
+    const dt = document.getElementById('export-date-to').value;
+    if (!df) { showExportError('Veuillez sélectionner une date de début.'); btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Télécharger .xlsx'; btn.disabled = false; return; }
+    url += '&date_from=' + df;
+    if (dt) url += '&date_to=' + dt;
+  }
+
+  // Trigger download via hidden link
+  const a = document.createElement('a');
+  a.href = url;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  // Reset button after 2s
+  setTimeout(() => {
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Télécharger .xlsx';
+    btn.disabled = false;
+    closeExportModal();
+  }, 1800);
+}
+
+function showExportError(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:28px;right:28px;z-index:99999;background:var(--surface-1);border:1px solid var(--border-subtle);border-left:4px solid #ef4444;border-radius:12px;padding:14px 20px;font-size:13px;font-weight:600;color:var(--text-primary);box-shadow:0 8px 24px rgba(0,0,0,0.2);max-width:320px;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeExportModal(); });
+</script>
+
 {% endblock %}

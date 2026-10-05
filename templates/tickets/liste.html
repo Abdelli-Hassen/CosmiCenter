@@ -54,6 +54,18 @@
     background-color: var(--surface-hover, #f3f4f6);
   }
 
+  .premium-table tbody tr.ticket-row-unread {
+    background-color: var(--surface-2, #f8fafc);
+  }
+  
+  .premium-table tbody tr.ticket-row-unread td:first-child {
+    box-shadow: inset 4px 0 0 var(--brand, #2563eb);
+  }
+  
+  .premium-table tbody tr.ticket-row-unread .ticket-title {
+    font-weight: 700 !important;
+  }
+
   /* Badge Styles */
   .badge-premium {
     display: inline-flex;
@@ -231,7 +243,7 @@
       </thead>
       <tbody>
         {% for ticket in tickets.items %}
-        <tr data-ticket-id="{{ ticket.id }}" style="cursor: pointer;" onclick="if(!event.target.closest('input') && !event.target.closest('button')) window.location='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'">
+        <tr class="{% if ticket.statut == 'nouveau' %}ticket-row-unread{% endif %}" data-ticket-id="{{ ticket.id }}" style="cursor: pointer;" onclick="if(!event.target.closest('input') && !event.target.closest('button')) window.location='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'">
           <td style="text-align: center;" onclick="event.stopPropagation();">
             <input type="checkbox" class="ticket-select" data-id="{{ ticket.id }}" aria-label="Sélectionner le ticket {{ ticket.numero }}">
           </td>
@@ -251,7 +263,7 @@
           
           <td>
             <div style="display: flex; flex-direction: column; gap: 4px;">
-              <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" style="color: var(--text-primary); text-decoration: none; font-size: 14px; font-weight: 600; line-height: 1.4;">
+              <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="ticket-title" style="color: var(--text-primary); text-decoration: none; font-size: 14px; font-weight: 500; line-height: 1.4;">
                 {{ ticket.titre }}
               </a>
               {% if ticket.categorie %}

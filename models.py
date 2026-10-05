@@ -362,6 +362,7 @@ class PieceJointe(db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     ticket_id = db.Column(db.String(36), db.ForeignKey('tickets.id', ondelete='CASCADE'), nullable=False, index=True)
+    commentaire_id = db.Column(db.String(36), db.ForeignKey('commentaires.id', ondelete='CASCADE'), nullable=True, index=True)
     nom_fichier = db.Column(db.String(255), nullable=False)
     nom_original = db.Column(db.String(255), nullable=False)
     type_mime = db.Column(db.String(100))
@@ -528,3 +529,22 @@ class PlanActionTask(db.Model):
 
     def __repr__(self):
         return f'<PlanActionTask {self.titre}>'
+
+class Suggestion(db.Model):
+    """Suggestions et retours des utilisateurs sur la plateforme"""
+    __tablename__ = 'suggestions'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    titre = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    type_suggestion = db.Column(db.String(50), default='amelioration') # bug, amelioration, nouvelle_fonctionnalite
+    statut = db.Column(db.String(50), default='nouveau') # nouveau, lu, accepte, refuse, en_cours, termine
+    
+    auteur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), nullable=False)
+    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+
+    auteur = db.relationship('Utilisateur', foreign_keys=[auteur_id])
+
+    def __repr__(self):
+        return f'<Suggestion {self.titre}>'
+

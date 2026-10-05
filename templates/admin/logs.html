@@ -1,6 +1,40 @@
 {% extends "base.html" %}
-{% block title %}Logs - {{ super() }}{% endblock %}
+{% block title %}Logs Système{% endblock %}
+
 {% block content %}
-<div class="page-header"><h1>Logs Système</h1></div>
-<p>Visualisation des logs (à implémenter)</p>
+<div class="page">
+  <div class="page-header" style="align-items: center;">
+    <div class="page-header-left" style="display:flex; flex-direction:row; align-items:center; gap:16px;">
+      <a href="{{ url_for('admin.tableau_bord') }}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px; font-weight: 600; border-radius: 12px; display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); background: var(--surface-2); border: 1px solid var(--border-subtle); box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour
+      </a>
+      <h1 class="page-title" style="margin:0;">Logs Système</h1>
+    </div>
+    <div class="page-header-actions">
+      <button class="btn btn-secondary btn-sm" onclick="location.reload()" style="display: flex; gap: 6px; align-items: center;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.21l5.67-5.67"/></svg>
+        Rafraîchir
+      </button>
+    </div>
+  </div>
+
+  <div class="card card-raised" style="display:flex; flex-direction:column; max-height:calc(100vh - 85px);">
+    <div class="card-body" style="display:flex; flex-direction:column; padding: 0; flex:1; overflow: hidden; background: #1e1e1e; border-radius: var(--radius-lg);">
+      <pre style="flex:1; min-height:0; margin: 0; padding: 20px; font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #d4d4d4; overflow-y: auto; white-space: pre-wrap; line-height: 1.5;">
+{%- for line in logs -%}
+{%- if 'ERROR' in line or 'CRITICAL' in line -%}
+<span style="color: #fca5a5;">{{ line }}</span>
+{%- elif 'WARNING' in line -%}
+<span style="color: #fde047;">{{ line }}</span>
+{%- elif 'INFO' in line -%}
+<span style="color: #93c5fd;">{{ line }}</span>
+{%- else -%}
+{{ line }}
+{%- endif -%}
+{%- endfor -%}
+      </pre>
+    </div>
+  </div>
+</div>
 {% endblock %}

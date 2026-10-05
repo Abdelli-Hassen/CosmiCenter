@@ -267,3 +267,46 @@ def health_check():
         },
         message='Service opérationnel'
     )
+
+@api_bp.route('/notifications/marquer-lues', methods=['POST'])
+@login_required
+def marquer_notifications_lues():
+    """Marquer toutes les notifications de l'utilisateur comme lues"""
+    try:
+        from models import Notification, db
+        from datetime import datetime
+        
+        unread = Notification.query.filter_by(
+            utilisateur_id=current_user.id,
+            lue=False
+        ).all()
+        
+        for n in unread:
+            n.lue = True
+            n.date_lecture = datetime.utcnow()
+            
+        db.session.commit()
+        return json_response(success=True, message='Notifications marquées comme lues.')
+    except Exception as e:
+        logger.error(f'Erreur marquer_notifications_lues: {str(e)}')
+        return json_response(success=False, message='Erreur serveur', status=500)
+
+@api_bp.route('/notifications/poll')
+@login_required
+def poll_notifications():
+    from models import Notification, Message, db
+    
+    unread_notifs = Notification.query.filter_by(
+        utilisateur_id=current_user.id,
+        lue=False
+    ).count()
+    
+    unread_msgs = Message.query.filter_by(
+        receiver_id=current_user.id,
+        is_read=False
+    ).count()
+    
+    return json_response(data={
+        'unread_notifications': unread_notifs,
+        'unread_messages': unread_msgs
+    })

@@ -68,7 +68,6 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 24px;
-    max-width: 800px;
   }
   
   .settings-card {
@@ -118,7 +117,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="page" style="padding: 32px; max-width: 1200px; margin: 0 auto;">
+<div class="page" style="padding: 32px; max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box;">
 
   <div class="profile-hero">
     <div class="profile-avatar-large" style="position:relative; cursor:pointer; overflow:hidden;" onclick="document.getElementById('photoUpload').click()">
