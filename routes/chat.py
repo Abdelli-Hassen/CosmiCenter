@@ -42,6 +42,7 @@ def get_conversations():
             'contact_id': contact.id,
             'contact_name': f"{contact.prenom} {contact.nom}",
             'contact_initials': f"{contact.prenom[0]}{contact.nom[0]}".upper(),
+            'photo_profil': contact.photo_profil if contact.photo_profil else None,
             'last_message': last_msg.content if last_msg else '',
             'timestamp': last_msg.timestamp.isoformat() + 'Z' if last_msg else None,
             'unread_count': unread_count
@@ -70,11 +71,17 @@ def get_messages(contact_id):
     
     contact = Utilisateur.query.get_or_404(contact_id)
     
+    is_online = False
+    if contact.derniere_activite:
+        is_online = (datetime.utcnow() - contact.derniere_activite) < timedelta(minutes=5)
+        
     return jsonify({
         'contact': {
             'id': contact.id,
             'name': f"{contact.prenom} {contact.nom}",
-            'initials': f"{contact.prenom[0]}{contact.nom[0]}".upper()
+            'initials': f"{contact.prenom[0]}{contact.nom[0]}".upper(),
+            'photo_profil': contact.photo_profil if contact.photo_profil else None,
+            'is_online': is_online
         },
         'messages': [m.to_dict() for m in messages],
         'current_user_id': current_user.id
@@ -119,5 +126,6 @@ def get_users():
     return jsonify([{
         'id': u.id,
         'name': f"{u.prenom} {u.nom}",
-        'initials': f"{u.prenom[0]}{u.nom[0]}".upper()
+        'initials': f"{u.prenom[0]}{u.nom[0]}".upper(),
+        'photo_profil': u.photo_profil if u.photo_profil else None
     } for u in users])

@@ -58,6 +58,11 @@
     background-color: var(--surface-2, #f8fafc);
   }
   
+  .premium-table tbody tr.ticket-row-unread:hover {
+    background-color: var(--surface-3, #e2e8f0);
+    filter: brightness(1.1);
+  }
+  
   .premium-table tbody tr.ticket-row-unread td:first-child {
     box-shadow: inset 4px 0 0 var(--brand, #2563eb);
   }
@@ -243,7 +248,7 @@
       </thead>
       <tbody>
         {% for ticket in tickets.items %}
-        <tr class="{% if ticket.statut == 'nouveau' %}ticket-row-unread{% endif %}" data-ticket-id="{{ ticket.id }}" style="cursor: pointer;" onclick="if(!event.target.closest('input') && !event.target.closest('button')) window.location='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'">
+        <tr class="{% if ticket.statut == 'nouveau' and ticket.id not in viewed_ticket_ids %}ticket-row-unread{% endif %}" data-ticket-id="{{ ticket.id }}" style="cursor: pointer;" onclick="if(!event.target.closest('input') && !event.target.closest('button')) window.location='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'">
           <td style="text-align: center;" onclick="event.stopPropagation();">
             <input type="checkbox" class="ticket-select" data-id="{{ ticket.id }}" aria-label="Sélectionner le ticket {{ ticket.numero }}">
           </td>
@@ -389,7 +394,7 @@
     <h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin: 0 0 8px 0;">Aucun ticket trouvé</h3>
     <p style="font-size: 14px; color: var(--text-secondary); max-width: 400px; margin: 0 auto 24px;">Aucun ticket ne correspond à vos filtres actuels. Modifiez vos filtres ou créez un nouveau ticket.</p>
     <div style="display: flex; gap: 12px; justify-content: center;">
-      <a href="{{ url_for('tickets.liste') }}" class="btn btn-outline btn-sm" style="padding: 8px 16px; border-radius: 8px; font-weight: 500;">Effacer les filtres</a>
+      <a href="{{ url_for(request.endpoint) }}" class="btn btn-outline btn-sm" style="padding: 8px 16px; border-radius: 8px; font-weight: 500;">Effacer les filtres</a>
       <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm" style="padding: 8px 16px; border-radius: 8px; font-weight: 500; display: flex; align-items: center; gap: 6px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Nouveau ticket

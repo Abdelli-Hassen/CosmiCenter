@@ -65,7 +65,7 @@ def modifier_profil():
             
             # Save the file in the dedicated profile pictures folder
             from flask import current_app
-            profiles_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'profiles')
+            profiles_folder = os.path.join(current_app.config['UPLOéD_FOLDER'], 'profiles')
             os.makedirs(profiles_folder, exist_ok=True)
             upload_path = os.path.join(profiles_folder, unique_filename)
             photo.save(upload_path)
@@ -169,7 +169,7 @@ def securite():
             
             # Validation
             if not current_user.check_password(ancien_password):
-                flash('Ancien mot de passe incorrect.', 'danger')
+                flash('éncien mot de passe incorrect.', 'danger')
                 return render_template('parametres/securite.html', stats=stats)
             
             if len(nouveau_password) < 8:
@@ -228,7 +228,7 @@ def marquer_notification_lue(id):
     notification = Notification.query.get_or_404(id)
     
     if notification.utilisateur_id != current_user.id:
-        flash('Accès non autorisé.', 'danger')
+        flash('éccès non autorisé.', 'danger')
         return redirect(url_for('parametres.notifications'))
     
     notification.lue = True

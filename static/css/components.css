@@ -70,11 +70,15 @@
 /* Variants */
 .btn-primary {
   background: var(--brand);
-  color: #fff;
+  color: #fff !important;
   border-color: var(--brand);
 }
-.btn-primary:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
-.btn-primary:active { background: var(--brand-active); }
+.btn-primary:hover, a.btn-primary:hover { 
+  background: var(--brand-hover); 
+  border-color: var(--brand-hover); 
+  color: #fff !important;
+}
+.btn-primary:active, a.btn-primary:active { background: var(--brand-active); color: #fff !important; }
 .btn-primary:focus-visible { box-shadow: var(--shadow-brand); }
 
 .btn-secondary {
@@ -100,10 +104,10 @@
 
 .btn-danger {
   background: var(--error);
-  color: #fff;
+  color: #fff !important;
   border-color: var(--error);
 }
-.btn-danger:hover { background: #dc2626; border-color: #dc2626; }
+.btn-danger:hover, a.btn-danger:hover { background: #dc2626; border-color: #dc2626; color: #fff !important; }
 .btn-danger:focus-visible { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2); }
 
 .btn-danger-ghost {

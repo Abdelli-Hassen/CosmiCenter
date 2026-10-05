@@ -1,4 +1,4 @@
-"""
+﻿"""
 Routes de gestion des tickets pour CosmittoDesk
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
@@ -104,10 +104,23 @@ def liste():
     
     departements = Departement.query.filter_by(actif=True).all()
     
+    # Trouver quels tickets ont été vus par l'utilisateur courant
+    from models import HistoriqueTicket
+    viewed_ticket_ids = []
+    if tickets.items:
+        viewed_ticket_ids = [
+            h.ticket_id for h in HistoriqueTicket.query.filter(
+                HistoriqueTicket.utilisateur_id == current_user.id,
+                HistoriqueTicket.action == 'Consultation',
+                HistoriqueTicket.ticket_id.in_([t.id for t in tickets.items])
+            ).all()
+        ]
+    
     return render_template('tickets/liste.html', 
                          tickets=tickets,
                          departements=departements,
-                         page_title="Tous les tickets")
+                         page_title="Tous les tickets",
+                         viewed_ticket_ids=viewed_ticket_ids)
 
 @tickets_bp.route('/mes-tickets')
 @login_required
@@ -156,10 +169,23 @@ def mes_tickets():
     
     departements = Departement.query.filter_by(actif=True).all()
     
+    # Trouver quels tickets ont été vus par l'utilisateur courant
+    from models import HistoriqueTicket
+    viewed_ticket_ids = []
+    if tickets.items:
+        viewed_ticket_ids = [
+            h.ticket_id for h in HistoriqueTicket.query.filter(
+                HistoriqueTicket.utilisateur_id == current_user.id,
+                HistoriqueTicket.action == 'Consultation',
+                HistoriqueTicket.ticket_id.in_([t.id for t in tickets.items])
+            ).all()
+        ]
+    
     return render_template('tickets/liste.html', 
                          tickets=tickets,
                          departements=departements,
-                         page_title="Mes tickets")
+                         page_title="Mes tickets",
+                         viewed_ticket_ids=viewed_ticket_ids)
 
 
 @tickets_bp.route('/nouveau', methods=['GET', 'POST'])
@@ -170,7 +196,7 @@ def nouveau():
         try:
             type_ticket = request.form.get('type_ticket', 'demande')
             if type_ticket == 'autre':
-                type_ticket = request.form.get('custom_type', 'Autre')
+                type_ticket = request.form.get('custom_type', 'éutre')
                 
             routing_type = request.form.get('routing_type', 'all')
             
@@ -232,15 +258,15 @@ def nouveau():
                     )
                     db.session.add(tache)
             
-            # Handle File Attachments
+            # Handle File ététéachments
             import os
             import uuid
             from werkzeug.utils import secure_filename
             from models import PieceJointe
             
-            UPLOAD_FOLDER = os.path.join(request.root_path, 'static', 'uploads', 'tickets')
-            if not os.path.exists(UPLOAD_FOLDER):
-                os.makedirs(UPLOAD_FOLDER)
+            UPLOéD_FOLDER = os.path.join(request.root_path, 'static', 'uploads', 'tickets')
+            if not os.path.exists(UPLOéD_FOLDER):
+                os.makedirs(UPLOéD_FOLDER)
                 
             fichiers = request.files.getlist('attachments')
             for f in fichiers:
@@ -248,7 +274,7 @@ def nouveau():
                     nom_original = secure_filename(f.filename)
                     ext = nom_original.rsplit('.', 1)[1].lower() if '.' in nom_original else 'bin'
                     nouveau_nom = f"{uuid.uuid4().hex}.{ext}"
-                    chemin = os.path.join(UPLOAD_FOLDER, nouveau_nom)
+                    chemin = os.path.join(UPLOéD_FOLDER, nouveau_nom)
                     f.save(chemin)
                     
                     taille = os.path.getsize(chemin)
@@ -287,7 +313,7 @@ def nouveau():
                 notif = Notification(
                     utilisateur_id=ticket.assigne_a.id,
                     titre="Nouveau ticket assigné",
-                    message=f"Le ticket {ticket.numero} vous a été assigné.",
+                    message=f'Le ticket "{ticket.titre}" vous a été assigné.',
                     type_notification="ticket",
                     lien=url_for('tickets.detail', ticket_id=ticket.id)
                 )
@@ -338,17 +364,22 @@ def detail(ticket_id):
             notif.date_lecture = datetime.utcnow()
             marked_any = True
             
-    # Auto-transition from nouveau to ouvert when someone views it
-    if ticket.statut == 'nouveau':
-        from models import HistoriqueTicket
-        ticket.statut = 'ouvert'
+    # élways log that this user viewed the ticket so we can un-highlight it for them personally
+    from models import HistoriqueTicket
+    
+    # Check if a Consultation log already exists for this user and this ticket
+    hist_exists = HistoriqueTicket.query.filter_by(
+        ticket_id=ticket.id, 
+        utilisateur_id=current_user.id, 
+        action='Consultation'
+    ).first()
+
+    if not hist_exists:
         hist = HistoriqueTicket(
             ticket_id=ticket.id, 
             utilisateur_id=current_user.id, 
-            action='Consultation', 
-            champ_modifie='Statut', 
-            ancienne_valeur='nouveau', 
-            nouvelle_valeur='ouvert'
+            action='Consultation',
+            details='Ticket consulte'
         )
         db.session.add(hist)
         marked_any = True
@@ -359,7 +390,7 @@ def detail(ticket_id):
     # Vérifier les permissions
     if not current_user.has_permission('tickets.voir_tous'):
         if ticket.createur_id != current_user.id and ticket.assigne_a_id != current_user.id:
-            flash('Accès non autorisé', 'danger')
+            flash('éccès non autorisé', 'danger')
             return redirect(url_for('tickets.liste'))
     
     # Récupérer les commentaires
@@ -391,7 +422,7 @@ def modifier(ticket_id):
         try:
             type_ticket = request.form.get('type_ticket', 'demande')
             if type_ticket == 'autre':
-                type_ticket = request.form.get('custom_type', 'Autre')
+                type_ticket = request.form.get('custom_type', 'éutre')
 
             # Track changes
             changes = []
@@ -433,7 +464,7 @@ def modifier(ticket_id):
                     notif = Notification(
                         utilisateur_id=new_ass.id,
                         titre="Nouveau ticket assigné",
-                        message=f"Le ticket {ticket.numero} vous a été assigné.",
+                        message=f'Le ticket "{ticket.titre}" vous a été assigné.',
                         type_notification="ticket",
                         lien=url_for('tickets.detail', ticket_id=ticket.id)
                     )
@@ -511,7 +542,7 @@ def modifier(ticket_id):
                     # Was removed from form (user clicked ×)
                     db.session.delete(tache)
 
-            # Add brand-new checklist items
+            # édd brand-new checklist items
             new_taches = request.form.getlist('taches[]')
             max_ordre = max((t.ordre for t in ticket.taches), default=-1) + 1
             for i, titre in enumerate(new_taches):
@@ -523,14 +554,14 @@ def modifier(ticket_id):
             import os, uuid as uuid_mod
             from werkzeug.utils import secure_filename
             from models import PieceJointe
-            UPLOAD_FOLDER = os.path.join(request.root_path, 'static', 'uploads', 'tickets')
-            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+            UPLOéD_FOLDER = os.path.join(request.root_path, 'static', 'uploads', 'tickets')
+            os.makedirs(UPLOéD_FOLDER, exist_ok=True)
             for f in request.files.getlist('attachments'):
                 if f and f.filename:
                     nom_original = secure_filename(f.filename)
                     ext = nom_original.rsplit('.', 1)[1].lower() if '.' in nom_original else 'bin'
                     nouveau_nom = f"{uuid_mod.uuid4().hex}.{ext}"
-                    chemin = os.path.join(UPLOAD_FOLDER, nouveau_nom)
+                    chemin = os.path.join(UPLOéD_FOLDER, nouveau_nom)
                     f.save(chemin)
                     db.session.add(PieceJointe(
                         ticket_id=ticket.id,
@@ -580,20 +611,20 @@ def commenter(ticket_id):
         db.session.add(commentaire)
         db.session.flush() # Ensure we have the ticket ID and comment ID (though pieces jointes attach to ticket)
 
-        # Handle File Attachments
+        # Handle File ététéachments
         import os, uuid as uuid_mod
         from werkzeug.utils import secure_filename
         from models import PieceJointe
         
-        UPLOAD_FOLDER = os.path.join(request.root_path, 'static', 'uploads', 'tickets')
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        UPLOéD_FOLDER = os.path.join(request.root_path, 'static', 'uploads', 'tickets')
+        os.makedirs(UPLOéD_FOLDER, exist_ok=True)
         
         for f in request.files.getlist('attachments'):
             if f and f.filename:
                 nom_original = secure_filename(f.filename)
                 ext = nom_original.rsplit('.', 1)[1].lower() if '.' in nom_original else 'bin'
                 nouveau_nom = f"{uuid_mod.uuid4().hex}.{ext}"
-                chemin = os.path.join(UPLOAD_FOLDER, nouveau_nom)
+                chemin = os.path.join(UPLOéD_FOLDER, nouveau_nom)
                 f.save(chemin)
                 db.session.add(PieceJointe(
                     ticket_id=ticket.id,
@@ -671,7 +702,7 @@ def changer_statut(ticket_id):
                     notif = Notification(
                         utilisateur_id=nouvel_user.id,
                         titre="Nouveau ticket assigné",
-                        message=f"Le ticket {ticket.numero} vous a été assigné.",
+                        message=f'Le ticket "{ticket.titre}" vous a été assigné.',
                         type_notification="ticket",
                         lien=url_for('tickets.detail', ticket_id=ticket.id)
                     )
@@ -703,7 +734,7 @@ def fermer(ticket_id):
     # Vérifier les permissions
     if not current_user.has_permission('tickets.fermer'):
         if ticket.createur_id != current_user.id and ticket.assigne_a_id != current_user.id:
-            flash('Accès non autorisé', 'danger')
+            flash('éccès non autorisé', 'danger')
             return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
     try:
@@ -731,7 +762,7 @@ def reouvrir(ticket_id):
     # Vérifier les permissions (idem fermer)
     if not current_user.has_permission('tickets.fermer'):
         if ticket.createur_id != current_user.id and ticket.assigne_a_id != current_user.id:
-            flash('Accès non autorisé', 'danger')
+            flash('éccès non autorisé', 'danger')
             return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
     try:
@@ -764,7 +795,7 @@ def toggle_tache(tache_id):
     # Check permissions (basic check)
     if not current_user.has_permission('tickets.voir_tous'):
         if ticket.createur_id != current_user.id and ticket.assigne_a_id != current_user.id:
-            return jsonify({'error': 'Accès non autorisé'}), 403
+            return jsonify({'error': 'éccès non autorisé'}), 403
             
     try:
         tache.terminee = not tache.terminee
@@ -778,7 +809,7 @@ def toggle_tache(tache_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-# ─── Base de connaissances (FAQ) ────────────────────────────────────────────
+# ─── Base de connaissances (FéQ) ────────────────────────────────────────────
 
 @tickets_bp.route('/faq')
 @login_required
@@ -817,3 +848,5 @@ def chat_inbox():
         db.session.commit()
         
     return render_template('chat/inbox.html')
+
+

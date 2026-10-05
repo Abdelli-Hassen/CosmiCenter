@@ -8,20 +8,34 @@ from models import db, Utilisateur, Departement, CategorieTicket, Ticket, Statis
 from datetime import datetime, timedelta
 import logging
 
-# CrÃ©er le blueprint
+# Créer le blueprint
 admin_bp = Blueprint('admin', __name__)
 logger = logging.getLogger(__name__)
 
 
 def admin_required(f):
-    """DÃ©corateur pour restreindre l'accÃ¨s aux administrateurs (niveau >= 90)"""
+    """Décorateur pour restreindre l'accès aux administrateurs (niveau >= 90)"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or not current_user.role or current_user.role.niveau < 90:
-            flash('AccÃ¨s rÃ©servÃ© aux administrateurs', 'danger')
-            return redirect(url_for('tickets.tableau_bord'))
+            flash('éccès réservé aux administrateurs', 'danger')
+            return redirect(request.referrer or url_for('tickets.tableau_bord'))
         return f(*args, **kwargs)
     return decorated_function
+
+def permission_required(permission_name):
+    """Décorateur pour restreindre l'accès selon une permission spécifique"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return redirect(url_for('auth.login'))
+            if not current_user.has_permission(permission_name) and not (current_user.role and current_user.role.niveau >= 90):
+                flash('éccès non autorisé', 'danger')
+                return redirect(request.referrer or url_for('tickets.tableau_bord'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 
 @admin_bp.route('/tableau-bord')
@@ -45,7 +59,7 @@ def tableau_bord():
         Ticket.statut, db.func.count(Ticket.id).label('total_count')
     ).group_by(Ticket.statut).all()
     
-    # Tickets par prioritÃ©
+    # Tickets par priorité
     tickets_par_priorite = db.session.query(
         Ticket.priorite, db.func.count(Ticket.id).label('total_count')
     ).group_by(Ticket.priorite).all()
@@ -110,21 +124,21 @@ def utilisateurs():
 @login_required
 @admin_required
 def nouvel_utilisateur():
-    """CrÃ©er un nouvel utilisateur"""
+    """Créer un nouvel utilisateur"""
     if request.method == 'POST':
         try:
             email = request.form.get('email', '').strip()
             matricule = request.form.get('matricule', '').strip() or None
             
-            # VÃ©rifier l'unicitÃ© de l'email
+            # Vérifier l'unicité de l'email
             if Utilisateur.query.filter_by(email=email).first():
-                flash(f"L'adresse email {email} est dÃ©jÃ  utilisÃ©e par un autre compte.", 'danger')
+                flash(f"L'adresse email {email} est déjà  utilisée par un autre compte.", 'danger')
                 from models import Role
                 return render_template('admin/nouvel_utilisateur.html', departements=Departement.query.filter_by(actif=True).all(), roles=Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all())
             
-            # VÃ©rifier l'unicitÃ© du matricule
+            # Vérifier l'unicité du matricule
             if matricule and Utilisateur.query.filter_by(matricule=matricule).first():
-                flash(f"Le matricule {matricule} est dÃ©jÃ  utilisÃ©.", 'danger')
+                flash(f"Le matricule {matricule} est déjà  utilisé.", 'danger')
                 from models import Role
                 return render_template('admin/nouvel_utilisateur.html', departements=Departement.query.filter_by(actif=True).all(), roles=Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all())
 
@@ -149,15 +163,15 @@ def nouvel_utilisateur():
             db.session.add(utilisateur)
             db.session.commit()
             
-            flash('Utilisateur crÃ©Ã© avec succÃ¨s', 'success')
-            logger.info(f'Nouvel utilisateur crÃ©Ã©: {utilisateur.email} par {current_user.email}')
+            flash('Utilisateur créé avec succès', 'success')
+            logger.info(f'Nouvel utilisateur créé: {utilisateur.email} par {current_user.email}')
             
             return redirect(url_for('admin.utilisateurs'))
         
         except Exception as e:
             db.session.rollback()
-            logger.error(f'Erreur lors de la crÃ©ation de l\'utilisateur: {str(e)}')
-            flash('Erreur lors de la crÃ©ation de l\'utilisateur', 'danger')
+            logger.error(f'Erreur lors de la création de l\'utilisateur: {str(e)}')
+            flash('Erreur lors de la création de l\'utilisateur', 'danger')
     
     from models import Role
     departements = Departement.query.filter_by(actif=True).all()
@@ -177,16 +191,16 @@ def modifier_utilisateur(user_id):
             email = request.form.get('email', '').strip()
             matricule = request.form.get('matricule', '').strip() or None
             
-            # VÃ©rifier l'unicitÃ©
+            # Vérifier l'unicité
             existing_email = Utilisateur.query.filter_by(email=email).first()
             if existing_email and existing_email.id != utilisateur.id:
-                flash(f"L'adresse email {email} est dÃ©jÃ  utilisÃ©e par un autre compte.", 'danger')
+                flash(f"L'adresse email {email} est déjà  utilisée par un autre compte.", 'danger')
                 return redirect(url_for('admin.modifier_utilisateur', user_id=user_id))
                 
             if matricule:
                 existing_mat = Utilisateur.query.filter_by(matricule=matricule).first()
                 if existing_mat and existing_mat.id != utilisateur.id:
-                    flash(f"Le matricule {matricule} est dÃ©jÃ  utilisÃ©.", 'danger')
+                    flash(f"Le matricule {matricule} est déjà  utilisé.", 'danger')
                     return redirect(url_for('admin.modifier_utilisateur', user_id=user_id))
 
             utilisateur.nom = request.form.get('nom')
@@ -210,8 +224,8 @@ def modifier_utilisateur(user_id):
 
             db.session.commit()
 
-            flash('Utilisateur modifiÃ© avec succÃ¨s', 'success')
-            logger.info(f'Utilisateur modifiÃ©: {utilisateur.email} par {current_user.email}')
+            flash('Utilisateur modifié avec succès', 'success')
+            logger.info(f'Utilisateur modifié: {utilisateur.email} par {current_user.email}')
 
             return redirect(url_for('admin.utilisateurs'))
 
@@ -233,9 +247,9 @@ def modifier_utilisateur(user_id):
 @login_required
 @admin_required
 def desactiver_utilisateur(user_id):
-    """DÃ©sactiver un utilisateur"""
+    """Désactiver un utilisateur"""
     if user_id == current_user.id:
-        flash('Vous ne pouvez pas vous dÃ©sactiver vous-mÃªme', 'danger')
+        flash('Vous ne pouvez pas vous désactiver vous-màªme', 'danger')
         return redirect(url_for('admin.utilisateurs'))
     
     utilisateur = Utilisateur.query.get_or_404(user_id)
@@ -244,13 +258,13 @@ def desactiver_utilisateur(user_id):
         utilisateur.actif = False
         db.session.commit()
         
-        flash('Utilisateur dÃ©sactivÃ©', 'success')
-        logger.info(f'Utilisateur dÃ©sactivÃ©: {utilisateur.email} par {current_user.email}')
+        flash('Utilisateur désactivé', 'success')
+        logger.info(f'Utilisateur désactivé: {utilisateur.email} par {current_user.email}')
     
     except Exception as e:
         db.session.rollback()
-        logger.error(f'Erreur lors de la dÃ©sactivation: {str(e)}')
-        flash('Erreur lors de la dÃ©sactivation', 'danger')
+        logger.error(f'Erreur lors de la désactivation: {str(e)}')
+        flash('Erreur lors de la désactivation', 'danger')
     
     return redirect(url_for('admin.utilisateurs'))
 
@@ -259,19 +273,19 @@ def desactiver_utilisateur(user_id):
 @login_required
 @admin_required
 def reactiver_utilisateur(user_id):
-    """RÃ©activer un utilisateur dÃ©sactivÃ©"""
+    """Réactiver un utilisateur désactivé"""
     utilisateur = Utilisateur.query.get_or_404(user_id)
     try:
         utilisateur.actif = True
         utilisateur.verrouille = False
         utilisateur.tentatives_connexion = 0
         db.session.commit()
-        flash(f'{utilisateur.prenom} {utilisateur.nom} a Ã©tÃ© rÃ©activÃ©', 'success')
-        logger.info(f'Utilisateur rÃ©activÃ©: {utilisateur.email} par {current_user.email}')
+        flash(f'{utilisateur.prenom} {utilisateur.nom} a été réactivé', 'success')
+        logger.info(f'Utilisateur réactivé: {utilisateur.email} par {current_user.email}')
     except Exception as e:
         db.session.rollback()
-        logger.error(f'Erreur lors de la rÃ©activation: {str(e)}')
-        flash('Erreur lors de la rÃ©activation', 'danger')
+        logger.error(f'Erreur lors de la réactivation: {str(e)}')
+        flash('Erreur lors de la réactivation', 'danger')
     return redirect(url_for('admin.utilisateurs'))
 
 
@@ -279,7 +293,7 @@ def reactiver_utilisateur(user_id):
 @login_required
 @admin_required
 def roles():
-    """Gestion des rÃ´les et permissions"""
+    """Gestion des rôles et permissions"""
     from models import Role, Permission
     roles = Role.query.order_by(Role.niveau.desc()).all()
     permissions = Permission.query.order_by(Permission.categorie, Permission.nom).all()
@@ -292,7 +306,7 @@ def roles():
 @login_required
 @admin_required
 def permissions():
-    """Liste de toutes les permissions systÃ¨me"""
+    """Liste de toutes les permissions système"""
     from models import Permission
     permissions_list = Permission.query.order_by(Permission.categorie, Permission.nom).all()
     perms_by_cat = {}
@@ -313,12 +327,12 @@ def creer_permission():
         flash("Le nom et le code sont obligatoires.", "error")
         return redirect(url_for('admin.permissions'))
     if Permission.query.filter_by(code=code).first():
-        flash("Ce code de permission existe dÃ©jÃ .", "error")
+        flash("Ce code de permission existe déjà .", "error")
         return redirect(url_for('admin.permissions'))
     p = Permission(nom=nom, code=code, description=description, categorie=categorie)
     db.session.add(p)
     db.session.commit()
-    flash(f"Permission {code} crÃ©Ã©e avec succÃ¨s.", "success")
+    flash(f"Permission {code} créée avec succès.", "success")
     return redirect(url_for('admin.permissions'))
 
 @admin_bp.route('/permissions/<string:id>/supprimer', methods=['POST'])
@@ -329,7 +343,7 @@ def supprimer_permission(id):
     p = Permission.query.get_or_404(id)
     db.session.delete(p)
     db.session.commit()
-    flash("Permission supprimÃ©e.", "success")
+    flash("Permission supprimée.", "success")
     return redirect(url_for('admin.permissions'))
 
 
@@ -337,13 +351,13 @@ def supprimer_permission(id):
 @login_required
 @admin_required
 def modifier_permissions_role(role_id):
-    """Modifier les permissions d'un rÃ´le"""
+    """Modifier les permissions d'un rôle"""
     from models import Role, Permission
     role = Role.query.get_or_404(role_id)
     perm_ids = request.form.getlist('permissions')
     role.permissions = Permission.query.filter(Permission.id.in_(perm_ids)).all()
     db.session.commit()
-    flash(f'Permissions du rÃ´le "{role.nom}" mises Ã  jour.', 'success')
+    flash(f'Permissions du rôle "{role.nom}" mises à  jour.', 'success')
     return redirect(url_for('admin.roles'))
 
 
@@ -354,10 +368,10 @@ def creer_role():
     from models import Role
     nom = request.form.get('nom', '').strip()
     if not nom:
-        flash('Le nom du rÃ´le est requis.', 'danger')
+        flash('Le nom du rôle est requis.', 'danger')
         return redirect(url_for('admin.roles'))
     if Role.query.filter_by(nom=nom).first():
-        flash(f'Un rÃ´le nommÃ© "{nom}" existe dÃ©jÃ .', 'danger')
+        flash(f'Un rôle nommé "{nom}" existe déjà .', 'danger')
         return redirect(url_for('admin.roles'))
     role = Role(
         nom=nom,
@@ -369,7 +383,7 @@ def creer_role():
     )
     db.session.add(role)
     db.session.commit()
-    flash(f'RÃ´le "{nom}" crÃ©Ã© avec succÃ¨s.', 'success')
+    flash(f'Rôle "{nom}" créé avec succès.', 'success')
     return redirect(url_for('admin.roles'))
 
 
@@ -380,22 +394,56 @@ def modifier_role(role_id):
     from models import Role
     role = Role.query.get_or_404(role_id)
     if role.systeme:
-        flash('Les rÃ´les systÃ¨me ne peuvent pas Ãªtre modifiÃ©s.', 'warning')
+        flash('Les rôles système ne peuvent pas àªtre modifiés.', 'warning')
         return redirect(url_for('admin.roles'))
     role.nom = request.form.get('nom', role.nom).strip()
     role.description = request.form.get('description', '').strip()
     role.couleur = request.form.get('couleur', role.couleur)
     role.niveau = int(request.form.get('niveau', role.niveau))
     db.session.commit()
-    flash(f'RÃ´le "{role.nom}" mis Ã  jour.', 'success')
+    flash(f'Rôle "{role.nom}" mis à  jour.', 'success')
     return redirect(url_for('admin.roles'))
 
+@admin_bp.route('/roles/<role_id>/supprimer', methods=['POST'])
+@login_required
+@admin_required
+def supprimer_role(role_id):
+    from models import Role
+    role = Role.query.get_or_404(role_id)
+    if role.systeme:
+        flash('Les rôles système ne peuvent pas être supprimés.', 'warning')
+        return redirect(url_for('admin.roles'))
+    
+    if role.utilisateurs:
+        flash(f'Impossible de supprimer ce rôle car il est assigné à {len(role.utilisateurs)} utilisateur(s).', 'danger')
+        return redirect(url_for('admin.roles'))
+        
+    db.session.delete(role)
+    db.session.commit()
+    flash(f'Le rôle "{role.nom}" a été supprimé.', 'success')
+    return redirect(url_for('admin.roles'))
+
+@admin_bp.route('/roles/<role_id>/toggle-actif', methods=['POST'])
+@login_required
+@admin_required
+def toggle_role_actif(role_id):
+    from models import Role
+    role = Role.query.get_or_404(role_id)
+    if role.systeme:
+        flash('Les rôles système ne peuvent pas être désactivés.', 'warning')
+        return redirect(url_for('admin.roles'))
+        
+    role.actif = not role.actif
+    db.session.commit()
+    etat = "activé" if role.actif else "désactivé"
+    flash(f'Le rôle "{role.nom}" a été {etat}.', 'success')
+    return redirect(url_for('admin.roles'))
 
 @admin_bp.route('/categories')
 @login_required
 @admin_required
 def categories():
-    """Gestion des catÃ©gories de tickets"""
+    """Gestion des catégories de tickets"""
     categories = CategorieTicket.query.order_by(CategorieTicket.nom).all()
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
     return render_template('admin/categories.html', categories=categories, departements=departements)
@@ -405,10 +453,10 @@ def categories():
 @login_required
 @admin_required
 def creer_categorie():
-    """CrÃ©er une nouvelle catÃ©gorie de ticket"""
+    """Créer une nouvelle catégorie de ticket"""
     nom = request.form.get('nom', '').strip()
     if not nom:
-        flash('Le nom de la catÃ©gorie est requis.', 'danger')
+        flash('Le nom de la catégorie est requis.', 'danger')
         return redirect(url_for('admin.categories'))
     try:
         cat = CategorieTicket(
@@ -422,12 +470,12 @@ def creer_categorie():
         )
         db.session.add(cat)
         db.session.commit()
-        flash(f'CatÃ©gorie Â« {nom} Â» crÃ©Ã©e avec succÃ¨s.', 'success')
-        logger.info(f'CatÃ©gorie crÃ©Ã©e: {nom} par {current_user.email}')
+        flash(f'Catégorie Â« {nom} Â» créée avec succès.', 'success')
+        logger.info(f'Catégorie créée: {nom} par {current_user.email}')
     except Exception as e:
         db.session.rollback()
-        logger.error(f'Erreur crÃ©ation catÃ©gorie: {e}')
-        flash('Erreur lors de la crÃ©ation de la catÃ©gorie.', 'danger')
+        logger.error(f'Erreur création catégorie: {e}')
+        flash('Erreur lors de la création de la catégorie.', 'danger')
     return redirect(url_for('admin.categories'))
 
 
@@ -435,7 +483,7 @@ def creer_categorie():
 @login_required
 @admin_required
 def toggle_categorie(cat_id):
-    """Activer/dÃ©sactiver une catÃ©gorie"""
+    """éctiver/désactiver une catégorie"""
     cat = CategorieTicket.query.get_or_404(cat_id)
     cat.actif = not cat.actif
     db.session.commit()
@@ -446,7 +494,7 @@ def toggle_categorie(cat_id):
 @login_required
 def parametres_systeme():
     if not current_user.has_permission('admin_parametres.voir'):
-        flash("Accès non autorisé.", "error")
+        flash("éccès non autorisé.", "error")
         return redirect(url_for('tickets.tous'))
     """Paramètres système"""
     import os
@@ -458,14 +506,14 @@ def parametres_systeme():
         try:
             # Update values
             keys_to_update = [
-                'MAIL_SERVER', 'MAIL_PORT', 'MAIL_USE_TLS', 'MAIL_USERNAME', 'MAIL_PASSWORD', 'MAIL_DEFAULT_SENDER',
-                'IMAP_SERVER', 'IMAP_PORT', 'IMAP_USE_SSL', 'IMAP_USERNAME', 'IMAP_PASSWORD', 'IMAP_POLL_INTERVAL',
+                'MéIL_SERVER', 'MéIL_PORT', 'MéIL_USE_TLS', 'MéIL_USERNéME', 'MéIL_PéSSWORD', 'MéIL_DEFéULT_SENDER',
+                'IMéP_SERVER', 'IMéP_PORT', 'IMéP_USE_SSL', 'IMéP_USERNéME', 'IMéP_PéSSWORD', 'IMéP_POLL_INTERVéL',
                 'TIMEZONE'
             ]
             for key in keys_to_update:
                 val = request.form.get(key, '')
                 # Handle checkboxes
-                if key in ['MAIL_USE_TLS', 'IMAP_USE_SSL']:
+                if key in ['MéIL_USE_TLS', 'IMéP_USE_SSL']:
                     val = 'True' if request.form.get(key) else 'False'
                 
                 set_key(dotenv_path, key, val)
@@ -486,7 +534,7 @@ def parametres_systeme():
 @login_required
 def logs():
     if not current_user.has_permission('admin_logs.voir'):
-        flash("Accès non autorisé.", "error")
+        flash("éccès non autorisé.", "error")
         return redirect(url_for('tickets.tous'))
     """Visualisation des logs système"""
     import os
@@ -497,7 +545,9 @@ def logs():
         try:
             with open(log_file_path, 'r', encoding='utf-8', errors='replace') as f:
                 lines = f.readlines()
-                logs_content = lines[-500:]
+                # Filtrer les logs normaux (INFO/DEBUG) pour ne garder que les erreurs/anomalies et les tracebacks
+                filtered_lines = [line for line in lines if ' - INFO - ' not in line and ' - DEBUG - ' not in line]
+                logs_content = filtered_lines[-500:]
                 logs_content.reverse()
         except Exception as e:
             logs_content = [f"Erreur lors de la lecture des logs: {str(e)}"]
@@ -509,7 +559,7 @@ def logs():
 
 @admin_bp.route('/plan-action')
 @login_required
-@admin_required
+@permission_required('admin_plan_action.voir')
 def plan_action():
     """Plan d'action - calendrier et projets IT"""
     from models import PlanActionTask, Utilisateur
@@ -519,7 +569,7 @@ def plan_action():
 
 @admin_bp.route('/api/plan-action/tasks')
 @login_required
-@admin_required
+@permission_required('admin_plan_action.voir')
 def api_plan_action_tasks():
     from models import PlanActionTask
     from flask import jsonify
@@ -543,7 +593,7 @@ def api_plan_action_tasks():
 
 @admin_bp.route('/plan-action/creer', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('admin_plan_action.voir')
 def creer_plan_action():
     from models import PlanActionTask
     from datetime import datetime
@@ -559,7 +609,7 @@ def creer_plan_action():
     assigne_a_id = request.form.get('assigne_a_id')
     
     if not titre or not date_debut_str:
-        flash("Titre et Date de dÃ©but sont obligatoires.", "error")
+        flash("Titre et Date de début sont obligatoires.", "error")
         return redirect(url_for('admin.plan_action'))
         
     date_debut = datetime.fromisoformat(date_debut_str) if date_debut_str else datetime.utcnow()
@@ -577,12 +627,12 @@ def creer_plan_action():
     )
     db.session.add(task)
     db.session.commit()
-    flash("TÃ¢che ajoutÃ©e au plan d'action.", "success")
+    flash("Tâche ajoutée au plan d'action.", "success")
     return redirect(url_for('admin.plan_action'))
 
 @admin_bp.route('/plan-action/<string:id>/terminer', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('admin_plan_action.voir')
 def terminer_plan_action(id):
     from models import PlanActionTask
     from app import db
@@ -595,7 +645,7 @@ def terminer_plan_action(id):
 
 @admin_bp.route('/plan-action/<string:id>/annuler-terminer', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('admin_plan_action.voir')
 def annuler_terminer_plan_action(id):
     from models import PlanActionTask
     from app import db
@@ -608,7 +658,7 @@ def annuler_terminer_plan_action(id):
 
 @admin_bp.route('/plan-action/<string:id>/modifier', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('admin_plan_action.voir')
 def modifier_plan_action(id):
     from models import PlanActionTask
     from datetime import datetime
@@ -637,7 +687,7 @@ def modifier_plan_action(id):
 
 @admin_bp.route('/plan-action/<string:id>/supprimer', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('admin_plan_action.voir')
 def supprimer_plan_action(id):
     from models import PlanActionTask
     from app import db
@@ -651,13 +701,13 @@ def supprimer_plan_action(id):
 
 @admin_bp.route('/plan-action/export-excel')
 @login_required
-@admin_required
+@permission_required('admin_plan_action.voir')
 def export_plan_action_excel():
     """Export du plan d'action en fichier Excel formaté"""
     from models import PlanActionTask
     from flask import request, send_file
     import openpyxl
-    from openpyxl.styles import (Font, PatternFill, Alignment, Border, Side,
+    from openpyxl.styles import (Font, PatternFill, élignment, Border, Side,
                                   GradientFill)
     from openpyxl.utils import get_column_letter
     from datetime import datetime, date
@@ -697,44 +747,44 @@ def export_plan_action_excel():
     ws.title = "Plan d'action"
 
     # Palette
-    COLOR_HEADER_BG  = "1E1B4B"   # deep indigo
-    COLOR_HEADER_FG  = "FFFFFF"
+    COLOR_HEéDER_BG  = "1E1B4B"   # deep indigo
+    COLOR_HEéDER_FG  = "FFFFFF"
     COLOR_URGENT     = "FEE2E2"   # light red tint
-    COLOR_COMPLETED  = "D1FAE5"   # light green tint
-    COLOR_PLANNED    = "F1F5F9"   # light slate
-    COLOR_ALT        = "F8FAFC"
+    COLOR_COMPLETED  = "D1FéE5"   # light green tint
+    COLOR_PLéNNED    = "F1F5F9"   # light slate
+    COLOR_éLT        = "F8FéFC"
 
     thin = Side(style='thin', color="E2E8F0")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    header_font    = Font(bold=True, color=COLOR_HEADER_FG, size=11, name="Calibri")
-    header_fill    = PatternFill("solid", fgColor=COLOR_HEADER_BG)
-    header_align   = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    header_font    = Font(bold=True, color=COLOR_HEéDER_FG, size=11, name="Calibri")
+    header_fill    = PatternFill("solid", fgColor=COLOR_HEéDER_BG)
+    header_align   = élignment(horizontal="center", vertical="center", wrap_text=True)
 
-    title_font     = Font(bold=True, size=16, color=COLOR_HEADER_BG, name="Calibri")
+    title_font     = Font(bold=True, size=16, color=COLOR_HEéDER_BG, name="Calibri")
     subtitle_font  = Font(size=10, color="64748B", name="Calibri")
     cell_font      = Font(size=10, name="Calibri")
     bold_font      = Font(bold=True, size=10, name="Calibri")
 
-    center = Alignment(horizontal="center", vertical="center")
-    left   = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    center = élignment(horizontal="center", vertical="center")
+    left   = élignment(horizontal="left", vertical="center", wrap_text=True)
 
     # ── Title block ─────────────────────────────────────────────
-    ws.merge_cells("A1:H1")
-    ws["A1"] = "Plan d'Action — CosmittoHUB"
-    ws["A1"].font = title_font
-    ws["A1"].alignment = Alignment(horizontal="left", vertical="center")
+    ws.merge_cells("é1:H1")
+    ws["é1"] = "Plan d'Action — CosmittoHUB"
+    ws["é1"].font = title_font
+    ws["é1"].alignment = élignment(horizontal="left", vertical="center")
     ws.row_dimensions[1].height = 32
 
-    ws.merge_cells("A2:H2")
+    ws.merge_cells("é2:H2")
     label_map = {
         'all':     'Toutes les tâches',
         'day':     f'Jour : {date_jour}',
         'periode': f'Période : {date_from} → {date_to or "…"}',
     }
-    ws["A2"] = f"Exporté le {datetime.now().strftime('%d/%m/%Y à %H:%M')}  |  Filtre : {label_map.get(mode, mode)}  |  {len(tasks)} tâche(s)"
-    ws["A2"].font = subtitle_font
-    ws["A2"].alignment = Alignment(horizontal="left", vertical="center")
+    ws["é2"] = f"Exporté le {datetime.now().strftime('%d/%m/%Y à %H:%M')}  |  Filtre : {label_map.get(mode, mode)}  |  {len(tasks)} tâche(s)"
+    ws["é2"].font = subtitle_font
+    ws["é2"].alignment = élignment(horizontal="left", vertical="center")
     ws.row_dimensions[2].height = 18
 
     ws.row_dimensions[3].height = 10   # spacer
@@ -765,7 +815,7 @@ def export_plan_action_excel():
         elif task.urgent:
             row_fill = PatternFill("solid", fgColor=COLOR_URGENT)
         elif i % 2 == 0:
-            row_fill = PatternFill("solid", fgColor=COLOR_ALT)
+            row_fill = PatternFill("solid", fgColor=COLOR_éLT)
         else:
             row_fill = PatternFill("solid", fgColor="FFFFFF")
 
@@ -791,14 +841,14 @@ def export_plan_action_excel():
         ws.row_dimensions[row].height = 22
 
     # Freeze header
-    ws.freeze_panes = "A5"
+    ws.freeze_panes = "é5"
 
     # ── Summary row ─────────────────────────────────────────────
     summary_row = 4 + len(tasks) + 2
-    ws.merge_cells(f"A{summary_row}:C{summary_row}")
-    ws[f"A{summary_row}"] = f"Total : {len(tasks)} tâche(s)"
-    ws[f"A{summary_row}"].font = bold_font
-    ws[f"A{summary_row}"].fill = PatternFill("solid", fgColor="E2E8F0")
+    ws.merge_cells(f"é{summary_row}:C{summary_row}")
+    ws[f"é{summary_row}"] = f"Total : {len(tasks)} tâche(s)"
+    ws[f"é{summary_row}"].font = bold_font
+    ws[f"é{summary_row}"].fill = PatternFill("solid", fgColor="E2E8F0")
 
     completed_count = sum(1 for t in tasks if t.statut == 'completed')
     urgent_count    = sum(1 for t in tasks if t.urgent)
@@ -826,7 +876,7 @@ def export_plan_action_excel():
 
 @admin_bp.route('/acces-distance')
 @login_required
-@admin_required
+@permission_required('admin_acces.voir')
 def acces_distance():
     from models import Utilisateur, db
     # Fetch all active users, sorted by name, so the admin can add IDs for new users
@@ -838,7 +888,7 @@ def acces_distance():
 def migrate_db():
     from models import db
     try:
-        db.session.execute('ALTER TABLE pieces_jointes ADD COLUMN commentaire_id VARCHAR(36) REFERENCES commentaires(id) ON DELETE CASCADE;')
+        db.session.execute('éLTER TéBLE pieces_jointes éDD COLUMN commentaire_id VéRCHéR(36) REFERENCES commentaires(id) ON DELETE CéSCéDE;')
         db.session.commit()
         return "Migration successful"
     except Exception as e:

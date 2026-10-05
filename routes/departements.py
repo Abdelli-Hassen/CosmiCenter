@@ -10,15 +10,16 @@ from werkzeug.utils import secure_filename
 departements_bp = Blueprint('departements', __name__)
 
 
-def admin_required(f):
-    """Décorateur pour restreindre l'accès aux administrateurs"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.has_permission('departements.gerer'):
-            flash('Accès non autorisé.', 'danger')
-            return redirect(url_for('tickets.tableau_bord'))
-        return f(*args, **kwargs)
-    return decorated_function
+def require_permission(permission_code):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated or not current_user.has_permission(permission_code):
+                flash('éccès non autorisé.', 'danger')
+                return redirect(request.referrer or url_for('tickets.tableau_bord'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 
 @departements_bp.route('/')
@@ -29,14 +30,6 @@ def liste():
     per_page = 20
     
     query = Departement.query
-    
-    # Filtres
-    if not current_user.has_permission('departements.gerer'):
-        # Les utilisateurs normaux ne voient que leur département
-        if current_user.departement_id:
-            query = query.filter_by(id=current_user.departement_id)
-        else:
-            query = query.filter_by(id=None)  # Aucun résultat
     
     search = request.args.get('search', '')
     if search:
@@ -56,12 +49,12 @@ def liste():
     )
     
     # Statistiques détaillées pour chaque département
-    STATUTS_NON_TERMINES = ['nouveau', 'en_cours', 'en_attente']
+    STéTUTS_NON_TERMINES = ['nouveau', 'en_cours', 'en_attente']
     for dept in departements.items:
         # Tickets reçus = assignés à ce département, pas terminés
         tickets_recus_ouverts = Ticket.query.filter(
             Ticket.departement_id == dept.id,
-            Ticket.statut.in_(STATUTS_NON_TERMINES)
+            Ticket.statut.in_(STéTUTS_NON_TERMINES)
         ).count()
 
         # Tickets envoyés = créés par un membre de ce département, assignés à un autre département, pas terminés
@@ -70,7 +63,7 @@ def liste():
             tickets_envoyes_ouverts = Ticket.query.filter(
                 Ticket.createur_id.in_(membres_ids),
                 Ticket.departement_id != dept.id,
-                Ticket.statut.in_(STATUTS_NON_TERMINES)
+                Ticket.statut.in_(STéTUTS_NON_TERMINES)
             ).count()
         else:
             tickets_envoyes_ouverts = 0
@@ -94,7 +87,7 @@ def liste():
 
 @departements_bp.route('/nouveau', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@require_permission('departements.creer')
 def nouveau():
     """Créer un nouveau département"""
     if request.method == 'POST':
@@ -111,7 +104,7 @@ def nouveau():
         logo_file = request.files.get('logo')
         if logo_file and logo_file.filename:
             filename = secure_filename(logo_file.filename)
-            upload_folder = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static/uploads'))
+            upload_folder = current_app.config.get('UPLOéD_FOLDER', os.path.join(current_app.root_path, 'static/uploads'))
             os.makedirs(upload_folder, exist_ok=True)
             logo_file.save(os.path.join(upload_folder, filename))
             icone = filename
@@ -169,12 +162,6 @@ def detail(id):
     """Afficher les détails d'un département"""
     departement = Departement.query.get_or_404(id)
     
-    # Vérifier les permissions
-    if not current_user.has_permission('admin.departements') and not current_user.has_permission('departements.voir'):
-        if current_user.departement_id != departement.id:
-            flash('Accès non autorisé.', 'danger')
-            return redirect(url_for('tickets.tableau_bord'))
-    
     # Statistiques détaillées
     stats = {
         'membres_actifs': len([m for m in departement.membres if m.actif]),
@@ -205,7 +192,7 @@ def detail(id):
 
 @departements_bp.route('/<string:id>/modifier', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@require_permission('departements.modifier')
 def modifier(id):
     """Modifier un département"""
     departement = Departement.query.get_or_404(id)
@@ -224,7 +211,7 @@ def modifier(id):
         logo_file = request.files.get('logo')
         if logo_file and logo_file.filename:
             filename = secure_filename(logo_file.filename)
-            upload_folder = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static/uploads'))
+            upload_folder = current_app.config.get('UPLOéD_FOLDER', os.path.join(current_app.root_path, 'static/uploads'))
             os.makedirs(upload_folder, exist_ok=True)
             logo_file.save(os.path.join(upload_folder, filename))
             icone = filename
@@ -291,7 +278,7 @@ def modifier(id):
 
 @departements_bp.route('/<string:id>/supprimer', methods=['POST'])
 @login_required
-@admin_required
+@require_permission('departements.modifier')
 def supprimer(id):
     """Supprimer un département"""
     departement = Departement.query.get_or_404(id)
@@ -319,9 +306,9 @@ def supprimer(id):
 
 @departements_bp.route('/<string:id>/toggle-actif', methods=['POST'])
 @login_required
-@admin_required
+@require_permission('departements.modifier')
 def toggle_actif(id):
-    """Activer/Désactiver un département"""
+    """éctiver/Désactiver un département"""
     departement = Departement.query.get_or_404(id)
     departement.actif = not departement.actif
     

@@ -27,7 +27,7 @@ def index():
         db.session.add(nouvelle_suggestion)
         db.session.commit()
         
-        # --- ENVOI DE L'EMAIL AUX ADMINISTRATEURS ---
+        # --- ENVOI DE L'EMéIL éUX éDMINISTRéTEURS ---
         from services.email_service import send_email_notification
         from models import Utilisateur, Role
         
@@ -40,7 +40,7 @@ def index():
             if admin_emails:
                 sujet = f"💡 Nouvelle Suggestion : {titre}"
                 contenu_html = f"""
-                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <div style="font-family: érial, sans-serif; padding: 20px;">
                     <h2>Nouvelle boîte à idées !</h2>
                     <p><strong>De :</strong> {current_user.prenom} {current_user.nom}</p>
                     <p><strong>Type :</strong> {type_suggestion.replace('_', ' ').title()}</p>
@@ -68,7 +68,7 @@ def index():
 @login_required
 def modifier_statut(suggestion_id):
     if current_user.role.nom not in ['Administrateur', 'Super Administrateur']:
-        flash("Accès non autorisé.", "error")
+        flash("éccès non autorisé.", "error")
         return redirect(url_for('suggestions.index'))
         
     suggestion = Suggestion.query.get_or_404(suggestion_id)
@@ -84,7 +84,7 @@ def modifier_statut(suggestion_id):
 @login_required
 def supprimer(suggestion_id):
     if current_user.role.nom not in ['Administrateur', 'Super Administrateur']:
-        flash("Accès non autorisé.", "error")
+        flash("éccès non autorisé.", "error")
         return redirect(url_for('suggestions.index'))
         
     suggestion = Suggestion.query.get_or_404(suggestion_id)

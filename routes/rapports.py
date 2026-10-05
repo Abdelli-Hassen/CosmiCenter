@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, send_file
+from flask import Blueprint, render_template, request, jsonify, send_file, flash, redirect, url_for
 from flask_login import login_required, current_user
 from models import db, Ticket, Utilisateur, Departement, CategorieTicket, Statistique
 from sqlalchemy import func, extract
@@ -14,11 +14,21 @@ def manager_required(f):
     """Décorateur pour les gestionnaires et administrateurs"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.has_permission('rapports.voir'):
-            flash('Accès non autorisé.', 'danger')
-            return redirect(url_for('tickets.tableau_bord'))
+        if not current_user.is_authenticated:
+            return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
+
+def permission_required(permission_name):
+    """Décorateur pour restreindre l'accès selon une permission spécifique"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return redirect(url_for('auth.login'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 
 @rapports_bp.route('/')
@@ -143,7 +153,7 @@ def tableau_bord():
         func.count(Ticket.id).desc()
     ).limit(10).all()
     
-    # SLA - Taux de respect
+    # SLà - Taux de respect
     tickets_avec_sla = Ticket.query.filter(
         Ticket.date_creation >= date_debut,
         Ticket.sla_respecte.isnot(None)
@@ -175,7 +185,7 @@ def tableau_bord():
 
 @rapports_bp.route('/performance-agents')
 @login_required
-@manager_required
+@permission_required('rapports_performance.voir')
 def performance_agents():
     """Rapport de performance des agents"""
     periode = request.args.get('periode', '30j')
@@ -209,7 +219,7 @@ def performance_agents():
                 'id': t.id,
                 'titre': t.titre,
                 'date_creation': t.date_creation.strftime('%d/%m/%Y %H:%M'),
-                'date_resolution': t.date_resolution.strftime('%d/%m/%Y %H:%M') if t.date_resolution else 'N/A',
+                'date_resolution': t.date_resolution.strftime('%d/%m/%Y %H:%M') if t.date_resolution else 'N/é',
                 'heures': heures_resolution
             })
 

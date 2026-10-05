@@ -436,7 +436,7 @@
         <div class="chat-item-avatar online" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">AL</div>
         <div>
           <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Amine Larbi</div>
-          <div style="font-size: 12px; color: #10b981; font-weight: 500; display: flex; align-items: center; gap: 4px;">
+          <div id="chatActiveStatus" style="font-size: 12px; color: #10b981; font-weight: 500; display: flex; align-items: center; gap: 4px;">
             <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block;"></span>
             En ligne
           </div>
@@ -508,10 +508,11 @@
         data.forEach(chat => {
           const isActive = chat.contact_id === currentContactId ? 'active' : '';
           const unreadBadge = chat.unread_count > 0 ? `<div class="unread-badge">${chat.unread_count}</div>` : '';
+          const avatarHtml = chat.photo_profil ? `<img src="/static/uploads/${chat.photo_profil}" style="width:100%; height:100%; object-fit:cover;">` : chat.contact_initials;
           
           list.innerHTML += `
             <div class="chat-item ${isActive}" onclick="loadMessages('${chat.contact_id}')">
-              <div class="chat-item-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">${chat.contact_initials}</div>
+              <div class="chat-item-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb); overflow:hidden;">${avatarHtml}</div>
               <div class="chat-item-info">
                 <div class="chat-item-name" style="${chat.unread_count > 0 ? 'font-weight:700;' : ''}">${chat.contact_name}</div>
                 <div class="chat-item-preview" style="${chat.unread_count > 0 ? 'color:var(--text-primary);font-weight:500;' : ''}">${chat.last_message}</div>
@@ -538,9 +539,24 @@
       .then(res => res.json())
       .then(data => {
         // Update header
-        document.querySelector('.chat-active-header .chat-item-avatar').innerText = data.contact.initials;
+        const headerAvatar = document.querySelector('.chat-active-header .chat-item-avatar');
+        headerAvatar.style.overflow = 'hidden';
+        headerAvatar.innerHTML = data.contact.photo_profil ? `<img src="/static/uploads/${data.contact.photo_profil}" style="width:100%; height:100%; object-fit:cover;">` : data.contact.initials;
         const nameEl = document.querySelector('.chat-active-header .chat-header-user div div:first-child');
         if(nameEl) nameEl.innerText = data.contact.name;
+        
+        const statusEl = document.getElementById('chatActiveStatus');
+        if(statusEl) {
+            if(data.contact.is_online) {
+                statusEl.innerHTML = '<span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block;"></span>En ligne';
+                statusEl.style.color = '#10b981';
+                headerAvatar.classList.add('online');
+            } else {
+                statusEl.innerHTML = '<span style="width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; display: inline-block;"></span>Hors ligne';
+                statusEl.style.color = '#94a3b8';
+                headerAvatar.classList.remove('online');
+            }
+        }
         
         // Update messages
         const container = document.querySelector('.chat-messages');
@@ -598,11 +614,12 @@
           const list = document.getElementById('newChatUserList');
           list.innerHTML = '';
           data.forEach(user => {
+            const avatarHtml = user.photo_profil ? `<img src="/static/uploads/${user.photo_profil}" style="width:100%; height:100%; object-fit:cover;">` : user.initials;
             list.innerHTML += `
               <div style="padding: 10px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-subtle);" 
                    onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='transparent'"
-                   onclick="startNewChat('${user.id}', '${user.name.replace(/'/g, "\\'")}', '${user.initials}')">
-                <div class="chat-item-avatar" style="width: 32px; height: 32px; font-size: 11px; margin: 0; background: linear-gradient(135deg, #64748b, #475569);">${user.initials}</div>
+                   onclick="startNewChat('${user.id}', '${user.name.replace(/'/g, "\\'")}', '${user.initials}', '${user.photo_profil || ''}')">
+                <div class="chat-item-avatar" style="width: 32px; height: 32px; font-size: 11px; margin: 0; background: linear-gradient(135deg, #64748b, #475569); overflow:hidden;">${avatarHtml}</div>
                 <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${user.name}</div>
               </div>
             `;

@@ -62,7 +62,7 @@ Cosmitto Coffee opère plusieurs points de vente (POS). CosmittoHUB permet à ch
 | Agent | 50 | Tickets assignés, commentaires |
 | Utilisateur | 10 | Ses propres tickets |
 
-20+ permissions granulaires (tickets, admin, rapports, base de connaissances).
+20+ permissions granulaires (tickets, admin, rapports, base de connaissances) sont désormais appliquées dynamiquement sur toutes les interfaces et les routes au lieu de vérifications statiques, garantissant un contrôle précis des actions (Création, Modification, Suppression, Désactivation).
 
 ### Rapports
 - Tableau de bord analytique : métriques SLA, satisfaction, évolution quotidienne
@@ -73,6 +73,7 @@ Cosmitto Coffee opère plusieurs points de vente (POS). CosmittoHUB permet à ch
 ### Administration
 - Gestion des utilisateurs avec filtres avancés et stat chips (total / actifs / inactifs)
 - Gestion des rôles et permissions par cases à cocher hiérarchisées (interface en accordéon avec logique de désactivation en cascade)
+- Création, modification, désactivation et suppression des rôles personnalisés
 - Gestion des catégories de tickets (type, priorité par défaut, délai SLA, couleur)
 - Logs système et paramètres (en cours)
 
@@ -113,7 +114,13 @@ python app.py
 
 Accès : `http://127.0.0.1:5000`  
 
-> ⚠️ Changer le mot de passe admin à la première connexion.
+### Comptes de test par défaut
+- **Super Administrateur** : `admin@example.com` / `testtest`
+- **Chef département** : `stock8@example.com` / `testtest`
+- **Agent Support** : `ressourceshumaines1@example.com` / `testtest`
+- **Utilisateur Standard** : `utilisateurstandard1@example.com` / `testtest`
+
+> ⚠️ Changer les mots de passe à la première connexion en production.
 
 ---
 

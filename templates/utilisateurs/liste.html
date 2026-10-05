@@ -191,8 +191,8 @@
       </h1>
       <p class="users-hero-sub">Annuaire de l'organisation</p>
     </div>
-    {% if current_user.has_permission('admin.utilisateurs') %}
-    <a href="{{ url_for('admin.nouvel_utilisateur') }}" class="btn btn-primary" style="gap:8px;">
+    {% if current_user.has_permission('utilisateurs.creer') %}
+    <a href="{{ url_for('utilisateurs.nouveau') }}" class="btn btn-primary" style="gap:8px;">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Nouvel utilisateur
     </a>
@@ -216,7 +216,7 @@
         <select name="role" class="users-select" onchange="this.form.submit()">
           <option value="">Tous les rôles</option>
           {% for role in roles %}
-          <option value="{{ role.nom }}" {% if role_filter == role.nom %}selected{% endif %}>{{ role.nom }}</option>
+          <option value="{{ role.id }}" {% if role_filter|string == role.id|string %}selected{% endif %}>{{ role.nom }}</option>
           {% endfor %}
         </select>
       </div>
@@ -413,8 +413,8 @@
         {% if search or role_filter or dept_filter or actif_filter %}
         <a href="{{ url_for('utilisateurs.liste') }}" class="btn btn-ghost btn-sm">Effacer les filtres</a>
         {% endif %}
-        {% if current_user.has_permission('admin.utilisateurs') %}
-        <a href="{{ url_for('admin.nouvel_utilisateur') }}" class="btn btn-primary btn-sm">Nouvel utilisateur</a>
+        {% if current_user.has_permission('utilisateurs.creer') %}
+        <a href="{{ url_for('utilisateurs.nouveau') }}" class="btn btn-primary btn-sm">Nouvel utilisateur</a>
         {% endif %}
       </div>
     </div>

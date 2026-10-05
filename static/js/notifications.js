@@ -294,6 +294,23 @@
     }
   }
 
+  /**
+   * Read flash messages from #flashMessages div (used in base.html).
+   */
+  function processFlashDivs() {
+    const flashContainer = document.getElementById('flashMessages');
+    if (!flashContainer) return;
+    
+    const messages = flashContainer.querySelectorAll('[data-flash-type]');
+    messages.forEach(function(msg) {
+      const type = flashCategoryToType(msg.getAttribute('data-flash-type'));
+      const text = msg.getAttribute('data-flash-message');
+      if (text) {
+        show({ title: text, type: type });
+      }
+    });
+  }
+
   // ─── Notification Panel ────────────────────────────────────────────────────
 
   function initNotificationPanel() {
@@ -387,6 +404,7 @@
   function init() {
     convertFlashAlerts();
     processDataFlash();
+    processFlashDivs();
     initNotificationPanel();
     startPollingNotifications();
   }

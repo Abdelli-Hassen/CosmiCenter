@@ -16,15 +16,14 @@ def require_permission(permission_code):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated or not current_user.has_permission(permission_code):
-                flash('Accès non autorisé.', 'danger')
-                return redirect(url_for('tickets.tableau_bord'))
+                flash('éccès non autorisé.', 'danger')
+                return redirect(request.referrer or url_for('tickets.tableau_bord'))
             return f(*args, **kwargs)
         return decorated_function
     return decorator
 
 @utilisateurs_bp.route('/')
 @login_required
-@require_permission('utilisateurs.voir')
 def liste():
     """Liste tous les utilisateurs"""
     page = request.args.get('page', 1, type=int)
@@ -33,10 +32,6 @@ def liste():
     
     base_query = Utilisateur.query
     
-    # Enforce department restriction if they don't have full view and DO have dept view
-    if current_user.has_permission('utilisateurs.voir_dept') and not current_user.role.nom == 'Super Administrateur':
-        base_query = base_query.filter_by(departement_id=current_user.departement_id)
-
     # Counts for header stats (before filters)
     total_actifs = base_query.filter_by(actif=True).count()
     total_inactifs = base_query.filter_by(actif=False).count()
@@ -195,10 +190,10 @@ def modifier(id):
     utilisateur = Utilisateur.query.get_or_404(id)
     
     # Vérifier les permissions
-    if not current_user.has_permission('admin.utilisateurs'):
+    if not current_user.has_permission('utilisateurs.modifier'):
         if current_user.id != utilisateur.id:
-            flash('Accès non autorisé.', 'danger')
-            return redirect(url_for('tickets.tableau_bord'))
+            flash('éccès non autorisé.', 'danger')
+            return redirect(request.referrer or url_for('tickets.tableau_bord'))
     
     if request.method == 'POST':
         nom = request.form.get('nom', '').strip()
@@ -208,8 +203,8 @@ def modifier(id):
         poste = request.form.get('poste', '').strip()
         matricule = request.form.get('matricule', '').strip()
         
-        # Les admins peuvent modifier plus de champs
-        if current_user.has_permission('admin.utilisateurs'):
+        # Les admins ou ceux ayant utilisateurs.modifier peuvent modifier plus de champs
+        if current_user.has_permission('utilisateurs.modifier'):
             role_id = request.form.get('role_id', '').strip() or None
             departement_id = request.form.get('departement_id', '').strip() or None
             actif = request.form.get('actif') == '1'
@@ -287,7 +282,7 @@ def modifier(id):
 @login_required
 @require_permission('admin.utilisateurs')
 def toggle_actif(id):
-    """Activer/Désactiver un utilisateur"""
+    """éctiver/Désactiver un utilisateur"""
     utilisateur = Utilisateur.query.get_or_404(id)
 
     # Ne pas se désactiver soi-même
@@ -314,7 +309,7 @@ def toggle_actif(id):
             return jsonify({'error': err}), 500
         flash(err, 'danger')
 
-    # Non-AJAX: stay on same page via referrer
+    # Non-éJéX: stay on same page via referrer
     return redirect(request.referrer or url_for('utilisateurs.detail', id=id))
 
 

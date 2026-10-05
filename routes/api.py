@@ -142,7 +142,7 @@ def changer_statut_ticket(ticket_id):
             if ticket.createur_id != current_user.id and ticket.assigne_id != current_user.id:
                 return json_response(
                     success=False, 
-                    message='Accès non autorisé', 
+                    message='éccès non autorisé', 
                     status=403
                 )
         
@@ -185,7 +185,7 @@ def assigner_ticket(ticket_id):
         if current_user.role not in ['admin', 'responsable']:
             return json_response(
                 success=False, 
-                message='Accès réservé aux administrateurs et responsables', 
+                message='éccès réservé aux administrateurs et responsables', 
                 status=403
             )
         
