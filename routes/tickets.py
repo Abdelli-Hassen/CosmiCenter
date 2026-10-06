@@ -1,4 +1,4 @@
-﻿"""
+"""
 Routes de gestion des tickets pour CosmittoDesk
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
@@ -294,11 +294,36 @@ def nouveau():
             flash('Ticket créé avec succès', 'success')
             logger.info(f'Nouveau ticket créé: {ticket.numero} par {current_user.email}')
             
-            # Envoyer un email de notification au créateur et à l'assigné (si applicable)
-            recipients = [current_user.email]
+            # Déterminer tous les utilisateurs à notifier
+            users_to_notify = set()
+            
+            # 1. Assigné spécifiquement
             if ticket.assigne_a:
-                if ticket.assigne_a.email not in recipients:
-                    recipients.append(ticket.assigne_a.email)
+                users_to_notify.add(ticket.assigne_a)
+            # 2. Assignation de département
+            elif ticket.departement:
+                for user in ticket.departement.utilisateurs:
+                    if user.actif:
+                        users_to_notify.add(user)
+                        
+            # 3. Collaborateurs individuels
+            for collab_user in ticket.collaborateurs:
+                if collab_user.actif:
+                    users_to_notify.add(collab_user)
+                    
+            # 4. Collaborateurs via départements
+            for collab_dept in ticket.departements_collab:
+                for user in collab_dept.utilisateurs:
+                    if user.actif:
+                        users_to_notify.add(user)
+                        
+            # Ne pas s'auto-notifier
+            users_to_notify.discard(current_user)
+
+            # Envoyer les emails
+            recipients = [current_user.email]
+            for user in users_to_notify:
+                recipients.append(user.email)
             
             send_email_notification(
                 current_app._get_current_object(),
@@ -307,18 +332,19 @@ def nouveau():
                 f"<p>Le ticket <b>{ticket.numero}</b> a été créé avec succès.</p><p>Description: {ticket.description}</p><p><a href='{url_for('tickets.detail', ticket_id=ticket.id, _external=True)}'>Voir le ticket</a></p>"
             )
             
-            # Create UI notification for assignee
-            if ticket.assigne_a and ticket.assigne_a.id != current_user.id:
-                from models import Notification
+            # Créer les notifications UI
+            from models import Notification
+            for user in users_to_notify:
                 notif = Notification(
-                    utilisateur_id=ticket.assigne_a.id,
-                    titre="Nouveau ticket assigné",
-                    message=f'Le ticket "{ticket.titre}" vous a été assigné.',
+                    utilisateur_id=user.id,
+                    titre="Nouveau ticket",
+                    message=f'Le ticket "{ticket.titre}" vous concerne.',
                     type_notification="ticket",
                     lien=url_for('tickets.detail', ticket_id=ticket.id)
                 )
                 db.session.add(notif)
-                db.session.commit()
+            
+            db.session.commit()
             
             return redirect(url_for('tickets.detail', ticket_id=ticket.id))
         

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def send_email_notification(app, subject, recipients, html_body):
     """
-    Envoie un email en arrière-plan.
+    Envoie un email en arrière-plan via SMTP.
     """
     def send_async():
         with app.app_context():
@@ -30,12 +30,6 @@ def send_email_notification(app, subject, recipients, html_body):
                 logger.warning("Configuration SMTP manquante, email non envoyé.")
                 return
 
-            msg = EmailMessage()
-            msg['Subject'] = subject
-            msg['From'] = sender
-            msg['To'] = ", ".join(recipients)
-            msg.add_alternative(html_body, subtype='html')
-            
             try:
                 if mail_use_ssl:
                     server = smtplib.SMTP_SSL(mail_server, mail_port)
@@ -45,11 +39,27 @@ def send_email_notification(app, subject, recipients, html_body):
                         server.starttls()
                     
                 server.login(mail_user, mail_pass)
-                server.send_message(msg)
+                
+                # Envoyer individuellement pour éviter qu'une mauvaise adresse bloque les autres
+                for recipient in recipients:
+                    if not recipient or "@" not in recipient:
+                        continue
+                        
+                    msg = EmailMessage()
+                    msg['Subject'] = subject
+                    msg['From'] = sender
+                    msg['To'] = recipient
+                    msg.add_alternative(html_body, subtype='html')
+                    
+                    try:
+                        server.send_message(msg)
+                        logger.info(f"Email envoyé avec succès à {recipient}")
+                    except Exception as e:
+                        logger.error(f"Erreur lors de l'envoi de l'email à {recipient} : {e}")
+                        
                 server.quit()
-                logger.info(f"Email envoyé avec succès à {recipients}")
             except Exception as e:
-                logger.error(f"Erreur lors de l'envoi de l'email : {e}")
+                logger.error(f"Erreur globale de connexion SMTP : {e}")
 
     thread = threading.Thread(target=send_async)
     thread.daemon = True
@@ -124,13 +134,11 @@ def process_incoming_email(app, sender_email, subject, body):
     Transforme un email en ticket, ou l'attache comme commentaire si c'est une réponse.
     """
     with app.app_context():
-        # Find user
         utilisateur = Utilisateur.query.filter_by(email=sender_email).first()
         if not utilisateur:
             logger.info(f"Email ignoré : l'expéditeur {sender_email} n'est pas un utilisateur connu.")
             return
             
-        # Chercher s'il y a un tag de ticket dans le sujet comme [TICK-20240501-123]
         import re
         ticket_match = re.search(r'\[(TICK-\d+-\w+)\]', subject)
         
@@ -138,7 +146,6 @@ def process_incoming_email(app, sender_email, subject, body):
             numero = ticket_match.group(1)
             ticket = Ticket.query.filter_by(numero=numero).first()
             if ticket:
-                # Ajouter un commentaire
                 commentaire = Commentaire(
                     contenu=body.strip(),
                     auteur_id=utilisateur.id,
@@ -149,11 +156,9 @@ def process_incoming_email(app, sender_email, subject, body):
                 logger.info(f"Email ajouté comme commentaire au {ticket.numero} par {utilisateur.email}")
                 return
                 
-        # Sinon, créer un nouveau ticket
         from uuid import uuid4
         numero = f"TICK-{datetime.now().strftime('%Y%m%d')}-{uuid4().hex[:6].upper()}"
         
-        # Trouver une catégorie par défaut, ou None
         default_cat = CategorieTicket.query.first()
         cat_id = default_cat.id if default_cat else None
         
@@ -170,7 +175,6 @@ def process_incoming_email(app, sender_email, subject, body):
         db.session.commit()
         logger.info(f"Nouveau ticket créé via Email : {numero} par {utilisateur.email}")
         
-        # Envoi d'une notification de confirmation
         send_email_notification(
             app,
             f"Ticket Créé : [{numero}] {nouveau_ticket.titre}",
@@ -186,7 +190,6 @@ def start_imap_polling(app):
     poll_interval = app.config.get('IMAP_POLL_INTERVAL', 60)
     
     def poll_loop():
-        # Attendre un peu avant de commencer pour laisser l'app démarrer
         time.sleep(5)
         while True:
             try:
