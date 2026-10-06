@@ -2,10 +2,6 @@
 chcp 65001 >nul
 title Cosmicenter
 
-set DATABASE_URL=postgresql+psycopg://Cosmicenter:testtest@localhost:5432/Cosmicenter
-set FLASK_PORT=8080
-set PYTHONIOENCODING=utf-8
-set FLASK_ENV=development
 set FLASK_PORT=8080
 set PYTHONIOENCODING=utf-8
 set FLASK_ENV=development

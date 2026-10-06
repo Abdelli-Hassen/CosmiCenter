@@ -306,7 +306,55 @@ def poll_notifications():
         is_read=False
     ).count()
     
+    recent_notifs = Notification.query.filter_by(
+        utilisateur_id=current_user.id,
+        lue=False
+    ).order_by(Notification.date_creation.desc()).limit(10).all()
+    
+    notifs_data = [{
+        'id': n.id,
+        'titre': n.titre,
+        'message': n.message,
+        'lien': n.lien,
+        'date': n.date_creation.strftime('%d/%m/%Y %H:%M')
+    } for n in recent_notifs]
+    
     return json_response(data={
         'unread_notifications': unread_notifs,
-        'unread_messages': unread_msgs
+        'unread_messages': unread_msgs,
+        'notifications': notifs_data
     })
+
+@api_bp.route('/notifications/tickets/<int:ticket_id>/mark-read', methods=['POST'])
+@login_required
+def mark_ticket_notifs_read(ticket_id):
+    from models import Notification, db
+    
+    notifs = Notification.query.filter(
+        Notification.utilisateur_id == current_user.id,
+        Notification.lien.like(f'%/tickets/{ticket_id}%'),
+        Notification.lue == False
+    ).all()
+    
+    for n in notifs:
+        n.lue = True
+        
+    db.session.commit()
+    return json_response(success=True)
+
+@api_bp.route('/notifications/chat/mark-read', methods=['POST'])
+@login_required
+def mark_chat_notifs_read():
+    from models import Notification, db
+    
+    notifs = Notification.query.filter(
+        Notification.utilisateur_id == current_user.id,
+        Notification.titre == 'Nouveau message',
+        Notification.lue == False
+    ).all()
+    
+    for n in notifs:
+        n.lue = True
+        
+    db.session.commit()
+    return json_response(success=True)

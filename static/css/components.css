@@ -213,11 +213,17 @@
   flex-shrink: 0;
   display: inline-block;
 }
-.priority-dot.dot-critical { background: var(--priority-critical); box-shadow: 0 0 6px rgba(220,38,38,0.5); }
-.priority-dot.dot-urgent   { background: var(--priority-urgent); }
-.priority-dot.dot-high     { background: var(--priority-high); }
-.priority-dot.dot-medium   { background: var(--priority-medium); }
-.priority-dot.dot-low      { background: var(--priority-low); }
+.priority-dot.dot-critique { background: var(--priority-critical); box-shadow: 0 0 6px rgba(155,16,48,0.5); }
+.priority-dot.dot-urgente  { background: var(--priority-urgent); }
+.priority-dot.dot-haute    { background: var(--priority-high); }
+.priority-dot.dot-moyenne  { background: var(--priority-medium); }
+.priority-dot.dot-basse    { background: var(--priority-low); }
+
+.priority-text-critique { color: var(--priority-critical) !important; }
+.priority-text-urgente  { color: var(--priority-urgent) !important; }
+.priority-text-haute    { color: var(--priority-high) !important; }
+.priority-text-moyenne  { color: var(--priority-medium) !important; }
+.priority-text-basse    { color: var(--priority-low) !important; }
 
 /* ════════════════════════════════════════════════════════════
    CARDS

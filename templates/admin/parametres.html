@@ -2,7 +2,6 @@
 {% block title %}Paramètres Système{% endblock %}
 
 {% block content %}
-<<<<<<< HEAD
 <style>
   .settings-page { max-width: 1100px; margin: 0 auto; padding: 0 0 48px; }
 
@@ -124,17 +123,6 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       Retour
     </a>
-=======
-<div class="page">
-  <div class="page-header" style="align-items: center;">
-    <div class="page-header-left" style="display:flex; flex-direction:row; align-items:center; gap:16px;">
-      <a href="{{ url_for('admin.tableau_bord') }}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px; font-weight: 600; border-radius: 12px; display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); background: var(--surface-2); border: 1px solid var(--border-subtle); box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        Retour
-      </a>
-      <h1 class="page-title" style="margin:0;">Paramètres Système</h1>
-    </div>
->>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
   </div>
 
   <form method="POST" action="{{ url_for('admin.parametres_systeme') }}">
@@ -183,7 +171,6 @@
         </div>
       </div>
 
-<<<<<<< HEAD
     <div class="settings-panel">
       <div class="s-card">
         <div class="s-card-header">
@@ -226,81 +213,6 @@
       </button>
     </div>
 
-=======
-      <!-- Section IMAP -->
-      <div class="card card-raised">
-        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-          <h2 class="card-title">Inbound Email (Email-to-Ticket)</h2>
-          <span class="badge" style="background:var(--primary-subtle); color:var(--primary); font-size:11px; padding:4px 8px; border-radius:12px;">IMAP</span>
-        </div>
-        <div class="card-body" style="display:flex; flex-direction:column; gap:16px;">
-          
-          <div style="display:flex; gap:16px; flex-wrap:wrap;">
-            <div class="form-group" style="flex:2; min-width:200px;">
-              <label class="form-label">Serveur IMAP</label>
-              <input type="text" name="IMAP_SERVER" class="input" value="{{ config.get('IMAP_SERVER', '') }}" placeholder="ex: imap.gmail.com">
-            </div>
-            <div class="form-group" style="flex:1; min-width:100px;">
-              <label class="form-label">Port IMAP</label>
-              <input type="number" name="IMAP_PORT" class="input" value="{{ config.get('IMAP_PORT', '993') }}" placeholder="993">
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-              <input type="checkbox" name="IMAP_USE_SSL" value="1" {% if config.get('IMAP_USE_SSL', '').lower() == 'true' %}checked{% endif %}>
-              <span style="font-size:14px; font-weight:600; color:var(--text-primary);">Utiliser SSL</span>
-            </label>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Nom d'utilisateur IMAP</label>
-            <input type="text" name="IMAP_USERNAME" class="input" value="{{ config.get('IMAP_USERNAME', '') }}" placeholder="ex: support@example.com">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Mot de passe IMAP</label>
-            <input type="password" name="IMAP_PASSWORD" class="input" value="{{ config.get('IMAP_PASSWORD', '') }}" placeholder="Laissez vide pour conserver l'actuel si configuré">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Intervalle de vérification (secondes)</label>
-            <input type="number" name="IMAP_POLL_INTERVAL" class="input" value="{{ config.get('IMAP_POLL_INTERVAL', '60') }}" placeholder="60">
-            <small style="display:block; margin-top:4px; font-size:12px; color:var(--text-muted);">
-              Temps d'attente entre chaque vérification de la boîte de réception.
-            </small>
-          </div>
-        </div>
-      </div>
-
-      <!-- Section Globale -->
-      <div class="card card-raised">
-        <div class="card-header">
-          <h2 class="card-title">Paramètres Généraux</h2>
-        </div>
-        <div class="card-body" style="display:flex; flex-direction:column; gap:16px;">
-          <div class="form-group">
-            <label class="form-label">Fuseau Horaire</label>
-            <select name="TIMEZONE" class="select">
-              <option value="Africa/Tunis" {% if config.get('TIMEZONE') == 'Africa/Tunis' %}selected{% endif %}>Africa/Tunis</option>
-              <option value="Europe/Paris" {% if config.get('TIMEZONE') == 'Europe/Paris' %}selected{% endif %}>Europe/Paris</option>
-              <option value="UTC" {% if config.get('TIMEZONE') == 'UTC' %}selected{% endif %}>UTC</option>
-            </select>
-          </div>
-          
-          <div class="alert alert-info" style="margin-top:24px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            <div>
-              <p style="margin:0; font-size:13px;">Les modifications apportées à ces paramètres sont enregistrées dans le fichier de configuration environnemental (<code>.env</code>). Un redémarrage de l'application peut être nécessaire pour que tous les changements prennent effet.</p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="card-footer" style="padding: 16px 20px; border-top: 1px solid var(--border-subtle); display:flex; justify-content:flex-end;">
-          <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 600;">Enregistrer les modifications</button>
-        </div>
-      </div>
-
-    </div>
->>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
   </form>
 </div>
 {% endblock %}

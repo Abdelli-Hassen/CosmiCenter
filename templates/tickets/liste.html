@@ -262,7 +262,7 @@
           <td>
             <div style="display: flex; align-items: center; gap: 6px;" title="Priorité: {{ ticket.priorite|capitalize }}">
               <span class="priority-dot dot-{{ ticket.priorite }}"></span>
-              <span style="font-size: 13px; font-weight: 500; color: var(--text-primary); text-transform: capitalize;">{{ ticket.priorite }}</span>
+              <span class="priority-text-{{ ticket.priorite }}" style="font-size: 13px; font-weight: 500; text-transform: capitalize;">{{ ticket.priorite }}</span>
             </div>
           </td>
           

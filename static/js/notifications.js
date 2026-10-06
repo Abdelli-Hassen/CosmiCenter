@@ -377,7 +377,6 @@
             const notifs = data.data.unread_notifications;
             const msgs = data.data.unread_messages;
 
-<<<<<<< HEAD
             // Handle new notifications (Toast + Dropdown update)
             const previousNotifs = window._lastNotifsCount !== undefined ? window._lastNotifsCount : notifs;
             window._lastNotifsCount = notifs;
@@ -421,8 +420,6 @@
               }
             }
 
-=======
->>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
             // Top Bell Badge
             const topBadge = document.getElementById('notifBadge');
             if (topBadge) {
@@ -444,52 +441,49 @@
             }
           }
         }).catch(err => console.error(err));
-<<<<<<< HEAD
     }, 2500); // 2.5 second polling
-=======
-    }, 1000); // 1 second polling for instant updates
->>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
   }
 
-  function init() {
-    convertFlashAlerts();
-    processDataFlash();
-    processFlashDivs();
-    initNotificationPanel();
-    startPollingNotifications();
-  }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+    function init() {
+      convertFlashAlerts();
+      processDataFlash();
+      processFlashDivs();
+      initNotificationPanel();
+      startPollingNotifications();
+    }
 
-  // ─── Export ────────────────────────────────────────────────────────────────
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
 
-  window.CHUB = window.CHUB || {};
-  window.CHUB.toast = {
-    show: show,
-    success: success,
-    error: error,
-    warning: warning,
-    info: info,
-  };
+    // ─── Export ────────────────────────────────────────────────────────────────
 
-  // Mark ticket notification as read when visiting ticket
-  document.addEventListener('DOMContentLoaded', () => {
-    const match = window.location.pathname.match(/\/tickets\/(\d+)/);
-    if (match) {
+    window.CHUB = window.CHUB || {};
+    window.CHUB.toast = {
+      show: show,
+      success: success,
+      error: error,
+      warning: warning,
+      info: info,
+    };
+
+    // Mark ticket notification as read when visiting ticket
+    document.addEventListener('DOMContentLoaded', () => {
+      const match = window.location.pathname.match(/\/tickets\/(\d+)/);
+      if (match) {
         const ticketId = match[1];
         fetch(`/api/notifications/tickets/${ticketId}/mark-read`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'}
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
         });
-    }
-    
-    // Also mark chat messages read when visiting chat
-    if (window.location.pathname.includes('/chat')) {
+      }
+
+      // Also mark chat messages read when visiting chat
+      if (window.location.pathname.includes('/chat')) {
         fetch('/api/notifications/chat/mark-read', { method: 'POST' });
-    }
-  });
-})();
+      }
+    });
+  }) ();

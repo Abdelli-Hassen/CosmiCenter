@@ -81,16 +81,16 @@
   --status-cancelled-border: rgba(154, 154, 165, 0.25);
 
   /* ─── Priority ───────────────────────────────────────────── */
-  --priority-critical:    #9B1030;
-  --priority-critical-bg: rgba(155, 16, 48, 0.10);
-  --priority-urgent:      #E8213F;
-  --priority-urgent-bg:   rgba(232, 33, 63, 0.10);
-  --priority-high:        #F97316;
-  --priority-high-bg:     rgba(249, 115, 22, 0.10);
-  --priority-medium:      #2F6BFF;
-  --priority-medium-bg:   rgba(47, 107, 255, 0.10);
-  --priority-low:         #9A9AA5;
-  --priority-low-bg:      rgba(154, 154, 165, 0.10);
+  --priority-critical:    #EF4444;
+  --priority-critical-bg: rgba(239, 68, 68, 0.10);
+  --priority-urgent:      #F97316;
+  --priority-urgent-bg:   rgba(249, 115, 22, 0.10);
+  --priority-high:        #EAB308;
+  --priority-high-bg:     rgba(234, 179, 8, 0.10);
+  --priority-medium:      #3B82F6;
+  --priority-medium-bg:   rgba(59, 130, 246, 0.10);
+  --priority-low:         #9CA3AF;
+  --priority-low-bg:      rgba(156, 163, 175, 0.10);
 
   /* ─── AI ─────────────────────────────────────────────────── */
   --ai-primary:     #7A5AF8;
