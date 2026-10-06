@@ -111,10 +111,10 @@ small  { font-size: var(--text-xs); color: var(--text-muted); }
 .chrome-bar {
   height: var(--chrome-height);
   min-height: var(--chrome-height);
-  background: color-mix(in srgb, var(--shell) 85%, transparent);
+  background: var(--shell-glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid color-mix(in srgb, var(--shell-border) 80%, transparent);
+  border-bottom: 1px solid var(--shell-border);
   box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
@@ -327,10 +327,10 @@ small  { font-size: var(--text-xs); color: var(--text-muted); }
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
   height: 100%;
-  background: color-mix(in srgb, var(--surface-1) 85%, transparent);
+  background: var(--surface-1-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid color-mix(in srgb, var(--border-subtle) 80%, transparent);
+  border-right: 1px solid var(--border-subtle);
   box-shadow: 4px 0 24px -4px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;

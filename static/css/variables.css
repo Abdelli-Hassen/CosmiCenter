@@ -26,6 +26,7 @@
 :root:not([data-theme="dark"]) {
   /* ─── Shell (sidebar, chrome) - Light Mode ─────────────── */
   --shell:          #FFFFFF;
+  --shell-glass:    rgba(255, 255, 255, 0.85);
   --shell-1:        #F8FAFC;
   --shell-2:        #F1F5F9;
   --shell-3:        #E2E8F0;
@@ -35,6 +36,7 @@
   /* ─── Surfaces (Light mode — default) ───────────────────── */
   --surface-base:   var(--cream);
   --surface-1:      #FFFFFF;
+  --surface-1-glass: rgba(255, 255, 255, 0.85);
   --surface-2:      #F4F0EB;
   --surface-3:      #EDE8E1;
   --surface-4:      #E0D9D0;
@@ -225,6 +227,7 @@
 [data-theme="dark"] {
   /* Shell (Deep Space) */
   --shell:          var(--space);
+  --shell-glass:    rgba(20, 18, 43, 0.85);
   --shell-1:        #1C1A36;
   --shell-2:        #25233F;
   --shell-3:        #302E4E;
@@ -234,6 +237,7 @@
   /* Surfaces */
   --surface-base:   var(--shell);
   --surface-1:      var(--shell-1);
+  --surface-1-glass: rgba(28, 26, 54, 0.85);
   --surface-2:      var(--shell-2);
   --surface-3:      var(--shell-3);
   --surface-4:      var(--space-3);

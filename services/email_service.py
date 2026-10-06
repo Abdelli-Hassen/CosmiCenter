@@ -23,7 +23,8 @@ def send_email_notification(app, subject, recipients, html_body):
             mail_port = app.config.get('MAIL_PORT')
             mail_user = app.config.get('MAIL_USERNAME')
             mail_pass = app.config.get('MAIL_PASSWORD')
-            mail_use_tls = app.config.get('MAIL_USE_TLS')
+            mail_use_tls = app.config.get('MAIL_USE_TLS', False)
+            mail_use_ssl = app.config.get('MAIL_USE_SSL', False)
             
             if not mail_server or not mail_user or not mail_pass:
                 logger.warning("Configuration SMTP manquante, email non envoyé.")
@@ -36,11 +37,12 @@ def send_email_notification(app, subject, recipients, html_body):
             msg.add_alternative(html_body, subtype='html')
             
             try:
-                if mail_use_tls:
-                    server = smtplib.SMTP(mail_server, mail_port)
-                    server.starttls()
-                else:
+                if mail_use_ssl:
                     server = smtplib.SMTP_SSL(mail_server, mail_port)
+                else:
+                    server = smtplib.SMTP(mail_server, mail_port)
+                    if mail_use_tls:
+                        server.starttls()
                     
                 server.login(mail_user, mail_pass)
                 server.send_message(msg)

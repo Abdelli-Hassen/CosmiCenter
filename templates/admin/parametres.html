@@ -34,6 +34,10 @@
             <input type="checkbox" name="MAIL_USE_TLS" id="use_tls" {% if config.get('MAIL_USE_TLS', '').lower() == 'true' %}checked{% endif %}>
             <label for="use_tls" style="margin:0; font-size:14px; color:var(--text-secondary);">Utiliser TLS (Sécurité)</label>
           </div>
+          <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" name="MAIL_USE_SSL" id="use_ssl" {% if config.get('MAIL_USE_SSL', '').lower() == 'true' %}checked{% endif %}>
+            <label for="use_ssl" style="margin:0; font-size:14px; color:var(--text-secondary);">Utiliser SSL (Port 465)</label>
+          </div>
           <div class="form-group">
             <label class="form-label">Nom d'utilisateur (Email)</label>
             <input type="text" name="MAIL_USERNAME" class="input" value="{{ config.get('MAIL_USERNAME', '') }}">

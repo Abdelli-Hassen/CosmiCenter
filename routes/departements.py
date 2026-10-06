@@ -15,7 +15,22 @@ def require_permission(permission_code):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated or not current_user.has_permission(permission_code):
-                flash('éccès non autorisé.', 'danger')
+                flash('Accès non autorisé.', 'danger')
+                return redirect(request.referrer or url_for('tickets.tableau_bord'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+def any_permission(*permission_codes):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated:
+                flash('Accès non autorisé.', 'danger')
+                return redirect(url_for('tickets.tableau_bord'))
+            has_perm = any(current_user.has_permission(code) for code in permission_codes)
+            if not has_perm:
+                flash('Accès non autorisé.', 'danger')
                 return redirect(request.referrer or url_for('tickets.tableau_bord'))
             return f(*args, **kwargs)
         return decorated_function
@@ -192,10 +207,15 @@ def detail(id):
 
 @departements_bp.route('/<string:id>/modifier', methods=['GET', 'POST'])
 @login_required
-@require_permission('departements.modifier')
+@any_permission('departements.modifier', 'departements.modifier_propre')
 def modifier(id):
-    """Modifier un département"""
     departement = Departement.query.get_or_404(id)
+    
+    # Check fine-grained permissions
+    if not (current_user.has_permission('departements.modifier') or 
+            (current_user.has_permission('departements.modifier_propre') and current_user.departement_id == departement.id)):
+        flash('Accès non autorisé. Vous ne pouvez modifier que votre propre département.', 'danger')
+        return redirect(url_for('departements.liste'))
     
     if request.method == 'POST':
         nom = request.form.get('nom', '').strip()
@@ -278,10 +298,16 @@ def modifier(id):
 
 @departements_bp.route('/<string:id>/supprimer', methods=['POST'])
 @login_required
-@require_permission('departements.modifier')
+@any_permission('departements.modifier', 'departements.modifier_propre')
 def supprimer(id):
     """Supprimer un département"""
     departement = Departement.query.get_or_404(id)
+    
+    # Check fine-grained permissions
+    if not (current_user.has_permission('departements.modifier') or 
+            (current_user.has_permission('departements.modifier_propre') and current_user.departement_id == departement.id)):
+        flash('Accès non autorisé. Vous ne pouvez supprimer que votre propre département.', 'danger')
+        return redirect(url_for('departements.liste'))
     
     # Vérifier s'il y a des dépendances
     if departement.membres:
@@ -306,10 +332,17 @@ def supprimer(id):
 
 @departements_bp.route('/<string:id>/toggle-actif', methods=['POST'])
 @login_required
-@require_permission('departements.modifier')
+@any_permission('departements.modifier', 'departements.modifier_propre')
 def toggle_actif(id):
     """éctiver/Désactiver un département"""
     departement = Departement.query.get_or_404(id)
+    
+    # Check fine-grained permissions
+    if not (current_user.has_permission('departements.modifier') or 
+            (current_user.has_permission('departements.modifier_propre') and current_user.departement_id == departement.id)):
+        flash('Accès non autorisé. Vous ne pouvez modifier que votre propre département.', 'danger')
+        return redirect(url_for('departements.liste'))
+            
     departement.actif = not departement.actif
     
     try:
