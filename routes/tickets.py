@@ -333,7 +333,7 @@ def nouveau():
                 current_app._get_current_object(),
                 f"Nouveau Ticket : [{ticket.numero}] {ticket.titre}",
                 recipients,
-                f"<p>Le ticket <b>{ticket.numero}</b> a été créé avec succès.</p><p>Description: {ticket.description}</p><p><a href='{url_for('tickets.detail', ticket_id=ticket.id, _external=True)}'>Voir le ticket</a></p>"
+                render_template('emails/nouveau_ticket.html', ticket=ticket, ticket_url=f"https://hub.cosmitto.tn{url_for('tickets.detail', ticket_id=ticket.id)}")
             )
             
             # Créer les notifications UI

@@ -574,7 +574,7 @@
         </div>
 
         {% if ticket.assigne_a %}
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px; margin-top:20px;">Assigné à</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px; margin-top:20px;">Assigné à (Agent)</div>
         <div class="user-row">
           <div class="modern-avatar" style="width:32px; height:32px;">
             {% if ticket.assigne_a.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + ticket.assigne_a.photo_profil) }}" alt="">
@@ -583,6 +583,17 @@
           <div class="user-info">
             <span class="user-name">{{ ticket.assigne_a.prenom }} {{ ticket.assigne_a.nom }}</span>
             {% if ticket.assigne_a.departement %}<span class="user-sub">{{ ticket.assigne_a.departement.nom }}</span>{% endif %}
+          </div>
+        </div>
+        {% elif ticket.departement %}
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px; margin-top:20px;">Assigné à (Département)</div>
+        <div class="user-row">
+          <div class="modern-avatar" style="width:32px; height:32px; background:var(--surface-raised); color:var(--text-primary); border:1px solid var(--border-subtle);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+          </div>
+          <div class="user-info">
+            <span class="user-name">{{ ticket.departement.nom }}</span>
+            <span class="user-sub">Tout le département</span>
           </div>
         </div>
         {% endif %}

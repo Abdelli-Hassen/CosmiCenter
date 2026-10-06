@@ -49,6 +49,10 @@ def send_email_notification(app, subject, recipients, html_body):
                     msg['Subject'] = subject
                     msg['From'] = sender
                     msg['To'] = recipient
+                    
+                    # Add plain text fallback first (required for proper multipart/alternative MIME structure)
+                    msg.set_content(f"Nouveau ticket créé: {subject}\n\nOuvrez cet email dans un client compatible HTML pour voir les détails.")
+                    # Then add the HTML part
                     msg.add_alternative(html_body, subtype='html')
                     
                     try:
