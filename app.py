@@ -25,6 +25,10 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+# Silence noisy SQLAlchemy query logs
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+logging.getLogger('sqlalchemy.pool').setLevel(logging.WARNING)
+logging.getLogger('sqlalchemy.dialects').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # Migration
@@ -107,6 +111,7 @@ def create_app(config_name='default'):
             # Charger les notifications
             g.user_notifications = Notification.query.filter_by(utilisateur_id=current_user.id).order_by(Notification.date_creation.desc()).limit(20).all()
             g.notifications_non_lues = sum(1 for n in g.user_notifications if not n.lue)
+            g.ticket_notifs_count = sum(1 for n in g.user_notifications if not n.lue and getattr(n, 'type_notification', '') == 'ticket')
     
     # Contexte global pour les templates
     @app.context_processor
@@ -116,6 +121,7 @@ def create_app(config_name='default'):
             'app_name': app.config['APP_NAME'],
             'app_version': app.config['APP_VERSION'],
             'notifications_count': getattr(g, 'notifications_non_lues', 0),
+            'ticket_notifs_count': getattr(g, 'ticket_notifs_count', 0),
             'notifications': getattr(g, 'user_notifications', [])
         }
     
@@ -203,14 +209,6 @@ def create_app(config_name='default'):
         else:
             print('Opération annulée.')
     
-    # Initialize background services
-    from services.email_service import start_imap_polling
-    if not app.config['TESTING'] and not app.debug:
-        # Ne pas démarrer le polling multiple fois en mode debug (à cause du reloader)
-        # Mais pour permettre au développeur de tester, on démarre si ce n'est pas le process "werzeug" master
-        if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
-            start_imap_polling(app)
-            
     return app
 
 

@@ -296,17 +296,37 @@ def marquer_notifications_lues():
 def poll_notifications():
     from models import Notification, Message, db
     
-    unread_notifs = Notification.query.filter_by(
+    notifs = Notification.query.filter_by(
         utilisateur_id=current_user.id,
         lue=False
-    ).count()
+    ).order_by(Notification.date_creation.desc()).limit(20).all()
+    
+    unread_notifs = len(notifs)
     
     unread_msgs = Message.query.filter_by(
         receiver_id=current_user.id,
         is_read=False
     ).count()
     
+    notif_list = []
+    for n in notifs:
+        notif_list.append({
+            'id': n.id,
+            'titre': n.titre,
+            'message': n.message,
+            'lien': n.lien,
+            'date': n.date_creation.strftime('%d/%m/%Y %H:%M')
+        })
+    
+    unread_tickets = Notification.query.filter_by(
+        utilisateur_id=current_user.id,
+        type_notification='ticket',
+        lue=False
+    ).count()
+
     return json_response(data={
         'unread_notifications': unread_notifs,
-        'unread_messages': unread_msgs
+        'unread_messages': unread_msgs,
+        'unread_tickets': unread_tickets,
+        'notifications': notif_list
     })

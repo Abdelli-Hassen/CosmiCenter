@@ -377,6 +377,35 @@
             const notifs = data.data.unread_notifications;
             const msgs = data.data.unread_messages;
 
+            // Handle new notifications (Toast + Dropdown update)
+            const previousNotifs = window._lastNotifsCount !== undefined ? window._lastNotifsCount : notifs;
+            window._lastNotifsCount = notifs;
+            
+            if (notifs > previousNotifs && data.data.notifications && data.data.notifications.length > 0) {
+              const newest = data.data.notifications[0];
+              // Only show toast for non-chat notifications
+              if (newest.titre !== 'Nouveau message') {
+                show({ title: newest.titre, message: newest.message, type: 'info' });
+              }
+              
+              // Update dropdown HTML
+              const scroll = document.getElementById('notifScroll');
+              if (scroll) {
+                let html = '';
+                data.data.notifications.forEach(n => {
+                  html += `<a href="${n.lien || '#'}" class="notif-item unread" style="text-decoration:none;">
+                    <div class="notif-unread-dot"></div>
+                    <div class="notif-item-content">
+                      <div class="notif-item-title">${escapeHtml(n.titre)}</div>
+                      ${n.message ? `<div class="notif-item-meta" style="margin-top:2px;">${escapeHtml(n.message)}</div>` : ''}
+                      <div class="notif-item-meta" style="margin-top:4px;"><span>${escapeHtml(n.date)}</span></div>
+                    </div>
+                  </a>`;
+                });
+                scroll.innerHTML = html;
+              }
+            }
+
             // Top Bell Badge
             const topBadge = document.getElementById('notifBadge');
             if (topBadge) {
@@ -384,11 +413,14 @@
               topBadge.style.display = notifs > 0 ? 'inline-flex' : 'none';
             }
 
-            // Tickets nav badge
-            const ticketsBadge = document.getElementById('navTicketsBadge');
-            if (ticketsBadge) {
-              ticketsBadge.textContent = notifs;
-              ticketsBadge.style.display = notifs > 0 ? 'inline-block' : 'none';
+            // Tickets nav badge (Dots)
+            const tousTicketsBadge = document.getElementById('navTousTicketsBadge');
+            if (tousTicketsBadge) {
+              tousTicketsBadge.style.display = data.data.unread_tickets > 0 ? 'inline-block' : 'none';
+            }
+            const mesTicketsBadge = document.getElementById('navMesTicketsBadge');
+            if (mesTicketsBadge) {
+              mesTicketsBadge.style.display = data.data.unread_tickets > 0 ? 'inline-block' : 'none';
             }
 
             // Messagerie nav badge
@@ -398,7 +430,7 @@
             }
           }
         }).catch(err => console.error(err));
-    }, 1000); // 1 second polling for instant updates
+    }, 5000); // 5 second polling
   }
 
   function init() {

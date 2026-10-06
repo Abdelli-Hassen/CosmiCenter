@@ -893,3 +893,30 @@ def migrate_db():
         return "Migration successful"
     except Exception as e:
         return f"Migration failed: {str(e)}"
+
+
+@admin_bp.route('/api/test_davmail', methods=['POST'])
+@login_required
+def test_davmail():
+    """Test SMTP connection to DavMail proxy."""
+    import smtplib
+    from flask import current_app, jsonify
+    server_host = current_app.config.get('MAIL_SERVER', '127.0.0.1')
+    server_port = int(current_app.config.get('MAIL_PORT', 1025))
+    user = current_app.config.get('MAIL_USERNAME', '')
+    password = current_app.config.get('MAIL_PASSWORD', '')
+    use_ssl = str(current_app.config.get('MAIL_USE_SSL', 'false')).lower() == 'true'
+    use_tls = str(current_app.config.get('MAIL_USE_TLS', 'false')).lower() == 'true'
+    try:
+        if use_ssl:
+            conn = smtplib.SMTP_SSL(server_host, server_port, timeout=5)
+        else:
+            conn = smtplib.SMTP(server_host, server_port, timeout=5)
+            if use_tls:
+                conn.starttls()
+        if user and password:
+            conn.login(user, password)
+        conn.quit()
+        return jsonify({'success': True, 'message': f'Connexion reussie a {server_host}:{server_port}'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
