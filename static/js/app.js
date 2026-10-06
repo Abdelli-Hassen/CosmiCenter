@@ -1,5 +1,5 @@
 /**
- * CosmittoHUB — Main Entry Point
+ * Cosmicenter — Main Entry Point
  * Initializes all modules, sets up global UI behaviours, and exposes
  * the window.CHUB namespace with shared utilities.
  */

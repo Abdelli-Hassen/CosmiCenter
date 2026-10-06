@@ -1,8 +1,8 @@
-# CosmittoHUB — Plateforme de gestion opérationnelle
+# Cosmicenter — Plateforme de gestion opérationnelle
 
-![CosmittoHUB Logo](static/images/logo-cosmitto.png)
+![Cosmicenter Logo](static/images/logo-cosmitto.png)
 
-**CosmittoHUB** est le système de gestion de tickets et d'incidents interne de **Cosmitto Coffee**, réseau multi-points de vente (multi-POS) de cafés. Il centralise le suivi des incidents, demandes, maintenances et besoins opérationnels de l'ensemble des points de vente.
+**Cosmicenter** est le système de gestion de tickets et d'incidents interne de **Cosmitto Coffee**, réseau multi-points de vente (multi-POS) de cafés. Il centralise le suivi des incidents, demandes, maintenances et besoins opérationnels de l'ensemble des points de vente.
 
 ---
 
@@ -24,7 +24,7 @@
 
 ## Contexte métier
 
-Cosmitto Coffee opère plusieurs points de vente (POS). CosmittoHUB permet à chaque site de remonter des incidents ou demandes vers les équipes centrales (Support IT, Maintenance, Stock, Qualité, RH, Finances, SI), avec suivi, priorisation et résolution traçable.
+Cosmitto Coffee opère plusieurs points de vente (POS). Cosmicenter permet à chaque site de remonter des incidents ou demandes vers les équipes centrales (Support IT, Maintenance, Stock, Qualité, RH, Finances, SI), avec suivi, priorisation et résolution traçable.
 
 ---
 
@@ -137,7 +137,7 @@ DATABASE_URL=postgresql://user:testtest@localhost:5432/cosmitto_hub
 ## Structure
 
 ```
-CosmittoHUB/
+Cosmicenter/
 ├── app.py              # Point d'entrée Flask
 ├── config.py           # Configuration par environnement
 ├── models.py           # 14 modèles SQLAlchemy

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}{{ idee.titre }} — Boîte à Idées{% endblock %}
+
+{% block extra_head %}
+<style>
+.page { padding: 32px 48px; max-width: 1400px; margin: 0 auto; }
+.idea-detail-layout { display: flex; gap: 32px; margin-top: 32px; }
+.idea-detail-main {
+    flex: 1;
+    background: var(--surface-raised, #27293D);
+    border: 1px solid var(--border-subtle, #333346);
+    border-radius: 24px;
+    padding: 48px;
+    color: var(--text-primary);
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
+}
+.idea-detail-sidebar {
+    width: 320px;
+    background: var(--surface-raised, #27293D);
+    border: 1px solid var(--border-subtle, #333346);
+    border-radius: 24px;
+    padding: 40px 32px;
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    height: fit-content;
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
+}
+.idea-content {
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+}
+.vote-number { font-size: 4rem; font-weight: 900; color: var(--brand, #E71A37); margin-bottom: 8px; line-height: 1; letter-spacing: -0.05em; }
+.vote-label { color: var(--text-muted); font-weight: 700; margin-bottom: 32px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.1em; }
+.btn-vote { width: 100%; padding: 14px; border-radius: 12px; display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: 700; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(231, 26, 55, 0.3); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page">
+    <a href="{{ url_for('boite_idees.index') }}" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; font-weight: 600; padding: 8px 16px; background: var(--surface-2); border-radius: 99px; transition: all 0.2s;" onmouseover="this.style.background='var(--surface-3)'; this.style.color='var(--text-primary)'" onmouseout="this.style.background='var(--surface-2)'; this.style.color='var(--text-muted)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Retour aux idées
+    </a>
+    
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+            <h1 style="font-weight: 900; font-size: 3rem; color: var(--text-primary); margin: 0 0 16px 0; letter-spacing: -0.03em;">{{ idee.titre }}</h1>
+            <div style="display: flex; align-items: center; gap: 32px; color: var(--text-muted); font-size: 1rem; font-weight: 600;">
+                <span style="display:flex; align-items:center; gap:8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    {{ idee.auteur.prenom }} {{ idee.auteur.nom }}
+                </span>
+                <span style="display:flex; align-items:center; gap:8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    {{ idee.date_soumission.strftime('%d/%m/%Y') }}
+                </span>
+            </div>
+        </div>
+        <span style="background: rgba(231, 26, 55, 0.1); color: var(--brand, #E71A37); font-weight: 800; padding: 8px 16px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.05em;">
+            {{ idee.statut }}
+        </span>
+    </div>
+
+    <div class="idea-detail-layout">
+        <div class="idea-detail-main">
+            <div class="idea-content">
+                {{ idee.description }}
+            </div>
+        </div>
+        <div class="idea-detail-sidebar">
+            <div class="vote-number">{{ idee.votes }}</div>
+            <div class="vote-label">Votes</div>
+            <form action="{{ url_for('boite_idees.voter', id=idee.id) }}" method="POST" style="width:100%;">
+                <button type="submit" class="btn btn-primary btn-vote" {% if has_voted %}disabled style="opacity:0.6; box-shadow:none; cursor:not-allowed;"{% endif %}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                    {% if has_voted %}Déjà voté{% else %}Voter{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

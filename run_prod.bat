@@ -1,13 +1,13 @@
 @echo off
-title CosmittoHUB - PRODUCTION
+title Cosmicenter - PRODUCTION
 
 REM =========================================
-REM CosmittoHUB Production Launcher
+REM Cosmicenter Production Launcher
 REM =========================================
 
 echo.
 echo ========================================
-echo   CosmittoHUB - PREPARATION DU SERVEUR
+echo   Cosmicenter - PREPARATION DU SERVEUR
 echo ========================================
 echo.
 

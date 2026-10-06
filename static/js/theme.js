@@ -1,5 +1,5 @@
 /**
- * CosmittoHUB — Theme Management
+ * Cosmicenter — Theme Management
  * Handles dark/light theme toggle, persistence, and system preference.
  */
 

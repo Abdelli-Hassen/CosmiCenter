@@ -1,5 +1,5 @@
 /**
- * CosmittoHUB — Toast Notifications & Notification Panel
+ * Cosmicenter — Toast Notifications & Notification Panel
  * Provides window.CHUB.toast API and notification panel toggle.
  */
 
@@ -457,4 +457,21 @@
     warning: warning,
     info: info,
   };
+
+  // Mark ticket notification as read when visiting ticket
+  document.addEventListener('DOMContentLoaded', () => {
+    const match = window.location.pathname.match(/\/tickets\/(\d+)/);
+    if (match) {
+        const ticketId = match[1];
+        fetch(`/api/notifications/tickets/${ticketId}/mark-read`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+    }
+    
+    // Also mark chat messages read when visiting chat
+    if (window.location.pathname.includes('/chat')) {
+        fetch('/api/notifications/chat/mark-read', { method: 'POST' });
+    }
+  });
 })();

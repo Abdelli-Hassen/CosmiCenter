@@ -1,4 +1,4 @@
-# CosmittoHUB — Enterprise UX/UI Design Proposal
+# Cosmicenter — Enterprise UX/UI Design Proposal
 ## A Premium Redesign Blueprint by the Product Design Studio
 
 > **Document Type**: UX/UI Enhancement Proposal — Interaction Design Specification  
@@ -26,13 +26,13 @@
 
 ### 1.1 The Core UX Thesis
 
-**"CosmittoHUB should feel like the sharpest tool in the room."**
+**"Cosmicenter should feel like the sharpest tool in the room."**
 
 Not the loudest. Not the most colorful. The sharpest — the one that responds before you finish thinking, that surfaces the right information before you know you need it, that disappears into your workflow rather than demanding your attention.
 
 Enterprise software has failed its users for two decades because it confuses *capability* with *complexity*, and *features* with *friction*. Every additional click in a tool used 200 times a day costs 10 seconds × 200 = 33 minutes of productivity lost — per user, per day. With 50 agents, that's 27+ hours of organizational productivity dissolved into bad UX every single day.
 
-CosmittoHUB's UX philosophy is built on a single, non-negotiable principle:
+Cosmicenter's UX philosophy is built on a single, non-negotiable principle:
 
 > **Intelligence should reduce work, not add to it. Every interaction must earn its place.**
 
@@ -94,7 +94,7 @@ Every screen is evaluated against four cognitive load dimensions:
 
 ### 1.6 AI-Assisted Workflow Philosophy
 
-AI in CosmittoHUB is *ambient*, not *modal*. It never interrupts. It never demands attention. It offers — and waits.
+AI in Cosmicenter is *ambient*, not *modal*. It never interrupts. It never demands attention. It offers — and waits.
 
 The interaction model: **AI presents → User decides → User controls**.
 
@@ -1175,7 +1175,7 @@ The shimmer animation runs simultaneously across all skeletons on a page (synchr
 
 ### 9.1 The Command Center — Power User Interface
 
-For agents and managers who live in CosmittoHUB 8+ hours a day:
+For agents and managers who live in Cosmicenter 8+ hours a day:
 
 **Command center mode**: Activated by `⌘⇧K` (extended command palette). This is distinct from the standard `⌘K` palette — it includes system commands, admin actions, and developer-grade utilities:
 ```
@@ -1704,7 +1704,7 @@ Every empty state follows a consistent structure:
 
 ---
 
-*This document represents the complete UX/UI enhancement specification for CosmittoHUB.*  
+*This document represents the complete UX/UI enhancement specification for Cosmicenter.*  
 *Implementation should proceed section by section, with Phase 0 prioritizing §2 (Global UI) and §3 (Ticket Management) as the highest-impact surfaces.*
 
 *Design tokens (§10.2) and typography (§10.1) should be implemented before any component work begins — they are the foundation everything else is built on.*

@@ -548,3 +548,25 @@ class Suggestion(db.Model):
     def __repr__(self):
         return f'<Suggestion {self.titre}>'
 
+
+
+class CategorieConnaissance(db.Model):
+    __tablename__ = 'categories_connaissance'
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    nom = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    icone = db.Column(db.String(50), default='folder')
+    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+    articles = db.relationship('ArticleConnaissance', backref='categorie', lazy=True)
+
+class ArticleConnaissance(db.Model):
+    __tablename__ = 'articles_connaissance'
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    titre = db.Column(db.String(255), nullable=False)
+    contenu = db.Column(db.Text, nullable=False)
+    categorie_id = db.Column(db.String(36), db.ForeignKey('categories_connaissance.id'), nullable=False)
+    auteur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id'))
+    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+    date_mise_a_jour = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    vues = db.Column(db.Integer, default=0)
+    statut = db.Column(db.String(20), default='publie')

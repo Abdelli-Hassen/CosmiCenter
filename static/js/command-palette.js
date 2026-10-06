@@ -1,5 +1,5 @@
 /**
- * CosmittoHUB — Command Palette
+ * Cosmicenter — Command Palette
  * Full ⌘K / Ctrl+K command palette with fuzzy search, keyboard navigation,
  * recent items persistence, and grouped results.
  */

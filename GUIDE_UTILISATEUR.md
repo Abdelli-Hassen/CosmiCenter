@@ -1,4 +1,4 @@
-# Guide Utilisateur — CosmittoHUB
+# Guide Utilisateur — Cosmicenter
 
 **Plateforme de gestion des opérations — Cosmitto Coffee**
 
@@ -29,7 +29,7 @@
 
 ![Page de connexion](static/images/guide/01-connexion.png)
 
-Pour accéder à CosmittoHUB, rendez-vous sur l'URL fournie par votre administrateur.
+Pour accéder à Cosmicenter, rendez-vous sur l'URL fournie par votre administrateur.
 
 **Procédure :**
 
@@ -216,7 +216,7 @@ Cliquez sur **Nouvelle catégorie** et renseignez :
 
 ![Rôles](static/images/guide/10-roles.png)
 
-Les **rôles** définissent ce que chaque utilisateur peut faire dans CosmittoHUB.
+Les **rôles** définissent ce que chaque utilisateur peut faire dans Cosmicenter.
 
 **Rôles prédéfinis :**
 
@@ -305,4 +305,4 @@ Pour toute question ou signalement d'anomalie sur la plateforme elle-même, cont
 
 ---
 
-*CosmittoHUB — Gestion des opérations Cosmitto Coffee · Documentation interne*
+*Cosmicenter — Gestion des opérations Cosmitto Coffee · Documentation interne*

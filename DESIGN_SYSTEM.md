@@ -1,4 +1,4 @@
-# CosmittoHUB - Premium Design System Guidelines
+# Cosmicenter - Premium Design System Guidelines
 
 This document outlines the core aesthetic principles, CSS structures, and interactive patterns used in the new "Performance des Agents" and "Agent Profile" dashboards. 
 

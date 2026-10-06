@@ -51,7 +51,7 @@ echo ═════════════════════════
 echo.
 
 REM Vérifier si la base de données PostgreSQL est initialisée
-python -c "import psycopg, sys; conn=psycopg.connect('postgresql+psycopg://CosHub:testtest@localhost:5432/CosHub'.replace('postgresql+psycopg','postgresql')); cur=conn.cursor(); cur.execute(\"SELECT COUNT(*) FROM pg_tables WHERE schemaname='public'\"); n=cur.fetchone()[0]; conn.close(); sys.exit(0 if n>0 else 1)" >nul 2>&1
+python -c "import psycopg, sys; conn=psycopg.connect('postgresql+psycopg://Cosmicenter:testtest@localhost:5432/Cosmicenter'.replace('postgresql+psycopg','postgresql')); cur=conn.cursor(); cur.execute(\"SELECT COUNT(*) FROM pg_tables WHERE schemaname='public'\"); n=cur.fetchone()[0]; conn.close(); sys.exit(0 if n>0 else 1)" >nul 2>&1
 if errorlevel 1 (
     echo La base de données PostgreSQL n'est pas encore initialisée.
     echo.
@@ -59,7 +59,7 @@ if errorlevel 1 (
     if /i "%init%"=="O" (
         echo.
         echo Initialisation de la base de données...
-        set DATABASE_URL=postgresql+psycopg://CosHub:testtest@localhost:5432/CosHub
+        set DATABASE_URL=postgresql+psycopg://Cosmicenter:testtest@localhost:5432/Cosmicenter
         python scripts\init_db.py
         echo.
     )
@@ -82,7 +82,7 @@ echo ═════════════════════════
 echo.
 
 REM Lancer l'application
-set DATABASE_URL=postgresql+psycopg://CosHub:testtest@localhost:5432/CosHub
+set DATABASE_URL=postgresql+psycopg://Cosmicenter:testtest@localhost:5432/Cosmicenter
 python app.py
 
 pause

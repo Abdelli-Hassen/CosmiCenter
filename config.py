@@ -62,7 +62,7 @@ class Config:
     LOCKOUT_DURATION_MINUTES = 30
     
     # Application
-    APP_NAME = 'CosHub'
+    APP_NAME = 'Cosmicenter'
     APP_VERSION = '2.0.0'
     SUPPORT_EMAIL = 'support@example.com'
     

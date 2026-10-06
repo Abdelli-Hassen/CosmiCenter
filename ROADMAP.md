@@ -1,4 +1,4 @@
-# ROADMAP & TODO — CosmittoHUB
+# ROADMAP & TODO — Cosmicenter
 
 Ce document liste les fonctionnalités restantes pour finaliser la version 1.0, ainsi que les pistes d'amélioration pour faire évoluer l'application vers un standard d'entreprise complet (type Jira/Zendesk).
 
@@ -17,7 +17,7 @@ Ce document liste les fonctionnalités restantes pour finaliser la version 1.0, 
 ---
 
 ## 🚀 2. Fonctionnalités "Next-Level" (Pour la V2 et au-delà)
-*Ces éléments transformeront CosmittoHUB en une véritable plateforme d'entreprise.*
+*Ces éléments transformeront Cosmicenter en une véritable plateforme d'entreprise.*
 
 - [ ] **Intégration Email (Email-to-Ticket)**
   - Création automatique de tickets lorsqu'un utilisateur envoie un email à `support@example.com`.

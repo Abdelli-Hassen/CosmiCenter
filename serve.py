@@ -22,7 +22,7 @@ if __name__ == '__main__':
     host = os.getenv('FLASK_HOST', '0.0.0.0')
     
     print(f"=================================================")
-    print(f" CosmittoHUB - Mode PRODUCTION (Waitress)")
+    print(f" Cosmicenter - Mode PRODUCTION (Waitress)")
     print(f" Serveur en ecoute sur : http://{host}:{port}")
     print(f" Appuyez sur CTRL+C pour arreter le serveur")
     print(f"=================================================")
