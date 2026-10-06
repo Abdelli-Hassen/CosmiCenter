@@ -1,4 +1,4 @@
-"""
+﻿"""
 Routes de gestion des tickets pour CosmittoDesk
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
@@ -58,14 +58,6 @@ def tableau_bord():
 @login_required
 def liste():
     """Liste de tous les tickets"""
-    from models import Notification, db
-    from datetime import datetime
-    unread = Notification.query.filter_by(utilisateur_id=current_user.id, type_notification='ticket', lue=False).all()
-    if unread:
-        for n in unread:
-            n.lue = True
-            n.date_lecture = datetime.utcnow()
-        db.session.commit()
     # Filtres
     statut = request.args.get('statut')
     priorite = request.args.get('priorite')
@@ -134,14 +126,6 @@ def liste():
 @login_required
 def mes_tickets():
     """Liste de mes tickets"""
-    from models import Notification, db
-    from datetime import datetime
-    unread = Notification.query.filter_by(utilisateur_id=current_user.id, type_notification='ticket', lue=False).all()
-    if unread:
-        for n in unread:
-            n.lue = True
-            n.date_lecture = datetime.utcnow()
-        db.session.commit()
     # Filtres
     statut = request.args.get('statut')
     priorite = request.args.get('priorite')

@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
 from models import db, Message, Utilisateur
 from sqlalchemy import or_, and_, func, desc
-from datetime import datetime, timedelta
+from datetime import datetime
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 

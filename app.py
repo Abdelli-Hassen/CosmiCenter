@@ -25,10 +25,6 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-# Silence noisy SQLAlchemy query logs
-logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
-logging.getLogger('sqlalchemy.pool').setLevel(logging.WARNING)
-logging.getLogger('sqlalchemy.dialects').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # Migration
@@ -110,6 +106,13 @@ def create_app(config_name='default'):
         if current_user.is_authenticated:
             current_user.derniere_activite = datetime.utcnow()
             db.session.commit()
+<<<<<<< HEAD
+=======
+            
+            # Charger les notifications
+            g.user_notifications = Notification.query.filter_by(utilisateur_id=current_user.id).order_by(Notification.date_creation.desc()).limit(20).all()
+            g.notifications_non_lues = sum(1 for n in g.user_notifications if not n.lue)
+>>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
     
     # Contexte global pour les templates
     @app.context_processor
@@ -127,9 +130,14 @@ def create_app(config_name='default'):
             'now': datetime.now(),
             'app_name': app.config['APP_NAME'],
             'app_version': app.config['APP_VERSION'],
+<<<<<<< HEAD
             'notifications_count': notifications_non_lues,
             'ticket_notifs_count': ticket_notifs_count,
             'notifications': user_notifications
+=======
+            'notifications_count': getattr(g, 'notifications_non_lues', 0),
+            'notifications': getattr(g, 'user_notifications', [])
+>>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
         }
     
     # Filtres Jinja personnalisés
@@ -215,6 +223,7 @@ def create_app(config_name='default'):
             print('Base de données réinitialisée!')
         else:
             print('Opération annulée.')
+<<<<<<< HEAD
 
     @app.route('/admin/api/test_davmail', methods=['POST'])
     @login_required
@@ -249,6 +258,16 @@ def create_app(config_name='default'):
             return "Permissions updated! You can now delete this route."
         except Exception as e:
             return str(e)
+=======
+    
+    # Initialize background services
+    from services.email_service import start_imap_polling
+    if not app.config['TESTING'] and not app.debug:
+        # Ne pas démarrer le polling multiple fois en mode debug (à cause du reloader)
+        # Mais pour permettre au développeur de tester, on démarre si ce n'est pas le process "werzeug" master
+        if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
+            start_imap_polling(app)
+>>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
             
     return app
 

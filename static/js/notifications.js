@@ -377,6 +377,7 @@
             const notifs = data.data.unread_notifications;
             const msgs = data.data.unread_messages;
 
+<<<<<<< HEAD
             // Handle new notifications (Toast + Dropdown update)
             const previousNotifs = window._lastNotifsCount !== undefined ? window._lastNotifsCount : notifs;
             window._lastNotifsCount = notifs;
@@ -420,6 +421,8 @@
               }
             }
 
+=======
+>>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
             // Top Bell Badge
             const topBadge = document.getElementById('notifBadge');
             if (topBadge) {
@@ -427,14 +430,11 @@
               topBadge.style.display = notifs > 0 ? 'inline-flex' : 'none';
             }
 
-            // Tickets nav badge (Dots)
-            const tousTicketsBadge = document.getElementById('navTousTicketsBadge');
-            if (tousTicketsBadge) {
-              tousTicketsBadge.style.display = data.data.unread_tickets > 0 ? 'inline-block' : 'none';
-            }
-            const mesTicketsBadge = document.getElementById('navMesTicketsBadge');
-            if (mesTicketsBadge) {
-              mesTicketsBadge.style.display = data.data.unread_tickets > 0 ? 'inline-block' : 'none';
+            // Tickets nav badge
+            const ticketsBadge = document.getElementById('navTicketsBadge');
+            if (ticketsBadge) {
+              ticketsBadge.textContent = notifs;
+              ticketsBadge.style.display = notifs > 0 ? 'inline-block' : 'none';
             }
 
             // Messagerie nav badge
@@ -444,7 +444,11 @@
             }
           }
         }).catch(err => console.error(err));
+<<<<<<< HEAD
     }, 2500); // 2.5 second polling
+=======
+    }, 1000); // 1 second polling for instant updates
+>>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
   }
 
   function init() {
