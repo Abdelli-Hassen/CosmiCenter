@@ -298,12 +298,12 @@
     
     <div style="display:flex;align-items:center;gap:8px;">
       <span style="font-size:12px;font-weight:700;color:var(--text-muted);">Version</span>
-      <span class="status-badge" style="background:var(--surface-hover); color:var(--text-primary);">v2.1.0</span>
+      <span class="status-badge" style="background:var(--surface-hover); color:var(--text-primary);">v{{ config.get('APP_VERSION', '2.0.0') }}</span>
     </div>
     
     <div style="display:flex;align-items:center;gap:8px;">
       <span style="font-size:12px;font-weight:700;color:var(--text-muted);">Base de données</span>
-      <span class="status-badge resolu">Connectée</span>
+      <span class="status-badge resolu">{% if stats %}Connectée{% else %}Erreur{% endif %}</span>
     </div>
     
     <div style="margin-left:auto;">

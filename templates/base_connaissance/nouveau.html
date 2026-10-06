@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Nouvel article - Base de connaissance{% endblock %}
+{% block body_class %}page-base-connaissance{% endblock %}
+
+{% block content %}
+<div style="padding: 40px; max-width: 1000px; margin: 0 auto; animation: fade-in 0.4s ease-out;">
+    <div style="display:flex; align-items:center; gap:20px; margin-bottom: 40px;">
+        <a href="{{ url_for('base_connaissance.index') }}" class="btn btn-secondary" style="border-radius: 50%; width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; background: var(--surface-2); border: 1px solid var(--border-subtle); color: var(--text-muted); transition: all 0.2s;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </a>
+        <div>
+            <h1 style="font-size:32px; font-weight:800; color:var(--text-primary); margin:0; letter-spacing: -0.5px;">Créer un article</h1>
+            <p style="color: var(--text-muted); margin: 6px 0 0 0; font-size: 15px;">Ajoutez un nouveau document à la base de connaissances</p>
+        </div>
+    </div>
+
+    <form method="POST" style="background: rgba(30, 30, 35, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+        
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; margin-bottom: 32px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label for="titre" style="font-size:14px; font-weight:600; color:var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px;">Titre de l'article</label>
+                <input type="text" id="titre" name="titre" required placeholder="Saisissez un titre clair et descriptif..." style="width:100%; background: var(--surface-base); border: 1px solid var(--border-subtle); padding: 16px 20px; border-radius: 12px; color: var(--text-primary); font-size: 16px; outline: none; transition: all 0.2s box-shadow;" onfocus="this.style.borderColor='var(--brand)'; this.style.boxShadow='0 0 0 3px rgba(255, 51, 102, 0.15)'" onblur="this.style.borderColor='var(--border-subtle)'; this.style.boxShadow='none'">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label for="categorie_id" style="font-size:14px; font-weight:600; color:var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px;">Catégorie</label>
+                <div style="position: relative;">
+                    <select id="categorie_id" name="categorie_id" required style="width:100%; background: var(--surface-base); border: 1px solid var(--border-subtle); padding: 16px 20px; border-radius: 12px; color: var(--text-primary); font-size: 16px; outline: none; appearance: none; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='var(--brand)'; this.style.boxShadow='0 0 0 3px rgba(255, 51, 102, 0.15)'" onblur="this.style.borderColor='var(--border-subtle)'; this.style.boxShadow='none'">
+                        <option value="" disabled selected>Sélectionnez...</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.nom }}</option>
+                        {% endfor %}
+                    </select>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: none;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:40px; display: flex; flex-direction: column; gap: 8px;">
+            <label for="contenu" style="font-size:14px; font-weight:600; color:var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px;">Contenu de l'article</label>
+            <textarea id="contenu" name="contenu" required rows="18" placeholder="Rédigez le contenu détaillé de votre article ici... (Le support du Markdown sera bientôt disponible)" style="width:100%; background: var(--surface-base); border: 1px solid var(--border-subtle); padding: 20px; border-radius: 16px; color: var(--text-primary); font-size: 15px; outline: none; resize: vertical; font-family: var(--font-sans); line-height: 1.7; transition: all 0.2s;" onfocus="this.style.borderColor='var(--brand)'; this.style.boxShadow='0 0 0 3px rgba(255, 51, 102, 0.15)'" onblur="this.style.borderColor='var(--border-subtle)'; this.style.boxShadow='none'"></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.05); margin-top: -10px; padding-top: 30px;">
+            <span style="color: var(--text-muted); font-size: 13px;">Vérifiez vos informations avant de publier.</span>
+            <div style="display:flex; gap:16px;">
+                <a href="{{ url_for('base_connaissance.index') }}" class="btn btn-secondary" style="padding:14px 28px; border-radius: 12px; font-weight: 600; background: rgba(255,255,255,0.05); border: none;">Annuler</a>
+                <button type="submit" class="btn btn-primary" style="padding:14px 32px; border-radius: 12px; font-weight: 600; background: linear-gradient(135deg, var(--brand), #ff5e7e); box-shadow: 0 4px 15px rgba(255, 51, 102, 0.3); border: none;">Publier l'article</button>
+            </div>
+        </div>
+    </form>
+</div>
+<style>
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.1) !important; color: white !important; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 51, 102, 0.4) !important; }
+</style>
+{% endblock %}

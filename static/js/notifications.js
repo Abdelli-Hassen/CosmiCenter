@@ -300,9 +300,9 @@
   function processFlashDivs() {
     const flashContainer = document.getElementById('flashMessages');
     if (!flashContainer) return;
-    
+
     const messages = flashContainer.querySelectorAll('[data-flash-type]');
-    messages.forEach(function(msg) {
+    messages.forEach(function (msg) {
       const type = flashCategoryToType(msg.getAttribute('data-flash-type'));
       const text = msg.getAttribute('data-flash-message');
       if (text) {
@@ -377,35 +377,52 @@
             const notifs = data.data.unread_notifications;
             const msgs = data.data.unread_messages;
 
+<<<<<<< HEAD
             // Handle new notifications (Toast + Dropdown update)
             const previousNotifs = window._lastNotifsCount !== undefined ? window._lastNotifsCount : notifs;
             window._lastNotifsCount = notifs;
-            
-            if (notifs > previousNotifs && data.data.notifications && data.data.notifications.length > 0) {
-              const newest = data.data.notifications[0];
-              // Only show toast for non-chat notifications
-              if (newest.titre !== 'Nouveau message') {
-                show({ title: newest.titre, message: newest.message, type: 'info' });
+
+            if (notifs !== previousNotifs && data.data.notifications) {
+              if (notifs > previousNotifs && data.data.notifications.length > 0) {
+                const newest = data.data.notifications[0];
+                // Only show toast for non-chat notifications
+                if (newest.titre !== 'Nouveau message') {
+                  show({ title: newest.titre, message: newest.message, type: 'info' });
+                }
               }
-              
+
               // Update dropdown HTML
               const scroll = document.getElementById('notifScroll');
               if (scroll) {
-                let html = '';
-                data.data.notifications.forEach(n => {
-                  html += `<a href="${n.lien || '#'}" class="notif-item unread" style="text-decoration:none;">
-                    <div class="notif-unread-dot"></div>
-                    <div class="notif-item-content">
-                      <div class="notif-item-title">${escapeHtml(n.titre)}</div>
-                      ${n.message ? `<div class="notif-item-meta" style="margin-top:2px;">${escapeHtml(n.message)}</div>` : ''}
-                      <div class="notif-item-meta" style="margin-top:4px;"><span>${escapeHtml(n.date)}</span></div>
+                if (data.data.notifications.length === 0) {
+                  scroll.innerHTML = `
+                    <div class="empty-state">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                      </svg>
+                      <div>Aucune nouvelle notification</div>
                     </div>
-                  </a>`;
-                });
-                scroll.innerHTML = html;
+                  `;
+                } else {
+                  let html = '';
+                  data.data.notifications.forEach(n => {
+                    html += `<a href="${n.lien || '#'}" class="notif-item unread" style="text-decoration:none;">
+                      <div class="notif-unread-dot"></div>
+                      <div class="notif-item-content">
+                        <div class="notif-item-title">${escapeHtml(n.titre)}</div>
+                        ${n.message ? `<div class="notif-item-meta" style="margin-top:2px;">${escapeHtml(n.message)}</div>` : ''}
+                        <div class="notif-item-meta" style="margin-top:4px;"><span>${escapeHtml(n.date)}</span></div>
+                      </div>
+                    </a>`;
+                  });
+                  scroll.innerHTML = html;
+                }
               }
             }
 
+=======
+>>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
             // Top Bell Badge
             const topBadge = document.getElementById('notifBadge');
             if (topBadge) {
@@ -413,14 +430,11 @@
               topBadge.style.display = notifs > 0 ? 'inline-flex' : 'none';
             }
 
-            // Tickets nav badge (Dots)
-            const tousTicketsBadge = document.getElementById('navTousTicketsBadge');
-            if (tousTicketsBadge) {
-              tousTicketsBadge.style.display = data.data.unread_tickets > 0 ? 'inline-block' : 'none';
-            }
-            const mesTicketsBadge = document.getElementById('navMesTicketsBadge');
-            if (mesTicketsBadge) {
-              mesTicketsBadge.style.display = data.data.unread_tickets > 0 ? 'inline-block' : 'none';
+            // Tickets nav badge
+            const ticketsBadge = document.getElementById('navTicketsBadge');
+            if (ticketsBadge) {
+              ticketsBadge.textContent = notifs;
+              ticketsBadge.style.display = notifs > 0 ? 'inline-block' : 'none';
             }
 
             // Messagerie nav badge
@@ -430,7 +444,11 @@
             }
           }
         }).catch(err => console.error(err));
-    }, 5000); // 5 second polling
+<<<<<<< HEAD
+    }, 2500); // 2.5 second polling
+=======
+    }, 1000); // 1 second polling for instant updates
+>>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
   }
 
   function init() {

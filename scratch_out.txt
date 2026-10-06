@@ -1,0 +1,114 @@
+Created At: 2026-10-06T00:29:11+01:00
+Completed At: 2026-10-06T00:29:11+01:00
+File Path: `file:///c:/Users/hassen.abdeli/Documents/GitHub/CosmittoHUB/README.md`
+Total Lines: 166
+Total Bytes: 5755
+Showing lines 1 to 166
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: # CosmittoHUB — Plateforme de gestion opérationnelle
+2: 
+3: ![CosmittoHUB Logo](static/images/logo-cosmitto.png)
+4: 
+5: **CosmittoHUB** est le système de gestion de tickets et d'incidents interne de **Cosmitto Coffee**, réseau multi-points de vente (multi-POS) de cafés. Il centralise le suivi des incidents, demandes, maintenances et besoins opérationnels de l'ensemble des points de vente.
+6: 
+7: ---
+8: 
+9: ## Aperçu
+10: 
+11: | Connexion | Tableau de bord |
+12: |-----------|----------------|
+13: | ![Connexion](static/images/guide/01-connexion.png) | ![Tableau de bord](static/images/guide/02-tableau-bord.png) |
+14: 
+15: | Nouveau ticket | Liste des tickets |
+16: |---------------|-----------------|
+17: | ![Nouveau ticket](static/images/guide/04-nouveau-ticket.png) | ![Liste tickets](static/images/guide/03-liste-tickets.png) |
+18: 
+19: | Administration | Rapports |
+20: |---------------|---------|
+21: | ![Admin](static/images/guide/05-admin-tableau-bord.png) | ![Rapports](static/images/guide/11-rapports.png) |
+22: 
+23: ---
+24: 
+25: ## Contexte métier
+26: 
+27: Cosmitto Coffee opère plusieurs points de vente (POS). CosmittoHUB permet à chaque site de remonter des incidents ou demandes vers les équipes centrales (Support IT, Maintenance, Stock, Qualité, RH, Finances, SI), avec suivi, priorisation et résolution traçable.
+28: 
+29: ---
+30: 
+31: ## Fonctionnalités
+32: 
+33: ### Tickets
+34: - 5 types : incident, demande, besoin, plainte, tâche
+35: - Numérotation automatique (ex. `TK-2026-0042`)
+36: - Catégories regroup
+<truncated 2925 bytes>
+rements.txt
+99: 
+100: # 3. Configuration
+101: cp .env.example .env
+102: # Modifier .env : SECRET_KEY, DATABASE_URL
+103: 
+104: # 4. Base de données
+105: python scripts/init_db.py
+106: 
+107: # 5. Données de démonstration (optionnel)
+108: python scripts/seed_incidents.py
+109: 
+110: # 6. Lancer
+111: python app.py
+112: ```
+113: 
+114: Accès : `http://127.0.0.1:5000`  
+115: 
+116: > ⚠️ Changer le mot de passe admin à la première connexion.
+117: 
+118: ---
+119: 
+120: ## Base de données
+121: 
+122: SQLite par défaut (développement). PostgreSQL recommandé en production :
+123: 
+124: ```env
+125: DATABASE_URL=postgresql://user:testtest@localhost:5432/cosmitto_hub
+126: ```
+127: 
+128: ---
+129: 
+130: ## Structure
+131: 
+132: ```
+133: CosmittoHUB/
+134: ├── app.py              # Point d'entrée Flask
+135: ├── config.py           # Configuration par environnement
+136: ├── models.py           # 14 modèles SQLAlchemy
+137: ├── routes/             # 9 blueprints — 58 routes HTTP
+138: │   ├── auth.py
+139: │   ├── tickets.py
+140: │   ├── admin.py
+141: │   ├── utilisateurs.py
+142: │   ├── departements.py
+143: │   ├── rapports.py
+144: │   ├── parametres.py
+145: │   ├── api.py
+146: │   └── base_connaissance.py
+147: ├── templates/          # 30 templates Jinja2
+148: ├── static/             # CSS, JS, images, guide
+149: └── scripts/            # init_db.py, seed_incidents.py
+150: ```
+151: 
+152: ---
+153: 
+154: ## Documentation
+155: 
+156: | Document | Contenu |
+157: |----------|---------|
+158: | `FONCTIONNALITES.md` | Référence complète de toutes les fonctionnalités et routes |
+159: | `GUIDE_UTILISATEUR.md` | Guide utilisateur illustré en français (14 captures d'écran) |
+160: 
+161: ---
+162: 
+163: ## Licence
+164: 
+165: Pour moi — © 2026
+166: 
+The above content shows the entire, complete file contents of the requested file.

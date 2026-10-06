@@ -1,18 +1,25 @@
 # ROADMAP & TODO — Cosmicenter
 
-Ce document liste les fonctionnalités restantes pour finaliser la version 1.0, ainsi que les pistes d'amélioration pour faire évoluer l'application vers un standard d'entreprise complet (type Jira/Zendesk).
+Ce document liste les fonctionnalités restantes pour finaliser la version 1.0, ainsi que les pistes d'évolution.
+
+---
+
+## ✅ Fonctionnalités Récemment Achevées
+- **Paramètres et Logs Système** : Configurables (UI, DavMail) et visualisation en direct fonctionnelle.
+- **Gestion des Pièces Jointes** : Glisser-déposer (Drag & Drop) complètement implémenté en front et back.
+- **Notifications UI** : Gestion via des points ("dots") plutôt que des badges numériques.
+- **Design du Tableau de Bord Admin et Utilisateurs** : Complètement mis à jour avec des interfaces dynamiques et réactives.
+
+---
+
+- **Base de Connaissance (Knowledge Base)** : Modèles de base de données implémentés avec un système de catégories (Tech, Finance, RH) et interfaces de lecture, création, et modification intégrées.
+- **Réinitialisation de Mot de Passe** : Simplifié pour diriger les utilisateurs vers le support IT directement (au lieu d'un système d'email factice).
+- **Valeurs Dynamiques** : La version de l'application et l'état de la base de données dans le Dashboard Admin sont désormais chargés dynamiquement depuis la configuration du serveur.
 
 ---
 
 ## 🚧 1. Les Indispensables (Pour finaliser la V1)
-*Ces éléments sont déjà prévus dans l'architecture mais nécessitent d'être codés.*
-
-
-- [ ] **Paramètres et Logs Système**
-  - Rendre fonctionnelles les pages d'administration "Paramètres" et "Logs système" qui sont actuellement des espaces réservés.
-
-- [ ] **Gestion complète des Pièces Jointes**
-  - S'assurer que le glisser-déposer de captures d'écran et de fichiers fonctionne de manière fluide dans les commentaires et la création de tickets.
+*Aucune fonctionnalité indispensable restante. Le système de base (V1) est terminé.*
 
 ---
 
@@ -22,6 +29,9 @@ Ce document liste les fonctionnalités restantes pour finaliser la version 1.0, 
 - [ ] **Intégration Email (Email-to-Ticket)**
   - Création automatique de tickets lorsqu'un utilisateur envoie un email à `support@example.com`.
   - Permettre aux utilisateurs de répondre aux notifications par email pour ajouter un commentaire au ticket.
+
+- [ ] **Moteur d'Automatisations (Triggers)**
+  - Règles basées sur le temps (ex: *Si un ticket est 'En attente' depuis 5 jours, relancer l'utilisateur*).
 
 - [ ] **Moteur d'Automatisations (Triggers)**
   - Règles basées sur le temps (ex: *Si un ticket est 'En attente' depuis 5 jours, relancer l'utilisateur*).

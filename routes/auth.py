@@ -96,18 +96,4 @@ def profil():
 @auth_bp.route('/mot-de-passe-oublie', methods=['GET', 'POST'])
 def mot_de_passe_oublie():
     """Page de réinitialisation de mot de passe"""
-    if request.method == 'POST':
-        email = request.form.get('email', '').strip()
-        
-        utilisateur = Utilisateur.query.filter_by(email=email).first()
-        if utilisateur:
-            # TODO: Implémenter l'envoi d'email de réinitialisation
-            flash('Un email de réinitialisation a été envoyé', 'info')
-            logger.info(f'Demande de réinitialisation de mot de passe: {email}')
-        else:
-            # Ne pas révéler si l'email existe ou non (sécurité)
-            flash('Si cet email existe, un lien de réinitialisation a été envoyé', 'info')
-        
-        return redirect(url_for('auth.connexion'))
-    
     return render_template('auth/mot_de_passe_oublie.html')

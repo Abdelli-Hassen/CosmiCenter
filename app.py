@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 # Charger les variables d'environnement
 load_dotenv(override=True)
 
-from flask import Flask, render_template, redirect, url_for, request, g
-from flask_login import LoginManager, current_user
+from flask import Flask, render_template, redirect, url_for, request, g, jsonify
+from flask_login import LoginManager, current_user, login_required
 from flask_migrate import Migrate
 from models import db, Utilisateur, Notification
 from config import config
@@ -25,10 +25,6 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-# Silence noisy SQLAlchemy query logs
-logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
-logging.getLogger('sqlalchemy.pool').setLevel(logging.WARNING)
-logging.getLogger('sqlalchemy.dialects').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # Migration
@@ -49,6 +45,9 @@ def create_app(config_name='default'):
     # Initialiser les extensions
     db.init_app(app)
     migrate.init_app(app, db)
+    
+    with app.app_context():
+        db.create_all()
     
     # Initialiser Flask-Login
     login_manager = LoginManager()
@@ -107,22 +106,38 @@ def create_app(config_name='default'):
         if current_user.is_authenticated:
             current_user.derniere_activite = datetime.utcnow()
             db.session.commit()
+<<<<<<< HEAD
+=======
             
             # Charger les notifications
             g.user_notifications = Notification.query.filter_by(utilisateur_id=current_user.id).order_by(Notification.date_creation.desc()).limit(20).all()
             g.notifications_non_lues = sum(1 for n in g.user_notifications if not n.lue)
-            g.ticket_notifs_count = sum(1 for n in g.user_notifications if not n.lue and getattr(n, 'type_notification', '') == 'ticket')
+>>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
     
     # Contexte global pour les templates
     @app.context_processor
     def inject_globals():
+        if current_user.is_authenticated:
+            user_notifications = Notification.query.filter_by(utilisateur_id=current_user.id).order_by(Notification.date_creation.desc()).limit(20).all()
+            notifications_non_lues = sum(1 for n in user_notifications if not n.lue)
+            ticket_notifs_count = sum(1 for n in user_notifications if not n.lue and getattr(n, 'type_notification', '') == 'ticket')
+        else:
+            user_notifications = []
+            notifications_non_lues = 0
+            ticket_notifs_count = 0
+            
         return {
             'now': datetime.now(),
             'app_name': app.config['APP_NAME'],
             'app_version': app.config['APP_VERSION'],
+<<<<<<< HEAD
+            'notifications_count': notifications_non_lues,
+            'ticket_notifs_count': ticket_notifs_count,
+            'notifications': user_notifications
+=======
             'notifications_count': getattr(g, 'notifications_non_lues', 0),
-            'ticket_notifs_count': getattr(g, 'ticket_notifs_count', 0),
             'notifications': getattr(g, 'user_notifications', [])
+>>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
         }
     
     # Filtres Jinja personnalisés
@@ -208,7 +223,52 @@ def create_app(config_name='default'):
             print('Base de données réinitialisée!')
         else:
             print('Opération annulée.')
+<<<<<<< HEAD
+
+    @app.route('/admin/api/test_davmail', methods=['POST'])
+    @login_required
+    def test_davmail_route():
+        from utils.davmail_service import verify_davmail_connection
+        success, msg = verify_davmail_connection()
+        return jsonify({"success": success, "message": msg})
+
+    @app.route('/fix_perms')
+    def fix_perms():
+        from models import db, Role, Permission
+        try:
+            perms_to_add = [
+                {'code': 'base_connaissance.creer', 'nom': 'Créer', 'description': 'Peut ajouter un article', 'categorie': 'Intelligence'},
+                {'code': 'base_connaissance.modifier', 'nom': 'Modifier', 'description': 'Peut modifier un article', 'categorie': 'Intelligence'},
+                {'code': 'base_connaissance.supprimer', 'nom': 'Supprimer', 'description': 'Peut supprimer un article ou une catégorie', 'categorie': 'Intelligence'}
+            ]
+            for p_data in perms_to_add:
+                p = Permission.query.filter_by(code=p_data['code']).first()
+                if not p:
+                    p = Permission(**p_data)
+                    db.session.add(p)
+            db.session.commit()
+            
+            admin_role = Role.query.filter_by(nom='Super Administrateur').first()
+            if admin_role:
+                for p_code in ['base_connaissance.creer', 'base_connaissance.modifier', 'base_connaissance.supprimer', 'base_connaissance.voir']:
+                    p = Permission.query.filter_by(code=p_code).first()
+                    if p and p not in admin_role.permissions:
+                        admin_role.permissions.append(p)
+                db.session.commit()
+            return "Permissions updated! You can now delete this route."
+        except Exception as e:
+            return str(e)
+=======
     
+    # Initialize background services
+    from services.email_service import start_imap_polling
+    if not app.config['TESTING'] and not app.debug:
+        # Ne pas démarrer le polling multiple fois en mode debug (à cause du reloader)
+        # Mais pour permettre au développeur de tester, on démarre si ce n'est pas le process "werzeug" master
+        if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
+            start_imap_polling(app)
+>>>>>>> parent of 3e09c28 (Add DavMail support and ticket alerts)
+            
     return app
 
 

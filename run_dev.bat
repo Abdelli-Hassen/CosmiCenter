@@ -6,6 +6,9 @@ set DATABASE_URL=postgresql+psycopg://Cosmicenter:testtest@localhost:5432/Cosmic
 set FLASK_PORT=8080
 set PYTHONIOENCODING=utf-8
 set FLASK_ENV=development
+set FLASK_PORT=8080
+set PYTHONIOENCODING=utf-8
+set FLASK_ENV=development
 set FLASK_DEBUG=1
 
 echo.

@@ -64,7 +64,6 @@ if errorlevel 1 (
         echo.
     )
 )
-
 echo.
 echo ╔════════════════════════════════════════════════════════╗
 echo ║           LANCEMENT DE L'APPLICATION                  ║
@@ -83,6 +82,8 @@ echo.
 
 REM Lancer l'application
 set DATABASE_URL=postgresql+psycopg://Cosmicenter:testtest@localhost:5432/Cosmicenter
+python app.py
+pause
 python app.py
 
 pause
