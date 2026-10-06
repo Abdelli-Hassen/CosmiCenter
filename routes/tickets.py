@@ -298,14 +298,18 @@ def nouveau():
             users_to_notify = set()
             
             # 1. Assigné spécifiquement
-            if ticket.assigne_a:
-                users_to_notify.add(ticket.assigne_a)
+            if ticket.assigne_a_id:
+                assignee = Utilisateur.query.get(ticket.assigne_a_id)
+                if assignee:
+                    users_to_notify.add(assignee)
             # 2. Assignation de département
-            elif ticket.departement:
-                for user in ticket.departement.utilisateurs:
-                    if user.actif:
-                        users_to_notify.add(user)
-                        
+            elif ticket.departement_id:
+                dept = Departement.query.get(ticket.departement_id)
+                if dept:
+                    for user in dept.utilisateurs:
+                        if user.actif:
+                            users_to_notify.add(user)
+                            
             # 3. Collaborateurs individuels
             for collab_user in ticket.collaborateurs:
                 if collab_user.actif:
