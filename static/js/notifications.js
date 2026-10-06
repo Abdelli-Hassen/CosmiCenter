@@ -1,5 +1,5 @@
 /**
- * Cosmicenter — Toast Notifications & Notification Panel
+ * CosmiCenter — Toast Notifications & Notification Panel
  * Provides window.CHUB.toast API and notification panel toggle.
  */
 
@@ -58,6 +58,16 @@
     const type = opts.type || 'info';
     const duration = (opts.duration !== undefined) ? opts.duration : (DEFAULT_DURATIONS[type] || 5000);
     const c = getContainer();
+    
+    // Play audio notifications
+    try {
+        const textToMatch = ((opts.title || '') + ' ' + (opts.message || '')).toLowerCase();
+        if (type === 'success' && textToMatch.includes('créé')) {
+            new Audio('/static/ticket%20sent.mp3').play().catch(e => console.log('Audio play error:', e));
+        } else if (textToMatch.includes('nouveau') && textToMatch.includes('ticket')) {
+            new Audio('/static/new%20ticket.mp3').play().catch(e => console.log('Audio play error:', e));
+        }
+    } catch (err) {}
 
     // Enforce max — dismiss oldest
     while (activeToasts.length >= MAX_TOASTS) {

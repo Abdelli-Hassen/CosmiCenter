@@ -1,5 +1,5 @@
 """
-Script d'initialisation de la base de données CosmittoDesk 2.0
+Script d'initialisation de la base de données CosmiCenter 2.0
 Crée les tables, les permissions, les rôles et un utilisateur administrateur par défaut
 """
 import sys
@@ -251,7 +251,7 @@ def creer_departements_exemples():
 def initialiser_base_donnees():
     """Fonction principale d'initialisation"""
     print("\n" + "="*60)
-    print("  INITIALISATION DE LA BASE DE DONNÉES COSMITTODESK 2.0")
+    print("  INITIALISATION DE LA BASE DE DONNÉES COSMICENTER 2.0")
     print("="*60 + "\n")
     
     # Créer toutes les tables

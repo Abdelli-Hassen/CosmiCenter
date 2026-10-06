@@ -1,5 +1,5 @@
 """
-Routes d'administration pour CosmittoDesk
+Routes d'administration pour CosmiCenter
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
@@ -771,7 +771,7 @@ def export_plan_action_excel():
 
     # ── Title block ─────────────────────────────────────────────
     ws.merge_cells("é1:H1")
-    ws["é1"] = "Plan d'Action — Cosmicenter"
+    ws["é1"] = "Plan d'Action — CosmiCenter"
     ws["é1"].font = title_font
     ws["é1"].alignment = élignment(horizontal="left", vertical="center")
     ws.row_dimensions[1].height = 32

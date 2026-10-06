@@ -1,5 +1,5 @@
 /**
- * Cosmicenter — Ticket-specific Interactions
+ * CosmiCenter — Ticket-specific Interactions
  * Handles checkbox selection & bulk bar, inline status changes,
  * reply composer, filter auto-submit, and SLA countdowns.
  */

@@ -308,32 +308,14 @@
 
     <!-- Logo & Branding -->
     <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:16px;">
-      <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="{{ app_name }}" style="height:180px;width:auto;object-fit:contain;margin-bottom:15px;">
+      <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="{{ app_name }}" style="height:80px;width:auto;object-fit:contain;margin-bottom:15px;">
     </div>
     <div class="auth-tagline" style="margin-bottom:20px;">Gestion des opérations — Cosmitto Coffee</div>
     <div style="font-size: 13px; color: var(--text-muted, #a1a1aa); text-align: center; margin-bottom: 24px; line-height: 1.5; padding: 0 10px;">
       L'accès à InterComm se fait avec l'adresse email et le mot de passe fournis par votre administrateur IT. Il n'y a pas d'auto-inscription : seul un administrateur peut créer un compte.
     </div>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-        <div class="auth-alert auth-alert-{{ 'error' if category == 'danger' else category }}" role="alert">
-          {% if category == 'danger' or category == 'error' %}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          {% elif category == 'success' %}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;">
-            <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/>
-          </svg>
-          {% endif %}
-          <span>{{ message }}</span>
-        </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+    <!-- Flash Messages handled automatically by notifications.js toasts -->
 
     <!-- Sign In Form -->
     <form method="POST" action="{{ url_for('auth.connexion') }}" id="loginForm" novalidate>

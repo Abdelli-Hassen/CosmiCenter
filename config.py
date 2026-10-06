@@ -21,7 +21,7 @@ class Config:
         import os
         basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
         if 'instance' in db_url:
-            db_path = os.path.join(basedir, 'CosmittoHUB', 'instance', 'cosmitto.db')
+            db_path = os.path.join(basedir, 'CosmiCenter', 'instance', 'cosmitto.db')
             if not os.path.exists(os.path.dirname(db_path)):
                 os.makedirs(os.path.dirname(db_path), exist_ok=True)
             db_url = 'sqlite:///' + db_path.replace('\\', '/')
@@ -71,7 +71,7 @@ class Config:
     LOCKOUT_DURATION_MINUTES = 30
     
     # Application
-    APP_NAME = 'Cosmicenter'
+    APP_NAME = 'CosmiCenter'
     APP_VERSION = '2.0.0'
     SUPPORT_EMAIL = 'support@example.com'
     
