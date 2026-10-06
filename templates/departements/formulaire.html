@@ -22,27 +22,14 @@
 <div class="page">
 
   <!-- Page Header -->
-  <div style="max-width: 800px; margin: 0 auto; padding: 32px 0 24px 0; display: flex; justify-content: space-between; align-items: flex-end;">
-    <div style="display: flex; flex-direction: column; gap: 8px;">
-      <div style="margin-bottom: 24px;">
-    <a href="{{ url_for('departements.liste') }}" class="btn btn-secondary" style="padding: 10px 20px; font-size: 15px; font-weight: 600; border-radius: 12px; display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); background: var(--surface-2); border: 1px solid var(--border-subtle); box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-      Retour
-    </a>
-  </div>
-      <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; display: flex; align-items: center; gap: 12px;">
-        <div style="width:40px; height:40px; border-radius:var(--r-md); background:var(--surface-raised); border:1px solid var(--border-default); display:flex; align-items:center; justify-content:center; color:var(--text-secondary); box-shadow:var(--shadow-sm);">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-        </div>
-        {% if is_edit %}Modifier {{ departement.nom }}{% else %}Nouveau Département{% endif %}
-      </h1>
-    </div>
-    <div>
-      <a href="{{ url_for('departements.liste') }}" class="btn btn-ghost">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        Retour
-      </a>
-    </div>
+  <div style="max-width: 800px; margin: 0 auto; padding: 32px 0 24px 0; width: 100%; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
+
+    <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; display: flex; align-items: center; gap: 12px; justify-content: flex-start; text-align: left;">
+      <div style="width:40px; height:40px; border-radius:var(--r-md); background:var(--surface-raised); border:1px solid var(--border-default); display:flex; align-items:center; justify-content:center; color:var(--text-secondary); box-shadow:var(--shadow-sm);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+      </div>
+      {% if is_edit %}Modifier {{ departement.nom }}{% else %}Nouveau Département{% endif %}
+    </h1>
   </div>
 
   <!-- Form -->
@@ -52,7 +39,7 @@
           id="deptForm" enctype="multipart/form-data">
 
       <!-- Section: Informations de base -->
-      <div class="card card-raised" style="margin-bottom: 32px; border-radius: 16px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-md); overflow: hidden; transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-md)';">
+      <div class="card card-raised" style="margin-bottom: 32px; border-radius: 20px; border: 1px solid var(--border-subtle); background: var(--surface-raised); box-shadow: var(--shadow-md); overflow: hidden; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-md)';">
         <div class="card-header" style="background: var(--surface-2); padding: 20px 32px; border-bottom: 1px solid var(--border-subtle); position: relative;">
           <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(to bottom, var(--color-brand, #3b82f6), #8b5cf6);"></div>
           <div class="card-title" style="font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
@@ -112,7 +99,7 @@
       </div>
 
       <!-- Section: Contact -->
-      <div class="card card-raised" style="margin-bottom: 32px; border-radius: 16px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-md); overflow: hidden; transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-md)';">
+      <div class="card card-raised" style="margin-bottom: 32px; border-radius: 20px; border: 1px solid var(--border-subtle); background: var(--surface-raised); box-shadow: var(--shadow-md); overflow: hidden; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-md)';">
         <div class="card-header" style="background: var(--surface-2); padding: 20px 32px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 12px; position: relative;">
           <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(to bottom, #10b981, #059669);"></div>
           <div class="card-title" style="font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
@@ -168,7 +155,7 @@
       </div>
 
       <!-- Section: Configuration -->
-      <div class="card card-raised" style="margin-bottom: 32px; border-radius: 16px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-md); overflow: hidden; transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-md)';">
+      <div class="card card-raised" style="margin-bottom: 32px; border-radius: 20px; border: 1px solid var(--border-subtle); background: var(--surface-raised); box-shadow: var(--shadow-md); overflow: hidden; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-md)';">
         <div class="card-header" style="background: var(--surface-2); padding: 20px 32px; border-bottom: 1px solid var(--border-subtle); position: relative;">
           <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(to bottom, #f59e0b, #d97706);"></div>
           <div class="card-title" style="font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
