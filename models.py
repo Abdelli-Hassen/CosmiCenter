@@ -294,11 +294,12 @@ class Ticket(db.Model):
 
     @staticmethod
     def generer_numero():
-        """Génère un numéro de ticket unique"""
-        timestamp = datetime.now().strftime('%Y%m%d')
-        import random
-        random_num = random.randint(1000, 9999)
-        return f"TKT-{timestamp}-{random_num}"
+        """Génère un numéro de ticket séquentiel"""
+        count = db.session.query(db.func.count(Ticket.id)).scalar()
+        next_num = count + 1
+        while Ticket.query.filter_by(numero=str(next_num)).first() is not None:
+            next_num += 1
+        return str(next_num)
 
     def calculer_priorite_automatique(self):
         """Calcule la priorité basée sur impact et urgence"""

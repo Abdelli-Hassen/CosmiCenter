@@ -548,7 +548,7 @@
           {% if ticket.date_echeance %}
           <div class="prop-row">
             <div class="prop-label">Échéance</div>
-            <div class="prop-val">{{ ticket.date_echeance.strftime('%d/%m/%Y') }}</div>
+            <div class="prop-val">{{ ticket.date_echeance.strftime('%d/%m/%Y %H:%M') }}</div>
           </div>
           {% endif %}
         </div>

@@ -331,7 +331,7 @@ def nouveau():
             
             send_email_notification(
                 current_app._get_current_object(),
-                f"Nouveau Ticket : [{ticket.numero}] {ticket.titre}",
+                f"Ticket : [#{ticket.numero}] {ticket.titre}",
                 recipients,
                 render_template('emails/nouveau_ticket.html', ticket=ticket, ticket_url=f"https://hub.cosmitto.tn{url_for('tickets.detail', ticket_id=ticket.id)}")
             )

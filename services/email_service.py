@@ -161,7 +161,7 @@ def process_incoming_email(app, sender_email, subject, body):
                 return
                 
         from uuid import uuid4
-        numero = f"TICK-{datetime.now().strftime('%Y%m%d')}-{uuid4().hex[:6].upper()}"
+        numero = Ticket.generer_numero()
         
         default_cat = CategorieTicket.query.first()
         cat_id = default_cat.id if default_cat else None
@@ -181,9 +181,9 @@ def process_incoming_email(app, sender_email, subject, body):
         
         send_email_notification(
             app,
-            f"Ticket Créé : [{numero}] {nouveau_ticket.titre}",
+            f"Ticket : [#{numero}] {nouveau_ticket.titre}",
             [utilisateur.email],
-            f"<p>Bonjour {utilisateur.prenom},</p><p>Votre ticket <b>{numero}</b> a bien été créé depuis votre email.</p>"
+            f"<p>Bonjour {utilisateur.prenom},</p><p>Votre ticket <b>#{numero}</b> a bien été créé depuis votre email.</p>"
         )
 
 

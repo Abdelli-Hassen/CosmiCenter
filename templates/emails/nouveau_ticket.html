@@ -13,8 +13,7 @@
                     <!-- Header -->
                     <tr>
                         <td style="background-color: #dc2626; padding: 30px; text-align: center;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">Nouveau Ticket Créé</h1>
-                            <p style="margin: 8px 0 0; color: #fee2e2; font-size: 15px; opacity: 0.9;">Ticket #{{ ticket.numero }}</p>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">Ticket #{{ ticket.numero }}</h1>
                         </td>
                     </tr>
                     
@@ -57,18 +56,19 @@
                                         <p style="margin: 0; font-size: 15px; color: #111827; font-weight: 500; text-transform: capitalize;">{{ ticket.priorite }}</p>
                                     </td>
                                 </tr>
-                            </table>
-
-                            <!-- Action Button -->
-                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
                                 <tr>
-                                    <td align="center">
-                                        <a href="{{ ticket_url }}" target="_blank" style="display: inline-block; padding: 14px 32px; background-color: #dc2626; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 600; border-radius: 8px; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.25);">
-                                            Voir le ticket dans CosmiCenter
-                                        </a>
+                                    <td width="50%" valign="top" style="padding-top: 20px;">
+                                        <p style="margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; font-weight: 600;">Date de création</p>
+                                        <p style="margin: 0; font-size: 15px; color: #111827; font-weight: 500;">{{ ticket.date_creation.strftime('%d/%m/%Y %H:%M') if ticket.date_creation else 'N/A' }}</p>
+                                    </td>
+                                    <td width="50%" valign="top" style="padding-top: 20px;">
+                                        <p style="margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; font-weight: 600;">Échéance</p>
+                                        <p style="margin: 0; font-size: 15px; color: #111827; font-weight: 500;">{{ ticket.date_echeance.strftime('%d/%m/%Y %H:%M') if ticket.date_echeance else 'Non définie' }}</p>
                                     </td>
                                 </tr>
                             </table>
+
+                            <!-- Action Button removed for local development -->
                         </td>
                     </tr>
                     
