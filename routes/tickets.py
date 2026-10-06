@@ -306,7 +306,7 @@ def nouveau():
             elif ticket.departement_id:
                 dept = Departement.query.get(ticket.departement_id)
                 if dept:
-                    for user in dept.utilisateurs:
+                    for user in dept.membres:
                         if user.actif:
                             users_to_notify.add(user)
                             
@@ -317,7 +317,7 @@ def nouveau():
                     
             # 4. Collaborateurs via départements
             for collab_dept in ticket.departements_collab:
-                for user in collab_dept.utilisateurs:
+                for user in collab_dept.membres:
                     if user.actif:
                         users_to_notify.add(user)
                         
