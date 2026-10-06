@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ categorie.nom }} - Base de connaissance{% endblock %}
+{% block body_class %}page-base-connaissance{% endblock %}
+
+{% block content %}
+<div style="padding: 28px 36px; max-width: 1400px; margin: 0 auto;">
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom: 24px;">
+        <a href="{{ url_for('base_connaissance.index') }}" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            Retour
+        </a>
+        <h1 style="font-size:24px; font-weight:900; color:var(--text-primary); margin:0;">{{ categorie.nom }}</h1>
+    </div>
+
+    <p style="color:var(--text-muted); font-size:15px; margin-bottom:32px;">{{ categorie.description }}</p>
+
+    {% if categorie.articles %}
+    <div style="display:flex; flex-direction:column; gap:12px;">
+        {% for art in categorie.articles %}
+        <a href="{{ url_for('base_connaissance.article', id=art.id) }}" style="display:flex; align-items:center; justify-content:space-between; padding:20px; background:var(--surface-1); border:1px solid var(--border-subtle); border-radius:12px; text-decoration:none; color:var(--text-primary); transition:all 0.2s;">
+            <div>
+                <div style="font-size:16px; font-weight:700; margin-bottom:4px;">{{ art.titre }}</div>
+                <div style="font-size:13px; color:var(--text-muted); display:flex; gap:12px; align-items:center;">
+                    <span>Ajouté par {{ art.auteur.prenom }} {{ art.auteur.nom }}</span>
+                    <span>•</span>
+                    <span>{{ art.date_creation.strftime('%d/%m/%Y') }}</span>
+                    <span>•</span>
+                    <span style="display:flex; align-items:center; gap:4px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        {{ art.vues }} vues
+                    </span>
+                </div>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center; padding:64px 24px; background:var(--surface-1); border-radius:16px; border:1px dashed var(--border-subtle);">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        <h3 style="margin:16px 0 8px; font-size:18px; font-weight:800; color:var(--text-primary);">Aucun article</h3>
+        <p style="color:var(--text-muted); font-size:14px;">Il n'y a pas encore d'article dans cette catégorie.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

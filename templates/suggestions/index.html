@@ -1,123 +1,149 @@
 {% extends "base.html" %}
 
-{% block title %}Boîte à Idées - CosmittoHUB{% endblock %}
+{% block title %}Boîte à Idées - Cosmicenter{% endblock %}
 
 {% block content %}
-<div class="page-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
-    <div>
-        <h1 class="page-title" style="display:flex; align-items:center; gap:8px;">
-            <i class="fas fa-lightbulb" style="color:var(--warning);"></i> 
-            Boîte à Idées
-        </h1>
-        <p class="text-muted" style="margin-top:4px;">Partagez vos suggestions pour améliorer CosmittoHUB</p>
-    </div>
-    <button class="btn btn-primary" onclick="document.getElementById('modal-suggestion').style.display='flex'">
-        <i class="fas fa-plus"></i> Nouvelle Suggestion
-    </button>
-</div>
-
-<div class="grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:20px;">
-    {% for sugg in suggestions %}
-    <div class="card card-raised" style="display:flex; flex-direction:column; justify-content:space-between;">
-        <div class="card-body">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
-                <h3 style="margin:0; font-size:16px; font-weight:600;">{{ sugg.titre }}</h3>
-                <span class="badge" style="
-                    {% if sugg.statut == 'nouveau' %}background:var(--info-subtle); color:var(--info);
-                    {% elif sugg.statut == 'lu' %}background:var(--primary-subtle); color:var(--primary);
-                    {% elif sugg.statut == 'accepte' %}background:var(--success-subtle); color:var(--success);
-                    {% elif sugg.statut == 'refuse' %}background:var(--danger-subtle); color:var(--danger);
-                    {% else %}background:var(--surface-active); color:var(--text-secondary);{% endif %}
-                ">
-                    {{ sugg.statut | title }}
-                </span>
-            </div>
-            
-            <span class="badge" style="margin-bottom:12px; font-size:11px; padding:2px 8px; border:1px solid var(--border-color); background:transparent;">
-                <i class="fas {% if sugg.type_suggestion == 'bug' %}fa-bug{% elif sugg.type_suggestion == 'nouvelle_fonctionnalite' %}fa-star{% else %}fa-wrench{% endif %}" style="margin-right:4px;"></i>
-                {{ sugg.type_suggestion.replace('_', ' ') | title }}
-            </span>
-
-            <p style="color:var(--text-secondary); font-size:14px; margin-bottom:16px; line-height:1.5;">
-                {{ sugg.description }}
-            </p>
-        </div>
-        <div class="card-footer" style="padding:12px 20px; border-top:1px solid var(--border-subtle, rgba(255,255,255,0.1)); display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted);">
-            <div style="display:flex; align-items:center; gap:8px;">
-                {% if sugg.auteur.photo_profil %}
-                    <img src="{{ url_for('static', filename='uploads/profiles/' + sugg.auteur.photo_profil) }}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;">
-                {% else %}
-                    <div style="width:24px; height:24px; border-radius:50%; background:var(--primary-subtle); color:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:bold;">
-                        {{ sugg.auteur.prenom[0] }}{{ sugg.auteur.nom[0] }}
-                    </div>
-                {% endif %}
-                <span>{{ sugg.auteur.prenom }}</span>
-            </div>
-            <span>{{ sugg.date_creation.strftime('%d/%m/%Y') }}</span>
+<div style="padding: 40px; max-width: 1400px; margin: 0 auto; animation: fade-in 0.4s ease-out;">
+    
+    <!-- Hero Section -->
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom: 48px; background: linear-gradient(135deg, rgba(220,38,38,0.08) 0%, rgba(220,38,38,0.02) 100%); padding: 32px 40px; border-radius: 24px; border: 1px solid var(--border-subtle); position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -40px; right: -40px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(220,38,38,0.15) 0%, transparent 70%); pointer-events: none;"></div>
+        
+        <div style="display:flex; flex-direction:column; gap:8px; z-index: 1;">
+            <h1 style="font-size:32px; font-weight:900; color:var(--text-primary); margin:0; letter-spacing: -0.5px;">Boîte à Idées</h1>
+            <p style="font-size:16px; color:var(--text-muted); font-weight:500; margin:0; max-width: 600px;">Partagez vos suggestions pour améliorer Cosmicenter. Chaque idée compte pour bâtir l'avenir de la plateforme.</p>
         </div>
         
-        {% if current_user.role.nom in ['Administrateur', 'Super Administrateur'] %}
-        <div style="padding:12px 20px; border-top:1px dashed var(--border-subtle, rgba(255,255,255,0.1)); display:flex; justify-content:space-between; gap:8px; background:var(--shell-1);">
-            <form action="{{ url_for('suggestions.modifier_statut', suggestion_id=sugg.id) }}" method="POST" style="flex:1; display:flex; gap:8px;">
-                <select name="statut" class="input" style="flex:1; padding:4px 8px; font-size:12px; height:auto; min-height:0; border-radius:4px; background:var(--surface);">
-                    <option value="nouveau" {% if sugg.statut == 'nouveau' %}selected{% endif %}>Nouveau</option>
-                    <option value="lu" {% if sugg.statut == 'lu' %}selected{% endif %}>Lu</option>
-                    <option value="accepte" {% if sugg.statut == 'accepte' %}selected{% endif %}>Accepté</option>
-                    <option value="en_cours" {% if sugg.statut == 'en_cours' %}selected{% endif %}>En cours</option>
-                    <option value="termine" {% if sugg.statut == 'termine' %}selected{% endif %}>Terminé</option>
-                    <option value="refuse" {% if sugg.statut == 'refuse' %}selected{% endif %}>Refusé</option>
-                </select>
-                <button type="submit" class="btn btn-primary" style="padding:4px 8px; font-size:12px; height:auto; min-height:0; border-radius:4px;"><i class="fas fa-check"></i></button>
-            </form>
-            <form action="{{ url_for('suggestions.supprimer', suggestion_id=sugg.id) }}" method="POST" onsubmit="return confirm('Supprimer cette suggestion ?');">
-                <button type="submit" class="btn" style="padding:4px 8px; font-size:12px; height:auto; min-height:0; border-radius:4px; background:var(--danger-subtle); color:var(--danger); border:none;"><i class="fas fa-trash"></i></button>
-            </form>
+        <div style="z-index: 1;">
+            <button onclick="document.getElementById('modal-suggestion').style.display='flex'" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:10px; padding: 14px 28px; border-radius: 14px; font-weight: 700; background: linear-gradient(135deg, var(--brand), #ff5e7e); box-shadow: 0 8px 20px rgba(255, 51, 102, 0.3); border: none; transition: all 0.2s; cursor: pointer;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nouvelle Suggestion
+            </button>
         </div>
-        {% endif %}
     </div>
-    {% else %}
-    <div style="grid-column: 1 / -1; text-align:center; padding: 40px; background:var(--surface); border-radius:12px; border:1px dashed var(--border-color);">
-        <i class="fas fa-inbox" style="font-size:32px; color:var(--text-muted); margin-bottom:16px;"></i>
-        <h3 style="margin-bottom:8px;">Aucune suggestion pour le moment</h3>
-        <p style="color:var(--text-secondary);">Soyez le premier à partager une idée pour améliorer la plateforme !</p>
+
+    <!-- Grid Suggestions -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:24px;">
+        {% for sugg in suggestions %}
+        <div style="background: rgba(30, 30, 35, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; display:flex; flex-direction:column; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='var(--brand)'; this.style.boxShadow='0 20px 40px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(255, 255, 255, 0.05)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.1)';">
+            <div style="padding:24px; flex-grow:1;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                    <h3 style="margin:0; font-size:18px; font-weight:800; color:var(--text-primary); line-height: 1.4;">{{ sugg.titre }}</h3>
+                    <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 8px; letter-spacing: 0.5px; white-space: nowrap; margin-left: 12px;
+                        {% if sugg.statut == 'nouveau' %}background:rgba(59,130,246,0.15); color:#60a5fa;
+                        {% elif sugg.statut == 'lu' %}background:rgba(168,85,247,0.15); color:#c084fc;
+                        {% elif sugg.statut == 'accepte' %}background:rgba(16,185,129,0.15); color:#34d399;
+                        {% elif sugg.statut == 'refuse' %}background:rgba(239,68,68,0.15); color:#f87171;
+                        {% else %}background:rgba(255,255,255,0.05); color:var(--text-muted);{% endif %}
+                    ">
+                        {{ sugg.statut }}
+                    </span>
+                </div>
+                
+                <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-muted); margin-bottom: 20px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        {% if sugg.type_suggestion == 'bug' %}<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline>
+                        {% elif sugg.type_suggestion == 'nouvelle_fonctionnalite' %}<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        {% else %}<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>{% endif %}
+                    </svg>
+                    {{ sugg.type_suggestion.replace('_', ' ') }}
+                </span>
+
+                <p style="color:var(--text-muted); font-size:14px; margin:0; line-height:1.6;">
+                    {{ sugg.description }}
+                </p>
+            </div>
+            
+            <div style="padding:16px 24px; border-top:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center; background: rgba(0,0,0,0.2);">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    {% if sugg.auteur.photo_profil %}
+                        <img src="{{ url_for('static', filename='uploads/profiles/' + sugg.auteur.photo_profil) }}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
+                    {% else %}
+                        <div style="width:28px; height:28px; border-radius:50%; background: linear-gradient(135deg, rgba(220,38,38,0.2), transparent); border: 1px solid rgba(220,38,38,0.3); color:var(--brand); display:flex; align-items:center; justify-content:center; font-weight:800; font-size: 11px;">
+                            {{ sugg.auteur.prenom[0] }}{{ sugg.auteur.nom[0] }}
+                        </div>
+                    {% endif %}
+                    <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">{{ sugg.auteur.prenom }}</span>
+                </div>
+                <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">{{ sugg.date_creation.strftime('%d/%m/%Y') }}</span>
+            </div>
+            
+            {% if current_user.role.nom in ['Administrateur', 'Super Administrateur'] %}
+            <div style="padding:12px 24px; border-top:1px dashed rgba(255,255,255,0.1); display:flex; justify-content:space-between; gap:12px; background: rgba(220,38,38,0.02);">
+                <form action="{{ url_for('suggestions.modifier_statut', suggestion_id=sugg.id) }}" method="POST" style="flex:1; display:flex; gap:8px;">
+                    <div style="position: relative; flex: 1;">
+                        <select name="statut" style="width:100%; appearance:none; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; font-size: 13px; font-weight: 600; color: var(--text-primary); border-radius: 8px; outline: none; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='var(--brand)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)';">
+                            <option value="nouveau" style="background: var(--surface-1); color: var(--text-primary);" {% if sugg.statut == 'nouveau' %}selected{% endif %}>Nouveau</option>
+                            <option value="lu" style="background: var(--surface-1); color: var(--text-primary);" {% if sugg.statut == 'lu' %}selected{% endif %}>Lu</option>
+                            <option value="accepte" style="background: var(--surface-1); color: var(--text-primary);" {% if sugg.statut == 'accepte' %}selected{% endif %}>Accepté</option>
+                            <option value="en_cours" style="background: var(--surface-1); color: var(--text-primary);" {% if sugg.statut == 'en_cours' %}selected{% endif %}>En cours</option>
+                            <option value="termine" style="background: var(--surface-1); color: var(--text-primary);" {% if sugg.statut == 'termine' %}selected{% endif %}>Terminé</option>
+                            <option value="refuse" style="background: var(--surface-1); color: var(--text-primary);" {% if sugg.statut == 'refuse' %}selected{% endif %}>Refusé</option>
+                        </select>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <button type="submit" style="background: var(--brand); border: none; color: white; width: 34px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.transform='scale(1.05)';" onmouseout="this.style.transform='scale(1)';">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </button>
+                </form>
+                <form action="{{ url_for('suggestions.supprimer', suggestion_id=sugg.id) }}" method="POST" onsubmit="return confirm('Voulez-vous vraiment supprimer cette idée ?');">
+                    <button type="submit" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #ef4444; width: 34px; height: 100%; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)';" onmouseout="this.style.background='rgba(239,68,68,0.1)';">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div style="grid-column: 1 / -1; text-align:center; padding: 60px 40px; background: rgba(30, 30, 35, 0.4); backdrop-filter: blur(12px); border-radius:24px; border:1px dashed rgba(255,255,255,0.1);">
+            <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.03); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px auto;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            </div>
+            <h3 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 800; color: var(--text-primary);">Aucune suggestion</h3>
+            <p style="color:var(--text-muted); font-size: 15px; max-width: 400px; margin: 0 auto;">Soyez le premier à partager une idée innovante pour améliorer l'expérience Cosmicenter !</p>
+        </div>
+        {% endfor %}
     </div>
-    {% endfor %}
+
 </div>
 
 <!-- Modal Nouvelle Suggestion -->
-<div id="modal-suggestion" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); align-items:center; justify-content:center; padding:24px;" onclick="if(event.target===this) document.getElementById('modal-suggestion').style.display='none'">
-    <div class="card" style="width:100%; max-width:500px; animation: slideUp 0.3s ease; border-radius:12px; overflow:hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
-        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; padding:20px 24px; border-bottom:1px solid var(--border-subtle, rgba(255,255,255,0.1));">
-            <h2 class="card-title" style="margin:0; font-size:18px; font-weight:700;">Proposer une Idée</h2>
-            <button type="button" onclick="document.getElementById('modal-suggestion').style.display='none'" style="background:transparent; border:none; cursor:pointer; color:inherit; display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+<div id="modal-suggestion" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:24px;" onclick="if(event.target===this) document.getElementById('modal-suggestion').style.display='none'">
+    <div style="width:100%; max-width:550px; background: rgba(25, 25, 30, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); border-radius:24px; overflow:hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:24px 32px; border-bottom:1px solid rgba(255,255,255,0.05); background: linear-gradient(135deg, rgba(220,38,38,0.05), transparent);">
+            <h2 style="margin:0; font-size:20px; font-weight:800; color: var(--text-primary);">Proposer une Idée</h2>
+            <button type="button" onclick="document.getElementById('modal-suggestion').style.display='none'" style="background:rgba(255,255,255,0.05); border:none; cursor:pointer; color:var(--text-muted); display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:10px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='white';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.color='var(--text-muted)';">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
-        <div class="card-body" style="padding:24px;">
-            <form action="{{ url_for('suggestions.index') }}" method="POST">
-                <div class="form-group" style="margin-bottom:16px;">
-                    <label class="form-label" style="display:block; margin-bottom:8px; font-size:13px; font-weight:600;">Titre de votre idée</label>
-                    <input type="text" name="titre" class="input" required placeholder="Ex: Ajouter un mode sombre complet">
+        <div style="padding:32px;">
+            <form action="{{ url_for('suggestions.index') }}" method="POST" style="display: flex; flex-direction: column; gap: 24px;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-size:13px; font-weight:700; color:var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Titre de votre idée</label>
+                    <input type="text" name="titre" required placeholder="Ex: Ajouter un mode sombre complet" style="width:100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 16px 20px; border-radius: 12px; color: var(--text-primary); font-size: 15px; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor='var(--brand)'; this.style.boxShadow='0 0 0 3px rgba(255, 51, 102, 0.15)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.boxShadow='none'">
                 </div>
                 
-                <div class="form-group" style="margin-bottom:16px;">
-                    <label class="form-label" style="display:block; margin-bottom:8px; font-size:13px; font-weight:600;">Type</label>
-                    <select name="type_suggestion" class="input">
-                        <option value="amelioration">Amélioration d'une fonction existante</option>
-                        <option value="nouvelle_fonctionnalite">Nouvelle Fonctionnalité</option>
-                        <option value="bug">Signalement de Bug mineur</option>
-                    </select>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-size:13px; font-weight:700; color:var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Type</label>
+                    <div style="position: relative;">
+                        <select name="type_suggestion" style="width:100%; appearance:none; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 16px 20px; border-radius: 12px; color: var(--text-primary); font-size: 15px; outline: none; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='var(--brand)'; this.style.boxShadow='0 0 0 3px rgba(255, 51, 102, 0.15)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.boxShadow='none'">
+                            <option value="amelioration" style="background: var(--surface-1); color: var(--text-primary);">Amélioration d'une fonction existante</option>
+                            <option value="nouvelle_fonctionnalite" style="background: var(--surface-1); color: var(--text-primary);">Nouvelle Fonctionnalité</option>
+                            <option value="bug" style="background: var(--surface-1); color: var(--text-primary);">Signalement de Bug mineur</option>
+                        </select>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: none;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom:32px;">
-                    <label class="form-label" style="display:block; margin-bottom:8px; font-size:13px; font-weight:600;">Description détaillée</label>
-                    <textarea name="description" class="input" rows="4" style="resize:vertical;" required placeholder="Expliquez votre idée et comment elle pourrait aider l'équipe..."></textarea>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-size:13px; font-weight:700; color:var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Description détaillée</label>
+                    <textarea name="description" rows="5" required placeholder="Expliquez votre idée et comment elle pourrait aider l'équipe..." style="width:100%; resize:vertical; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 16px 20px; border-radius: 12px; color: var(--text-primary); font-size: 15px; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor='var(--brand)'; this.style.boxShadow='0 0 0 3px rgba(255, 51, 102, 0.15)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.boxShadow='none'"></textarea>
                 </div>
 
-                <div style="display:flex; justify-content:flex-end; gap:12px; border-top:1px solid var(--border-subtle, rgba(255,255,255,0.1)); padding-top:20px;">
-                    <button type="button" class="btn" onclick="document.getElementById('modal-suggestion').style.display='none'" style="background:transparent; border:1px solid currentColor;">Annuler</button>
-                    <button type="submit" class="btn btn-primary" style="display:flex; align-items:center; gap:8px;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                <div style="display:flex; justify-content:flex-end; gap:16px; border-top:1px solid rgba(255,255,255,0.05); padding-top:32px; margin-top: 8px;">
+                    <button type="button" onclick="document.getElementById('modal-suggestion').style.display='none'" style="padding:14px 28px; border-radius: 12px; font-weight: 600; font-size: 14px; background: rgba(255,255,255,0.05); border: none; color: white; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.background='rgba(255,255,255,0.05)';">Annuler</button>
+                    <button type="submit" style="padding:14px 32px; border-radius: 12px; font-weight: 700; font-size: 14px; background: linear-gradient(135deg, var(--brand), #ff5e7e); box-shadow: 0 4px 15px rgba(255, 51, 102, 0.3); border: none; color: white; cursor: pointer; display:flex; align-items:center; gap:8px; transition: all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(255, 51, 102, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255, 51, 102, 0.3)';">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                         Envoyer
                     </button>
                 </div>
@@ -127,9 +153,13 @@
 </div>
 
 <style>
-    @keyframes slideUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleUp {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
 </style>
 {% endblock %}

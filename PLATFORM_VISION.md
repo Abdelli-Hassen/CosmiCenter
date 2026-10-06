@@ -1,4 +1,4 @@
-# CosmittoHUB — Enterprise Platform Vision, Architecture Blueprint & Product Specification
+# Cosmicenter — Enterprise Platform Vision, Architecture Blueprint & Product Specification
 
 > **Version**: 3.0 Strategic Blueprint  
 > **Classification**: Executive & Engineering Specification  
@@ -30,7 +30,7 @@
 
 ### 1.1 The Defining Statement
 
-**CosmittoHUB is the world's first AI-native, context-aware enterprise operations platform** that unifies service management, internal operations, knowledge intelligence, and team coordination into a single, deeply integrated workspace — where every workflow is augmented by AI that understands organizational context, not just keywords.
+**Cosmicenter is the world's first AI-native, context-aware enterprise operations platform** that unifies service management, internal operations, knowledge intelligence, and team coordination into a single, deeply integrated workspace — where every workflow is augmented by AI that understands organizational context, not just keywords.
 
 The platform is not a helpdesk with AI bolted on. It is an **operations intelligence layer** that happens to have a ticket surface. The distinction is fundamental.
 
@@ -39,13 +39,13 @@ The platform is not a helpdesk with AI bolted on. It is an **operations intellig
 Current enterprise platforms suffer from three structural failures:
 
 **Structural Failure #1 — Context Blindness**  
-ServiceNow knows a ticket's status. It does not know that the reporter submitted 4 tickets in the last 48 hours, is a VIP customer whose contract renews next month, and that the assigned agent resolved an identical issue 3 months ago but never documented the fix. CosmittoHUB makes this context ambient, automatic, and actionable.
+ServiceNow knows a ticket's status. It does not know that the reporter submitted 4 tickets in the last 48 hours, is a VIP customer whose contract renews next month, and that the assigned agent resolved an identical issue 3 months ago but never documented the fix. Cosmicenter makes this context ambient, automatic, and actionable.
 
 **Structural Failure #2 — Workflow Rigidity**  
-Jira forces teams into its data model. Teams adapt their operations to fit the tool, not the inverse. CosmittoHUB introduces **Adaptive Workflow Graphs** — AI-inferred process flows that model themselves around how teams actually work, detected from behavioral patterns in the data.
+Jira forces teams into its data model. Teams adapt their operations to fit the tool, not the inverse. Cosmicenter introduces **Adaptive Workflow Graphs** — AI-inferred process flows that model themselves around how teams actually work, detected from behavioral patterns in the data.
 
 **Structural Failure #3 — Intelligence Fragmentation**  
-Most platforms offer dashboards. Dashboards are backward-looking. CosmittoHUB offers **Operational Foresight** — a predictive intelligence layer that surfaces risk, predicts SLA breaches 2–4 hours before they occur, forecasts ticket volume spikes, and recommends staffing adjustments in real time.
+Most platforms offer dashboards. Dashboards are backward-looking. Cosmicenter offers **Operational Foresight** — a predictive intelligence layer that surfaces risk, predicts SLA breaches 2–4 hours before they occur, forecasts ticket volume spikes, and recommends staffing adjustments in real time.
 
 ### 1.3 The Strategic Thesis
 
@@ -53,11 +53,11 @@ The enterprise software market is undergoing a once-per-decade structural shift.
 
 > **The organizational operating system is moving from process-centric to intelligence-centric.**
 
-Teams that adopt intelligence-centric platforms will reduce operational overhead by 40–60%, improve resolution quality by 2–3x, and retain institutional knowledge across employee turnover. CosmittoHUB is purpose-built for this transition.
+Teams that adopt intelligence-centric platforms will reduce operational overhead by 40–60%, improve resolution quality by 2–3x, and retain institutional knowledge across employee turnover. Cosmicenter is purpose-built for this transition.
 
 ### 1.4 Product Positioning — One Sentence
 
-*"CosmittoHUB is the platform where enterprise operations become intelligent — every ticket resolved faster, every agent empowered, every decision data-driven, and every process continuously optimized by AI that understands your organization."*
+*"Cosmicenter is the platform where enterprise operations become intelligent — every ticket resolved faster, every agent empowered, every decision data-driven, and every process continuously optimized by AI that understands your organization."*
 
 ---
 
@@ -65,18 +65,18 @@ Teams that adopt intelligence-centric platforms will reduce operational overhead
 
 ### 2.1 Competitive Landscape Analysis
 
-| Platform | Core Strength | Critical Weakness | CosmittoHUB Advantage |
+| Platform | Core Strength | Critical Weakness | Cosmicenter Advantage |
 |---|---|---|---|
 | **ServiceNow** | Enterprise workflow depth, ITSM maturity | $200K+ implementation costs, 18-month deployment, UI from 2015 | 10x faster deployment, modern AI-native UX, 1/5 the cost |
 | **Jira Service Management** | Developer ecosystem, Atlassian integration | Requires Atlassian buy-in, poor non-technical UX, fragmented | Unified workspace, business-user-first design |
 | **Zendesk Enterprise** | CX-focused, email-first workflows | Weak internal ops, no ITSM depth, expensive at scale | Full ITSM + CX unified, superior AI resolution |
 | **Freshservice** | Mid-market ITSM, affordable | Surface-level AI, weak analytics, generic workflows | Deeper AI, predictive ops, 3x analytics depth |
-| **Linear** | Developer-focused, beautiful UX | Not enterprise, no service management, niche | CosmittoHUB's design language at enterprise scale |
+| **Linear** | Developer-focused, beautiful UX | Not enterprise, no service management, niche | Cosmicenter's design language at enterprise scale |
 | **Notion** | Flexible knowledge base | No workflow engine, no SLA, not ops-grade | Combines Notion's flexibility with ops-grade reliability |
 
 ### 2.2 The Whitespace We Own
 
-CosmittoHUB targets the **SME-to-Enterprise segment** (50–5,000 employees) that:
+Cosmicenter targets the **SME-to-Enterprise segment** (50–5,000 employees) that:
 - Has outgrown email-and-spreadsheet operations
 - Cannot afford ServiceNow's implementation complexity
 - Needs more depth than Freshservice provides
@@ -99,7 +99,7 @@ This segment represents **$18B TAM** with <15% penetration by modern, AI-native 
 ### 3.1 The Five Design Axioms
 
 **Axiom 1 — Calm Technology**  
-The platform should reduce cognitive load, not add to it. Every notification must justify its existence. Every action must have a clear consequence. Information density must be high but never overwhelming. CosmittoHUB should feel like a calm, intelligent colleague — not an alarm system.
+The platform should reduce cognitive load, not add to it. Every notification must justify its existence. Every action must have a clear consequence. Information density must be high but never overwhelming. Cosmicenter should feel like a calm, intelligent colleague — not an alarm system.
 
 **Axiom 2 — Progressive Disclosure**  
 A new agent on day one and a power user after two years must both feel at home. The interface reveals complexity on demand. Simple by default, powerful by choice.
@@ -723,13 +723,13 @@ Self-service report creation with no SQL required.
 
 ### 8.5 Asset Management (CMDB-Lite)
 
-Every enterprise operation tool needs to know what assets exist. CosmittoHUB includes a lightweight CMDB (Configuration Management Database) that keeps assets in context without the complexity of a full ServiceNow CMDB.
+Every enterprise operation tool needs to know what assets exist. Cosmicenter includes a lightweight CMDB (Configuration Management Database) that keeps assets in context without the complexity of a full ServiceNow CMDB.
 
 **Asset types**: Hardware (laptops, servers, printers, phones), Software (licenses, SaaS subscriptions), Services (internal and external), Infrastructure (network equipment, access points).
 
 **Auto-discovery**: Agent-installed lightweight collector (< 5MB) reports asset inventory and health every 15 minutes. Agentless discovery via network scan for infrastructure assets.
 
-**Ticket-Asset linking**: When a ticket is submitted, CosmittoHUB attempts to link it to a specific asset ("My laptop won't connect" → automatically linked to the reporter's registered laptop). SLA and priority can be modified based on asset criticality.
+**Ticket-Asset linking**: When a ticket is submitted, Cosmicenter attempts to link it to a specific asset ("My laptop won't connect" → automatically linked to the reporter's registered laptop). SLA and priority can be modified based on asset criticality.
 
 ### 8.6 Field Service & On-Site Operations
 
@@ -980,7 +980,7 @@ type Query {
 - **Notion**: Bidirectional sync with runbooks and documentation
 - **Confluence**: KB article sync, documentation linking
 
-### 10.4 CosmittoHUB Marketplace
+### 10.4 Cosmicenter Marketplace
 
 Phase 3 initiative: an integration marketplace where partners and customers can publish integrations.
 
@@ -1311,7 +1311,7 @@ Pricing aligned with customer value, not with our cost structure. Customers pay 
 
 ### Phase 2 — Intelligence Platform (Months 9-16)
 
-**Goal**: Forecast AI and Context Graph make CosmittoHUB genuinely predictive. Begin multi-region deployment.
+**Goal**: Forecast AI and Context Graph make Cosmicenter genuinely predictive. Begin multi-region deployment.
 
 **Deliverables**:
 - [ ] Forecast AI — volume prediction, SLA breach early warning, staffing recommendations
@@ -1341,7 +1341,7 @@ Pricing aligned with customer value, not with our cost structure. Customers pay 
 
 ### Phase 3 — Ecosystem (Months 17-24)
 
-**Goal**: CosmittoHUB becomes the hub of enterprise operations — deeply integrated, widely deployed.
+**Goal**: Cosmicenter becomes the hub of enterprise operations — deeply integrated, widely deployed.
 
 **Deliverables**:
 - [ ] Public marketplace launch (partner SDK, certification program)
@@ -1376,7 +1376,7 @@ Pricing aligned with customer value, not with our cost structure. Customers pay 
 - [ ] **Cross-organizational benchmarking**: Anonymized industry benchmarks — "Your SLA compliance is in the 73rd percentile for your industry"
 - [ ] **Predictive Workforce Planning**: 90-day staffing recommendations based on business growth signals
 - [ ] **Mobile-first redesign**: Native iOS and Android apps replacing PWA
-- [ ] **CosmittoHUB for Developers**: An API-first tier for teams that want to build custom operations tooling on the CosmittoHUB platform
+- [ ] **Cosmicenter for Developers**: An API-first tier for teams that want to build custom operations tooling on the Cosmicenter platform
 
 ---
 
@@ -1417,7 +1417,7 @@ Pricing aligned with customer value, not with our cost structure. Customers pay 
 
 ### 15.4 Operational Metrics (Customer Outcomes)
 
-These are the metrics CosmittoHUB customers see improve — the proof points for sales and renewal.
+These are the metrics Cosmicenter customers see improve — the proof points for sales and renewal.
 
 - **Time to first response**: Target 40% reduction vs. email/pre-platform baseline
 - **Average resolution time**: Target 30% reduction in Phase 1, 50% in Phase 2

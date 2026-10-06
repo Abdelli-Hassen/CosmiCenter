@@ -68,7 +68,7 @@
     <header class="chrome-bar" role="banner">
       <div class="chrome-left">
         <button class="workspace-trigger" id="workspaceTrigger" aria-label="Espace de travail">
-          <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="CosmittoHUB" style="height:28px;width:auto;object-fit:contain;">
+          <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="Cosmicenter" style="height:48px;width:auto;object-fit:contain;">
         </button>
       </div>
 
@@ -360,7 +360,7 @@
     window.CHUB_CONFIG = {
       isAuthenticated: "{{ 'true' if current_user and current_user.is_authenticated else 'false' }}" === "true",
       userId: "{{ current_user.id if current_user and current_user.is_authenticated else '' }}",
-      appName: "{{ app_name | default('CosmittoHUB') }}"
+      appName: "{{ config.get('APP_NAME', 'Cosmicenter') }}"
     };
   </script>
 

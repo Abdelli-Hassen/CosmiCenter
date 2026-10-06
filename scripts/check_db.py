@@ -1,6 +1,6 @@
 import psycopg
 
-conn = psycopg.connect("postgresql://CosHub:testtest@localhost:5432/CosHub")
+conn = psycopg.connect("postgresql://Cosmicenter:testtest@localhost:5432/Cosmicenter")
 cur = conn.cursor()
 sql = "SELECT schemaname, tablename FROM pg_tables WHERE schemaname NOT IN ('pg_catalog', 'information_schema') ORDER BY schemaname, tablename"
 cur.execute(sql)

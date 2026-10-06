@@ -1,4 +1,4 @@
-# CosmittoHUB — Fonctionnalités
+# Cosmicenter — Fonctionnalités
 
 Plateforme de gestion des opérations interne de **Cosmitto Coffee** (réseau multi-POS).
 
@@ -480,7 +480,7 @@ Le système de permissions est divisé en deux catégories :
 ### Structure du projet
 
 ```
-CosmittoHUB/
+Cosmicenter/
 ├── app.py                  # Point d'entrée Flask, factory
 ├── config.py               # Configuration par environnement
 ├── models.py               # 14 modèles SQLAlchemy
@@ -519,4 +519,4 @@ CosmittoHUB/
 
 ---
 
-*CosmittoHUB — Pour moi © 2026 — Documentation*
+*Cosmicenter — Pour moi © 2026 — Documentation*

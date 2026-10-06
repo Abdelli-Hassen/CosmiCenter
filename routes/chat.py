@@ -59,7 +59,18 @@ def get_messages(contact_id):
     unread_msgs = Message.query.filter_by(sender_id=contact_id, receiver_id=current_user.id, is_read=False).all()
     for msg in unread_msgs:
         msg.is_read = True
-    if unread_msgs:
+        
+    from models import Notification
+    chat_notifs = Notification.query.filter_by(
+        utilisateur_id=current_user.id, 
+        type_notification="chat", 
+        lue=False
+    ).all()
+    for n in chat_notifs:
+        n.lue = True
+        n.date_lecture = datetime.utcnow()
+        
+    if unread_msgs or chat_notifs:
         db.session.commit()
 
     messages = Message.query.filter(

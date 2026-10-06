@@ -1,5 +1,5 @@
 /**
- * CosmittoHUB — Global Keyboard Shortcuts
+ * Cosmicenter — Global Keyboard Shortcuts
  * Handles application-wide keyboard shortcuts, chord sequences, and
  * page-specific behaviours for ticket list and detail pages.
  */

@@ -17,6 +17,15 @@ class Config:
     if db_url.startswith('postgresql://'):
         db_url = db_url.replace('postgresql://', 'postgresql+psycopg://', 1)
         
+    if db_url.startswith('sqlite:///'):
+        import os
+        basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+        if 'instance' in db_url:
+            db_path = os.path.join(basedir, 'CosmittoHUB', 'instance', 'cosmitto.db')
+            if not os.path.exists(os.path.dirname(db_path)):
+                os.makedirs(os.path.dirname(db_path), exist_ok=True)
+            db_url = 'sqlite:///' + db_path.replace('\\', '/')
+            
     SQLALCHEMY_DATABASE_URI = db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
@@ -62,7 +71,7 @@ class Config:
     LOCKOUT_DURATION_MINUTES = 30
     
     # Application
-    APP_NAME = 'CosHub'
+    APP_NAME = 'Cosmicenter'
     APP_VERSION = '2.0.0'
     SUPPORT_EMAIL = 'support@example.com'
     
