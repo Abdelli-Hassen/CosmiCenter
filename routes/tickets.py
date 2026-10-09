@@ -13,6 +13,10 @@ import logging
 tickets_bp = Blueprint('tickets', __name__)
 logger = logging.getLogger(__name__)
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in current_app.config.get('ALLOWED_EXTENSIONS', {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'zip', 'rar'})
+
 
 @tickets_bp.route('/tableau-bord')
 @login_required
@@ -270,7 +274,7 @@ def nouveau():
                 
             fichiers = request.files.getlist('attachments')
             for f in fichiers:
-                if f and f.filename:
+                if f and f.filename and allowed_file(f.filename):
                     nom_original = secure_filename(f.filename)
                     ext = nom_original.rsplit('.', 1)[1].lower() if '.' in nom_original else 'bin'
                     nouveau_nom = f"{uuid.uuid4().hex}.{ext}"
@@ -587,7 +591,7 @@ def modifier(ticket_id):
             UPLOéD_FOLDER = os.path.join(request.root_path, 'static', 'uploads', 'tickets')
             os.makedirs(UPLOéD_FOLDER, exist_ok=True)
             for f in request.files.getlist('attachments'):
-                if f and f.filename:
+                if f and f.filename and allowed_file(f.filename):
                     nom_original = secure_filename(f.filename)
                     ext = nom_original.rsplit('.', 1)[1].lower() if '.' in nom_original else 'bin'
                     nouveau_nom = f"{uuid_mod.uuid4().hex}.{ext}"
@@ -650,7 +654,7 @@ def commenter(ticket_id):
         os.makedirs(UPLOéD_FOLDER, exist_ok=True)
         
         for f in request.files.getlist('attachments'):
-            if f and f.filename:
+            if f and f.filename and allowed_file(f.filename):
                 nom_original = secure_filename(f.filename)
                 ext = nom_original.rsplit('.', 1)[1].lower() if '.' in nom_original else 'bin'
                 nouveau_nom = f"{uuid_mod.uuid4().hex}.{ext}"

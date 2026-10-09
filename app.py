@@ -220,33 +220,6 @@ def create_app(config_name='default'):
         success, msg = verify_davmail_connection()
         return jsonify({"success": success, "message": msg})
 
-    @app.route('/fix_perms')
-    def fix_perms():
-        from models import db, Role, Permission
-        try:
-            perms_to_add = [
-                {'code': 'base_connaissance.creer', 'nom': 'Créer', 'description': 'Peut ajouter un article', 'categorie': 'Intelligence'},
-                {'code': 'base_connaissance.modifier', 'nom': 'Modifier', 'description': 'Peut modifier un article', 'categorie': 'Intelligence'},
-                {'code': 'base_connaissance.supprimer', 'nom': 'Supprimer', 'description': 'Peut supprimer un article ou une catégorie', 'categorie': 'Intelligence'}
-            ]
-            for p_data in perms_to_add:
-                p = Permission.query.filter_by(code=p_data['code']).first()
-                if not p:
-                    p = Permission(**p_data)
-                    db.session.add(p)
-            db.session.commit()
-            
-            admin_role = Role.query.filter_by(nom='Super Administrateur').first()
-            if admin_role:
-                for p_code in ['base_connaissance.creer', 'base_connaissance.modifier', 'base_connaissance.supprimer', 'base_connaissance.voir']:
-                    p = Permission.query.filter_by(code=p_code).first()
-                    if p and p not in admin_role.permissions:
-                        admin_role.permissions.append(p)
-                db.session.commit()
-            return "Permissions updated! You can now delete this route."
-        except Exception as e:
-            return str(e)
-            
     return app
 
 

@@ -62,7 +62,7 @@
     // Play audio notifications
     try {
         const textToMatch = ((opts.title || '') + ' ' + (opts.message || '')).toLowerCase();
-        if (type === 'success' && textToMatch.includes('créé')) {
+        if (type === 'success' && textToMatch.includes('ticket') && textToMatch.includes('créé')) {
             new Audio('/static/ticket%20sent.mp3').play().catch(e => console.log('Audio play error:', e));
         } else if (textToMatch.includes('nouveau') && textToMatch.includes('ticket')) {
             new Audio('/static/new%20ticket.mp3').play().catch(e => console.log('Audio play error:', e));

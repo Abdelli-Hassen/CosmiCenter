@@ -23,8 +23,6 @@ def categorie(id):
 
     cat = CategorieConnaissance.query.get_or_404(id)
     return render_template('base_connaissance/categorie.html', categorie=cat)
-    cat = CategorieConnaissance.query.get_or_404(id)
-    return render_template('base_connaissance/categorie.html', categorie=cat)
 
 @base_connaissance_bp.route('/article/<string:id>')
 @login_required
@@ -37,9 +35,6 @@ def article(id):
     art.vues += 1
     db.session.commit()
     return render_template('base_connaissance/article.html', article=art)
-    art.vues += 1
-    db.session.commit()
-    return render_template('base_connaissance/article.html', article=art)
 
 @base_connaissance_bp.route('/article/nouveau', methods=['GET', 'POST'])
 @login_required
@@ -49,15 +44,6 @@ def nouvel_article():
         return redirect(url_for('base_connaissance.index'))
 
     categories = CategorieConnaissance.query.all()
-
-    if not categories:
-        cat1 = CategorieConnaissance(nom='Tech', description='Technologie', icone='monitor')
-        cat2 = CategorieConnaissance(nom='RH', description='Ressources Humaines', icone='users')
-        cat3 = CategorieConnaissance(nom='Finance', description='Finances', icone='dollar-sign')
-        cat4 = CategorieConnaissance(nom='Autre', description='Autres', icone='folder')
-        db.session.add_all([cat1, cat2, cat3, cat4])
-        db.session.commit()
-        categories = CategorieConnaissance.query.all()
 
     if request.method == 'POST':
         titre = request.form.get('titre')

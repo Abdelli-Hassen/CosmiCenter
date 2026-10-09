@@ -457,30 +457,6 @@ class ModeleReponse(db.Model):
         return f'<ModeleReponse {self.titre}>'
 
 
-class BaseConnaissance(db.Model):
-    """Base de connaissances / FAQ"""
-    __tablename__ = 'base_connaissance'
-
-    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    titre = db.Column(db.String(200), nullable=False)
-    contenu = db.Column(db.Text, nullable=False)
-    categorie_id = db.Column(db.String(36), db.ForeignKey('categories_tickets.id', ondelete='SET NULL'), index=True)
-    departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='SET NULL'), index=True)
-    tags = db.Column(db.JSON)  # JSON
-    publique = db.Column(db.Boolean, default=True)
-    auteur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), index=True)
-    vues = db.Column(db.Integer, default=0)
-    utile_count = db.Column(db.Integer, default=0)
-    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
-    date_modification = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    categorie = db.relationship('CategorieTicket')
-    departement = db.relationship('Departement')
-    auteur = db.relationship('Utilisateur')
-
-    def __repr__(self):
-        return f'<BaseConnaissance {self.titre}>'
-
 class Message(db.Model):
     """Messages du chat interne"""
     __tablename__ = 'messages'
