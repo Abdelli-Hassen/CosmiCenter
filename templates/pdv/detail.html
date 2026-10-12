@@ -1028,7 +1028,7 @@ dialog::backdrop {
       <div class="pdv-card-body">
         {% if pdv.employes %}
         <div class="pdv-card-scroll-body">
-          {% for emp in pdv.employes %}
+          {% for emp in (pdv.employes|sort(attribute='nom_complet')) %}
           <div class="pdv-staff-item">
             <div class="pdv-staff-left">
               <div class="pdv-staff-avatar">
@@ -1062,6 +1062,255 @@ dialog::backdrop {
     </div>
 
   </div>
+
+  <!-- Dialog Assigner un employé -->
+  <dialog id="addEmployeeDialog" style="padding:0; border:none; border-radius:20px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); background:var(--surface-base); max-width:620px; width:94%; margin:auto; overflow:hidden;">
+    <div style="padding:20px 24px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; background:var(--surface-1);">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:36px; height:36px; border-radius:10px; background:rgba(16,185,129,0.1); color:#10b981; display:flex; align-items:center; justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary);">
+            Assigner un employé
+          </h3>
+          <p style="margin:0; font-size:12px; color:var(--text-muted);">Rattacher un collaborateur à <strong>{{ pdv.nom }}</strong></p>
+        </div>
+      </div>
+      <button type="button" onclick="document.getElementById('addEmployeeDialog').close()" style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:6px; border-radius:8px; display:flex;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form method="POST" action="{{ url_for('pdv.ajouter_employe', id=pdv.id) }}" id="assignPdvEmployeeForm" style="padding:20px 24px; display:flex; flex-direction:column; gap:16px;">
+      <input type="hidden" name="utilisateur_id" id="selected_pdv_user_id" required value="">
+
+      <!-- Filtres rapides : Origine & Recherche -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div>
+          <label style="display:block; font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px;">
+            Filtrer par affectation actuelle
+          </label>
+          <select id="filterPdvOrigin" class="select-field" style="width:100%; padding:9px 12px; font-size:13px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-base); color:var(--text-primary);">
+            <option value="all">Toutes les affectations</option>
+            <option value="none">Sans affectation / Siège libre</option>
+            <optgroup label="── Départements ──">
+              {% for d in departements_list %}
+              <option value="dept_{{ d.id }}">{{ d.nom }}</option>
+              {% endfor %}
+            </optgroup>
+            <optgroup label="── Autres Points de Vente ──">
+              {% for p in pdvs_list %}
+              {% if p.id != pdv.id %}
+              <option value="pdv_{{ p.id }}">{{ p.nom }} ({{ p.ville or 'PDV' }})</option>
+              {% endif %}
+              {% endfor %}
+            </optgroup>
+          </select>
+        </div>
+
+        <div>
+          <label style="display:block; font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px;">
+            Recherche rapide
+          </label>
+          <div style="position:relative;">
+            <input type="text" id="searchPdvUser" placeholder="Nom, prénom, poste..." style="width:100%; padding:9px 12px 9px 34px; font-size:13px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-base); color:var(--text-primary); box-sizing:border-box;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none;">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Header liste avec compteur -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+        <span style="font-size:12px; font-weight:700; color:var(--text-primary);">
+          Choisir un collaborateur <span id="pdvUserCountBadge" style="font-size:11px; font-weight:600; color:var(--text-muted); background:var(--surface-2); padding:2px 6px; border-radius:9999px; margin-left:4px;"></span>
+        </span>
+        <span style="font-size:11px; color:var(--text-muted);">Cliquez pour sélectionner</span>
+      </div>
+
+      <!-- Liste scrollable des utilisateurs -->
+      <div id="pdvUserCardsList" style="max-height:250px; overflow-y:auto; border:1px solid var(--border-subtle); border-radius:12px; background:var(--surface-1); padding:6px; display:flex; flex-direction:column; gap:4px;">
+        {% for u in (utilisateurs|sort(attribute='nom_complet')) %}
+        {% if u.pdv_id != pdv.id %}
+        <div class="user-select-card" 
+             data-id="{{ u.id }}" 
+             data-name="{{ u.nom_complet|lower }}" 
+             data-poste="{{ (u.poste or '')|lower }}" 
+             data-dept="{% if u.departement_id %}dept_{{ u.departement_id }}{% else %}none{% endif %}"
+             data-pdv="{% if u.pdv_id %}pdv_{{ u.pdv_id }}{% endif %}"
+             onclick="selectPdvUser(this, '{{ u.id }}', '{{ u.nom_complet }}', '{{ u.poste or 'Sans poste' }}')"
+             style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-radius:10px; cursor:pointer; background:var(--surface-base); border:1.5px solid transparent; transition:all 0.15s ease;">
+          <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+            <div style="width:34px; height:34px; border-radius:50%; background:var(--surface-3); color:var(--text-primary); font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              {{ u.prenom[0]|upper }}{{ u.nom[0]|upper }}
+            </div>
+            <div style="min-width:0;">
+              <div style="font-size:13px; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ u.nom_complet }}</span>
+                {% if u.entreprise %}
+                <span style="font-size:9px; font-weight:800; padding:1px 5px; border-radius:4px; background:{{ u.entreprise.couleur }}15; color:{{ u.entreprise.couleur }}; border:1px solid {{ u.entreprise.couleur }}30; flex-shrink:0;">
+                  {{ u.entreprise.nom }}
+                </span>
+                {% endif %}
+              </div>
+              <div style="font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                {{ u.poste or 'Sans poste' }}
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+            {% if u.pdv %}
+            <span style="font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px; background:rgba(245,158,11,0.12); color:#F59E0B; border:1px solid rgba(245,158,11,0.25);">
+              PDV: {{ u.pdv.nom }}
+            </span>
+            {% elif u.departement %}
+            <span style="font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px; background:{{ u.departement.couleur }}15; color:{{ u.departement.couleur }}; border:1px solid {{ u.departement.couleur }}30;">
+              Dépt: {{ u.departement.nom }}
+            </span>
+            {% else %}
+            <span style="font-size:10px; font-weight:600; padding:2px 7px; border-radius:6px; background:var(--surface-3); color:var(--text-muted);">
+              Non assigné
+            </span>
+            {% endif %}
+            <div class="pdv-user-check-indicator" style="width:18px; height:18px; border-radius:50%; border:1.5px solid var(--border-default); display:flex; align-items:center; justify-content:center;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" style="display:none;"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        <div id="pdvUserEmptyState" style="display:none; padding:24px; text-align:center; color:var(--text-muted); font-size:13px;">
+          Aucun collaborateur ne correspond à ces critères.
+        </div>
+      </div>
+
+      <!-- Bannière de confirmation -->
+      <div id="pdvUserSelectedBanner" style="display:none; padding:10px 14px; border-radius:10px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); color:var(--text-primary); font-size:12px; display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Sélectionné : <strong id="pdvUserSelectedName">-</strong> (<span id="pdvUserSelectedPoste">-</span>)</span>
+        </div>
+        <button type="button" onclick="clearPdvUserSelection()" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:11px; text-decoration:underline;">Changer</button>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex; justify-content:flex-end; gap:10px; padding-top:4px; border-top:1px solid var(--border-subtle);">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('addEmployeeDialog').close()">Annuler</button>
+        <button type="submit" id="btnConfirmPdvAssign" class="btn btn-primary" disabled style="display:inline-flex; align-items:center; gap:6px; opacity:0.5; cursor:not-allowed;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Confirmer l'assignation
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+  (function() {
+    const originSelect = document.getElementById('filterPdvOrigin');
+    const searchInput = document.getElementById('searchPdvUser');
+    const cards = document.querySelectorAll('#pdvUserCardsList .user-select-card');
+    const countBadge = document.getElementById('pdvUserCountBadge');
+    const emptyState = document.getElementById('pdvUserEmptyState');
+    const hiddenInput = document.getElementById('selected_pdv_user_id');
+    const confirmBtn = document.getElementById('btnConfirmPdvAssign');
+    const selectedBanner = document.getElementById('pdvUserSelectedBanner');
+    const selectedName = document.getElementById('pdvUserSelectedName');
+    const selectedPoste = document.getElementById('pdvUserSelectedPoste');
+
+    function filterUsers() {
+      const origin = originSelect ? originSelect.value : 'all';
+      const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      let visible = 0;
+
+      cards.forEach(card => {
+        const name = card.dataset.name || '';
+        const poste = card.dataset.poste || '';
+        const cardDept = card.dataset.dept || '';
+        const cardPdv = card.dataset.pdv || '';
+
+        const matchQuery = !query || name.includes(query) || poste.includes(query);
+        let matchOrigin = true;
+        if (origin === 'none') {
+          matchOrigin = cardDept === 'none' && !cardPdv;
+        } else if (origin.startsWith('dept_')) {
+          matchOrigin = cardDept === origin;
+        } else if (origin.startsWith('pdv_')) {
+          matchOrigin = cardPdv === origin;
+        }
+
+        if (matchQuery && matchOrigin) {
+          card.style.display = 'flex';
+          visible++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      if (countBadge) countBadge.textContent = visible + ' disponible' + (visible > 1 ? 's' : '');
+      if (emptyState) emptyState.style.display = visible === 0 ? 'block' : 'none';
+    }
+
+    if (originSelect) originSelect.addEventListener('change', filterUsers);
+    if (searchInput) searchInput.addEventListener('input', filterUsers);
+
+    window.selectPdvUser = function(cardElem, id, name, poste) {
+      cards.forEach(c => {
+        c.style.borderColor = 'transparent';
+        c.style.background = 'var(--surface-base)';
+        const ind = c.querySelector('.pdv-user-check-indicator');
+        if (ind) {
+          ind.style.borderColor = 'var(--border-default)';
+          ind.style.background = 'transparent';
+          const sv = ind.querySelector('svg');
+          if (sv) sv.style.display = 'none';
+        }
+      });
+
+      cardElem.style.borderColor = 'var(--brand)';
+      cardElem.style.background = 'rgba(225,29,72,0.04)';
+      const ind = cardElem.querySelector('.pdv-user-check-indicator');
+      if (ind) {
+        ind.style.borderColor = 'var(--brand)';
+        ind.style.background = 'var(--brand)';
+        const sv = ind.querySelector('svg');
+        if (sv) sv.style.display = 'block';
+      }
+
+      hiddenInput.value = id;
+      selectedName.textContent = name;
+      selectedPoste.textContent = poste;
+      selectedBanner.style.display = 'flex';
+
+      confirmBtn.disabled = false;
+      confirmBtn.style.opacity = '1';
+      confirmBtn.style.cursor = 'pointer';
+    };
+
+    window.clearPdvUserSelection = function() {
+      hiddenInput.value = '';
+      selectedBanner.style.display = 'none';
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = '0.5';
+      confirmBtn.style.cursor = 'not-allowed';
+      cards.forEach(c => {
+        c.style.borderColor = 'transparent';
+        c.style.background = 'var(--surface-base)';
+        const ind = c.querySelector('.pdv-user-check-indicator');
+        if (ind) {
+          ind.style.borderColor = 'var(--border-default)';
+          ind.style.background = 'transparent';
+          const sv = ind.querySelector('svg');
+          if (sv) sv.style.display = 'none';
+        }
+      });
+    };
+
+    filterUsers();
+  })();
+  </script>
 
   <!-- ==========================================================================
        SECTION: TICKETS SOUMIS (WIDE / FULL-WIDTH FOR HUNDREDS OF TICKETS)

@@ -363,7 +363,10 @@ def nouveau():
     
     # Récupérer les données pour le formulaire
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
-    utilisateurs = Utilisateur.query.filter_by(actif=True).order_by(Utilisateur.nom).all()
+    utilisateurs = sorted(
+        Utilisateur.query.filter_by(actif=True).all(),
+        key=lambda u: (u.nom_complet or '').strip().upper()
+    )
     
     categories = CategorieTicket.query.filter_by(actif=True).order_by(CategorieTicket.nom).all()
     
@@ -618,7 +621,10 @@ def modifier(ticket_id):
             flash('Erreur lors de la modification', 'danger')
 
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
-    utilisateurs = Utilisateur.query.filter_by(actif=True).order_by(Utilisateur.nom).all()
+    utilisateurs = sorted(
+        Utilisateur.query.filter_by(actif=True).all(),
+        key=lambda u: (u.nom_complet or '').strip().upper()
+    )
     categories = CategorieTicket.query.filter_by(actif=True).order_by(CategorieTicket.nom).all()
 
     return render_template('tickets/modifier.html',

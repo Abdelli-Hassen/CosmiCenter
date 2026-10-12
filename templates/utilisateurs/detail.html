@@ -155,6 +155,19 @@
           </div>
 
           <div>
+            <dt style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Entreprise</dt>
+            <dd style="font-size:13px;margin:0;">
+              {% if utilisateur.entreprise %}
+              <span class="badge" style="background:{{ utilisateur.entreprise.couleur }}18; color:{{ utilisateur.entreprise.couleur }}; border:1px solid {{ utilisateur.entreprise.couleur }}35; font-weight:800; padding:2px 8px;">
+                {{ utilisateur.entreprise.nom }} ({{ utilisateur.entreprise.type_entreprise }})
+              </span>
+              {% else %}
+              <span style="color:var(--text-muted);">Cosmitto (Par défaut)</span>
+              {% endif %}
+            </dd>
+          </div>
+
+          <div>
             <dt style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Département</dt>
             <dd style="font-size:13px;color:var(--text-primary);font-weight:500;margin:0;">{{ utilisateur.departement.nom if utilisateur.departement else '—' }}</dd>
           </div>

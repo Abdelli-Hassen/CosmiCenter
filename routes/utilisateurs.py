@@ -65,7 +65,7 @@ def liste():
     elif actif_filter == '0':
         query = query.filter_by(actif=False)
     
-    utilisateurs = query.order_by(Utilisateur.nom, Utilisateur.prenom).paginate(
+    utilisateurs = query.order_by(Utilisateur.prenom.asc(), Utilisateur.nom.asc()).paginate(
         page=page, per_page=per_page, error_out=False
     )
     
@@ -101,27 +101,41 @@ def nouveau():
         departement_id = request.form.get('departement_id', '').strip() or None
         
         # Validation
+        from models import Entreprise, PointDeVente
+        roles_all = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
+        departements_all = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
+        entreprises_all = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
+        pdvs_all = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
+
         if not all([nom, prenom, email, password]):
             flash('Tous les champs obligatoires doivent être remplis.', 'danger')
             return render_template('utilisateurs/nouveau_utilisateur.html',
-                                 roles=Role.query.filter_by(actif=True).all(),
-                                 departements=Departement.query.filter_by(actif=True).all())
+                                 roles=roles_all,
+                                 departements=departements_all,
+                                 entreprises=entreprises_all,
+                                 pdvs=pdvs_all)
         
         # Vérifier l'email unique
         if Utilisateur.query.filter_by(email=email).first():
             flash('Un utilisateur avec cet email existe déjà.', 'danger')
             return render_template('utilisateurs/nouveau_utilisateur.html',
-                                 roles=Role.query.filter_by(actif=True).all(),
-                                 departements=Departement.query.filter_by(actif=True).all())
+                                 roles=roles_all,
+                                 departements=departements_all,
+                                 entreprises=entreprises_all,
+                                 pdvs=pdvs_all)
         
         # Vérifier le matricule unique
         if matricule and Utilisateur.query.filter_by(matricule=matricule).first():
             flash('Un utilisateur avec ce matricule existe déjà.', 'danger')
             return render_template('utilisateurs/nouveau_utilisateur.html',
-                                 roles=Role.query.filter_by(actif=True).all(),
-                                 departements=Departement.query.filter_by(actif=True).all())
+                                 roles=roles_all,
+                                 departements=departements_all,
+                                 entreprises=entreprises_all,
+                                 pdvs=pdvs_all)
         
         # Créer l'utilisateur
+        entreprise_id = request.form.get('entreprise_id', '').strip() or None
+        pdv_id = request.form.get('pdv_id', '').strip() or None
         utilisateur = Utilisateur(
             nom=nom,
             prenom=prenom,
@@ -136,6 +150,8 @@ def nouveau():
             poste_machine=request.form.get('poste_machine', '').strip() or None,
             role_id=role_id,
             departement_id=departement_id,
+            entreprise_id=entreprise_id,
+            pdv_id=pdv_id,
             actif=True
         )
         utilisateur.set_password(password)
@@ -149,11 +165,16 @@ def nouveau():
             db.session.rollback()
             flash(f'Erreur lors de la création: {str(e)}', 'danger')
     
+    from models import Entreprise, PointDeVente
     roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
+    entreprises = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
+    pdvs = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
     return render_template('utilisateurs/nouveau_utilisateur.html',
                          roles=roles,
-                         departements=departements)
+                         departements=departements,
+                         entreprises=entreprises,
+                         pdvs=pdvs)
 
 
 @utilisateurs_bp.route('/<string:id>')
@@ -210,22 +231,32 @@ def modifier(id):
         if current_user.has_permission('utilisateurs.modifier'):
             role_id = request.form.get('role_id', '').strip() or None
             departement_id = request.form.get('departement_id', '').strip() or None
+            pdv_id = request.form.get('pdv_id', '').strip() or None
             actif = request.form.get('actif') == '1'
         else:
             role_id = utilisateur.role_id
             departement_id = utilisateur.departement_id
+            pdv_id = utilisateur.pdv_id
             actif = utilisateur.actif
         
-        # Mot de passe optionnel
-        password = request.form.get('password', '').strip()
+        # Mot de passe optionnel (supporte 'nouveau_password' et 'password')
+        password = request.form.get('nouveau_password', '').strip() or request.form.get('password', '').strip()
         
         # Validation
+        from models import Entreprise, PointDeVente
+        roles_all = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
+        departements_all = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
+        entreprises_all = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
+        pdvs_all = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
+
         if not all([nom, prenom, email]):
             flash('Tous les champs obligatoires doivent être remplis.', 'danger')
             return render_template('utilisateurs/modifier_utilisateur.html',
                                  utilisateur=utilisateur,
-                                 roles=Role.query.filter_by(actif=True).all(),
-                                 departements=Departement.query.filter_by(actif=True).all())
+                                 roles=roles_all,
+                                 departements=departements_all,
+                                 entreprises=entreprises_all,
+                                 pdvs=pdvs_all)
         
         # Vérifier l'email unique (sauf pour l'utilisateur actuel)
         existing = Utilisateur.query.filter_by(email=email).first()
@@ -233,8 +264,10 @@ def modifier(id):
             flash('Un utilisateur avec cet email existe déjà.', 'danger')
             return render_template('utilisateurs/modifier_utilisateur.html',
                                  utilisateur=utilisateur,
-                                 roles=Role.query.filter_by(actif=True).all(),
-                                 departements=Departement.query.filter_by(actif=True).all())
+                                 roles=roles_all,
+                                 departements=departements_all,
+                                 entreprises=entreprises_all,
+                                 pdvs=pdvs_all)
         
         # Vérifier le matricule unique
         if matricule:
@@ -243,8 +276,10 @@ def modifier(id):
                 flash('Un utilisateur avec ce matricule existe déjà.', 'danger')
                 return render_template('utilisateurs/modifier_utilisateur.html',
                                      utilisateur=utilisateur,
-                                     roles=Role.query.filter_by(actif=True).all(),
-                                     departements=Departement.query.filter_by(actif=True).all())
+                                     roles=roles_all,
+                                     departements=departements_all,
+                                     entreprises=entreprises_all,
+                                     pdvs=pdvs_all)
         
         # Mettre à jour
         utilisateur.nom = nom
@@ -260,6 +295,8 @@ def modifier(id):
         utilisateur.poste_machine = request.form.get('poste_machine', '').strip() or None
         utilisateur.role_id = role_id
         utilisateur.departement_id = departement_id
+        utilisateur.pdv_id = pdv_id
+        utilisateur.entreprise_id = request.form.get('entreprise_id', '').strip() or None
         utilisateur.actif = actif
         
         if password:
@@ -273,12 +310,17 @@ def modifier(id):
             db.session.rollback()
             flash(f'Erreur lors de la modification: {str(e)}', 'danger')
     
+    from models import Entreprise, PointDeVente
     roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
+    entreprises = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
+    pdvs = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
     return render_template('utilisateurs/modifier_utilisateur.html',
                          utilisateur=utilisateur,
                          roles=roles,
-                         departements=departements)
+                         departements=departements,
+                         entreprises=entreprises,
+                         pdvs=pdvs)
 
 
 @utilisateurs_bp.route('/<string:id>/toggle-actif', methods=['POST'])

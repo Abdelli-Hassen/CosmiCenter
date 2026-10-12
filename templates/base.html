@@ -199,6 +199,13 @@
               <span class="nav-item-label">Points de Vente</span>
             </a>
             {% endif %}
+
+            {% if current_user.has_permission('utilisateurs.voir') or current_user.has_permission('pdv.voir') %}
+            <a href="{{ url_for('companies.liste') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('companies.') %}active{% endif %}">
+              <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M9 8h1"/><path d="M9 12h1"/><path d="M9 16h1"/><path d="M14 8h1"/><path d="M14 12h1"/><path d="M14 16h1"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
+              <span class="nav-item-label">Companies</span>
+            </a>
+            {% endif %}
             
             {% if current_user.has_permission('utilisateurs.voir') %}
             <a href="{{ url_for('utilisateurs.liste') }}" class="nav-item {% if request.endpoint and (request.endpoint.startswith('utilisateurs.') or request.endpoint == 'admin.utilisateurs' or request.endpoint == 'admin.modifier_utilisateur' or request.endpoint == 'admin.nouvel_utilisateur') %}active{% endif %}">

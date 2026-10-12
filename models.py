@@ -95,6 +95,7 @@ class Utilisateur(UserMixin, db.Model):
     role_id = db.Column(db.String(36), db.ForeignKey('roles.id', ondelete='SET NULL'), index=True)
     departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='SET NULL'), index=True)
     pdv_id = db.Column(db.String(36), db.ForeignKey('points_de_vente.id', ondelete='SET NULL'), index=True)
+    entreprise_id = db.Column(db.String(36), db.ForeignKey('entreprises.id', ondelete='SET NULL'), index=True)
     
     # Paramètres
     langue = db.Column(db.String(10), default='fr')
@@ -115,6 +116,7 @@ class Utilisateur(UserMixin, db.Model):
     role = db.relationship('Role', backref='utilisateurs')
     departement = db.relationship('Departement', foreign_keys=[departement_id], backref='membres')
     pdv = db.relationship('PointDeVente', foreign_keys=[pdv_id], backref='employes')
+    entreprise = db.relationship('Entreprise', foreign_keys=[entreprise_id], backref=db.backref('employes', lazy='dynamic'))
     tickets_crees = db.relationship('Ticket', foreign_keys='Ticket.createur_id', backref='createur')
     tickets_assignes = db.relationship('Ticket', foreign_keys='Ticket.assigne_a_id', backref='assigne_a')
     commentaires = db.relationship('Commentaire', backref='auteur', cascade='all, delete-orphan')
@@ -185,6 +187,32 @@ class Equipement(db.Model):
 
     def __repr__(self):
         return f'<Equipement {self.type_equipement} - {self.numero_serie}>'
+
+
+class Entreprise(db.Model):
+    """Modèle pour une Entreprise / Société (interne ou externe/prestataire)"""
+    __tablename__ = 'entreprises'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    nom = db.Column(db.String(100), nullable=False, unique=True)
+    code = db.Column(db.String(20), unique=True)
+    description = db.Column(db.Text)
+    type_entreprise = db.Column(db.String(50), default='externe')  # 'principale', 'filiale', 'externe', 'partenaire', 'prestataire'
+    email = db.Column(db.String(120))
+    telephone = db.Column(db.String(20))
+    adresse = db.Column(db.Text)
+    site_web = db.Column(db.String(200))
+    couleur = db.Column(db.String(30), default='#6366F1')
+    logo = db.Column(db.String(255))
+    actif = db.Column(db.Boolean, default=True)
+    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def nombre_employes(self):
+        return self.employes.count()
+
+    def __repr__(self):
+        return f'<Entreprise {self.nom}>'
 
 
 

@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}{{ entreprise.nom }} - Détails & Collaborateurs{% endblock %}
+{% block body_class %}page-company-detail{% endblock %}
+
+{% block extra_head %}
+<style>
+.comp-detail-page { padding: 28px 36px; max-width: 1400px; margin: 0 auto; }
+
+/* ── Top Bar ───────────────────────────────────────────────── */
+.comp-back {
+  display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700;
+  color: var(--text-muted); text-decoration: none; margin-bottom: 20px; transition: color 0.15s;
+}
+.comp-back:hover { color: var(--brand); }
+
+/* ── Header Banner ─────────────────────────────────────────── */
+.comp-header-card {
+  background: var(--surface-1); border: 1px solid var(--border-subtle);
+  border-radius: 20px; padding: 28px 32px; margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: var(--shadow-sm); flex-wrap: wrap; gap: 20px;
+}
+.comp-header-main { display: flex; align-items: center; gap: 20px; }
+.comp-detail-avatar {
+  width: 64px; height: 64px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 900; color: #fff;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12); flex-shrink: 0;
+}
+.comp-title {
+  font-size: 24px; font-weight: 900; color: var(--text-primary); margin: 0 0 6px 0;
+}
+.comp-badges-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.comp-meta-pills {
+  display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
+  padding: 14px 20px; background: var(--surface-2); border-radius: 14px; margin-top: 16px;
+}
+.comp-meta-item { display: flex; flex-direction: column; gap: 2px; }
+.comp-meta-lbl { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+.comp-meta-val { font-size: 13px; font-weight: 800; color: var(--text-primary); }
+
+/* ── Layout Grid ───────────────────────────────────────────── */
+.comp-layout {
+  display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;
+}
+
+/* ── Team Section ──────────────────────────────────────────── */
+.comp-box {
+  background: var(--surface-1); border: 1px solid var(--border-subtle);
+  border-radius: 20px; overflow: hidden; box-shadow: var(--shadow-sm);
+}
+.comp-box-header {
+  padding: 18px 24px; border-bottom: 1px solid var(--border-subtle);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface-2);
+}
+.comp-box-title {
+  font-size: 15px; font-weight: 800; color: var(--text-primary); margin: 0;
+  display: flex; align-items: center; gap: 10px;
+}
+
+/* ── Scrollable Staff Table ────────────────────────────────── */
+.comp-table-wrap {
+  max-height: 540px; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: var(--border-default) transparent;
+}
+.comp-table-wrap::-webkit-scrollbar { width: 6px; }
+.comp-table-wrap::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 4px; }
+
+.comp-table {
+  width: 100%; border-collapse: collapse; text-align: left;
+}
+.comp-table th {
+  padding: 12px 20px; font-size: 11px; font-weight: 800; text-transform: uppercase;
+  color: var(--text-muted); background: var(--surface-1);
+  border-bottom: 1px solid var(--border-subtle); position: sticky; top: 0; z-index: 10;
+}
+.comp-table td {
+  padding: 14px 20px; border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px; color: var(--text-primary); vertical-align: middle;
+}
+.comp-table tr:last-child td { border-bottom: none; }
+.comp-table tr:hover td { background: var(--surface-hover); }
+
+.user-cell { display: flex; align-items: center; gap: 12px; }
+.user-avatar-sm {
+  width: 34px; height: 34px; border-radius: 50%; background: var(--surface-3);
+  color: var(--text-secondary); font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.user-name-txt { font-weight: 800; color: var(--text-primary); }
+.user-email-txt { font-size: 11px; color: var(--text-muted); }
+
+@media (max-width: 960px) {
+  .comp-layout { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="comp-detail-page">
+
+  <a href="{{ url_for('companies.liste') }}" class="comp-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Retour aux entreprises
+  </a>
+
+  <!-- Header Banner -->
+  <div class="comp-header-card">
+    <div style="flex:1;">
+      <div class="comp-header-main">
+        <div class="comp-detail-avatar" style="background: {{ entreprise.couleur or '#6366F1' }};">
+          {{ entreprise.nom[:2]|upper }}
+        </div>
+        <div>
+          <h1 class="comp-title">{{ entreprise.nom }}</h1>
+          <div class="comp-badges-row">
+            <span class="badge badge-default" style="text-transform:uppercase; font-size:11px;">
+              Type: {{ entreprise.type_entreprise }}
+            </span>
+            {% if entreprise.code %}
+            <span class="badge badge-default" style="font-family:monospace; font-size:11px;">
+              Code: {{ entreprise.code }}
+            </span>
+            {% endif %}
+            <span class="badge" style="background:rgba(16,185,129,0.12); color:#10b981; font-weight:800; font-size:11px;">
+              {{ employes|length }} collaborateur{{ 's' if employes|length != 1 else '' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-meta-pills">
+        <div class="comp-meta-item">
+          <span class="comp-meta-lbl">Email</span>
+          <span class="comp-meta-val">{{ entreprise.email or 'Non renseigné' }}</span>
+        </div>
+        <div class="comp-meta-item">
+          <span class="comp-meta-lbl">Téléphone</span>
+          <span class="comp-meta-val">{{ entreprise.telephone or 'Non renseigné' }}</span>
+        </div>
+        <div class="comp-meta-item">
+          <span class="comp-meta-lbl">Adresse</span>
+          <span class="comp-meta-val">{{ entreprise.adresse or 'Non renseignée' }}</span>
+        </div>
+        <div class="comp-meta-item">
+          <span class="comp-meta-lbl">Site Web</span>
+          <span class="comp-meta-val">{{ entreprise.site_web or 'Non renseigné' }}</span>
+        </div>
+      </div>
+    </div>
+
+    {% if current_user.has_permission('admin_dashboard.voir') or current_user.role.niveau >= 80 %}
+    <div style="display:flex; gap:10px;">
+      <a href="{{ url_for('companies.modifier', id=entreprise.id) }}" class="btn-action" style="padding:10px 18px; border-radius:12px; text-decoration:none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Modifier
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Layout Grid -->
+  <div class="comp-layout">
+
+    <!-- Colonne Gauche : Collaborateurs de cette entreprise -->
+    <div class="comp-box">
+      <div class="comp-box-header">
+        <h2 class="comp-box-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Collaborateurs rattachés à {{ entreprise.nom }}
+        </h2>
+        <span class="badge badge-default" style="font-size:11px;">{{ employes|length }} membre{{ 's' if employes|length != 1 else '' }}</span>
+      </div>
+
+      <div class="comp-table-wrap">
+        {% if employes %}
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>Collaborateur</th>
+              <th>Poste</th>
+              <th>Département</th>
+              <th>Rôle</th>
+              {% if current_user.has_permission('admin_dashboard.voir') or current_user.role.niveau >= 80 %}
+              <th style="text-align:right;">Action</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in employes %}
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <div class="user-avatar-sm">
+                    {{ u.prenom[0]|upper }}{{ u.nom[0]|upper }}
+                  </div>
+                  <div>
+                    <div class="user-name-txt">{{ u.nom_complet }}</div>
+                    <div class="user-email-txt">{{ u.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td><strong>{{ u.poste or 'Non spécifié' }}</strong></td>
+              <td>
+                {% if u.departement %}
+                <span class="badge" style="background: {{ u.departement.couleur }}15; color: {{ u.departement.couleur }}; border: 1px solid {{ u.departement.couleur }}30;">
+                  {{ u.departement.nom }}
+                </span>
+                {% else %}
+                <span style="color:var(--text-muted);">-</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge badge-default" style="font-size:11px;">
+                  {{ u.role.nom if u.role else 'Sans rôle' }}
+                </span>
+              </td>
+              {% if current_user.has_permission('admin_dashboard.voir') or current_user.role.niveau >= 80 %}
+              <td style="text-align:right;">
+                <form method="POST" action="{{ url_for('companies.retirer_employe', user_id=u.id) }}" onsubmit="return confirm('Détacher ce collaborateur de {{ entreprise.nom }} ?');" style="display:inline;">
+                  <button type="submit" class="btn-action" style="padding:4px 8px; font-size:11px; color:#ef4444; border-color:rgba(239,68,68,0.2);">
+                    Détacher
+                  </button>
+                </form>
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div style="padding:48px 20px; text-align:center; color:var(--text-muted);">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px; opacity:0.5;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <div style="font-size:14px; font-weight:700;">Aucun collaborateur rattaché pour le moment.</div>
+          <div style="font-size:12px; margin-top:4px;">Utilisez le formulaire à droite pour affecter un utilisateur existant.</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Colonne Droite : Renseignements & Rapprochement -->
+    <div style="display:flex; flex-direction:column; gap:20px;">
+      
+      <!-- Box Info -->
+      <div class="comp-box">
+        <div class="comp-box-header">
+          <h3 class="comp-box-title">À propos de l'organisation</h3>
+        </div>
+        <div style="padding:20px;">
+          <p style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin:0;">
+            {{ entreprise.description or 'Aucune description spécifique n\'a été ajoutée.' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Assigner un employé -->
+      {% if current_user.has_permission('admin_dashboard.voir') or current_user.role.niveau >= 80 %}
+      <div class="comp-box">
+        <div class="comp-box-header">
+          <h3 class="comp-box-title">Rattacher un collaborateur</h3>
+        </div>
+        <form method="POST" action="{{ url_for('companies.assigner_employe', id=entreprise.id) }}" style="padding:20px; display:flex; flex-direction:column; gap:14px;">
+          <div>
+            <label style="display:block; font-size:12px; font-weight:700; color:var(--text-secondary); margin-bottom:6px;">
+              Sélectionner un utilisateur :
+            </label>
+            <select name="utilisateur_id" required style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border-default); background:var(--surface-base); color:var(--text-primary); font-size:13px;">
+              <option value="">-- Choisir un collaborateur --</option>
+              {% for u in (all_users|sort(attribute='nom_complet')) %}
+              <option value="{{ u.id }}">
+                {{ u.nom_complet }} ({{ u.email }}) {% if u.entreprise %} - [actuel: {{ u.entreprise.nom }}]{% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn-action primary" style="width:100%; justify-content:center; padding:10px;">
+            Rattacher à {{ entreprise.nom }}
+          </button>
+        </form>
+      </div>
+      {% endif %}
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

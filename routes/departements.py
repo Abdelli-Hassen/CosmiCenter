@@ -167,7 +167,10 @@ def nouveau():
             db.session.rollback()
             flash(f'Erreur lors de la création du département: {str(e)}', 'danger')
     
-    utilisateurs = Utilisateur.query.filter_by(actif=True).order_by(Utilisateur.nom).all()
+    utilisateurs = sorted(
+        Utilisateur.query.filter_by(actif=True).all(),
+        key=lambda u: (u.nom_complet or '').strip().upper()
+    )
     return render_template('departements/formulaire.html', utilisateurs=utilisateurs)
 
 
@@ -196,13 +199,27 @@ def detail(id):
     tickets_recents = tickets_recents[:10]
     
     # Membres du département
-    membres = Utilisateur.query.filter_by(departement_id=departement.id, actif=True).order_by(Utilisateur.nom).all()
+    membres = sorted(
+        Utilisateur.query.filter_by(departement_id=departement.id, actif=True).all(),
+        key=lambda u: (u.nom_complet or '').strip().upper()
+    )
+    tous_utilisateurs = sorted(
+        Utilisateur.query.filter_by(actif=True).all(),
+        key=lambda u: (u.nom_complet or '').strip().upper()
+    )
+    
+    from models import PointDeVente
+    departements_list = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
+    pdvs_list = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
     
     return render_template('departements/detail.html',
                          departement=departement,
                          stats=stats,
                          tickets_recents=tickets_recents,
-                         membres=membres)
+                         membres=membres,
+                         tous_utilisateurs=tous_utilisateurs,
+                         departements_list=departements_list,
+                         pdvs_list=pdvs_list)
 
 
 @departements_bp.route('/<string:id>/modifier', methods=['GET', 'POST'])
@@ -289,7 +306,10 @@ def modifier(id):
             db.session.rollback()
             flash(f'Erreur lors de la modification: {str(e)}', 'danger')
     
-    utilisateurs = Utilisateur.query.filter_by(actif=True).order_by(Utilisateur.nom).all()
+    utilisateurs = sorted(
+        Utilisateur.query.filter_by(actif=True).all(),
+        key=lambda u: (u.nom_complet or '').strip().upper()
+    )
     return render_template('departements/formulaire.html',
                          departement=departement,
                          is_edit=True,
@@ -354,3 +374,38 @@ def toggle_actif(id):
         flash(f'Erreur: {str(e)}', 'danger')
     
     return redirect(url_for('departements.detail', id=id))
+
+
+@departements_bp.route('/<string:id>/assigner-membre', methods=['POST'])
+@login_required
+def assigner_membre(id):
+    if not (current_user.has_permission('departements.modifier') or current_user.role.niveau >= 80):
+        flash('Accès non autorisé.', 'danger')
+        return redirect(url_for('departements.detail', id=id))
+        
+    dept = Departement.query.get_or_404(id)
+    user_id = request.form.get('utilisateur_id')
+    user = Utilisateur.query.get(user_id)
+    if user:
+        user.departement_id = dept.id
+        db.session.commit()
+        flash(f"{user.nom_complet} a été assigné au département {dept.nom}.", "success")
+        
+    return redirect(url_for('departements.detail', id=id))
+
+
+@departements_bp.route('/<string:id>/retirer-membre/<string:user_id>', methods=['POST'])
+@login_required
+def retirer_membre(id, user_id):
+    if not (current_user.has_permission('departements.modifier') or current_user.role.niveau >= 80):
+        flash('Accès non autorisé.', 'danger')
+        return redirect(url_for('departements.detail', id=id))
+        
+    user = Utilisateur.query.get(user_id)
+    if user and user.departement_id == id:
+        user.departement_id = None
+        db.session.commit()
+        flash(f"{user.nom_complet} a été retiré de ce département.", "success")
+        
+    return redirect(url_for('departements.detail', id=id))
+

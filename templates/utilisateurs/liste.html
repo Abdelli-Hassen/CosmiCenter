@@ -296,7 +296,14 @@
 
       <!-- Name + subtitle -->
       <a href="{{ url_for('utilisateurs.detail', id=u.id) }}" style="text-decoration:none; min-width:0;">
-        <div class="user-row-name">{{ u.prenom }} {{ u.nom }}</div>
+        <div class="user-row-name" style="display:flex; align-items:center; gap:8px;">
+          <span>{{ u.prenom }} {{ u.nom }}</span>
+          {% if u.entreprise %}
+          <span class="badge" style="background:{{ u.entreprise.couleur }}18; color:{{ u.entreprise.couleur }}; border:1px solid {{ u.entreprise.couleur }}35; font-size:10px; font-weight:800; padding:1px 6px;">
+            {{ u.entreprise.nom }}
+          </span>
+          {% endif %}
+        </div>
         <div class="user-row-sub">{{ u.poste or '—' }}{% if u.matricule %} • {{ u.matricule }}{% endif %}</div>
       </a>
 

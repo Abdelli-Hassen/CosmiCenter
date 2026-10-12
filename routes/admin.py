@@ -100,7 +100,7 @@ def utilisateurs():
     if dept_id:
         q = q.filter(Utilisateur.departement_id == dept_id)
 
-    utilisateurs_page = q.order_by(Utilisateur.nom, Utilisateur.prenom).paginate(
+    utilisateurs_page = q.order_by(Utilisateur.prenom.asc(), Utilisateur.nom.asc()).paginate(
         page=page, per_page=20, error_out=False
     )
 
@@ -143,12 +143,16 @@ def nouvel_utilisateur():
                 return render_template('admin/nouvel_utilisateur.html', departements=Departement.query.filter_by(actif=True).all(), roles=Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all())
 
             dept_id = request.form.get('departement_id') or None
+            pdv_id = request.form.get('pdv_id') or None
+            entreprise_id = request.form.get('entreprise_id') or None
             utilisateur = Utilisateur(
                 nom=request.form.get('nom'),
                 prenom=request.form.get('prenom'),
                 email=request.form.get('email'),
                 role_id=request.form.get('role_id') or None,
                 departement_id=dept_id,
+                pdv_id=pdv_id,
+                entreprise_id=entreprise_id,
                 telephone=request.form.get('telephone', '').strip() or None,
                 poste=request.form.get('poste', '').strip() or None,
                 matricule=matricule,
@@ -173,10 +177,12 @@ def nouvel_utilisateur():
             logger.error(f'Erreur lors de la création de l\'utilisateur: {str(e)}')
             flash('Erreur lors de la création de l\'utilisateur', 'danger')
     
-    from models import Role
+    from models import Role, PointDeVente, Entreprise
     departements = Departement.query.filter_by(actif=True).all()
     roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
-    return render_template('admin/nouvel_utilisateur.html', departements=departements, roles=roles)
+    pdvs = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
+    entreprises = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
+    return render_template('admin/nouvel_utilisateur.html', departements=departements, roles=roles, pdvs=pdvs, entreprises=entreprises)
 
 
 @admin_bp.route('/utilisateurs/<user_id>/modifier', methods=['GET', 'POST'])
@@ -208,6 +214,8 @@ def modifier_utilisateur(user_id):
             utilisateur.email = email
             utilisateur.role_id = request.form.get('role_id') or None
             utilisateur.departement_id = request.form.get('departement_id') or None
+            utilisateur.pdv_id = request.form.get('pdv_id') or None
+            utilisateur.entreprise_id = request.form.get('entreprise_id') or None
             utilisateur.telephone = request.form.get('telephone', '').strip() or None
             utilisateur.poste = request.form.get('poste', '').strip() or None
             utilisateur.matricule = matricule
@@ -234,13 +242,17 @@ def modifier_utilisateur(user_id):
             logger.error(f'Erreur lors de la modification de l\'utilisateur: {str(e)}')
             flash('Erreur lors de la modification', 'danger')
 
-    from models import Role
+    from models import Role, PointDeVente, Entreprise
     departements = Departement.query.filter_by(actif=True).all()
     roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
+    pdvs = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
+    entreprises = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
     return render_template('admin/modifier_utilisateur.html',
                          utilisateur=utilisateur,
                          departements=departements,
-                         roles=roles)
+                         roles=roles,
+                         pdvs=pdvs,
+                         entreprises=entreprises)
 
 
 @admin_bp.route('/utilisateurs/<user_id>/desactiver', methods=['POST'])
@@ -917,7 +929,7 @@ def export_plan_action_excel():
 def acces_distance():
     from models import Utilisateur, db
     # Fetch all active users, sorted by name, so the admin can add IDs for new users
-    users = Utilisateur.query.filter_by(actif=True).order_by(Utilisateur.nom, Utilisateur.prenom).all()
+    users = Utilisateur.query.filter_by(actif=True).order_by(Utilisateur.prenom.asc(), Utilisateur.nom.asc()).all()
     return render_template('admin/acces_distance.html', users=users)
 
 

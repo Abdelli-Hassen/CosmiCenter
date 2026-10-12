@@ -223,6 +223,194 @@ textarea.fi { resize: vertical; min-height: 140px; }
   .type-grid { grid-template-columns: repeat(2, 1fr); }
   .routing-options { flex-direction: column; }
 }
+
+/* ── Collaboration Premium Component ─────── */
+.collab-wrapper-card {
+  padding: 18px;
+  background: var(--surface-1);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all var(--fast);
+}
+.collab-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.collab-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.collab-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--brand-light);
+  color: var(--brand);
+}
+.collab-count-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+.collab-count-badge.has-selected {
+  background: var(--brand-light);
+  color: var(--brand);
+  border-color: var(--brand-light);
+}
+.collab-dept-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.collab-dept-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  user-select: none;
+}
+.collab-dept-chip:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-3);
+  transform: translateY(-1px);
+}
+.collab-dept-chip.active {
+  background: var(--brand-light) !important;
+  border-color: var(--brand) !important;
+  color: var(--brand) !important;
+  font-weight: 600;
+}
+.collab-dept-chip .chip-check {
+  display: none;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--brand);
+}
+.collab-dept-chip.active .chip-check {
+  display: inline-flex;
+}
+.collab-agents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 2px;
+}
+.collab-agent-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  user-select: none;
+}
+.collab-agent-card:hover {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+}
+.collab-agent-card.selected {
+  background: var(--brand-light) !important;
+  border-color: var(--brand) !important;
+}
+.collab-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.collab-check-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.collab-agent-card.selected .collab-check-box {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #ffffff;
+}
+.collab-shelf-container {
+  margin-top: 4px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+}
+.collab-selected-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 4px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  color: var(--text-primary);
+}
+.collab-selected-chip .mini-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--brand-light);
+  color: var(--brand);
+  font-size: 8px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.collab-selected-chip .remove-btn {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+.collab-selected-chip .remove-btn:hover {
+  color: var(--danger);
+}
 </style>
 {% endblock %}
 
@@ -407,32 +595,89 @@ textarea.fi { resize: vertical; min-height: 140px; }
 
               <div id="routingSpecificUI" style="display:{% if routing_type == 'specific' %}block{% else %}none{% endif %};">
                 <label class="fl">Assigner a</label>
-                <select name="assigne_a_id" class="fi">
+                <select name="assigne_a_id" id="agentSelect" class="fi">
                   <option value="">-- Selectionner --</option>
                   {% for u in utilisateurs %}
-                  <option value="{{ u.id }}" {% if ticket.assigne_a and ticket.assigne_a.id == u.id %}selected{% endif %}>{{ u.prenom }} {{ u.nom }}{% if u.departement %} &mdash; {{ u.departement.nom }}{% endif %}</option>
+                  <option value="{{ u.id }}" data-dept="{{ u.departement_id if u.departement_id else '' }}" {% if ticket.assigne_a and ticket.assigne_a.id == u.id %}selected{% endif %}>{{ u.prenom }} {{ u.nom }}{% if u.departement %} &mdash; {{ u.departement.nom }}{% endif %}</option>
                   {% endfor %}
                 </select>
               </div>
 
-              <div id="routingCollabUI" style="display:{% if routing_type == 'collab' %}flex{% else %}none{% endif %}; flex-direction: column; gap: 14px;">
+              <div id="routingCollabUI" class="collab-wrapper-card" style="display:{% if routing_type == 'collab' %}flex{% else %}none{% endif %};">
+                <!-- 1. Départements collaborateurs -->
                 <div>
-                  <label class="fl">Departements collaborateurs</label>
-                  <select name="collab_departements[]" class="fi" multiple style="min-height: 90px;">
+                  <div class="collab-header-row">
+                    <div class="collab-title">
+                      <span class="collab-title-icon">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      </span>
+                      <span>Departements impliqués</span>
+                    </div>
+                    <span id="collabDeptCount" class="collab-count-badge {% if ticket.departements_collab %}has-selected{% endif %}">{{ ticket.departements_collab | length }} sélectionné(s)</span>
+                  </div>
+
+                  <!-- Native multi-select for form submission -->
+                  <select name="collab_departements[]" id="collabDeptSelect" multiple style="display:none;">
                     {% for dept in departements %}
                     <option value="{{ dept.id }}" {% if dept in ticket.departements_collab %}selected{% endif %}>{{ dept.nom }}</option>
                     {% endfor %}
                   </select>
-                  <span style="font-size: 11px; color: var(--text-faint); margin-top: 3px; display: block;">Ctrl+clic pour selectionner plusieurs</span>
+
+                  <!-- Interactive Department Chips -->
+                  <div id="collabDeptChips" class="collab-dept-grid">
+                    {% for dept in departements %}
+                    {% set is_dept_selected = (dept in ticket.departements_collab) %}
+                    <button type="button" class="collab-dept-chip {% if is_dept_selected %}active{% endif %}" data-id="{{ dept.id }}" onclick="toggleCollabDept('{{ dept.id }}')">
+                      <span class="chip-check" style="display:{% if is_dept_selected %}inline-flex{% else %}none{% endif %};">✓</span>
+                      <span>{{ dept.nom }}</span>
+                    </button>
+                    {% endfor %}
+                  </div>
                 </div>
-                <div>
-                  <label class="fl">Agents collaborateurs</label>
-                  <select name="collab_users[]" class="fi" multiple style="min-height: 110px;">
+
+                <!-- 2. Agents collaborateurs -->
+                <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px;">
+                  <div class="collab-header-row">
+                    <div class="collab-title">
+                      <span class="collab-title-icon">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      </span>
+                      <span>Membres & Collaborateurs</span>
+                    </div>
+                    <span id="collabUserCount" class="collab-count-badge {% if ticket.collaborateurs %}has-selected{% endif %}">{{ ticket.collaborateurs | length }} sélectionné(s)</span>
+                  </div>
+
+                  <!-- Native multi-select for form submission -->
+                  <select name="collab_users[]" id="collabUsersSelect" multiple style="display:none;">
                     {% for u in utilisateurs %}
-                    <option value="{{ u.id }}" {% if u in ticket.collaborateurs %}selected{% endif %}>{{ u.prenom }} {{ u.nom }}{% if u.departement %} &mdash; {{ u.departement.nom }}{% endif %}</option>
+                    <option value="{{ u.id }}" data-dept="{{ u.departement_id if u.departement_id else '' }}" data-name="{{ u.prenom }} {{ u.nom }}" data-dept-name="{{ u.departement.nom if u.departement else 'Sans Dpt' }}" {% if u in ticket.collaborateurs %}selected{% endif %}>{{ u.prenom }} {{ u.nom }}</option>
                     {% endfor %}
                   </select>
-                  <span style="font-size: 11px; color: var(--text-faint); margin-top: 3px; display: block;">Ctrl+clic pour selectionner plusieurs</span>
+
+                  <!-- Filter input -->
+                  <div id="collabUserFilterWrap" style="margin-bottom: 8px;">
+                    <input type="text" id="collabUserSearch" placeholder="Rechercher un collaborateur par nom..." 
+                           class="fi" style="padding: 6px 10px; font-size: 12px; border-radius: var(--r-sm);" oninput="filterCollabUserList()">
+                  </div>
+
+                  <!-- Prompt when no departments chosen -->
+                  <div id="collabNoDeptPrompt" style="display:none; padding: 14px; border: 1.5px dashed var(--border-subtle); border-radius: var(--r-sm); text-align: center; color: var(--text-muted); font-size: 12px; background: var(--surface-2);">
+                    Activez un ou plusieurs départements pour afficher les collaborateurs.
+                  </div>
+
+                  <!-- Interactive list of filtered agents -->
+                  <div id="collabUsersContainer" class="collab-agents-grid">
+                    <!-- Rendered by JS -->
+                  </div>
+
+                  <!-- Summary of Selected Collaborators -->
+                  <div id="selectedCollabSummary" class="collab-shelf-container" style="display: none;">
+                    <div class="collab-shelf-header">
+                      <span class="collab-shelf-title">Collaborateurs sélectionnés</span>
+                      <button type="button" onclick="clearAllCollabUsers()" style="background:none; border:none; color:var(--text-faint); font-size:11px; cursor:pointer; text-decoration:underline;">Tout désélectionner</button>
+                    </div>
+                    <div id="selectedCollabChips" style="display: flex; flex-wrap: wrap; gap: 5px;"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -636,7 +881,239 @@ textarea.fi { resize: vertical; min-height: 140px; }
     var v = document.querySelector('input[name="routing_type"]:checked').value;
     document.getElementById('routingSpecificUI').style.display = v === 'specific' ? 'block' : 'none';
     document.getElementById('routingCollabUI').style.display = v === 'collab' ? 'flex' : 'none';
+    if (v === 'collab' && typeof updateCollabUsers === 'function') updateCollabUsers();
   };
+
+  /* ── Collaboration & Agent filtering logic ── */
+  var deptSelect = document.getElementById('departementSelect');
+  var agentSelect = document.getElementById('agentSelect');
+  var collabDeptSelect = document.getElementById('collabDeptSelect');
+  var collabUsersSelect = document.getElementById('collabUsersSelect');
+  var collabDeptCount = document.getElementById('collabDeptCount');
+  var collabUserCount = document.getElementById('collabUserCount');
+  var collabNoDeptPrompt = document.getElementById('collabNoDeptPrompt');
+  var collabUsersContainer = document.getElementById('collabUsersContainer');
+  var selectedCollabSummary = document.getElementById('selectedCollabSummary');
+  var selectedCollabChips = document.getElementById('selectedCollabChips');
+
+  function filterAgents() {
+    if (!agentSelect) return;
+    var deptId = deptSelect ? deptSelect.value : '';
+    var visible = 0;
+    Array.prototype.forEach.call(agentSelect.options, function(o, idx) {
+      if (idx === 0) return;
+      var show = deptId ? (o.dataset.dept === deptId) : false;
+      o.hidden = !show;
+      o.disabled = !show;
+      o.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+  }
+
+  var allCollabUsersData = [];
+  if (collabUsersSelect) {
+    Array.prototype.forEach.call(collabUsersSelect.options, function (opt) {
+      allCollabUsersData.push({
+        id: opt.value,
+        name: opt.getAttribute('data-name') || opt.textContent.trim(),
+        deptId: opt.getAttribute('data-dept') || '',
+        deptName: opt.getAttribute('data-dept-name') || 'Sans Dpt'
+      });
+    });
+  }
+
+  function getInitials(name) {
+    if (!name) return '??';
+    var parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  }
+  var AVATAR_GRADIENTS = [
+    'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    'linear-gradient(135deg, #0ea5e9, #3b82f6)',
+    'linear-gradient(135deg, #10b981, #059669)',
+    'linear-gradient(135deg, #f59e0b, #d97706)',
+    'linear-gradient(135deg, #ec4899, #d946ef)',
+    'linear-gradient(135deg, #14b8a6, #0d9488)'
+  ];
+  function getAvatarGradient(name) {
+    var hash = 0;
+    for (var i = 0; i < (name || '').length; i++) hash += name.charCodeAt(i);
+    return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
+  }
+
+  window.toggleCollabDept = function(deptId) {
+    var chip = document.querySelector('.collab-dept-chip[data-id="' + deptId + '"]');
+    var opt = collabDeptSelect ? collabDeptSelect.querySelector('option[value="' + deptId + '"]') : null;
+    if (!chip || !opt) return;
+
+    var isActive = chip.classList.toggle('active');
+    opt.selected = isActive;
+    var check = chip.querySelector('.chip-check');
+    if (check) check.style.display = isActive ? 'inline-flex' : 'none';
+
+    var selectedDepts = collabDeptSelect ? Array.prototype.filter.call(collabDeptSelect.options, function (o) { return o.selected; }) : [];
+    if (collabDeptCount) {
+      collabDeptCount.textContent = selectedDepts.length + ' sélectionné' + (selectedDepts.length > 1 ? 's' : '');
+      collabDeptCount.classList.toggle('has-selected', selectedDepts.length > 0);
+    }
+
+    updateCollabUsers();
+  };
+
+  window.toggleCollabUser = function(userId) {
+    var opt = collabUsersSelect ? collabUsersSelect.querySelector('option[value="' + userId + '"]') : null;
+    if (!opt) return;
+
+    opt.selected = !opt.selected;
+    var card = document.querySelector('.collab-agent-card[data-user-id="' + userId + '"]');
+    if (card) {
+      card.classList.toggle('selected', opt.selected);
+      var check = card.querySelector('.collab-check-box');
+      if (check) {
+        check.innerHTML = opt.selected ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+      }
+    }
+
+    renderSelectedCollabChips();
+  };
+
+  window.clearAllCollabUsers = function() {
+    if (!collabUsersSelect) return;
+    Array.prototype.forEach.call(collabUsersSelect.options, function (opt) {
+      opt.selected = false;
+    });
+    document.querySelectorAll('.collab-agent-card').forEach(function (card) {
+      card.classList.remove('selected');
+      var check = card.querySelector('.collab-check-box');
+      if (check) check.innerHTML = '';
+    });
+    renderSelectedCollabChips();
+  };
+
+  function updateCollabUsers() {
+    if (!collabUsersContainer) return;
+
+    var activeDeptIds = [];
+    if (collabDeptSelect) {
+      Array.prototype.forEach.call(collabDeptSelect.options, function (o) {
+        if (o.selected) activeDeptIds.push(o.value);
+      });
+    }
+
+    var mainDeptId = deptSelect ? deptSelect.value : '';
+    if (activeDeptIds.length === 0 && mainDeptId) {
+      activeDeptIds.push(mainDeptId);
+    }
+
+    if (activeDeptIds.length === 0) {
+      if (collabNoDeptPrompt) collabNoDeptPrompt.style.display = 'block';
+      collabUsersContainer.style.display = 'none';
+      collabUsersContainer.innerHTML = '';
+      return;
+    }
+
+    var filteredUsers = allCollabUsersData.filter(function (u) {
+      return activeDeptIds.indexOf(u.deptId) !== -1;
+    });
+
+    if (collabNoDeptPrompt) collabNoDeptPrompt.style.display = 'none';
+    collabUsersContainer.style.display = 'grid';
+    collabUsersContainer.innerHTML = '';
+
+    if (filteredUsers.length === 0) {
+      collabUsersContainer.innerHTML = '<div style="grid-column: 1 / -1; padding: 14px; text-align: center; color: var(--text-muted); font-size: 12px;">Aucun collaborateur trouvé dans les départements sélectionnés.</div>';
+    } else {
+      filteredUsers.forEach(function (user) {
+        var opt = collabUsersSelect.querySelector('option[value="' + user.id + '"]');
+        var isSelected = opt ? opt.selected : false;
+        var initials = getInitials(user.name);
+        var gradient = getAvatarGradient(user.name);
+
+        var card = document.createElement('div');
+        card.className = 'collab-agent-card' + (isSelected ? ' selected' : '');
+        card.setAttribute('data-user-id', user.id);
+        card.setAttribute('data-name', user.name.toLowerCase());
+        card.onclick = function () {
+          toggleCollabUser(user.id);
+        };
+
+        var checkIcon = isSelected ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+
+        card.innerHTML = 
+          '<div style="display:flex; align-items:center; gap:8px; min-width:0;">' +
+            '<div class="collab-avatar" style="background:' + gradient + ';">' + initials + '</div>' +
+            '<div style="min-width:0;">' +
+              '<div style="font-weight:600; font-size:12px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + user.name + '</div>' +
+              '<div style="font-size:10px; color:var(--text-muted);">' + user.deptName + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="collab-check-box">' + checkIcon + '</div>';
+
+        collabUsersContainer.appendChild(card);
+      });
+    }
+
+    renderSelectedCollabChips();
+  }
+
+  function renderSelectedCollabChips() {
+    if (!collabUsersSelect || !selectedCollabChips) return;
+
+    var selectedUsers = [];
+    Array.prototype.forEach.call(collabUsersSelect.options, function (opt) {
+      if (opt.selected) {
+        var uData = allCollabUsersData.find(function (x) { return x.id === opt.value; });
+        if (uData) selectedUsers.push(uData);
+      }
+    });
+
+    if (collabUserCount) {
+      collabUserCount.textContent = selectedUsers.length + ' sélectionné' + (selectedUsers.length > 1 ? 's' : '');
+      collabUserCount.classList.toggle('has-selected', selectedUsers.length > 0);
+    }
+
+    if (selectedUsers.length === 0) {
+      selectedCollabSummary.style.display = 'none';
+      selectedCollabChips.innerHTML = '';
+    } else {
+      selectedCollabSummary.style.display = 'block';
+      selectedCollabChips.innerHTML = '';
+      selectedUsers.forEach(function (user) {
+        var initials = getInitials(user.name);
+        var chip = document.createElement('div');
+        chip.className = 'collab-selected-chip';
+        chip.innerHTML = 
+          '<span class="mini-avatar">' + initials + '</span>' +
+          '<span style="font-weight:600; font-size:11px;">' + user.name + '</span>' +
+          '<span style="color:var(--text-muted); font-size:10px;">(' + user.deptName + ')</span>' +
+          '<button type="button" class="remove-btn" onclick="toggleCollabUser(\'' + user.id + '\')" title="Retirer">×</button>';
+        selectedCollabChips.appendChild(chip);
+      });
+    }
+  }
+
+  window.filterCollabUserList = function() {
+    var searchInput = document.getElementById('collabUserSearch');
+    if (!searchInput) return;
+    var query = searchInput.value.toLowerCase().trim();
+    var items = document.querySelectorAll('.collab-agent-card');
+    items.forEach(function (item) {
+      var name = item.getAttribute('data-name') || '';
+      item.style.display = (name.indexOf(query) !== -1) ? 'flex' : 'none';
+    });
+  };
+
+  if (deptSelect) {
+    deptSelect.addEventListener('change', function() {
+      filterAgents();
+      updateCollabUsers();
+    });
+  }
+
+  // Initial runs
+  filterAgents();
+  updateCollabUsers();
 
   /* Priority */
   var pRows = document.querySelectorAll('.priority-row'), hiddenP = document.getElementById('hiddenPriorite');

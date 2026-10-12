@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Modifier' if entreprise else 'Nouvelle' }} Entreprise{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 32px auto; padding: 0 20px;">
+  
+  <a href="{{ url_for('companies.detail', id=entreprise.id) if entreprise else url_for('companies.liste') }}" style="display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--text-muted); text-decoration:none; margin-bottom:20px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Retour
+  </a>
+
+  <div style="background:var(--surface-1); border:1px solid var(--border-subtle); border-radius:24px; box-shadow:var(--shadow-sm); overflow:hidden;">
+    <div style="padding:24px 28px; border-bottom:1px solid var(--border-subtle); background:var(--surface-2);">
+      <h1 style="font-size:20px; font-weight:900; color:var(--text-primary); margin:0;">
+        {{ 'Modifier l\'entreprise' if entreprise else 'Ajouter une entreprise' }}
+      </h1>
+      <p style="font-size:13px; color:var(--text-muted); margin:4px 0 0 0;">
+        Configurez les données de l'organisation externe ou partenaire.
+      </p>
+    </div>
+
+    <form method="POST" style="padding:28px; display:flex; flex-direction:column; gap:20px;">
+      
+      <div>
+        <label style="display:block; font-size:12px; font-weight:800; color:var(--text-secondary); margin-bottom:6px;">Nom de l'entreprise *</label>
+        <input type="text" name="nom" required value="{{ entreprise.nom if entreprise else '' }}" placeholder="Ex: Meninx, Cosmitto, TotalEnergies..." style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border-default); background:var(--surface-base); color:var(--text-primary); font-size:14px; font-weight:600;">
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div>
+          <label style="display:block; font-size:12px; font-weight:800; color:var(--text-secondary); margin-bottom:6px;">Code / Sigle</label>
+          <input type="text" name="code" value="{{ entreprise.code if entreprise else '' }}" placeholder="Ex: MNX" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border-default); background:var(--surface-base); color:var(--text-primary); font-size:14px; text-transform:uppercase;">
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; font-weight:800; color:var(--text-secondary); margin-bottom:6px;">Type d'organisation</label>
+          <select name="type_entreprise" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border-default); background:var(--surface-base); color:var(--text-primary); font-size:14px; font-weight:600;">
+            <option value="externe" {% if entreprise and entreprise.type_entreprise == 'externe' %}selected{% endif %}>Externe</option>
+            <option value="partenaire" {% if entreprise and entreprise.type_entreprise == 'partenaire' %}selected{% endif %}>Partenaire</option>
+            <option value="filiale" {% if entreprise and entreprise.type_entreprise == 'filiale' %}selected{% endif %}>Filiale</option>
+            <option value="prestataire" {% if entreprise and entreprise.type_entreprise == 'prestataire' %}selected{% endif %}>Prestataire de service</option>
+            <option value="principale" {% if entreprise and entreprise.type_entreprise == 'principale' %}selected{% endif %}>Société Principale (Cosmitto)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div>
+          <label style="display:block; font-size:12px; font-weight:800; color:var(--text-secondary); margin-bottom:6px;">Email de contact</label>
+          <input type="email" name="email" value="{{ entreprise.email if entreprise else '' }}" placeholder="contact@example.com" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border-default); background:var(--surface-base); color:var(--text-primary); font-size:14px;">
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; font-weight:800; color:var(--text-secondary); margin-bottom:6px;">Téléphone</label>
+          <input type="text" name="telephone" value="{{ entreprise.telephone if entreprise else '' }}" placeholder="+216 ..." style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border-default); background:var(--surface-base); color:var(--text-primary); font-size:14px;">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div>
+          <label style="display:block; font-size:12px; font-weight:800; color:var(--text-secondary); margin-bottom:6px;">Couleur distinctive</label>
+          <input type="color" name="couleur" value="{{ entreprise.couleur if entreprise and entreprise.couleur else '#6366F1' }}" style="width:100%; height:44px; padding:4px; border-radius:10px; border:1px solid var(--border-default); background:var(--surface-base); cursor:pointer;">
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; font-weight:800; color:var(--text-secondary); margin-bottom:6px;">Site Web</label>
+          <input type="url" name="site_web" value="{{ entreprise.site_web if entreprise else '' }}" placeholder="https://..." style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border-default); background:var(--surface-base); color:var(--text-primary); font-size:14px;">
+        </div>
+      </div>
+
+      <div>
+        <label style="display:block; font-size:12px; font-weight:800; color:var(--text-secondary); margin-bottom:6px;">Adresse</label>
+        <input type="text" name="adresse" value="{{ entreprise.adresse if entreprise else '' }}" placeholder="Adresse du siège..." style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border-default); background:var(--surface-base); color:var(--text-primary); font-size:14px;">
+      </div>
+
+      <div>
+        <label style="display:block; font-size:12px; font-weight:800; color:var(--text-secondary); margin-bottom:6px;">Description / Rôle dans la plateforme</label>
+        <textarea name="description" rows="3" placeholder="Informations et contexte sur cette entreprise..." style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border-default); background:var(--surface-base); color:var(--text-primary); font-size:13px; resize:vertical;">{{ entreprise.description if entreprise else '' }}</textarea>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:10px;">
+        <a href="{{ url_for('companies.detail', id=entreprise.id) if entreprise else url_for('companies.liste') }}" class="btn-action" style="padding:10px 20px; border-radius:10px; text-decoration:none;">
+          Annuler
+        </a>
+        <button type="submit" class="btn-action primary" style="padding:10px 24px; border-radius:10px;">
+          Enregistrer
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}

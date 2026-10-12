@@ -161,6 +161,27 @@
           </div>
         </div>
 
+        <div class="input-row" style="margin-top:16px; margin-bottom:0;">
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="entreprise_id">Entreprise d'appartenance</label>
+            <select id="entreprise_id" name="entreprise_id" class="select-field">
+              <option value="">Aucune (Non assigné)</option>
+              {% for ent in entreprises %}
+              <option value="{{ ent.id }}" {% if request.form.get('entreprise_id')|string == ent.id|string %}selected{% endif %}>{{ ent.nom }} ({{ ent.type_entreprise }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label" for="pdv_id">Point de Vente (PDV)</label>
+            <select id="pdv_id" name="pdv_id" class="select-field">
+              <option value="">Aucun (Siège / HQ)</option>
+              {% for p in pdvs %}
+              <option value="{{ p.id }}" {% if request.form.get('pdv_id')|string == p.id|string %}selected{% endif %}>{{ p.nom }} ({{ p.ville or p.categorie or 'PDV' }})</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
       </div>
     </div>
 

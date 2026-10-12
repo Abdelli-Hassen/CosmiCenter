@@ -55,7 +55,10 @@ def nouveau():
         flash(f"Point de vente '{nom}' créé avec succès.", "success")
         return redirect(url_for('pdv.detail', id=nouveau_pdv.id))
         
-    utilisateurs = Utilisateur.query.filter_by(actif=True).all()
+    utilisateurs = sorted(
+        Utilisateur.query.filter_by(actif=True).all(),
+        key=lambda u: (u.nom_complet or '').strip().upper()
+    )
     db_cats = [p.categorie for p in PointDeVente.query.all() if p.categorie]
     categories = list(dict.fromkeys(['Urbain', 'Express', 'Mall'] + [c for c in db_cats if c and c not in ['Urbain', 'Express', 'Mall']]))
     return render_template('pdv/formulaire.html', utilisateurs=utilisateurs, categories=categories)
@@ -68,8 +71,14 @@ def detail(id):
         return redirect(url_for('pdv.liste'))
         
     pdv = PointDeVente.query.get_or_404(id)
-    utilisateurs = Utilisateur.query.filter_by(actif=True).all()
-    return render_template('pdv/detail.html', pdv=pdv, utilisateurs=utilisateurs)
+    utilisateurs = sorted(
+        Utilisateur.query.filter_by(actif=True).all(),
+        key=lambda u: (u.nom_complet or '').strip().upper()
+    )
+    from models import Departement
+    departements_list = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
+    pdvs_list = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
+    return render_template('pdv/detail.html', pdv=pdv, utilisateurs=utilisateurs, departements_list=departements_list, pdvs_list=pdvs_list)
 
 @pdv_bp.route('/<string:id>/modifier', methods=['GET', 'POST'])
 @login_required
@@ -165,8 +174,10 @@ def ajouter_employe(id):
     
     if user:
         user.pdv_id = pdv.id
+        if user.departement and user.departement.code in ['OP', 'Opérationnel']:
+            user.departement_id = None
         db.session.commit()
-        flash(f"L'employé {user.nom_complet} a été assigné au PDV.", "success")
+        flash(f"L'employé {user.nom_complet} a été assigné au PDV '{pdv.nom}'.", "success")
         
     return redirect(url_for('pdv.detail', id=id))
 

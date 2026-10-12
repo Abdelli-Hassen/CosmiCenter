@@ -174,6 +174,17 @@
 .ticket-list {
   display: flex;
   flex-direction: column;
+  max-height: 520px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+.ticket-list::-webkit-scrollbar {
+  width: 6px;
+}
+.ticket-list::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
 }
 .ticket-row {
   display: flex;
@@ -226,6 +237,17 @@
 /* ── Members List ────────────────────────────────────────── */
 .member-list {
   padding: 8px 0;
+  max-height: 520px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+.member-list::-webkit-scrollbar {
+  width: 6px;
+}
+.member-list::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
 }
 .member-row {
   display: flex;
@@ -500,29 +522,55 @@ dialog::backdrop {
 
     <!-- Membres -->
     <div class="section-block">
-      <div class="section-header">
+      <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
         <h2 class="section-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Agents du département
         </h2>
-        <span class="badge badge-default" style="font-size:11px;">{{ membres|length }} membre(s)</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="badge badge-default" style="font-size:11px;">{{ membres|length }} membre(s)</span>
+          {% if current_user.has_permission('departements.modifier') or current_user.role.niveau >= 80 %}
+          <button class="btn btn-primary btn-sm" onclick="document.getElementById('addDeptMemberDialog').showModal()" style="display:inline-flex; align-items:center; gap:4px; padding:4px 10px; font-size:12px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Assigner
+          </button>
+          {% endif %}
+        </div>
       </div>
       <div class="section-body">
         {% if membres %}
         <div class="member-list">
-          {% for m in membres %}
-          <div class="member-row">
-            <div class="member-avatar">
-              {% if m.photo_profil %}
-              <img src="{{ url_for('static', filename='uploads/' + m.photo_profil) }}" alt="">
-              {% else %}
-              {{ m.prenom[0]|upper }}{{ m.nom[0]|upper }}
-              {% endif %}
-            </div>
-            <div class="member-info">
-              <div class="member-name">{{ m.nom_complet }}</div>
-              <div class="member-role">{{ m.role.nom if m.role else 'Sans rôle' }}</div>
-            </div>
+          {% for m in (membres|sort(attribute='nom_complet')) %}
+          <div class="member-row" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <a href="{{ url_for('utilisateurs.detail', id=m.id) }}" style="display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; flex:1; min-width:0;">
+              <div class="member-avatar">
+                {% if m.photo_profil %}
+                <img src="{{ url_for('static', filename='uploads/' + m.photo_profil) }}" alt="">
+                {% else %}
+                {{ m.prenom[0]|upper }}{{ m.nom[0]|upper }}
+                {% endif %}
+              </div>
+              <div class="member-info" style="min-width:0; overflow:hidden;">
+                <div class="member-name" style="display:flex; align-items:center; gap:6px;">
+                  <span style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ m.nom_complet }}</span>
+                  {% if m.entreprise %}
+                  <span class="badge" style="background:{{ m.entreprise.couleur }}18; color:{{ m.entreprise.couleur }}; border:1px solid {{ m.entreprise.couleur }}35; font-size:9px; font-weight:800; padding:1px 5px; border-radius:4px; flex-shrink:0;">
+                    {{ m.entreprise.nom }}
+                  </span>
+                  {% endif %}
+                </div>
+                <div class="member-role" style="font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  {{ m.poste or (m.role.nom if m.role else 'Membre') }}
+                </div>
+              </div>
+            </a>
+            {% if current_user.has_permission('departements.modifier') or current_user.role.niveau >= 80 %}
+            <form action="{{ url_for('departements.retirer_membre', id=departement.id, user_id=m.id) }}" method="POST" style="margin:0;">
+              <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--text-muted); padding:6px;" title="Retirer du département" onclick="return confirm('Retirer {{ m.nom_complet }} de ce département ?')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </form>
+            {% endif %}
           </div>
           {% endfor %}
         </div>
@@ -537,4 +585,260 @@ dialog::backdrop {
 
   </div>
 </div>
+
+<!-- Dialog Assigner un agent au département -->
+<!-- Dialog Assigner un agent au département -->
+<dialog id="addDeptMemberDialog" style="padding:0; border:none; border-radius:20px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); background:var(--surface-base); max-width:620px; width:94%; margin:auto; overflow:hidden;">
+  <div style="padding:20px 24px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; background:var(--surface-1);">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div style="width:36px; height:36px; border-radius:10px; background:rgba(225,29,72,0.1); color:var(--brand); display:flex; align-items:center; justify-content:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div>
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary);">
+          Assigner un collaborateur
+        </h3>
+        <p style="margin:0; font-size:12px; color:var(--text-muted);">Rattacher un membre au département <strong>{{ departement.nom }}</strong></p>
+      </div>
+    </div>
+    <button type="button" onclick="document.getElementById('addDeptMemberDialog').close()" style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:6px; border-radius:8px; display:flex;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <form method="POST" action="{{ url_for('departements.assigner_membre', id=departement.id) }}" id="assignDeptMemberForm" style="padding:20px 24px; display:flex; flex-direction:column; gap:16px;">
+    <input type="hidden" name="utilisateur_id" id="selected_dept_user_id" required value="">
+
+    <!-- Filtres rapides : Origine & Recherche -->
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+      <div>
+        <label style="display:block; font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px;">
+          Filtrer par affectation actuelle
+        </label>
+        <select id="filterDeptOrigin" class="select-field" style="width:100%; padding:9px 12px; font-size:13px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-base); color:var(--text-primary);">
+          <option value="all">Toutes les affectations</option>
+          <option value="none">Sans département (Personnel PDV / HQ libre)</option>
+          <optgroup label="── Départements ──">
+            {% for d in departements_list %}
+            {% if d.id != departement.id %}
+            <option value="dept_{{ d.id }}">{{ d.nom }}</option>
+            {% endif %}
+            {% endfor %}
+          </optgroup>
+          <optgroup label="── Points de Vente ──">
+            {% for p in pdvs_list %}
+            <option value="pdv_{{ p.id }}">{{ p.nom }} ({{ p.ville or 'PDV' }})</option>
+            {% endfor %}
+          </optgroup>
+        </select>
+      </div>
+
+      <div>
+        <label style="display:block; font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px;">
+          Recherche rapide
+        </label>
+        <div style="position:relative;">
+          <input type="text" id="searchDeptUser" placeholder="Nom, prénom, poste..." style="width:100%; padding:9px 12px 9px 34px; font-size:13px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-base); color:var(--text-primary); box-sizing:border-box;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none;">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header liste avec compteur -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+      <span style="font-size:12px; font-weight:700; color:var(--text-primary);">
+        Choisir un collaborateur <span id="deptUserCountBadge" style="font-size:11px; font-weight:600; color:var(--text-muted); background:var(--surface-2); padding:2px 6px; border-radius:9999px; margin-left:4px;"></span>
+      </span>
+      <span style="font-size:11px; color:var(--text-muted);">Cliquez pour sélectionner</span>
+    </div>
+
+    <!-- Liste scrollable des utilisateurs -->
+    <div id="deptUserCardsList" style="max-height:250px; overflow-y:auto; border:1px solid var(--border-subtle); border-radius:12px; background:var(--surface-1); padding:6px; display:flex; flex-direction:column; gap:4px;">
+      {% for u in (tous_utilisateurs|sort(attribute='nom_complet')) %}
+      {% if u.departement_id != departement.id %}
+      <div class="user-select-card" 
+           data-id="{{ u.id }}" 
+           data-name="{{ u.nom_complet|lower }}" 
+           data-poste="{{ (u.poste or '')|lower }}" 
+           data-dept="{% if u.departement_id %}dept_{{ u.departement_id }}{% else %}none{% endif %}"
+           data-pdv="{% if u.pdv_id %}pdv_{{ u.pdv_id }}{% endif %}"
+           onclick="selectDeptUser(this, '{{ u.id }}', '{{ u.nom_complet }}', '{{ u.poste or 'Sans poste' }}')"
+           style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-radius:10px; cursor:pointer; background:var(--surface-base); border:1.5px solid transparent; transition:all 0.15s ease;">
+        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+          <div style="width:34px; height:34px; border-radius:50%; background:var(--surface-3); color:var(--text-primary); font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            {{ u.prenom[0]|upper }}{{ u.nom[0]|upper }}
+          </div>
+          <div style="min-width:0;">
+            <div style="font-size:13px; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ u.nom_complet }}</span>
+              {% if u.entreprise %}
+              <span style="font-size:9px; font-weight:800; padding:1px 5px; border-radius:4px; background:{{ u.entreprise.couleur }}15; color:{{ u.entreprise.couleur }}; border:1px solid {{ u.entreprise.couleur }}30; flex-shrink:0;">
+                {{ u.entreprise.nom }}
+              </span>
+              {% endif %}
+            </div>
+            <div style="font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+              {{ u.poste or 'Sans poste' }}
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+          {% if u.point_de_vente or u.pdv %}
+          {% set cur_pdv = u.point_de_vente or u.pdv %}
+          <span style="font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px; background:rgba(245,158,11,0.12); color:#F59E0B; border:1px solid rgba(245,158,11,0.25);">
+            PDV: {{ cur_pdv.nom }}
+          </span>
+          {% elif u.departement %}
+          <span style="font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px; background:{{ u.departement.couleur }}15; color:{{ u.departement.couleur }}; border:1px solid {{ u.departement.couleur }}30;">
+            Dépt: {{ u.departement.nom }}
+          </span>
+          {% else %}
+          <span style="font-size:10px; font-weight:600; padding:2px 7px; border-radius:6px; background:var(--surface-3); color:var(--text-muted);">
+            Non assigné
+          </span>
+          {% endif %}
+          <div class="user-check-indicator" style="width:18px; height:18px; border-radius:50%; border:1.5px solid var(--border-default); display:flex; align-items:center; justify-content:center;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" style="display:none;"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+      <div id="deptUserEmptyState" style="display:none; padding:24px; text-align:center; color:var(--text-muted); font-size:13px;">
+        Aucun collaborateur ne correspond à ces critères.
+      </div>
+    </div>
+
+    <!-- Bannière de confirmation du collaborateur sélectionné -->
+    <div id="deptUserSelectedBanner" style="display:none; padding:10px 14px; border-radius:10px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); color:var(--text-primary); font-size:12px; display:flex; align-items:center; justify-content:space-between;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>Sélectionné : <strong id="deptUserSelectedName">-</strong> (<span id="deptUserSelectedPoste">-</span>)</span>
+      </div>
+      <button type="button" onclick="clearDeptUserSelection()" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:11px; text-decoration:underline;">Changer</button>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex; justify-content:flex-end; gap:10px; padding-top:4px; border-top:1px solid var(--border-subtle);">
+      <button type="button" class="btn btn-ghost" onclick="document.getElementById('addDeptMemberDialog').close()">Annuler</button>
+      <button type="submit" id="btnConfirmDeptAssign" class="btn btn-primary" disabled style="display:inline-flex; align-items:center; gap:6px; opacity:0.5; cursor:not-allowed;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Confirmer l'assignation
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function() {
+  const originSelect = document.getElementById('filterDeptOrigin');
+  const searchInput = document.getElementById('searchDeptUser');
+  const cards = document.querySelectorAll('#deptUserCardsList .user-select-card');
+  const countBadge = document.getElementById('deptUserCountBadge');
+  const emptyState = document.getElementById('deptUserEmptyState');
+  const hiddenInput = document.getElementById('selected_dept_user_id');
+  const confirmBtn = document.getElementById('btnConfirmDeptAssign');
+  const selectedBanner = document.getElementById('deptUserSelectedBanner');
+  const selectedName = document.getElementById('deptUserSelectedName');
+  const selectedPoste = document.getElementById('deptUserSelectedPoste');
+
+  function filterUsers() {
+    const origin = originSelect ? originSelect.value : 'all';
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    let visible = 0;
+
+    cards.forEach(card => {
+      const name = card.dataset.name || '';
+      const poste = card.dataset.poste || '';
+      const cardDept = card.dataset.dept || '';
+      const cardPdv = card.dataset.pdv || '';
+
+      // Match query
+      const matchQuery = !query || name.includes(query) || poste.includes(query);
+
+      // Match origin
+      let matchOrigin = true;
+      if (origin === 'none') {
+        matchOrigin = cardDept === 'none';
+      } else if (origin.startsWith('dept_')) {
+        matchOrigin = cardDept === origin;
+      } else if (origin.startsWith('pdv_')) {
+        matchOrigin = cardPdv === origin;
+      }
+
+      if (matchQuery && matchOrigin) {
+        card.style.display = 'flex';
+        visible++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    if (countBadge) countBadge.textContent = visible + ' disponible' + (visible > 1 ? 's' : '');
+    if (emptyState) emptyState.style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  if (originSelect) originSelect.addEventListener('change', filterUsers);
+  if (searchInput) searchInput.addEventListener('input', filterUsers);
+
+  window.selectDeptUser = function(cardElem, id, name, poste) {
+    cards.forEach(c => {
+      c.style.borderColor = 'transparent';
+      c.style.background = 'var(--surface-base)';
+      const ind = c.querySelector('.user-check-indicator');
+      if (ind) {
+        ind.style.borderColor = 'var(--border-default)';
+        ind.style.background = 'transparent';
+        const sv = ind.querySelector('svg');
+        if (sv) sv.style.display = 'none';
+      }
+    });
+
+    // Highlight selected
+    cardElem.style.borderColor = 'var(--brand)';
+    cardElem.style.background = 'rgba(225,29,72,0.04)';
+    const ind = cardElem.querySelector('.user-check-indicator');
+    if (ind) {
+      ind.style.borderColor = 'var(--brand)';
+      ind.style.background = 'var(--brand)';
+      const sv = ind.querySelector('svg');
+      if (sv) sv.style.display = 'block';
+    }
+
+    hiddenInput.value = id;
+    selectedName.textContent = name;
+    selectedPoste.textContent = poste;
+    selectedBanner.style.display = 'flex';
+
+    confirmBtn.disabled = false;
+    confirmBtn.style.opacity = '1';
+    confirmBtn.style.cursor = 'pointer';
+  };
+
+  window.clearDeptUserSelection = function() {
+    hiddenInput.value = '';
+    selectedBanner.style.display = 'none';
+    confirmBtn.disabled = true;
+    confirmBtn.style.opacity = '0.5';
+    confirmBtn.style.cursor = 'not-allowed';
+    cards.forEach(c => {
+      c.style.borderColor = 'transparent';
+      c.style.background = 'var(--surface-base)';
+      const ind = c.querySelector('.user-check-indicator');
+      if (ind) {
+        ind.style.borderColor = 'var(--border-default)';
+        ind.style.background = 'transparent';
+        const sv = ind.querySelector('svg');
+        if (sv) sv.style.display = 'none';
+      }
+    });
+  };
+
+  // Run initial filter on load
+  filterUsers();
+})();
+</script>
 {% endblock %}
