@@ -39,11 +39,8 @@
         <thead style="position:sticky; top:0; z-index:10; background:var(--surface-raised); box-shadow: 0 1px 0 var(--border-subtle);">
           <tr>
             <th class="sortable" data-sort="0" style="padding:12px 20px; cursor:pointer; user-select:none;">Nom <span class="sort-icon"></span></th>
-            <th class="sortable" data-sort="1" style="cursor:pointer; user-select:none;">Type <span class="sort-icon"></span></th>
-            <th class="sortable" data-sort="2" style="cursor:pointer; user-select:none;">Département <span class="sort-icon"></span></th>
-            <th class="sortable" data-sort="3" style="cursor:pointer; user-select:none;">Priorité par défaut <span class="sort-icon"></span></th>
-            <th class="sortable" data-sort="4" style="cursor:pointer; user-select:none;">Délai (j) <span class="sort-icon"></span></th>
-            <th class="sortable" data-sort="5" style="cursor:pointer; user-select:none;">Statut <span class="sort-icon"></span></th>
+            <th class="sortable" data-sort="1" style="cursor:pointer; user-select:none;">Département <span class="sort-icon"></span></th>
+            <th class="sortable" data-sort="2" style="cursor:pointer; user-select:none;">Statut <span class="sort-icon"></span></th>
             <th style="width:80px;"></th>
           </tr>
         </thead>
@@ -55,21 +52,10 @@
                 <span {{ 'styl' ~ 'e="display:inline-block;width:10px;height:10px;border-radius:50%;background:' ~ (cat.couleur or '#3B82F6') ~ ';flex-shrink:0;"'|safe }}></span>
                 <span style="font-weight:600;font-size:13px;color:var(--text-primary);">{{ cat.nom }}</span>
               </div>
-              {% if cat.description %}
-              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;padding-left:18px;">{{ cat.description[:80] }}{% if cat.description|length > 80 %}…{% endif %}</div>
-              {% endif %}
-            </td>
-            <td>
-              {% set type_colors = {'incident':'#EF4444','demande':'#3B82F6','besoin':'#F59E0B','plainte':'#8B5CF6','tache':'#10B981'} %}
-              <span {{ 'styl' ~ 'e="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:' ~ type_colors.get(cat.type_ticket,'#6B7280') ~ '20;color:' ~ type_colors.get(cat.type_ticket,'#6B7280') ~ ';"'|safe }}>
-                {{ cat.type_ticket|title }}
-              </span>
             </td>
             <td style="font-size:13px;color:var(--text-secondary);">
               {{ cat.departement.nom if cat.departement else '—' }}
             </td>
-            <td style="font-size:13px;color:var(--text-secondary);">{{ cat.priorite_defaut|title }}</td>
-            <td style="font-size:13px;color:var(--text-secondary);">{{ cat.delai_resolution_jours }}</td>
             <td>
               <span {{ 'styl' ~ 'e="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:rgba(16,185,129,.12);color:#10B981;"'|safe if cat.actif else 'styl' ~ 'e="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--surface-4);color:var(--text-muted);"'|safe }}>
                 {% if cat.actif %}Active{% else %}Inactive{% endif %}
@@ -113,56 +99,14 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Description</label>
-          <input type="text" name="description" class="input" placeholder="Brève description (optionnel)">
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div class="form-group">
-            <label class="form-label">Type de ticket</label>
-            <div class="select-wrap">
-              <select name="type_ticket" class="select">
-                <option value="incident">Incident</option>
-                <option value="demande">Demande</option>
-                <option value="besoin">Besoin</option>
-                <option value="plainte">Plainte</option>
-                <option value="tache">Tâche</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Département</label>
-            <div class="select-wrap">
-              <select name="departement_id" class="select" required>
-                <option value="">Choisir…</option>
-                {% for dept in departements %}
-                <option value="{{ dept.id }}">{{ dept.nom }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-          <div class="form-group">
-            <label class="form-label">Priorité défaut</label>
-            <div class="select-wrap">
-              <select name="priorite_defaut" class="select">
-                <option value="basse">Basse</option>
-                <option value="moyenne" selected>Moyenne</option>
-                <option value="haute">Haute</option>
-                <option value="urgente">Urgente</option>
-                <option value="critique">Critique</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Délai (jours)</label>
-            <input type="number" name="delai_resolution_jours" class="input" value="7" min="1" max="365">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Couleur</label>
-            <input type="color" name="couleur" class="input" value="#3B82F6" style="height:40px;padding:4px 6px;cursor:pointer;">
+          <label class="form-label">Département <span style="color:var(--brand)">*</span></label>
+          <div class="select-wrap">
+            <select name="departement_id" class="select" required>
+              <option value="">Choisir…</option>
+              {% for dept in departements %}
+              <option value="{{ dept.id }}">{{ dept.nom }}</option>
+              {% endfor %}
+            </select>
           </div>
         </div>
 

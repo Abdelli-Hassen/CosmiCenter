@@ -1,0 +1,1793 @@
+{% extends "base.html" %}
+
+{% block title %}Point de Vente : {{ pdv.nom }}{% endblock %}
+
+{% block body_class %}page-pdv-detail{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ==========================================================================
+   PDV Detail Page Styling - Enhanced Layout (Equipements + Employes & Wide Tickets)
+   ========================================================================== */
+
+.pdv-detail-container {
+  padding: 24px 32px 60px;
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Header & Navigation */
+.pdv-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 4px;
+}
+
+.pdv-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pdv-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted, #94a3b8);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.pdv-breadcrumb:hover {
+  color: var(--pdv-color, #10b981);
+  transform: translateX(-2px);
+}
+
+.pdv-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.pdv-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--pdv-color, #10b981) 22%, transparent), color-mix(in srgb, var(--pdv-color, #10b981) 6%, transparent));
+  border: 1px solid color-mix(in srgb, var(--pdv-color, #10b981) 35%, transparent);
+  color: var(--pdv-color, #10b981);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--pdv-color, #10b981) 18%, transparent);
+  flex-shrink: 0;
+}
+
+.pdv-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.pdv-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pdv-status-badge.active {
+  background: color-mix(in srgb, var(--pdv-color, #10b981) 15%, transparent);
+  color: var(--pdv-color, #10b981);
+  border: 1px solid color-mix(in srgb, var(--pdv-color, #10b981) 30%, transparent);
+}
+
+.pdv-status-badge.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.pdv-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pdv-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Key Metrics Grid */
+.pdv-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.pdv-stat-card {
+  background: var(--surface-raised, #171527);
+  border: 1px solid var(--border-default, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.05));
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.pdv-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md, 0 6px 16px rgba(0, 0, 0, 0.12));
+  border-color: var(--border-strong, rgba(255, 255, 255, 0.18));
+}
+
+.pdv-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--card-accent, #10b981);
+}
+
+.pdv-stat-card.accent-emerald { --card-accent: #10b981; }
+.pdv-stat-card.accent-blue { --card-accent: #3b82f6; }
+.pdv-stat-card.accent-amber { --card-accent: #f59e0b; }
+.pdv-stat-card.accent-purple { --card-accent: #8b5cf6; }
+
+.pdv-stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pdv-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pdv-stat-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--card-accent, #10b981);
+}
+
+.pdv-stat-num {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.pdv-stat-footnote {
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Two Column Operations Grid (Equipements & Employés) */
+.pdv-two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Cards */
+.pdv-card {
+  background: var(--surface-raised, #171527);
+  border: 1px solid var(--border-default, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.05));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pdv-card-header {
+  padding: 16px 20px;
+  background: var(--surface-1, #1e1b33);
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pdv-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.pdv-card-title svg {
+  color: var(--text-muted);
+}
+
+.pdv-card-body {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pdv-card-scroll-body {
+  max-height: 330px;
+  min-height: 160px;
+  overflow-y: auto;
+}
+
+.pdv-card-scroll-body::-webkit-scrollbar {
+  width: 6px;
+}
+.pdv-card-scroll-body::-webkit-scrollbar-thumb {
+  background: var(--surface-3, rgba(255, 255, 255, 0.15));
+  border-radius: 4px;
+}
+
+/* Equipments Table Inside Card */
+.pdv-equip-compact-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.pdv-equip-compact-table th {
+  padding: 11px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: var(--surface-1, #1e1b33);
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.pdv-equip-compact-table td {
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
+  vertical-align: middle;
+}
+
+.pdv-equip-compact-table tr:last-child td {
+  border-bottom: none;
+}
+
+.pdv-equip-compact-table tbody tr:hover {
+  background: var(--surface-hover, rgba(255, 255, 255, 0.03));
+}
+
+/* Staff List */
+.pdv-staff-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
+  transition: background 0.15s ease;
+}
+
+.pdv-staff-item:last-child {
+  border-bottom: none;
+}
+
+.pdv-staff-item:hover {
+  background: var(--surface-hover, rgba(255, 255, 255, 0.03));
+}
+
+.pdv-staff-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pdv-staff-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  flex-shrink: 0;
+}
+
+.pdv-staff-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.pdv-staff-role {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   TICKETS SOUMIS - Dedicated Full-Width Section for Hundreds of Tickets
+   ========================================================================== */
+.tickets-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Toolbar */
+.tickets-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--surface-1, #1e1b33);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.tickets-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.status-tabs {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface-2, rgba(255, 255, 255, 0.05));
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.status-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.status-tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.status-tab-btn.active {
+  background: var(--surface-raised, #24213d);
+  color: var(--text-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.status-tab-count {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.status-tab-btn.active .status-tab-count {
+  background: rgba(16, 185, 129, 0.18);
+  color: #10b981;
+}
+
+/* Search & Secondary Filter Bar */
+.tickets-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tickets-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 260px;
+  max-width: 440px;
+}
+
+.tickets-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.tickets-search-input {
+  width: 100%;
+  padding: 9px 36px 9px 36px;
+  background: var(--surface-base, #110e22);
+  border: 1px solid var(--border-default, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.tickets-search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.tickets-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: none;
+}
+
+.tickets-search-clear:hover {
+  color: var(--text-primary);
+}
+
+.tickets-secondary-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tickets-select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-default, rgba(255, 255, 255, 0.12));
+  background: var(--surface-base, #110e22);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.tickets-select:focus {
+  border-color: #3b82f6;
+}
+
+/* Premium Tickets Table (Matching tickets/liste.html exactly) */
+.premium-table-wrapper {
+  overflow-x: auto;
+  background: var(--surface-raised, #171527);
+}
+
+.premium-table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.premium-table th {
+  background: var(--surface-1, #1e1b33);
+  padding: 13px 18px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #94a3b8);
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  white-space: nowrap;
+}
+
+.premium-table td {
+  padding: 14px 18px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+  vertical-align: middle;
+}
+
+.premium-table tr:last-child td {
+  border-bottom: none;
+}
+
+.premium-table tbody tr {
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.premium-table tbody tr:hover {
+  background-color: var(--surface-hover, rgba(255, 255, 255, 0.04));
+}
+
+/* Badge Styles (Identical to tickets/liste.html) */
+.badge-premium {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1;
+}
+
+.badge-premium-new { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+.badge-premium-progress { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+.badge-premium-waiting { background: rgba(139, 92, 246, 0.12); color: #8b5cf6; }
+.badge-premium-resolved { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+.badge-premium-closed { background: rgba(107, 114, 128, 0.12); color: #9ca3af; }
+
+/* Priority Dot Styles */
+.priority-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-critique { background-color: #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25); }
+.dot-urgente { background-color: #f97316; }
+.dot-haute { background-color: #eab308; }
+.dot-moyenne { background-color: #3b82f6; }
+.dot-basse { background-color: #9ca3af; }
+
+/* Table Pagination Bar */
+.tickets-pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px;
+  background: var(--surface-1, #1e1b33);
+  border-top: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tickets-count-summary {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.tickets-count-summary strong {
+  color: var(--text-primary);
+}
+
+.pagination-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-base, #110e22);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+
+.pagination-btn.active {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--color-brand, #ef4444);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Empty State */
+.pdv-empty-block {
+  padding: 36px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+}
+
+.pdv-empty-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+/* Modal Dialog Styling */
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+.pdv-modal-dialog {
+  padding: 0;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  background: var(--surface-base, #110e22);
+  border: 1px solid var(--border-default, rgba(255, 255, 255, 0.12));
+  max-width: 540px;
+  width: 95%;
+  margin: auto;
+  color: var(--text-primary);
+}
+
+.pdv-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface-1, #1e1b33);
+}
+
+.pdv-modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pdv-modal-footer {
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  padding: 16px 24px;
+  background: var(--surface-1, #1e1b33);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Info Items inside the Info Dialog */
+.pdv-info-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+.pdv-info-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.pdv-info-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted, #94a3b8);
+  flex-shrink: 0;
+}
+
+.pdv-info-label-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  color: var(--text-secondary, #cbd5e1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdv-info-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-word;
+}
+
+.pdv-info-value a {
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.pdv-info-value a:hover {
+  color: #10b981;
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1100px) {
+  .pdv-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .pdv-two-col-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .pdv-detail-container {
+    padding: 16px;
+  }
+  .pdv-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pdv-detail-container" style="--pdv-color: {{ pdv.couleur or '#10b981' }};">
+
+  <!-- ==================== HEADER ==================== -->
+  <div class="pdv-header">
+    <div class="pdv-header-left">
+      <a href="{{ url_for('pdv.liste') }}" class="pdv-breadcrumb">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour aux points de vente
+      </a>
+      <div class="pdv-title-wrap">
+        <div class="pdv-icon-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+        </div>
+        <h1 class="pdv-title">{{ pdv.nom }}</h1>
+        {% if pdv.categorie %}
+        <span class="pdv-status-badge" style="background:var(--surface-2); color:var(--text-primary); border:1px solid var(--border-default); display:inline-flex; align-items:center; gap:5px;">
+          {% if pdv.categorie == 'Urbain' %}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h1M9 13h1M9 17h1M15 13h1M15 17h1"/></svg>
+          {% elif pdv.categorie == 'Express' %}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          {% elif pdv.categorie == 'Mall' %}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          {% else %}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+          {% endif %}
+          {{ pdv.categorie }}
+        </span>
+        {% endif %}
+        <span class="pdv-status-badge {{ 'active' if pdv.actif else 'inactive' }}">
+          <span class="pdv-status-dot"></span>
+          {{ 'Actif' if pdv.actif else 'Inactif' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="pdv-header-actions">
+      <!-- Button to show Store Information -->
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('pdvInfoDialog').showModal()" style="display:flex; align-items:center; gap:6px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Informations
+      </button>
+
+      {% if current_user.has_permission('pdv.modifier') or current_user.has_permission('pdv.gerer') %}
+      <a href="{{ url_for('pdv.modifier', id=pdv.id) }}" class="btn btn-secondary" style="display:flex; align-items:center; gap:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Modifier
+      </a>
+      {% endif %}
+
+      <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary" style="display:flex; align-items:center; gap:6px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouveau ticket
+      </a>
+    </div>
+  </div>
+
+  <!-- ==================== STATS OVERVIEW ==================== -->
+  {% set ticket_stats = namespace(total=0, ouvert=0, en_cours=0, en_attente=0, resolu=0, ferme=0) %}
+  {% if pdv.tickets_associes %}
+    {% set ticket_stats.total = pdv.tickets_associes|length %}
+    {% for t in pdv.tickets_associes %}
+      {% if t.statut in ['nouveau', 'ouvert'] %}
+        {% set ticket_stats.ouvert = ticket_stats.ouvert + 1 %}
+      {% elif t.statut == 'en_cours' %}
+        {% set ticket_stats.en_cours = ticket_stats.en_cours + 1 %}
+      {% elif t.statut == 'en_attente' %}
+        {% set ticket_stats.en_attente = ticket_stats.en_attente + 1 %}
+      {% elif t.statut == 'resolu' %}
+        {% set ticket_stats.resolu = ticket_stats.resolu + 1 %}
+      {% elif t.statut in ['ferme', 'annule'] %}
+        {% set ticket_stats.ferme = ticket_stats.ferme + 1 %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  {% set active_tickets_count = ticket_stats.ouvert + ticket_stats.en_cours + ticket_stats.en_attente %}
+
+  <div class="pdv-stats-grid">
+    <!-- Employés -->
+    <div class="pdv-stat-card accent-emerald">
+      <div class="pdv-stat-top">
+        <span class="pdv-stat-label">Employés</span>
+        <div class="pdv-stat-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+      </div>
+      <div class="pdv-stat-num">{{ pdv.employes|length }}</div>
+      <div class="pdv-stat-footnote">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+        Personnel rattaché
+      </div>
+    </div>
+
+    <!-- Équipements -->
+    <div class="pdv-stat-card accent-blue">
+      <div class="pdv-stat-top">
+        <span class="pdv-stat-label">Équipements</span>
+        <div class="pdv-stat-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+        </div>
+      </div>
+      <div class="pdv-stat-num">{{ pdv.equipements|length }}</div>
+      <div class="pdv-stat-footnote">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+        Matériels & terminaux
+      </div>
+    </div>
+
+    <!-- Total Tickets -->
+    <div class="pdv-stat-card accent-amber">
+      <div class="pdv-stat-top">
+        <span class="pdv-stat-label">Tickets Soumis</span>
+        <div class="pdv-stat-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+      </div>
+      <div class="pdv-stat-num">{{ ticket_stats.total }}</div>
+      <div class="pdv-stat-footnote">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        {{ ticket_stats.resolu }} résolus ({{ ((ticket_stats.resolu / ticket_stats.total * 100)|round|int) if ticket_stats.total > 0 else 0 }}%)
+      </div>
+    </div>
+
+    <!-- Active Tickets -->
+    <div class="pdv-stat-card accent-purple">
+      <div class="pdv-stat-top">
+        <span class="pdv-stat-label">Tickets Actifs</span>
+        <div class="pdv-stat-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+      </div>
+      <div class="pdv-stat-num">{{ active_tickets_count }}</div>
+      <div class="pdv-stat-footnote">
+        {{ ticket_stats.ouvert }} ouverts • {{ ticket_stats.en_cours }} en cours
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TWO-COLUMN: EQUIPEMENTS & EMPLOYES ==================== -->
+  <div class="pdv-two-col-grid">
+
+    <!-- Équipements Card (Replaces the Info Block) -->
+    <div class="pdv-card">
+      <div class="pdv-card-header">
+        <h2 class="pdv-card-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+          Équipements
+          <span style="font-size:12px; font-weight:700; padding:2px 8px; border-radius:9999px; background:var(--surface-3); color:var(--text-muted);">{{ pdv.equipements|length }}</span>
+        </h2>
+        {% if current_user.has_permission('equipements.gerer') %}
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('addEquipementDialog').showModal()" style="display:inline-flex; align-items:center; gap:4px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ajouter
+        </button>
+        {% endif %}
+      </div>
+      <div class="pdv-card-body">
+        {% if pdv.equipements %}
+        <div class="pdv-card-scroll-body">
+          <table class="pdv-equip-compact-table">
+            <thead>
+              <tr>
+                <th>Équipement</th>
+                <th>N° Série / IP</th>
+                <th>Statut</th>
+                <th style="width:36px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for eq in pdv.equipements %}
+              <tr>
+                <td>
+                  <div style="font-weight:700; color:var(--text-primary); line-height:1.3;">{{ eq.type_equipement }}</div>
+                  <div style="font-size:11px; color:var(--text-muted);">{{ eq.marque }} {{ eq.modele }}</div>
+                </td>
+                <td>
+                  <div style="font-family:var(--font-mono, monospace); font-size:11px; color:var(--text-secondary);">{{ eq.numero_serie or '—' }}</div>
+                  {% if eq.adresse_ip %}
+                  <div style="font-family:var(--font-mono, monospace); font-size:10px; color:var(--text-muted);">{{ eq.adresse_ip }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if eq.statut == 'actif' %}
+                    <span class="badge-premium badge-premium-resolved" style="font-size:10px; padding:2px 8px;">Actif</span>
+                  {% elif eq.statut == 'en_panne' %}
+                    <span class="badge-premium" style="background:rgba(239,68,68,0.15); color:#ef4444; font-size:10px; padding:2px 8px;">En panne</span>
+                  {% else %}
+                    <span class="badge-premium badge-premium-progress" style="font-size:10px; padding:2px 8px;">{{ eq.statut|capitalize }}</span>
+                  {% endif %}
+                </td>
+                <td style="text-align:right;">
+                  {% if current_user.has_permission('equipements.gerer') %}
+                  <form action="{{ url_for('pdv.supprimer_equipement', equip_id=eq.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--text-muted); padding:4px;" title="Supprimer" onclick="return confirm('Supprimer cet équipement ?')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </form>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="pdv-empty-block">
+          <div class="pdv-empty-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+          </div>
+          <div style="font-size:13px; font-weight:600; color:var(--text-primary);">Aucun équipement</div>
+          <div style="font-size:12px; color:var(--text-muted);">Enregistrez les matériels ou terminaux de ce PDV.</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Employés Card -->
+    <div class="pdv-card">
+      <div class="pdv-card-header">
+        <h2 class="pdv-card-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Employés
+          <span style="font-size:12px; font-weight:700; padding:2px 8px; border-radius:9999px; background:var(--surface-3); color:var(--text-muted);">{{ pdv.employes|length }}</span>
+        </h2>
+        {% if current_user.has_permission('pdv.gerer') %}
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('addEmployeeDialog').showModal()" style="display:inline-flex; align-items:center; gap:4px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Assigner
+        </button>
+        {% endif %}
+      </div>
+      <div class="pdv-card-body">
+        {% if pdv.employes %}
+        <div class="pdv-card-scroll-body">
+          {% for emp in pdv.employes %}
+          <div class="pdv-staff-item">
+            <div class="pdv-staff-left">
+              <div class="pdv-staff-avatar">
+                {{ emp.nom_complet[0]|upper }}
+              </div>
+              <div>
+                <div class="pdv-staff-name">{{ emp.nom_complet }}</div>
+                <div class="pdv-staff-role">{{ emp.role.nom if emp.role else 'Employé' }}</div>
+              </div>
+            </div>
+            {% if current_user.has_permission('pdv.gerer') %}
+            <form action="{{ url_for('pdv.retirer_employe', id=pdv.id, user_id=emp.id) }}" method="POST">
+              <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--text-muted); padding:6px;" title="Retirer cet employé" onclick="return confirm('Retirer cet employé du point de vente ?')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </form>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="pdv-empty-block">
+          <div class="pdv-empty-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div style="font-size:13px; font-weight:600; color:var(--text-primary);">Aucun employé rattaché</div>
+          <div style="font-size:12px; color:var(--text-muted);">Assignez des collaborateurs à ce point de vente.</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==========================================================================
+       SECTION: TICKETS SOUMIS (WIDE / FULL-WIDTH FOR HUNDREDS OF TICKETS)
+       Table Headings exactly matching tickets/liste.html:
+       ID | Priorité | Titre & Catégorie | Statut | Assigné à | Département | Créé le | Actions
+       ========================================================================== -->
+  <div class="pdv-card tickets-section" id="ticketsSection">
+    
+    <!-- Section Top Header -->
+    <div class="pdv-card-header">
+      <h2 class="pdv-card-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Tickets Soumis
+        <span style="font-size:12px; font-weight:700; padding:2px 8px; border-radius:9999px; background:var(--surface-3); color:var(--text-muted);" id="ticketsBadgeTotal">
+          {{ pdv.tickets_associes|length }} tickets
+        </span>
+      </h2>
+      <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouveau ticket
+      </a>
+    </div>
+
+    <!-- Filter Toolbar -->
+    <div class="tickets-toolbar">
+      
+      <!-- Top Row: Status Tabs -->
+      <div class="tickets-filter-row">
+        <div class="status-tabs" role="tablist">
+          <button class="status-tab-btn active" data-status="all" type="button">
+            Tous
+            <span class="status-tab-count" id="countAll">{{ ticket_stats.total }}</span>
+          </button>
+          <button class="status-tab-btn" data-status="ouvert" type="button">
+            Ouverts
+            <span class="status-tab-count" id="countOuvert">{{ ticket_stats.ouvert }}</span>
+          </button>
+          <button class="status-tab-btn" data-status="en_cours" type="button">
+            En cours
+            <span class="status-tab-count" id="countCours">{{ ticket_stats.en_cours }}</span>
+          </button>
+          <button class="status-tab-btn" data-status="en_attente" type="button">
+            En attente
+            <span class="status-tab-count" id="countAttente">{{ ticket_stats.en_attente }}</span>
+          </button>
+          <button class="status-tab-btn" data-status="resolu" type="button">
+            Résolus
+            <span class="status-tab-count" id="countResolu">{{ ticket_stats.resolu }}</span>
+          </button>
+          <button class="status-tab-btn" data-status="ferme" type="button">
+            Fermés
+            <span class="status-tab-count" id="countFerme">{{ ticket_stats.ferme }}</span>
+          </button>
+        </div>
+
+        <div style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
+          <span>Affichage par page:</span>
+          <select id="ticketsPerPageSelect" class="tickets-select" style="padding:4px 8px; font-size:12px;">
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Bottom Row: Realtime Search & Priority Filters -->
+      <div class="tickets-controls-bar">
+        <div class="tickets-search-wrap">
+          <svg class="tickets-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="ticketsSearchInput" class="tickets-search-input" placeholder="Rechercher par ID, titre, assigné, département..." autocomplete="off">
+          <button type="button" id="ticketsSearchClear" class="tickets-search-clear" title="Effacer la recherche">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="tickets-secondary-filters">
+          <select id="priorityFilterSelect" class="tickets-select">
+            <option value="all">Toutes les priorités</option>
+            <option value="critique">Critique</option>
+            <option value="urgente">Urgente</option>
+            <option value="haute">Haute</option>
+            <option value="moyenne">Moyenne</option>
+            <option value="basse">Basse</option>
+          </select>
+
+          <button type="button" id="resetFiltersBtn" class="btn btn-ghost btn-sm" style="display:none; color:var(--color-brand, #ef4444); font-size:12px;">
+            Effacer les filtres
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tickets Table Content -->
+    <div class="pdv-card-body">
+      {% if pdv.tickets_associes %}
+      <div class="premium-table-wrapper">
+        <table class="premium-table" id="ticketsTable">
+          <thead>
+            <tr>
+              <!-- Exactly matching tickets/liste.html headings -->
+              <th style="width: 110px;">ID</th>
+              <th style="width: 120px;">Priorité</th>
+              <th style="min-width: 280px;">Titre & Catégorie</th>
+              <th style="width: 140px;">Statut</th>
+              <th style="width: 180px;">Assigné à</th>
+              <th style="width: 160px;">Département</th>
+              <th style="width: 130px;">Créé le</th>
+              <th style="width: 60px; text-align: center;"></th>
+            </tr>
+          </thead>
+          <tbody id="ticketsTbody">
+            {% for t in pdv.tickets_associes|sort(attribute='date_creation', reverse=True) %}
+            <tr class="ticket-row"
+                data-id="{{ t.id }}"
+                data-numero="{{ (t.numero or '')|lower }}"
+                data-titre="{{ (t.titre or '')|lower }}"
+                data-statut="{{ t.statut or 'nouveau' }}"
+                data-priorite="{{ t.priorite or 'normale' }}"
+                data-assigne="{{ (t.assigne_a.prenom ~ ' ' ~ t.assigne_a.nom)|lower if t.assigne_a else '' }}"
+                data-departement="{{ t.departement.nom|lower if t.departement else '' }}"
+                data-categorie="{{ t.categorie.nom|lower if t.categorie else (t.type_ticket|lower if t.type_ticket else '') }}"
+                onclick="if(!event.target.closest('button') && !event.target.closest('a')) window.location='{{ url_for('tickets.detail', ticket_id=t.id) }}'">
+              
+              <!-- ID -->
+              <td>
+                <a href="{{ url_for('tickets.detail', ticket_id=t.id) }}" style="font-family: var(--font-mono, monospace); font-size: 12px; color: var(--text-muted); text-decoration: none; font-weight: 600; white-space: nowrap;">
+                  {{ t.numero }}
+                </a>
+              </td>
+
+              <!-- Priorité -->
+              <td>
+                <div style="display: flex; align-items: center; gap: 7px;" title="Priorité: {{ t.priorite|capitalize }}">
+                  <span class="priority-dot dot-{{ t.priorite }}"></span>
+                  <span style="font-size: 13px; font-weight: 500; text-transform: capitalize;">{{ t.priorite }}</span>
+                </div>
+              </td>
+
+              <!-- Titre & Catégorie -->
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <a href="{{ url_for('tickets.detail', ticket_id=t.id) }}" style="color: var(--text-primary); text-decoration: none; font-size: 14px; font-weight: 600; line-height: 1.4;">
+                    {{ t.titre }}
+                  </a>
+                  {% if t.categorie %}
+                  <span style="font-size: 12px; color: var(--text-secondary); display: inline-flex; align-items: center; gap: 4px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    {{ t.categorie.nom }}
+                  </span>
+                  {% elif t.type_ticket %}
+                  <span style="font-size: 12px; color: var(--text-secondary);">{{ t.type_ticket }}</span>
+                  {% endif %}
+                </div>
+              </td>
+
+              <!-- Statut -->
+              <td>
+                {% if t.statut in ['nouveau', 'ouvert'] %}
+                  <span class="badge-premium badge-premium-new">{{ 'Ouvert' if t.statut == 'ouvert' else 'Nouveau' }}</span>
+                {% elif t.statut == 'en_cours' %}
+                  <span class="badge-premium badge-premium-progress">En cours</span>
+                {% elif t.statut == 'en_attente' %}
+                  <span class="badge-premium badge-premium-waiting">En attente</span>
+                {% elif t.statut == 'resolu' %}
+                  <span class="badge-premium badge-premium-resolved">Résolu</span>
+                {% elif t.statut == 'ferme' %}
+                  <span class="badge-premium badge-premium-closed">Fermé</span>
+                {% elif t.statut == 'annule' %}
+                  <span class="badge-premium badge-premium-closed">Annulé</span>
+                {% else %}
+                  <span class="badge-premium">{{ t.statut|capitalize }}</span>
+                {% endif %}
+              </td>
+
+              <!-- Assigné à -->
+              <td>
+                {% if t.assigne_a %}
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--text-primary); flex-shrink: 0; border: 1px solid var(--border-subtle);">
+                    {% if t.assigne_a.photo_profil %}
+                    <img src="{{ url_for('static', filename='uploads/' + t.assigne_a.photo_profil) }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    {{ t.assigne_a.prenom[0]|upper }}
+                    {% endif %}
+                  </div>
+                  <span style="font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap;">
+                    {{ t.assigne_a.prenom }} {{ t.assigne_a.nom }}
+                  </span>
+                </div>
+                {% else %}
+                <span style="font-size: 13px; color: var(--text-muted); font-style: italic;">Non assigné</span>
+                {% endif %}
+              </td>
+
+              <!-- Département -->
+              <td>
+                {% if t.departement %}
+                <span style="font-size: 13px; color: var(--text-secondary); display:inline-flex; align-items:center; gap:5px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
+                  {{ t.departement.nom }}
+                </span>
+                {% else %}
+                <span style="font-size: 13px; color: var(--text-muted);">—</span>
+                {% endif %}
+              </td>
+
+              <!-- Créé le -->
+              <td>
+                <span style="font-size: 12px; font-weight: 500; color: var(--text-secondary); white-space: nowrap;">
+                  {{ t.date_creation.strftime('%d %b %Y') if t.date_creation else '—' }}
+                </span>
+              </td>
+
+              <!-- Actions -->
+              <td style="text-align: center;">
+                <button onclick="window.location='{{ url_for('tickets.detail', ticket_id=t.id) }}'" class="btn btn-ghost btn-sm" style="padding: 6px; color: var(--text-muted); background: transparent; border: none; cursor: pointer; transition: color 0.15s;" title="Voir les détails">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
+                </button>
+              </td>
+
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <!-- No Filter Results State (Hidden by default) -->
+        <div id="noResultsState" class="pdv-empty-block" style="display:none; padding:48px 24px;">
+          <div class="pdv-empty-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </div>
+          <div style="font-size:14px; font-weight:700; color:var(--text-primary);">Aucun ticket ne correspond à vos filtres</div>
+          <div style="font-size:13px; color:var(--text-muted);">Essayez de modifier votre mot-clé de recherche ou de réinitialiser vos filtres de statut.</div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="resetAllFilters()" style="margin-top:6px;">Réinitialiser les filtres</button>
+        </div>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="tickets-pagination-bar" id="ticketsPaginationBar">
+        <div class="tickets-count-summary" id="ticketsCountSummary">
+          Affichage de <strong id="showingStart">1</strong> à <strong id="showingEnd">25</strong> sur <strong id="showingTotal">{{ pdv.tickets_associes|length }}</strong> tickets
+        </div>
+
+        <div class="pagination-controls" id="paginationControls">
+          <!-- Dynamically populated by JS -->
+        </div>
+      </div>
+
+      {% else %}
+      <!-- Empty State When Zero Tickets in PDV -->
+      <div class="pdv-empty-block" style="padding:60px 24px;">
+        <div class="pdv-empty-icon" style="width:64px; height:64px;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div style="font-size:15px; font-weight:700; color:var(--text-primary);">Aucun ticket soumis par ce PDV</div>
+        <div style="font-size:13px; color:var(--text-muted); max-width:400px;">Ce point de vente n'a encore enregistré aucun ticket d'incident ou de demande de support.</div>
+        <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary" style="margin-top:8px; display:inline-flex; align-items:center; gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Créer le premier ticket
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ==================== MODAL: INFORMATIONS DU MAGASIN ==================== -->
+<dialog id="pdvInfoDialog" class="pdv-modal-dialog">
+  <div class="pdv-modal-header">
+    <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      Informations du magasin
+    </h3>
+    <form method="dialog">
+      <button type="submit" style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </form>
+  </div>
+  <div class="pdv-modal-body">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border-subtle);">
+      <div>
+        <div style="font-size:18px; font-weight:800; color:var(--text-primary);">{{ pdv.nom }}</div>
+        <div style="font-size:12px; color:var(--text-muted);">Point de Vente physique</div>
+      </div>
+      <span class="badge-premium {{ 'badge-premium-resolved' if pdv.actif else 'badge-premium-closed' }}">
+        {{ 'Actif' if pdv.actif else 'Inactif' }}
+      </span>
+    </div>
+
+    <div>
+      <div class="pdv-info-item">
+        <span class="pdv-info-label">
+          <span class="pdv-info-label-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+          </span>
+          Catégorie
+        </span>
+        <span class="pdv-info-value" style="font-weight:700;">{{ pdv.categorie or 'Urbain' }}</span>
+      </div>
+
+      <div class="pdv-info-item">
+        <span class="pdv-info-label">
+          <span class="pdv-info-label-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </span>
+          Localisation
+        </span>
+        <span class="pdv-info-value">{{ pdv.localisation or 'Non renseignée' }}</span>
+      </div>
+
+      <div class="pdv-info-item">
+        <span class="pdv-info-label">
+          <span class="pdv-info-label-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          </span>
+          Adresse
+        </span>
+        <span class="pdv-info-value">{{ pdv.adresse or 'Non renseignée' }}</span>
+      </div>
+
+      <div class="pdv-info-item">
+        <span class="pdv-info-label">
+          <span class="pdv-info-label-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </span>
+          Téléphone
+        </span>
+        <span class="pdv-info-value">
+          {% if pdv.telephone %}
+            <a href="tel:{{ pdv.telephone }}">{{ pdv.telephone }}</a>
+          {% else %}
+            <span style="color:var(--text-muted);">Non renseigné</span>
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="pdv-info-item">
+        <span class="pdv-info-label">
+          <span class="pdv-info-label-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </span>
+          Email
+        </span>
+        <span class="pdv-info-value">
+          {% if pdv.email %}
+            <a href="mailto:{{ pdv.email }}" title="{{ pdv.email }}">{{ pdv.email }}</a>
+          {% else %}
+            <span style="color:var(--text-muted);">Non renseigné</span>
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="pdv-info-item">
+        <span class="pdv-info-label">
+          <span class="pdv-info-label-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </span>
+          Responsable
+        </span>
+        <span class="pdv-info-value">
+          {% if pdv.responsable %}
+            <span style="display:inline-flex; align-items:center; gap:6px;">
+              <span style="width:20px; height:20px; border-radius:50%; background:var(--brand-subtle, rgba(220,38,38,0.15)); color:var(--brand, #dc2626); font-size:10px; font-weight:700; display:inline-flex; align-items:center; justify-content:center;">
+                {{ pdv.responsable.nom_complet[0]|upper }}
+              </span>
+              {{ pdv.responsable.nom_complet }}
+            </span>
+          {% else %}
+            <span style="color:var(--text-muted); font-style:italic;">Aucun</span>
+          {% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="pdv-modal-footer">
+    <button type="button" class="btn btn-primary" onclick="document.getElementById('pdvInfoDialog').close()">Fermer</button>
+  </div>
+</dialog>
+
+<!-- ==================== MODAL: ASSIGNER EMPLOYE ==================== -->
+{% if current_user.has_permission('pdv.gerer') %}
+<dialog id="addEmployeeDialog" class="pdv-modal-dialog">
+    <div class="pdv-modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Assigner un employé
+        </h3>
+        <form method="dialog">
+            <button type="submit" style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:4px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </form>
+    </div>
+    <form action="{{ url_for('pdv.ajouter_employe', id=pdv.id) }}" method="POST">
+        <div class="pdv-modal-body">
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <label style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Sélectionner l'employé</label>
+                <select name="utilisateur_id" required style="width:100%; padding:10px 14px; border-radius:8px; background:var(--surface-1); border:1px solid var(--border-default); color:var(--text-primary); font-size:14px;">
+                    {% for user in utilisateurs %}
+                        {% if user.pdv_id != pdv.id %}
+                        <option value="{{ user.id }}">{{ user.nom_complet }} ({{ user.role.nom if user.role else 'Aucun rôle' }})</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="pdv-modal-footer">
+            <button type="button" class="btn btn-ghost" onclick="document.getElementById('addEmployeeDialog').close()">Annuler</button>
+            <button type="submit" class="btn btn-primary">Assigner</button>
+        </div>
+    </form>
+</dialog>
+{% endif %}
+
+<!-- ==================== MODAL: AJOUTER EQUIPEMENT ==================== -->
+{% if current_user.has_permission('equipements.gerer') %}
+<dialog id="addEquipementDialog" class="pdv-modal-dialog" style="max-width:600px;">
+    <div class="pdv-modal-header">
+        <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+            Ajouter un équipement
+        </h3>
+        <form method="dialog">
+            <button type="submit" style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:4px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </form>
+    </div>
+    <form action="{{ url_for('pdv.ajouter_equipement', id=pdv.id) }}" method="POST">
+        <div class="pdv-modal-body">
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <label style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Type d'équipement</label>
+                <select name="type_equipement" required style="width:100%; padding:10px 14px; border-radius:8px; background:var(--surface-1); border:1px solid var(--border-default); color:var(--text-primary); font-size:14px;">
+                    <option value="Camera IP">Caméra IP</option>
+                    <option value="Netbox / Routeur">Netbox / Routeur</option>
+                    <option value="Switch">Switch</option>
+                    <option value="Point d'accès Wi-Fi">Point d'accès Wi-Fi</option>
+                    <option value="Imprimante">Imprimante</option>
+                    <option value="Scanner">Scanner</option>
+                    <option value="TPE">TPE (Terminal de Paiement)</option>
+                    <option value="Caisse">Caisse Enregistreuse</option>
+                    <option value="PC">PC / Ordinateur</option>
+                    <option value="Autre">Autre</option>
+                </select>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <label style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Marque</label>
+                    <input type="text" name="marque" placeholder="ex: Epson, Cisco..." style="width:100%; padding:10px 14px; border-radius:8px; background:var(--surface-1); border:1px solid var(--border-default); color:var(--text-primary); font-size:14px;">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <label style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Modèle</label>
+                    <input type="text" name="modele" placeholder="ex: TM-T20III" style="width:100%; padding:10px 14px; border-radius:8px; background:var(--surface-1); border:1px solid var(--border-default); color:var(--text-primary); font-size:14px;">
+                </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <label style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Numéro de série</label>
+                <input type="text" name="numero_serie" placeholder="N° de série constructeur" style="width:100%; padding:10px 14px; border-radius:8px; background:var(--surface-1); border:1px solid var(--border-default); color:var(--text-primary); font-size:14px;">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <label style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Adresse IP</label>
+                <input type="text" name="adresse_ip" placeholder="ex: 192.168.1.10" style="width:100%; padding:10px 14px; border-radius:8px; background:var(--surface-1); border:1px solid var(--border-default); color:var(--text-primary); font-size:14px;">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <label style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Statut</label>
+                <select name="statut" style="width:100%; padding:10px 14px; border-radius:8px; background:var(--surface-1); border:1px solid var(--border-default); color:var(--text-primary); font-size:14px;">
+                    <option value="actif">Actif</option>
+                    <option value="en_panne">En panne</option>
+                    <option value="maintenance">En maintenance</option>
+                </select>
+            </div>
+        </div>
+        <div class="pdv-modal-footer">
+            <button type="button" class="btn btn-ghost" onclick="document.getElementById('addEquipementDialog').close()">Annuler</button>
+            <button type="submit" class="btn btn-primary">Ajouter l'équipement</button>
+        </div>
+    </form>
+</dialog>
+{% endif %}
+
+<!-- ==================== CLIENT-SIDE TICKET ENGINE FOR HUNDREDS OF TICKETS ==================== -->
+<script>
+(function() {
+  const tbody = document.getElementById('ticketsTbody');
+  if (!tbody) return;
+
+  const allRows = Array.from(tbody.querySelectorAll('.ticket-row'));
+  const totalCount = allRows.length;
+  if (totalCount === 0) return;
+
+  // Filter Elements
+  const statusTabs = document.querySelectorAll('.status-tab-btn');
+  const searchInput = document.getElementById('ticketsSearchInput');
+  const searchClear = document.getElementById('ticketsSearchClear');
+  const prioritySelect = document.getElementById('priorityFilterSelect');
+  const perPageSelect = document.getElementById('ticketsPerPageSelect');
+  const resetBtn = document.getElementById('resetFiltersBtn');
+
+  // Display Elements
+  const noResultsState = document.getElementById('noResultsState');
+  const ticketsTable = document.getElementById('ticketsTable');
+  const paginationBar = document.getElementById('ticketsPaginationBar');
+  const showingStart = document.getElementById('showingStart');
+  const showingEnd = document.getElementById('showingEnd');
+  const showingTotal = document.getElementById('showingTotal');
+  const paginationControls = document.getElementById('paginationControls');
+
+  // State
+  let currentStatus = 'all';
+  let currentSearch = '';
+  let currentPriority = 'all';
+  let currentPage = 1;
+  let perPage = parseInt(perPageSelect.value, 10) || 25;
+  let filteredRows = allRows.slice();
+
+  function matchesStatus(statut, tab) {
+    if (tab === 'all') return true;
+    if (tab === 'ouvert') return statut === 'ouvert' || statut === 'nouveau';
+    if (tab === 'en_cours') return statut === 'en_cours';
+    if (tab === 'en_attente') return statut === 'en_attente';
+    if (tab === 'resolu') return statut === 'resolu';
+    if (tab === 'ferme') return statut === 'ferme' || statut === 'annule';
+    return statut === tab;
+  }
+
+  function matchesPriority(priorite, filter) {
+    if (filter === 'all') return true;
+    return priorite === filter;
+  }
+
+  function matchesSearch(row, query) {
+    if (!query) return true;
+    const text = (
+      row.dataset.numero + ' ' +
+      row.dataset.titre + ' ' +
+      row.dataset.assigne + ' ' +
+      row.dataset.departement + ' ' +
+      row.dataset.categorie
+    );
+    return text.includes(query);
+  }
+
+  function filterTickets() {
+    filteredRows = allRows.filter(row => {
+      return matchesStatus(row.dataset.statut, currentStatus) &&
+             matchesPriority(row.dataset.priorite, currentPriority) &&
+             matchesSearch(row, currentSearch);
+    });
+
+    const isFiltered = (currentStatus !== 'all' || currentPriority !== 'all' || currentSearch.length > 0);
+    if (resetBtn) {
+      resetBtn.style.display = isFiltered ? 'inline-block' : 'none';
+    }
+
+    currentPage = 1;
+    render();
+  }
+
+  function render() {
+    const totalFiltered = filteredRows.length;
+    const totalPages = Math.ceil(totalFiltered / perPage) || 1;
+
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    // Show / Hide rows
+    allRows.forEach(row => { row.style.display = 'none'; });
+
+    if (totalFiltered === 0) {
+      if (noResultsState) noResultsState.style.display = 'flex';
+      if (ticketsTable) ticketsTable.style.display = 'none';
+      if (paginationBar) paginationBar.style.display = 'none';
+      return;
+    }
+
+    if (noResultsState) noResultsState.style.display = 'none';
+    if (ticketsTable) ticketsTable.style.display = 'table';
+    if (paginationBar) paginationBar.style.display = 'flex';
+
+    const startIndex = (currentPage - 1) * perPage;
+    const endIndex = Math.min(startIndex + perPage, totalFiltered);
+
+    for (let i = startIndex; i < endIndex; i++) {
+      filteredRows[i].style.display = '';
+    }
+
+    // Update Counts Summary
+    if (showingStart) showingStart.textContent = startIndex + 1;
+    if (showingEnd) showingEnd.textContent = endIndex;
+    if (showingTotal) showingTotal.textContent = totalFiltered;
+
+    // Render Pagination Buttons
+    renderPagination(totalPages);
+  }
+
+  function renderPagination(totalPages) {
+    if (!paginationControls) return;
+    paginationControls.innerHTML = '';
+
+    if (totalPages <= 1) {
+      return;
+    }
+
+    // Previous Button
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'pagination-btn';
+    prevBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>';
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.title = "Page précédente";
+    prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; render(); scrollToTickets(); } };
+    paginationControls.appendChild(prevBtn);
+
+    // Page Number Logic
+    let pagesToRender = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pagesToRender.push(i);
+    } else {
+      pagesToRender.push(1);
+      if (currentPage > 3) pagesToRender.push('...');
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) {
+        if (!pagesToRender.includes(i)) pagesToRender.push(i);
+      }
+      if (currentPage < totalPages - 2) pagesToRender.push('...');
+      if (!pagesToRender.includes(totalPages)) pagesToRender.push(totalPages);
+    }
+
+    pagesToRender.forEach(p => {
+      if (p === '...') {
+        const dots = document.createElement('span');
+        dots.className = 'pagination-btn';
+        dots.style.border = 'none';
+        dots.style.background = 'transparent';
+        dots.style.cursor = 'default';
+        dots.textContent = '…';
+        paginationControls.appendChild(dots);
+      } else {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = 'pagination-btn' + (p === currentPage ? ' active' : '');
+        pageBtn.textContent = p;
+        pageBtn.onclick = () => { currentPage = p; render(); scrollToTickets(); };
+        paginationControls.appendChild(pageBtn);
+      }
+    });
+
+    // Next Button
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'pagination-btn';
+    nextBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>';
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.title = "Page suivante";
+    nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; render(); scrollToTickets(); } };
+    paginationControls.appendChild(nextBtn);
+  }
+
+  function scrollToTickets() {
+    const sec = document.getElementById('ticketsSection');
+    if (sec) {
+      const top = sec.getBoundingClientRect().top + window.pageYOffset - 80;
+      window.scrollTo({ top: top, behavior: 'smooth' });
+    }
+  }
+
+  // Event Listeners
+  statusTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      statusTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentStatus = tab.dataset.status;
+      filterTickets();
+    });
+  });
+
+  searchInput.addEventListener('input', (e) => {
+    currentSearch = e.target.value.trim().toLowerCase();
+    searchClear.style.display = currentSearch.length > 0 ? 'block' : 'none';
+    filterTickets();
+  });
+
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    currentSearch = '';
+    searchClear.style.display = 'none';
+    searchInput.focus();
+    filterTickets();
+  });
+
+  prioritySelect.addEventListener('change', (e) => {
+    currentPriority = e.target.value;
+    filterTickets();
+  });
+
+  perPageSelect.addEventListener('change', (e) => {
+    perPage = parseInt(e.target.value, 10) || 25;
+    currentPage = 1;
+    render();
+  });
+
+  window.resetAllFilters = function() {
+    currentStatus = 'all';
+    currentPriority = 'all';
+    currentSearch = '';
+    searchInput.value = '';
+    searchClear.style.display = 'none';
+    prioritySelect.value = 'all';
+    statusTabs.forEach(t => {
+      t.classList.toggle('active', t.dataset.status === 'all');
+    });
+    filterTickets();
+  };
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', window.resetAllFilters);
+  }
+
+  // Initial Run
+  render();
+})();
+</script>
+{% endblock %}

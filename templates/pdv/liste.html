@@ -1,0 +1,579 @@
+{% extends "base.html" %}
+
+{% block title %}Points de Vente{% endblock %}
+
+{% block body_class %}page-pdv-list{% endblock %}
+
+{% block extra_head %}
+<style>
+.pdv-page { padding: 24px 32px 60px; max-width: 100%; margin: 0 auto; }
+
+/* Hero */
+.pdv-hero { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:32px; gap:24px; flex-wrap:wrap; }
+.pdv-hero-left { display:flex; flex-direction:column; gap:6px; }
+.pdv-hero-title { font-size:32px; font-weight:900; color:var(--text-primary); letter-spacing:-0.03em; margin:0; display:flex; align-items:center; gap:12px; }
+.pdv-hero-icon { width:44px; height:44px; border-radius:14px; background:var(--brand-light); border:1px solid var(--brand-subtle); display:flex; align-items:center; justify-content:center; color:var(--brand); }
+.pdv-hero-sub { font-size:14px; color:var(--text-muted); font-weight:500; margin:0; display:flex; align-items:center; gap:12px; }
+.pdv-count-pill { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; background:var(--surface-2); border:1px solid var(--border-subtle); font-size:13px; font-weight:700; color:var(--text-secondary); }
+
+/* Grid */
+.pdv-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; }
+@media (max-width:1200px) { .pdv-grid { grid-template-columns:repeat(2, 1fr); } }
+@media (max-width:640px) { .pdv-grid { grid-template-columns:1fr; } }
+
+/* Card */
+.pdv-card {
+  --pdv-color: #10b981;
+  background: var(--surface-1);
+  border-radius: 18px;
+  border: 1px solid var(--border-subtle);
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: transform .2s cubic-bezier(.16,1,.3,1), box-shadow .2s cubic-bezier(.16,1,.3,1);
+  position: relative;
+}
+.pdv-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+}
+
+.pdv-card-banner {
+  height: 100px;
+  background: linear-gradient(135deg, var(--pdv-color), color-mix(in srgb, var(--pdv-color) 70%, #000));
+  position: relative;
+  border-radius: 18px 18px 0 0;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  transition: background 0.3s ease;
+}
+.pdv-card-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+.pdv-card-banner-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.08;
+  background-image: radial-gradient(circle, white 1px, transparent 1px);
+  background-size: 16px 16px;
+  pointer-events: none;
+}
+.pdv-card-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  border: 2.5px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(4px);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 800;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.pdv-card-banner-title {
+  color: white;
+  font-size: 16px;
+  font-weight: 800;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Card Header Action Buttons */
+.pdv-card-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 3;
+}
+
+.pdv-card-btn-action {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.35);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .15s, transform .15s;
+  padding: 0;
+}
+.pdv-card-btn-action:hover {
+  background: rgba(255,255,255,0.4);
+  transform: scale(1.05);
+}
+
+/* Quick Theme Palette Popover */
+.pdv-theme-popover {
+  position: absolute;
+  top: 48px;
+  right: 10px;
+  background: var(--surface-base, #110e22);
+  border: 1px solid var(--border-default, rgba(255, 255, 255, 0.15));
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  padding: 12px;
+  z-index: 20;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  width: 200px;
+}
+.pdv-theme-popover.open {
+  display: flex;
+}
+.popover-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.popover-swatches {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.popover-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s;
+  padding: 0;
+}
+.popover-swatch:hover {
+  transform: scale(1.15);
+}
+.popover-swatch.active {
+  border-color: white;
+  box-shadow: 0 0 0 2px var(--surface-base);
+}
+
+.pdv-card-body {
+  padding: 18px 20px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface-1);
+  border-radius: 0 0 18px 18px;
+}
+.pdv-card-name { font-size:17px; font-weight:800; color:var(--text-primary); margin:0; letter-spacing:-0.01em; line-height:1.2; }
+.pdv-card-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:6px; }
+.pdv-card-cat {
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  letter-spacing: -0.01em;
+}
+.pdv-card-cat svg {
+  color: var(--brand, #e11d48);
+}
+.pdv-card-loc { font-family:var(--font-mono); font-size:10px; padding:2px 7px; border-radius:6px; background:var(--surface-3); color:var(--text-secondary); font-weight:600; }
+.pdv-badge-actif {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--pdv-color) 14%, transparent);
+  color: var(--pdv-color);
+  border: 1px solid color-mix(in srgb, var(--pdv-color) 25%, transparent);
+}
+.pdv-badge-inactif { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; padding:2px 8px; border-radius:20px; background:var(--surface-3); color:var(--text-muted); }
+.pdv-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.pdv-filter-chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+.pdv-filter-chip:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+.pdv-filter-chip.active {
+  background: var(--brand, #e11d48);
+  color: white;
+  border-color: var(--brand, #e11d48);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand, #e11d48) 35%, transparent);
+}
+.pdv-filter-count {
+  font-size: 11px;
+  opacity: 0.8;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.12);
+}
+.pdv-card-desc { font-size:13px; color:var(--text-secondary); line-height:1.6; margin:0; flex:1; }
+
+.pdv-card-stats {
+  display: flex;
+  background: color-mix(in srgb, var(--pdv-color) 6%, var(--surface-1));
+  border: 1px solid color-mix(in srgb, var(--pdv-color) 18%, transparent);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: auto;
+}
+.pdv-stat-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 10px 12px;
+}
+.pdv-stat-item + .pdv-stat-item {
+  border-left: 1px solid color-mix(in srgb, var(--pdv-color) 18%, transparent);
+}
+.pdv-stat-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--pdv-color) 16%, transparent);
+  color: var(--pdv-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.pdv-stat-val { font-size:16px; font-weight:800; color:var(--text-primary); line-height:1; }
+.pdv-stat-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); margin-top:2px; }
+
+/* Empty */
+.pdv-empty { padding:80px 32px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:12px; }
+.pdv-empty-icon { width:72px; height:72px; border-radius:20px; background:var(--surface-2); border:1px solid var(--border-subtle); display:flex; align-items:center; justify-content:center; color:var(--text-muted); margin-bottom:8px; }
+
+@media (max-width:768px) {
+  .pdv-page { padding:16px 20px; }
+  .pdv-grid { grid-template-columns:1fr; }
+  .pdv-hero { flex-direction:column; align-items:flex-start; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pdv-page">
+
+  <!-- Hero Header -->
+  <div class="pdv-hero">
+    <div class="pdv-hero-left">
+      <h1 class="pdv-hero-title">
+        <div class="pdv-hero-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+        </div>
+        Points de Vente
+      </h1>
+      <p class="pdv-hero-sub">
+        <span class="pdv-count-pill">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line></svg>
+          {{ pdvs|length }} Point{% if pdvs|length != 1 %}s{% endif %} de vente
+        </span>
+        Gérez vos magasins, employés, équipements et thèmes personnalisés.
+      </p>
+    </div>
+    {% if current_user.has_permission('pdv.creer') or current_user.has_permission('pdv.gerer') %}
+    <a href="{{ url_for('pdv.nouveau') }}" class="btn btn-primary" style="gap:8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nouveau PDV
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Category Filter Bar -->
+  {% if pdvs and categories %}
+  <div class="pdv-filter-bar">
+    <button type="button" class="pdv-filter-chip active" onclick="filterCategory('all', this)">
+      <span>Tous</span>
+      <span class="pdv-filter-count">{{ pdvs|length }}</span>
+    </button>
+    {% for cat in categories %}
+      {% set count_cat = pdvs | selectattr('categorie', 'equalto', cat) | list | length %}
+      {% if count_cat > 0 %}
+      <button type="button" class="pdv-filter-chip" onclick="filterCategory('{{ cat }}', this)">
+        {% if cat == 'Urbain' %}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h1M9 13h1M9 17h1M15 13h1M15 17h1"/></svg>
+        {% elif cat == 'Express' %}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        {% elif cat == 'Mall' %}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        {% else %}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+        {% endif %}
+        <span>{{ cat }}</span>
+        <span class="pdv-filter-count">{{ count_cat }}</span>
+      </button>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Cards Grid -->
+  {% if pdvs %}
+  <div class="pdv-grid">
+    {% for pdv in pdvs %}
+    {% set theme_color = pdv.couleur if pdv.couleur else '#10b981' %}
+    <div class="pdv-card"
+         id="pdvCard_{{ pdv.id }}"
+         data-cat="{{ pdv.categorie or 'Urbain' }}"
+         style="--pdv-color: {{ theme_color }};"
+         onclick="if(!event.target.closest('a')&&!event.target.closest('button')) window.location='{{ url_for('pdv.detail', id=pdv.id) }}'">
+
+      <!-- Colored Banner -->
+      <div class="pdv-card-banner">
+        <div class="pdv-card-banner-pattern"></div>
+        
+        <!-- Avatar inside banner -->
+        <div class="pdv-card-avatar">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line></svg>
+        </div>
+        
+        <!-- Store Name in banner -->
+        <span class="pdv-card-banner-title">{{ pdv.nom }}</span>
+
+        <!-- Top Right Actions: Quick Theme Palette & Edit Button -->
+        <div class="pdv-card-actions">
+          {% if current_user.has_permission('pdv.modifier') or current_user.has_permission('pdv.gerer') %}
+          <!-- Quick Color Palette Button -->
+          <button type="button" 
+                  class="pdv-card-btn-action" 
+                  title="Changer le thème couleur"
+                  onclick="event.stopPropagation(); toggleThemePopover('{{ pdv.id }}')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="12" r="1.5" fill="currentColor"/><circle cx="8" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="16" r="1.5" fill="currentColor"/></svg>
+          </button>
+
+          <!-- Edit Button -->
+          <a href="{{ url_for('pdv.modifier', id=pdv.id) }}" class="pdv-card-btn-action" title="Modifier les informations" onclick="event.stopPropagation()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick Theme Popover (Opens on palette click) -->
+      {% if current_user.has_permission('pdv.modifier') or current_user.has_permission('pdv.gerer') %}
+      <div class="pdv-theme-popover" id="themePopover_{{ pdv.id }}" onclick="event.stopPropagation()">
+        <div class="popover-title">Choisir le thème</div>
+        <div class="popover-swatches">
+          {% set colors = [
+            '#10b981', '#0ea5e9', '#2563eb', '#6366f1', '#8b5cf6',
+            '#ec4899', '#f97316', '#f59e0b', '#ef4444', '#14b8a6'
+          ] %}
+          {% for c in colors %}
+          <button type="button" 
+                  class="popover-swatch {% if theme_color == c %}active{% endif %}"
+                  style="background-color: {{ c }};"
+                  title="Appliquer cette couleur"
+                  onclick="applyThemeQuick('{{ pdv.id }}', '{{ c }}')"></button>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Card Body -->
+      <div class="pdv-card-body">
+        <div>
+          <h3 class="pdv-card-name">{{ pdv.nom }}</h3>
+          <div class="pdv-card-meta">
+            {% if pdv.categorie %}
+            <span class="pdv-card-cat">
+              {% if pdv.categorie == 'Urbain' %}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h1M9 13h1M9 17h1M15 13h1M15 17h1"/></svg>
+              {% elif pdv.categorie == 'Express' %}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              {% elif pdv.categorie == 'Mall' %}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              {% else %}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+              {% endif %}
+              {{ pdv.categorie }}
+            </span>
+            {% endif %}
+            {% if pdv.localisation and pdv.localisation != 'None' %}<span class="pdv-card-loc">{{ pdv.localisation }}</span>{% endif %}
+            <span class="{{ 'pdv-badge-actif' if pdv.actif else 'pdv-badge-inactif' }}">{{ 'Ouvert' if pdv.actif else 'Fermé' }}</span>
+          </div>
+        </div>
+
+        <p class="pdv-card-desc">
+          {% if pdv.responsable %}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> {{ pdv.responsable.nom_complet }}<br>
+          {% endif %}
+          {% if pdv.telephone %}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> {{ pdv.telephone }}
+          {% endif %}
+        </p>
+
+        <!-- Stats Bar with Theme Accent -->
+        <div class="pdv-card-stats">
+          <!-- Equipements -->
+          <div class="pdv-stat-item" title="Équipements">
+            <div class="pdv-stat-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+            </div>
+            <div class="pdv-stat-val">{{ pdv.equipements|length }}</div>
+          </div>
+          <!-- Employees -->
+          <div class="pdv-stat-item" title="Employés">
+            <div class="pdv-stat-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="pdv-stat-val">{{ pdv.employes|length }}</div>
+          </div>
+          <!-- Tickets -->
+          <div class="pdv-stat-item" title="Tickets associés">
+            <div class="pdv-stat-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div class="pdv-stat-val">{{ pdv.tickets_associes|length }}</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <!-- Empty State -->
+  <div class="pdv-empty">
+    <div class="pdv-empty-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+    </div>
+    <h3 style="margin:0; font-size:18px; font-weight:800; color:var(--text-primary);">
+      Aucun point de vente
+    </h3>
+    <p style="margin:0; font-size:14px; color:var(--text-muted); max-width:380px; text-align:center;">
+      Créez votre premier Point de Vente pour gérer ses employés et équipements.
+    </p>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <a href="{{ url_for('pdv.nouveau') }}" class="btn btn-primary btn-sm">Nouveau PDV</a>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Interactive Theme Switching Script -->
+<script>
+function toggleThemePopover(pdvId) {
+  const popover = document.getElementById('themePopover_' + pdvId);
+  const isOpen = popover.classList.contains('open');
+  
+  // Close all open popovers first
+  document.querySelectorAll('.pdv-theme-popover').forEach(p => p.classList.remove('open'));
+  
+  if (!isOpen) {
+    popover.classList.add('open');
+  }
+}
+
+// Close popovers on click outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.pdv-card-actions') && !e.target.closest('.pdv-theme-popover')) {
+    document.querySelectorAll('.pdv-theme-popover').forEach(p => p.classList.remove('open'));
+  }
+});
+
+function applyThemeQuick(pdvId, color) {
+  const card = document.getElementById('pdvCard_' + pdvId);
+  if (card) {
+    card.style.setProperty('--pdv-color', color);
+  }
+  
+  // Update active swatch indicator in this popover
+  const popover = document.getElementById('themePopover_' + pdvId);
+  if (popover) {
+    popover.querySelectorAll('.popover-swatch').forEach(sw => {
+      sw.classList.toggle('active', sw.style.backgroundColor === color || sw.getAttribute('data-color') === color);
+    });
+    popover.classList.remove('open');
+  }
+
+  // Persist to database via AJAX
+  fetch(`/pdvs/${pdvId}/couleur`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: JSON.stringify({ couleur: color })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (!data.success) {
+      console.error('Erreur lors du changement de couleur:', data.message);
+    }
+  })
+  .catch(err => console.error('Erreur réseau:', err));
+}
+
+function filterCategory(cat, btn) {
+  document.querySelectorAll('.pdv-filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  
+  const cards = document.querySelectorAll('.pdv-card');
+  cards.forEach(card => {
+    if (cat === 'all' || card.getAttribute('data-cat') === cat) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+</script>
+{% endblock %}

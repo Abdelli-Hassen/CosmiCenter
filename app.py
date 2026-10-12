@@ -59,7 +59,7 @@ def create_app(config_name='default'):
     
     @login_manager.user_loader
     def load_user(user_id):
-        return Utilisateur.query.get(user_id)
+        return db.session.get(Utilisateur, user_id)
     
     # Enregistrer les blueprints
     from routes.auth import auth_bp
@@ -72,6 +72,7 @@ def create_app(config_name='default'):
     from routes.parametres import parametres_bp
     from routes.chat import chat_bp
     from routes.base_connaissance import base_connaissance_bp
+    from routes.pdv import pdv_bp
     
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(tickets_bp, url_prefix='/tickets')
@@ -83,6 +84,7 @@ def create_app(config_name='default'):
     app.register_blueprint(parametres_bp, url_prefix='/parametres')
     app.register_blueprint(chat_bp, url_prefix='/chat')
     app.register_blueprint(base_connaissance_bp, url_prefix='/base_connaissance')
+    app.register_blueprint(pdv_bp, url_prefix='/pdv')
     
     from routes.suggestions import suggestions_bp
     app.register_blueprint(suggestions_bp, url_prefix='/suggestions')

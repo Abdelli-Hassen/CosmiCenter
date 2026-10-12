@@ -294,13 +294,50 @@ def reactiver_utilisateur(user_id):
 @admin_required
 def roles():
     """Gestion des rôles et permissions"""
-    from models import Role, Permission
+    import json
+    from models import Role, Permission, ConfigurationSysteme
     roles = Role.query.order_by(Role.niveau.desc()).all()
     permissions = Permission.query.order_by(Permission.categorie, Permission.nom).all()
-    perms_by_cat = {}
+    perms_by_cat_raw = {}
     for p in permissions:
-        perms_by_cat.setdefault(p.categorie, []).append(p)
+        cat = 'Espace de travail' if p.categorie == 'Tickets Actions' else p.categorie
+        perms_by_cat_raw.setdefault(cat, []).append(p)
+
+    # Récupérer l'ordre enregistré des catégories (s'il existe)
+    saved_order_raw = ConfigurationSysteme.get_valeur('roles_categories_order', '[]')
+    try:
+        saved_order = json.loads(saved_order_raw)
+    except Exception:
+        saved_order = []
+
+    perms_by_cat = {}
+    for cat in saved_order:
+        if cat in perms_by_cat_raw:
+            perms_by_cat[cat] = perms_by_cat_raw.pop(cat)
+    # Ajouter les catégories restantes qui ne sont pas encore ordonnées
+    for cat, items in perms_by_cat_raw.items():
+        perms_by_cat[cat] = items
+
     return render_template('admin/roles.html', roles=roles, perms_by_cat=perms_by_cat)
+
+@admin_bp.route('/roles/ordonner-categories', methods=['POST'])
+@login_required
+@admin_required
+def ordonner_categories_roles():
+    """Sauvegarde l'ordre permanent des catégories de permissions (drag & drop)"""
+    import json
+    from models import ConfigurationSysteme
+    data = request.get_json() or {}
+    order = data.get('order', [])
+    if isinstance(order, list) and order:
+        ConfigurationSysteme.set_valeur(
+            cle='roles_categories_order',
+            valeur=json.dumps(order, ensure_ascii=False),
+            description='Ordre d affichage des catégories de permissions dans la gestion des rôles'
+        )
+        return jsonify({'success': True, 'order': order})
+    return jsonify({'success': False, 'error': 'Format invalide'}), 400
+
 
 @admin_bp.route('/permissions')
 @login_required

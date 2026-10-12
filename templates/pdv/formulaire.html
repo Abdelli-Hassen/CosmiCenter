@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if pdv %}Modifier Point de Vente{% else %}Nouveau Point de Vente{% endif %} - {{ app_name }}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.form-container { max-width: 840px; margin: 40px auto; padding: 0 20px; }
+.form-card { background: var(--surface-raised); border-radius: var(--r-lg); border: 1px solid var(--border-default); box-shadow: var(--shadow-sm); overflow: hidden; }
+.form-header { padding: 24px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 16px; background: var(--surface-1); }
+.form-icon { width: 48px; height: 48px; border-radius: var(--r-md); background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.form-title { font-size: 20px; font-weight: 800; color: var(--text-primary); margin: 0; }
+.form-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+.form-body { padding: 32px 24px; display: flex; flex-direction: column; gap: 24px; }
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-label { font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
+.form-control, .form-select { background: var(--surface-1); border: 1px solid var(--border-default); border-radius: var(--r-md); padding: 10px 14px; font-size: 14px; color: var(--text-primary); transition: border-color var(--fast), box-shadow var(--fast); }
+.form-control:focus, .form-select:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); outline: none; }
+.form-footer { padding: 20px 24px; border-top: 1px solid var(--border-subtle); background: var(--surface-1); display: flex; justify-content: flex-end; gap: 12px; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 600px) { .row-2 { grid-template-columns: 1fr; } }
+
+/* Theme Color Picker Styling */
+.theme-picker-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.swatches-grid {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.color-swatch-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 0;
+}
+.color-swatch-btn:hover {
+    transform: scale(1.1);
+}
+.color-swatch-btn.active {
+    box-shadow: 0 0 0 3px var(--surface-base), 0 0 0 5px currentColor;
+    transform: scale(1.08);
+}
+.color-swatch-btn svg {
+    color: white;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+    display: none;
+}
+.color-swatch-btn.active svg {
+    display: block;
+}
+.custom-color-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border-default);
+    background: var(--surface-2);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+.custom-color-input {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: none;
+    padding: 0;
+}
+
+/* Mini Preview */
+.theme-preview-box {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.theme-preview-banner {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    gap: 12px;
+    position: relative;
+    transition: background 0.3s ease;
+}
+.theme-preview-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+.theme-preview-title {
+    color: white;
+    font-weight: 800;
+    font-size: 15px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+/* Category Selector */
+.category-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+.cat-card {
+    background: var(--surface-1);
+    border: 1.5px solid var(--border-default);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    user-select: none;
+}
+.cat-card:hover {
+    border-color: #10b981;
+    background: var(--surface-2);
+    transform: translateY(-2px);
+}
+.cat-card.active {
+    border-color: #10b981;
+    background: color-mix(in srgb, #10b981 10%, var(--surface-1));
+    box-shadow: 0 0 0 2px color-mix(in srgb, #10b981 25%, transparent);
+}
+.cat-card-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #10b981;
+    flex-shrink: 0;
+    transition: all 0.18s ease;
+}
+.cat-card.active .cat-card-icon {
+    background: #10b981;
+    color: white;
+}
+.cat-card-content {
+    flex: 1;
+    min-width: 0;
+}
+.cat-card-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+.cat-card-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.3;
+    margin-top: 2px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <div class="form-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line></svg>
+            </div>
+            <div>
+                <h2 class="form-title">{% if pdv %}Modifier le magasin{% else %}Nouveau Point de Vente{% endif %}</h2>
+                <div class="form-subtitle">Enregistrez et personnalisez le thème couleur, le matériel et les employés.</div>
+            </div>
+        </div>
+        <form method="POST">
+            <div class="form-body">
+                
+                <!-- Nom du PDV -->
+                <div class="form-group">
+                    <label for="nom" class="form-label">Nom du Magasin / PDV <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="nom" name="nom" value="{{ pdv.nom if pdv else '' }}" required placeholder="Ex: PDV Azur" oninput="updatePreviewTitle(this.value)">
+                </div>
+
+                <!-- Catégorie du PDV -->
+                <div class="form-group">
+                    <label class="form-label">Catégorie du Point de Vente <span class="text-danger">*</span></label>
+                    <div style="font-size:12px; color:var(--text-muted); margin-bottom: 6px;">
+                        Choisissez un type prédéfini (Urbain, Express, Mall) ou définissez votre propre catégorie :
+                    </div>
+                    {% set current_cat = pdv.categorie if pdv and pdv.categorie else 'Urbain' %}
+                    {% set is_custom = current_cat not in ['Urbain', 'Express', 'Mall'] and current_cat not in categories %}
+                    <input type="hidden" id="categorieInput" name="categorie" value="{% if is_custom %}custom{% else %}{{ current_cat }}{% endif %}">
+
+                    <div class="category-cards-grid">
+                        <!-- Urbain -->
+                        <div class="cat-card {% if current_cat == 'Urbain' %}active{% endif %}" onclick="selectCategory('Urbain', this)">
+                            <div class="cat-card-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h1M9 13h1M9 17h1M15 13h1M15 17h1"/></svg>
+                            </div>
+                            <div class="cat-card-content">
+                                <div class="cat-card-title">Urbain</div>
+                                <div class="cat-card-desc">Centre-ville & quartiers</div>
+                            </div>
+                        </div>
+
+                        <!-- Express -->
+                        <div class="cat-card {% if current_cat == 'Express' %}active{% endif %}" onclick="selectCategory('Express', this)">
+                            <div class="cat-card-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            </div>
+                            <div class="cat-card-content">
+                                <div class="cat-card-title">Express</div>
+                                <div class="cat-card-desc">Station-service, kiosque</div>
+                            </div>
+                        </div>
+
+                        <!-- Mall -->
+                        <div class="cat-card {% if current_cat == 'Mall' %}active{% endif %}" onclick="selectCategory('Mall', this)">
+                            <div class="cat-card-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                            </div>
+                            <div class="cat-card-content">
+                                <div class="cat-card-title">Mall</div>
+                                <div class="cat-card-desc">Centre commercial</div>
+                            </div>
+                        </div>
+
+                        <!-- Other existing categories from DB -->
+                        {% for c in categories %}
+                            {% if c not in ['Urbain', 'Express', 'Mall'] %}
+                            <div class="cat-card {% if current_cat == c %}active{% endif %}" onclick="selectCategory('{{ c }}', this)">
+                                <div class="cat-card-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                                </div>
+                                <div class="cat-card-content">
+                                    <div class="cat-card-title">{{ c }}</div>
+                                    <div class="cat-card-desc">Catégorie existante</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Custom category option -->
+                        <div class="cat-card {% if is_custom %}active{% endif %}" id="customCatCard" onclick="selectCategory('custom', this)">
+                            <div class="cat-card-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            </div>
+                            <div class="cat-card-content">
+                                <div class="cat-card-title">+ Personnalisée</div>
+                                <div class="cat-card-desc">Créer une nouvelle catégorie</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom input field -->
+                    <div id="customCatInputWrap" style="margin-top: 10px; display: {% if is_custom %}block{% else %}none{% endif %};">
+                        <input type="text" class="form-control" id="customCatInput" name="categorie_custom" 
+                               value="{% if is_custom %}{{ current_cat }}{% endif %}" 
+                               placeholder="Saisissez votre catégorie personnalisée (Ex: Gare, Aéroport, Drive, Rooftop...)">
+                    </div>
+                </div>
+
+                <!-- Theme Color Selector -->
+                <div class="form-group">
+                    <label class="form-label">Thème Couleur du Point de Vente</label>
+                    {% set current_color = pdv.couleur if pdv and pdv.couleur else '#10b981' %}
+                    <input type="hidden" id="couleurInput" name="couleur" value="{{ current_color }}">
+                    
+                    <div class="theme-picker-card">
+                        <div style="font-size:12px; color:var(--text-muted); margin-bottom: -4px;">Choisissez une palette prédéfinie ou sélectionnez votre propre couleur :</div>
+                        <div class="swatches-grid">
+                            {% set swatches = [
+                                ('#10b981', 'Émeraude'),
+                                ('#0ea5e9', 'Azur'),
+                                ('#2563eb', 'Saphir'),
+                                ('#6366f1', 'Indigo'),
+                                ('#8b5cf6', 'Violet'),
+                                ('#ec4899', 'Rose'),
+                                ('#f97316', 'Corail'),
+                                ('#f59e0b', 'Ambre'),
+                                ('#ef4444', 'Rouge'),
+                                ('#14b8a6', 'Sarcelle'),
+                                ('#64748b', 'Ardoise')
+                            ] %}
+                            {% for hex, name in swatches %}
+                            <button type="button" 
+                                    class="color-swatch-btn {% if current_color == hex %}active{% endif %}" 
+                                    style="background-color: {{ hex }}; color: {{ hex }};"
+                                    data-color="{{ hex }}" 
+                                    title="{{ name }}"
+                                    onclick="selectThemeColor('{{ hex }}', this)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </button>
+                            {% endfor %}
+
+                            <!-- Custom Color Picker -->
+                            <label class="custom-color-wrap" title="Choisir une couleur sur mesure">
+                                <input type="color" class="custom-color-input" id="customColorPicker" value="{{ current_color }}" oninput="selectThemeColor(this.value, null)">
+                                <span>Personnalisée</span>
+                            </label>
+                        </div>
+
+                        <!-- Live Banner Preview -->
+                        <div class="theme-preview-box">
+                            <div class="theme-preview-banner" id="previewBanner" style="background: linear-gradient(135deg, {{ current_color }}, color-mix(in srgb, {{ current_color }} 70%, #000));">
+                                <div class="theme-preview-avatar">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line></svg>
+                                </div>
+                                <div>
+                                    <div class="theme-preview-title" id="previewTitle">{{ pdv.nom if pdv and pdv.nom else 'Aperçu du magasin' }}</div>
+                                    <div style="font-size:11px; color:rgba(255,255,255,0.75);">Aperçu de la bannière sur la page des points de vente</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row-2">
+                    <div class="form-group">
+                        <label for="telephone" class="form-label">Téléphone</label>
+                        <input type="text" class="form-control" id="telephone" name="telephone" value="{{ pdv.telephone if pdv else '' }}" placeholder="Ex: +216 71 123 456">
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email de contact</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ pdv.email if pdv else '' }}" placeholder="Ex: pdv.azur@example.com">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="localisation" class="form-label">Localisation (Ville / Centre commercial)</label>
+                    <input type="text" class="form-control" id="localisation" name="localisation" value="{{ pdv.localisation if pdv else '' }}" placeholder="Ex: Azur City, Tunis">
+                </div>
+                
+                <div class="form-group">
+                    <label for="adresse" class="form-label">Adresse Complète</label>
+                    <textarea class="form-control" id="adresse" name="adresse" rows="3" placeholder="Numéro, rue, zone...">{{ pdv.adresse if pdv else '' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="responsable_id" class="form-label">Responsable du Magasin</label>
+                    <select class="form-select" id="responsable_id" name="responsable_id">
+                        <option value="">-- Aucun Responsable --</option>
+                        {% for user in utilisateurs %}
+                        <option value="{{ user.id }}" {% if pdv and pdv.responsable_id == user.id %}selected{% endif %}>
+                            {{ user.nom_complet }} ({{ user.role.nom if user.role else 'Sans rôle' }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-footer">
+                <a href="{{ url_for('pdv.liste') }}" class="btn btn-ghost">Annuler</a>
+                <button type="submit" class="btn btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    {% if pdv %}Enregistrer les modifications{% else %}Créer le PDV{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function selectThemeColor(color, btn) {
+    document.getElementById('couleurInput').value = color;
+    document.getElementById('customColorPicker').value = color;
+    
+    // Update active swatch
+    document.querySelectorAll('.color-swatch-btn').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-color') === color);
+    });
+
+    // Update Live Banner Preview
+    const banner = document.getElementById('previewBanner');
+    banner.style.background = `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color} 70%, #000))`;
+}
+
+function updatePreviewTitle(val) {
+    const title = document.getElementById('previewTitle');
+    title.textContent = val.trim() || 'Aperçu du magasin';
+}
+
+function selectCategory(val, el) {
+    document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    
+    const catInput = document.getElementById('categorieInput');
+    const customWrap = document.getElementById('customCatInputWrap');
+    const customInput = document.getElementById('customCatInput');
+    
+    if (val === 'custom') {
+        catInput.value = 'custom';
+        customWrap.style.display = 'block';
+        customInput.focus();
+        customInput.required = true;
+    } else {
+        catInput.value = val;
+        customWrap.style.display = 'none';
+        customInput.required = false;
+    }
+}
+</script>
+{% endblock %}

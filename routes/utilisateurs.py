@@ -30,7 +30,10 @@ def liste():
     per_page = 50
     
     
-    base_query = Utilisateur.query
+    if current_user.has_permission('utilisateurs.voir_tous'):
+        base_query = Utilisateur.query
+    else:
+        base_query = Utilisateur.query.filter_by(departement_id=current_user.departement_id)
     
     # Counts for header stats (before filters)
     total_actifs = base_query.filter_by(actif=True).count()

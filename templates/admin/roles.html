@@ -71,9 +71,63 @@
 .panel-subtitle { font-size:13px; font-weight:600; color:var(--text-muted); margin-top:4px; }
 .panel-body { max-height:calc(100vh - 280px); overflow-y:auto; }
 
-.perm-cat { border-bottom:1px solid var(--border-subtle); padding:20px 24px; }
+.perm-cat { border-bottom:1px solid var(--border-subtle); padding:16px 20px; transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1); background:var(--surface-1); }
 .perm-cat:last-child { border-bottom:none; }
-.perm-cat-title { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-secondary); margin-bottom:16px; }
+.perm-cat.dragging {
+  opacity:0.4; background:var(--surface-hover);
+  border:2px dashed var(--brand) !important; border-radius:12px;
+  box-shadow:0 12px 28px rgba(0,0,0,0.15);
+}
+.perm-cat.drag-over {
+  border-top:3px solid var(--brand) !important; background:var(--surface-50);
+}
+.perm-cat-header {
+  display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+  padding:8px 10px; margin:-4px -8px; border-radius:10px; transition:all 0.18s ease; user-select:none;
+}
+.perm-cat-header:hover { background:var(--surface-hover); }
+.perm-cat-header-left { display:flex; align-items:center; gap:8px; }
+.perm-cat-drag-handle {
+  width:22px; height:26px; border-radius:6px;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text-muted); cursor:grab; opacity:0.45;
+  transition:all 0.15s ease;
+}
+.perm-cat-header:hover .perm-cat-drag-handle { opacity:1; color:var(--text-secondary); }
+.perm-cat-drag-handle:hover { color:var(--brand); background:var(--surface-2); }
+.perm-cat-drag-handle:active { cursor:grabbing; }
+.perm-cat-icon {
+  width:28px; height:28px; border-radius:8px; background:var(--surface-2);
+  display:flex; align-items:center; justify-content:center; color:var(--brand);
+}
+.perm-cat-title {
+  font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em;
+  color:var(--text-primary); margin:0;
+}
+.perm-cat-header-right { display:flex; align-items:center; gap:8px; }
+.perm-cat-badge {
+  font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px;
+  background:var(--surface-2); color:var(--text-muted); border:1px solid var(--border-subtle);
+}
+.perm-cat-toggle-btn {
+  width:26px; height:26px; border-radius:6px; display:flex; align-items:center;
+  justify-content:center; color:var(--text-muted); transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s;
+}
+.perm-cat-header:hover .perm-cat-toggle-btn { color:var(--text-primary); background:var(--surface-2); }
+.perm-cat.collapsed .perm-cat-toggle-btn { transform:rotate(-90deg); }
+.perm-cat-body { margin-top:14px; display:flex; flex-direction:column; gap:12px; transition:all 0.2s ease; }
+.perm-cat.collapsed .perm-cat-body { display:none; }
+
+.perm-order-toast {
+  position:fixed; bottom:28px; right:28px; z-index:1000;
+  background:var(--surface-1); color:var(--text-primary);
+  border:1px solid var(--border-subtle); border-radius:12px;
+  padding:12px 18px; box-shadow:0 12px 32px rgba(0,0,0,0.18);
+  display:flex; align-items:center; gap:10px; font-size:13px; font-weight:700;
+  transform:translateY(40px); opacity:0; pointer-events:none;
+  transition:all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.perm-order-toast.show { transform:translateY(0); opacity:1; }
 
 .perm-row {
   display:flex; align-items:flex-start; gap:12px; cursor:pointer; padding:10px 12px; border-radius:12px; transition:all 0.2s ease;
@@ -181,7 +235,7 @@
             {% set role_pages = [] %}
             {% set role_actions = [] %}
             {% for p in role.permissions %}
-              {% if p.code.endswith('.voir') %}
+              {% if p.code.endswith('.voir') or p.code in ['tickets.voir_tous', 'tickets.voir_mes', 'tickets.creer'] %}
                 {% set _ = role_pages.append(p) %}
               {% else %}
                 {% set _ = role_actions.append(p) %}
@@ -270,8 +324,13 @@
         </div>
 
         <form method="POST" id="permsForm" action="">
-          <div style="padding:16px; border-bottom:1px solid var(--border-subtle); background:var(--surface-50);">
+          <div style="padding:14px 20px; border-bottom:1px solid var(--border-subtle); background:var(--surface-50); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
             <h3 style="font-size:14px; font-weight:700; color:var(--text-primary); margin:0;">Autorisations par Page</h3>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button type="button" class="btn-action" style="padding:4px 10px; font-size:12px; height:auto; box-shadow:none; background:transparent; border:none; color:var(--text-muted); cursor:pointer;" onclick="toggleAllSections(true)">Tout déplier</button>
+              <span style="color:var(--border-subtle); font-size:12px;">•</span>
+              <button type="button" class="btn-action" style="padding:4px 10px; font-size:12px; height:auto; box-shadow:none; background:transparent; border:none; color:var(--text-muted); cursor:pointer;" onclick="toggleAllSections(false)">Tout replier</button>
+            </div>
           </div>
           
           <div class="panel-body">
@@ -281,7 +340,7 @@
               {% set page_perms = [] %}
               {% set action_perms = [] %}
               {% for p in perms %}
-                {% if p.code.endswith('.voir') %}
+                {% if p.code.endswith('.voir') or p.code in ['tickets.voir_tous', 'tickets.voir_mes', 'tickets.creer'] %}
                   {% set _ = page_perms.append(p) %}
                 {% else %}
                   {% set _ = action_perms.append(p) %}
@@ -289,15 +348,49 @@
               {% endfor %}
               
               {% if page_perms %}
-              <div class="perm-cat" style="margin-bottom: 24px;">
-                <div class="perm-cat-title" style="margin-bottom:12px;">{{ categorie or 'Général' }}</div>
-                <div style="display:flex;flex-direction:column;gap:12px;">
+              <div class="perm-cat" id="cat-{{ loop.index }}" data-category="{{ categorie or 'Général' }}" draggable="true">
+                <div class="perm-cat-header" onclick="toggleSection(this)">
+                  <div class="perm-cat-header-left">
+                    <div class="perm-cat-drag-handle" title="Glisser pour réorganiser les sections" onclick="event.stopPropagation()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="8" cy="4" r="1.8"/>
+                        <circle cx="8" cy="12" r="1.8"/>
+                        <circle cx="8" cy="20" r="1.8"/>
+                        <circle cx="16" cy="4" r="1.8"/>
+                        <circle cx="16" cy="12" r="1.8"/>
+                        <circle cx="16" cy="20" r="1.8"/>
+                      </svg>
+                    </div>
+                    <div class="perm-cat-icon">
+                      {% if categorie == 'Espace de travail' %}
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                      {% elif categorie == 'Opérations' %}
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                      {% elif categorie == 'Intelligence' %}
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                      {% elif categorie == 'Administration' %}
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                      {% else %}
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                      {% endif %}
+                    </div>
+                    <div class="perm-cat-title">{{ categorie or 'Général' }}</div>
+                  </div>
+                  <div class="perm-cat-header-right">
+                    <span class="perm-cat-badge">{{ page_perms|length }} page{{ 's' if page_perms|length != 1 else '' }}</span>
+                    <div class="perm-cat-toggle-btn" title="Replier / Déplier la section">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="perm-cat-body">
                   {% for page_perm in page_perms %}
                   <div style="border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden; background: var(--surface-1);">
                     {% set child_actions = [] %}
                     {% for ap in action_perms %}
-                       {% if (ap.code == 'tickets.creer' and page_perm.code == 'tickets_nouveau.voir') or 
-                             (ap.code in ['tickets.modifier', 'tickets.supprimer'] and page_perm.code in ['tickets_tous.voir', 'tickets_mes.voir']) or 
+                       {% if (page_perm.code in ['tickets.voir_tous', 'tickets.voir_mes'] and ap.code in ['tickets.modifier', 'tickets.supprimer', 'tickets.assigner', 'tickets.cloturer']) or 
+                             (page_perm.code == 'pdv.voir' and ap.code == 'equipements.gerer') or 
                              (page_perm.code == (ap.code.split('.')[0] ~ '.voir')) %}
                           {% set _ = child_actions.append(ap) %}
                        {% endif %}
@@ -366,6 +459,12 @@
 
     </div>
 
+  </div>
+
+  <!-- Toast Notification Ordre des Catégories -->
+  <div id="permOrderToast" class="perm-order-toast">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    <span>Ordre des sections enregistré en direct</span>
   </div>
 
 <!-- Modal: Créer un rôle -->
@@ -475,7 +574,7 @@
     panelActions.style.display = 'flex';
 
     let pagesCount = 0;
-    let actionsCount = 0;
+    const countedActions = new Set();
 
     const permCheckboxes = document.querySelectorAll('.perm-checkbox');
     permCheckboxes.forEach(function (cb) {
@@ -488,11 +587,15 @@
       row.style.cursor = 'pointer';
 
       if (isChecked) {
-        if (cb.classList.contains('perm-page')) pagesCount++;
-        else if (cb.classList.contains('perm-action')) actionsCount++;
+        if (cb.classList.contains('perm-page')) {
+          pagesCount++;
+        } else if (cb.classList.contains('perm-action')) {
+          countedActions.add(cb.dataset.permId);
+        }
       }
     });
 
+    const actionsCount = countedActions.size;
     document.getElementById('panelRoleInfo').textContent =
       pagesCount + ' page' + (pagesCount !== 1 ? 's' : '') + ' • ' + 
       actionsCount + ' action' + (actionsCount !== 1 ? 's' : '') + ' accordée' + (actionsCount !== 1 ? 's' : '');
@@ -601,6 +704,100 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const pageCheckboxes = document.querySelectorAll('.perm-page');
     const actionCheckboxes = document.querySelectorAll('.perm-action');
+
+    // Drag and Drop pour réordonner les catégories en base de données
+    const tabPages = document.getElementById('tab-pages');
+    const toast = document.getElementById('permOrderToast');
+    let draggedItem = null;
+    let isDragging = false;
+    let toastTimeout = null;
+
+    function showOrderToast() {
+        if (!toast) return;
+        toast.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2600);
+    }
+
+    function saveCategoryOrder() {
+        const order = [];
+        document.querySelectorAll('#tab-pages .perm-cat').forEach(cat => {
+            const cName = cat.dataset.category;
+            if (cName) order.push(cName);
+        });
+
+        if (order.length === 0) return;
+
+        fetch('{{ url_for("admin.ordonner_categories_roles") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ order: order })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.success) {
+                showOrderToast();
+            }
+        })
+        .catch(err => console.error('Erreur sauvegarde ordre catégories:', err));
+    }
+
+    if (tabPages) {
+        tabPages.addEventListener('dragstart', function(e) {
+            const cat = e.target.closest('.perm-cat');
+            if (!cat) return;
+            draggedItem = cat;
+            isDragging = true;
+            cat.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', cat.dataset.category || '');
+        });
+
+        tabPages.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const cat = e.target.closest('.perm-cat');
+            if (!cat || cat === draggedItem) return;
+
+            const rect = cat.getBoundingClientRect();
+            const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+            tabPages.insertBefore(draggedItem, next ? cat.nextSibling : cat);
+        });
+
+        tabPages.addEventListener('dragend', function(e) {
+            if (draggedItem) {
+                draggedItem.classList.remove('dragging');
+                draggedItem = null;
+            }
+            document.querySelectorAll('#tab-pages .perm-cat').forEach(c => c.classList.remove('drag-over'));
+            saveCategoryOrder();
+            setTimeout(() => {
+                isDragging = false;
+            }, 120);
+        });
+    }
+
+    window.toggleSection = function(header) {
+        if (isDragging) return;
+        const cat = header.closest('.perm-cat');
+        if (cat) {
+            cat.classList.toggle('collapsed');
+        }
+    };
+
+    window.toggleAllSections = function(expand) {
+        document.querySelectorAll('.perm-cat').forEach(cat => {
+            if (expand) {
+                cat.classList.remove('collapsed');
+            } else {
+                cat.classList.add('collapsed');
+            }
+        });
+    };
 
     window.toggleActions = function(btn, targetId) {
         const container = document.getElementById(targetId);

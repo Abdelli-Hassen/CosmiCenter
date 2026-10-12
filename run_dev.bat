@@ -4,6 +4,7 @@ title Cosmicenter
 
 set FLASK_PORT=8080
 set PYTHONIOENCODING=utf-8
+set PYTHONUNBUFFERED=1
 set FLASK_ENV=development
 set FLASK_DEBUG=1
 

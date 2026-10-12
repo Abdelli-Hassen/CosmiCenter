@@ -131,7 +131,7 @@
 
         <div class="nav-scroll">
 
-          {% if current_user.has_permission('dashboard.voir') or current_user.has_permission('tickets_tous.voir') or current_user.has_permission('tickets_mes.voir') or current_user.has_permission('tickets_nouveau.voir') or current_user.has_permission('messagerie.voir') %}
+          {% if current_user.has_permission('dashboard.voir') or current_user.has_permission('tickets.voir_tous') or current_user.has_permission('tickets.voir_mes') or current_user.has_permission('tickets.creer') or current_user.has_permission('messagerie.voir') %}
           <div class="nav-group">
             <span class="nav-group-label">Espace de travail</span>
             {% if current_user.has_permission('dashboard.voir') %}
@@ -141,7 +141,7 @@
             </a>
             {% endif %}
             
-            {% if current_user.has_permission('tickets_tous.voir') %}
+            {% if current_user.has_permission('tickets.voir_tous') %}
             <a href="{{ url_for('tickets.liste') }}" class="nav-item {% if request.endpoint in ['tickets.liste','tickets.detail','tickets.modifier'] %}active{% endif %}">
               <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
               <span class="nav-item-label">Tous les tickets</span>
@@ -149,14 +149,14 @@
             </a>
             {% endif %}
             
-            {% if current_user.has_permission('tickets_mes.voir') %}
+            {% if current_user.has_permission('tickets.voir_mes') %}
             <a href="{{ url_for('tickets.mes_tickets') }}" class="nav-item {% if request.endpoint == 'tickets.mes_tickets' %}active{% endif %}">
               <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
               <span class="nav-item-label">Mes tickets</span>
             </a>
             {% endif %}
             
-            {% if current_user.has_permission('tickets_nouveau.voir') %}
+            {% if current_user.has_permission('tickets.creer') %}
             <a href="{{ url_for('tickets.nouveau') }}" class="nav-item {% if request.endpoint == 'tickets.nouveau' %}active{% endif %}">
               <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               <span class="nav-item-label">Nouveau ticket</span>
@@ -171,15 +171,17 @@
             </a>
             {% endif %}
             
+            {% if current_user.has_permission('idees.voir') %}
             <a href="{{ url_for('suggestions.index') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('suggestions') %}active{% endif %}">
               <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1.45.62 2.81 1.5 3.5.76.76 1.23 1.52 1.41 2.5"></path></svg>
               <span class="nav-item-label">Boîte à idées</span>
             </a>
+            {% endif %}
 
           </div>
           {% endif %}
 
-          {% if current_user.has_permission('departements.voir') or current_user.has_permission('utilisateurs.voir') or current_user.has_permission('admin_plan_action.voir') or current_user.has_permission('base_connaissance.voir') %}
+          {% if current_user.has_permission('departements.voir') or current_user.has_permission('utilisateurs.voir') or current_user.has_permission('admin_plan_action.voir') or current_user.has_permission('base_connaissance.voir') or current_user.has_permission('pdv.voir') %}
           <div class="nav-divider"></div>
 
           <div class="nav-group">
@@ -188,6 +190,13 @@
             <a href="{{ url_for('departements.liste') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('departements.') %}active{% endif %}">
               <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
               <span class="nav-item-label">Départements</span>
+            </a>
+            {% endif %}
+
+            {% if current_user.has_permission('pdv.voir') %}
+            <a href="{{ url_for('pdv.liste') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('pdv.') %}active{% endif %}">
+              <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+              <span class="nav-item-label">Points de Vente</span>
             </a>
             {% endif %}
             

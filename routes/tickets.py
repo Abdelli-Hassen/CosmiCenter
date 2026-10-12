@@ -766,9 +766,9 @@ def fermer(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     
     # Vérifier les permissions
-    if not current_user.has_permission('tickets.fermer'):
+    if not (current_user.has_permission('tickets.cloturer') or current_user.has_permission('tickets.fermer')):
         if ticket.createur_id != current_user.id and ticket.assigne_a_id != current_user.id:
-            flash('éccès non autorisé', 'danger')
+            flash('Accès non autorisé', 'danger')
             return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
     try:
@@ -794,9 +794,9 @@ def reouvrir(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     
     # Vérifier les permissions (idem fermer)
-    if not current_user.has_permission('tickets.fermer'):
+    if not (current_user.has_permission('tickets.cloturer') or current_user.has_permission('tickets.fermer')):
         if ticket.createur_id != current_user.id and ticket.assigne_a_id != current_user.id:
-            flash('éccès non autorisé', 'danger')
+            flash('Accès non autorisé', 'danger')
             return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
     try:

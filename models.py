@@ -91,9 +91,10 @@ class Utilisateur(UserMixin, db.Model):
     teamviewer_password = db.Column(db.String(100))
     poste_machine = db.Column(db.String(100))
     
-    # Rôle
+    # Rôle & Attachements
     role_id = db.Column(db.String(36), db.ForeignKey('roles.id', ondelete='SET NULL'), index=True)
     departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='SET NULL'), index=True)
+    pdv_id = db.Column(db.String(36), db.ForeignKey('points_de_vente.id', ondelete='SET NULL'), index=True)
     
     # Paramètres
     langue = db.Column(db.String(10), default='fr')
@@ -113,6 +114,7 @@ class Utilisateur(UserMixin, db.Model):
     # Relations
     role = db.relationship('Role', backref='utilisateurs')
     departement = db.relationship('Departement', foreign_keys=[departement_id], backref='membres')
+    pdv = db.relationship('PointDeVente', foreign_keys=[pdv_id], backref='employes')
     tickets_crees = db.relationship('Ticket', foreign_keys='Ticket.createur_id', backref='createur')
     tickets_assignes = db.relationship('Ticket', foreign_keys='Ticket.assigne_a_id', backref='assigne_a')
     commentaires = db.relationship('Commentaire', backref='auteur', cascade='all, delete-orphan')
@@ -136,6 +138,54 @@ class Utilisateur(UserMixin, db.Model):
 
     def __repr__(self):
         return f'<Utilisateur {self.email}>'
+
+
+class PointDeVente(db.Model):
+    """Modèle pour un Point de Vente physique"""
+    __tablename__ = 'points_de_vente'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    nom = db.Column(db.String(100), nullable=False, unique=True)
+    adresse = db.Column(db.Text)
+    telephone = db.Column(db.String(20))
+    email = db.Column(db.String(120))
+    localisation = db.Column(db.String(200))
+    categorie = db.Column(db.String(50), default='Urbain')  # Ex: Urbain, Express, Mall, ou personnalisé
+    
+    responsable_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), index=True)
+    responsable = db.relationship('Utilisateur', foreign_keys=[responsable_id])
+    
+    actif = db.Column(db.Boolean, default=True)
+    couleur = db.Column(db.String(30), default='#10b981')
+    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<PointDeVente {self.nom}>'
+
+
+class Equipement(db.Model):
+    """Matériel informatique ou autre d'un Point de Vente"""
+    __tablename__ = 'equipements'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    pdv_id = db.Column(db.String(36), db.ForeignKey('points_de_vente.id', ondelete='CASCADE'), nullable=False, index=True)
+    
+    type_equipement = db.Column(db.String(50), nullable=False) # e.g., Camera, Netbox, Routeur Wi-Fi, Imprimante, Scanner, TPE, etc.
+    marque = db.Column(db.String(100))
+    modele = db.Column(db.String(100))
+    numero_serie = db.Column(db.String(100), unique=True)
+    adresse_ip = db.Column(db.String(50))
+    adresse_mac = db.Column(db.String(50))
+    
+    statut = db.Column(db.String(20), default='actif') # actif, en_panne, maintenance, hors_service
+    date_installation = db.Column(db.DateTime)
+    notes = db.Column(db.Text)
+
+    pdv = db.relationship('PointDeVente', backref=db.backref('equipements', cascade='all, delete-orphan'))
+
+    def __repr__(self):
+        return f'<Equipement {self.type_equipement} - {self.numero_serie}>'
+
 
 
 class Departement(db.Model):
@@ -232,6 +282,7 @@ class Ticket(db.Model):
     # Catégorie & Routage direct
     categorie_id = db.Column(db.String(36), db.ForeignKey('categories_tickets.id', ondelete='SET NULL'), index=True)
     departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='SET NULL'), index=True)
+    pdv_id = db.Column(db.String(36), db.ForeignKey('points_de_vente.id', ondelete='SET NULL'), index=True)
 
     # Dates
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
@@ -272,6 +323,7 @@ class Ticket(db.Model):
                                 order_by='HistoriqueTicket.date_creation.desc()')
     taches = db.relationship('Tache', backref='ticket', cascade='all, delete-orphan')
     departement_associe = db.relationship('Departement', foreign_keys=[departement_id])
+    pdv_associe = db.relationship('PointDeVente', foreign_keys=[pdv_id], backref='tickets_associes')
 
     @property
     def departement(self):
@@ -560,3 +612,31 @@ class ArticleConnaissance(db.Model):
     statut = db.Column(db.String(20), default='publie')
     categorie = db.relationship('CategorieConnaissance', back_populates='articles')
     auteur = db.relationship('Utilisateur', foreign_keys=[auteur_id])
+
+
+class ConfigurationSysteme(db.Model):
+    """Paramètres système et préférences clés-valeurs (ex: ordre des catégories de permissions)"""
+    __tablename__ = 'configurations_systeme'
+
+    cle = db.Column(db.String(100), primary_key=True)
+    valeur = db.Column(db.Text, nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+    date_mise_a_jour = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @classmethod
+    def get_valeur(cls, cle, defaut=None):
+        cfg = cls.query.filter_by(cle=cle).first()
+        return cfg.valeur if cfg else defaut
+
+    @classmethod
+    def set_valeur(cls, cle, valeur, description=None):
+        cfg = cls.query.filter_by(cle=cle).first()
+        if not cfg:
+            cfg = cls(cle=cle, valeur=str(valeur), description=description)
+            db.session.add(cfg)
+        else:
+            cfg.valeur = str(valeur)
+            if description:
+                cfg.description = description
+        db.session.commit()
+        return cfg
