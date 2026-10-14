@@ -1,155 +1,716 @@
 {% extends "base.html" %}
 
-{% block title %}Companies & Externals{% endblock %}
+{% block title %}Entreprises & Partenaires — Gestion des Organisations{% endblock %}
 {% block body_class %}page-companies{% endblock %}
 
 {% block extra_head %}
 <style>
-.companies-page { padding: 28px 36px; max-width: 1400px; margin: 0 auto; }
+/* ── Page Layout ───────────────────────────────────────────── */
+.companies-page {
+  padding: 24px 36px 48px;
+  max-width: 1440px;
+  margin: 0 auto;
+  animation: pageFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes modalZoomIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
 
 /* ── Hero ──────────────────────────────────────────────────── */
 .comp-hero {
-  display: flex; align-items: flex-end; justify-content: space-between;
-  margin-bottom: 24px; gap: 20px; flex-wrap: wrap;
-}
-.comp-hero-left { display: flex; flex-direction: column; gap: 6px; }
-.comp-hero-title {
-  font-size: 30px; font-weight: 900; color: var(--text-primary);
-  letter-spacing: -0.03em; margin: 0;
-  display: flex; align-items: center; gap: 12px;
-}
-.comp-hero-icon {
-  width: 44px; height: 44px; border-radius: 14px;
-  background: var(--brand-light); border: 1px solid var(--brand-subtle);
-  display: flex; align-items: center; justify-content: center; color: var(--brand);
-}
-.comp-hero-sub {
-  font-size: 14px; color: var(--text-muted); font-weight: 500; margin: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-/* ── Stats Bar ─────────────────────────────────────────────── */
+.comp-hero-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comp-hero-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.comp-hero-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--brand-light);
+  border: 1px solid var(--brand-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.comp-hero-sub {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin: 0;
+  max-width: 780px;
+  line-height: 1.5;
+}
+
+.btn-primary-comp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: var(--brand);
+  color: #fff;
+  border: 1px solid var(--brand);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px var(--brand-subtle);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-primary-comp:hover {
+  background: var(--brand-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px var(--brand-glow);
+  color: #fff;
+}
+
+/* ── KPI Metrics Grid ──────────────────────────────────────── */
 .comp-stats-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
   margin-bottom: 24px;
 }
+
+@media (max-width: 1024px) {
+  .comp-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .comp-stats-grid { grid-template-columns: 1fr; }
+}
+
 .comp-stat-card {
-  background: var(--surface-1); border: 1px solid var(--border-subtle);
-  border-radius: 16px; padding: 18px 20px;
-  display: flex; flex-direction: column; gap: 4px;
-  box-shadow: var(--shadow-sm); transition: transform 0.2s, box-shadow 0.2s;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-xs);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
-.comp-stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.comp-stat-label {
-  font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;
+
+.comp-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--border-default);
 }
-.comp-stat-val {
-  font-size: 26px; font-weight: 900; color: var(--text-primary); line-height: 1.1; margin-top: 4px;
+
+.comp-stat-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.comp-stat-icon-wrap.total { background: var(--surface-2); color: var(--text-primary); border: 1px solid var(--border-subtle); }
+.comp-stat-icon-wrap.active { background: rgba(34, 197, 94, 0.12); color: #16a34a; border: 1px solid rgba(34, 197, 94, 0.22); }
+.comp-stat-icon-wrap.archive { background: rgba(245, 158, 11, 0.12); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.22); }
+.comp-stat-icon-wrap.team { background: rgba(124, 58, 237, 0.1); color: #7c3aed; border: 1px solid rgba(124, 58, 237, 0.2); }
+
+.comp-stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.comp-stat-num {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.comp-stat-lbl {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.comp-stat-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ── Filters & Controls ────────────────────────────────────── */
-.comp-controls {
-  display: flex; justify-content: space-between; align-items: center; gap: 16px;
-  margin-bottom: 20px; flex-wrap: wrap;
+.comp-controls-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 24px;
+  background: var(--surface-1);
+  padding: 14px 18px;
+  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-xs);
 }
-.comp-filters-pills {
-  display: flex; gap: 6px; background: var(--surface-1); padding: 4px;
-  border-radius: 12px; border: 1px solid var(--border-subtle);
+
+.comp-filters-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
-.comp-pill {
-  padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700;
-  color: var(--text-muted); text-decoration: none; transition: all 0.15s;
+
+/* Dropdown Select Controls */
+.comp-filter-select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
 }
-.comp-pill.active {
-  background: var(--brand); color: #fff; box-shadow: 0 2px 6px rgba(var(--brand-rgb, 232,33,63), 0.25);
+
+.comp-filter-select-wrap svg.select-caret {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: var(--text-muted);
+  transition: transform 0.2s;
 }
-.comp-search {
-  position: relative; min-width: 260px;
+
+.comp-filter-select {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 38px;
+  padding: 0 34px 0 14px;
+  background: var(--surface-base);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 150px;
 }
-.comp-search svg {
-  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-  color: var(--text-muted); pointer-events: none;
+
+.comp-filter-select:hover {
+  border-color: var(--border-hover, #bbb);
+  background: var(--surface-1);
 }
-.comp-search input {
-  width: 100%; height: 38px; padding: 0 12px 0 38px;
-  background: var(--surface-1); border: 1px solid var(--border-default);
-  border-radius: 10px; font-size: 13px; color: var(--text-primary); outline: none;
+
+.comp-filter-select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-subtle);
 }
-.comp-search input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-subtle); }
+
+.comp-filter-select.is-filtered {
+  border-color: var(--brand);
+  background: var(--surface-1);
+  color: var(--brand);
+  font-weight: 700;
+}
+
+/* Search input */
+.comp-search-wrap {
+  position: relative;
+  min-width: 260px;
+  flex: 1;
+  max-width: 380px;
+}
+
+.comp-search-wrap svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.comp-search-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px 0 38px;
+  background: var(--surface-base);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+  transition: all 0.15s;
+}
+
+.comp-search-input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-subtle);
+  background: var(--surface-1);
+}
 
 /* ── Companies Grid ────────────────────────────────────────── */
 .comp-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 20px;
 }
+
 .comp-card {
-  background: var(--surface-1); border: 1px solid var(--border-subtle);
-  border-radius: 18px; padding: 22px;
-  display: flex; flex-direction: column; justify-content: space-between;
-  box-shadow: var(--shadow-sm); transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative; overflow: hidden;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-xs);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
 }
+
 .comp-card:hover {
-  transform: translateY(-3px); box-shadow: var(--shadow-md);
-  border-color: var(--border-default);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  border-color: var(--brand);
 }
+
+.comp-card a,
+.comp-card button {
+  position: relative;
+  z-index: 2;
+}
+
+.comp-card.is-archived {
+  opacity: 0.78;
+  background: var(--surface-2);
+}
+
+.comp-card.is-archived:hover {
+  opacity: 1;
+}
+
+.comp-card-stripe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
 .comp-card-badge-main {
-  position: absolute; top: 0; right: 0;
-  background: var(--brand); color: #fff;
-  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
-  padding: 4px 14px; border-bottom-left-radius: 12px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--brand);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 14px;
+  border-bottom-left-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
+
 .comp-card-header {
-  display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 14px;
 }
+
 .comp-avatar {
-  width: 52px; height: 52px; border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; font-weight: 900; color: #fff; flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  user-select: none;
+  position: relative;
 }
-.comp-header-text { flex: 1; min-width: 0; }
+
+.comp-status-dot-avatar {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid var(--surface-1);
+}
+.comp-status-dot-avatar.active { background: #22c55e; }
+.comp-status-dot-avatar.archived { background: #9ca3af; }
+
+.comp-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.comp-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  min-height: 28px;
+}
+
 .comp-name {
-  font-size: 17px; font-weight: 800; color: var(--text-primary);
-  margin: 0 0 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.3;
 }
+
+.comp-name a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.comp-name a:hover {
+  color: var(--brand);
+}
+
+.comp-code-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  padding: 1px 6px;
+  border-radius: 5px;
+}
+
+.comp-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 22px;
+}
+
 .comp-type-tag {
-  display: inline-block; padding: 2px 8px; border-radius: 6px;
-  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
+
 .type-principale { background: rgba(232, 33, 63, 0.12); color: var(--brand); border: 1px solid rgba(232, 33, 63, 0.25); }
 .type-filiale { background: rgba(59, 130, 246, 0.12); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.25); }
-.type-externe { background: rgba(139, 92, 246, 0.12); color: #8B5CF6; border: 1px solid rgba(139, 92, 246, 0.25); }
 .type-partenaire { background: rgba(16, 185, 129, 0.12); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.25); }
+.type-externe { background: rgba(139, 92, 246, 0.12); color: #8B5CF6; border: 1px solid rgba(139, 92, 246, 0.25); }
 .type-prestataire { background: rgba(245, 158, 11, 0.12); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.25); }
 
+.badge-archive-tag {
+  background: rgba(156, 163, 175, 0.15);
+  color: #6b7280;
+  border: 1px solid rgba(156, 163, 175, 0.3);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .comp-desc {
-  font-size: 13px; color: var(--text-muted); line-height: 1.45;
-  margin-bottom: 16px; min-height: 38px;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 14px;
+  height: 40px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.comp-staff-preview {
-  background: var(--surface-2); border-radius: 12px; padding: 12px 14px;
-  display: flex; align-items: center; justify-content: space-between;
+.comp-staff-banner {
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.comp-staff-num {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.comp-staff-num svg { color: var(--text-muted); }
+.comp-staff-sub { color: var(--text-muted); font-weight: 500; font-size: 12px; }
+
+/* Contact info strip - standardized 3 rows so every card has identical height */
+.comp-contact-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin-bottom: 16px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  min-height: 68px;
 }
-.comp-staff-count {
-  font-size: 13px; font-weight: 800; color: var(--text-primary);
-  display: flex; align-items: center; gap: 8px;
+.comp-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  height: 18px;
 }
-.comp-staff-count span { color: var(--text-muted); font-weight: 600; font-size: 12px; }
+.comp-contact-item svg { flex-shrink: 0; color: var(--text-faint); }
+.comp-contact-item a { color: var(--text-secondary); text-decoration: none; }
+.comp-contact-item a:hover { color: var(--brand); text-decoration: underline; }
+.comp-contact-item.empty { color: var(--text-faint); font-style: italic; }
 
-.comp-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  border-top: 1px solid var(--border-subtle); padding-top: 14px; margin-top: auto;
-}
-.comp-meta-text {
-  font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;
+/* Footer & Actions */
+.comp-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 14px;
+  margin-top: auto;
+  gap: 10px;
 }
 
-@media (max-width: 900px) {
-  .comp-stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .comp-grid { grid-template-columns: 1fr; }
+.comp-action-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-icon-action {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-icon-action:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+.btn-icon-action.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.btn-icon-action.archive:hover {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.btn-view-team {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+.btn-view-team:hover {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+
+/* ── Modal Dialog Styles ───────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(6px);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modal-dialog-content {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 22px;
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  animation: modalZoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header-comp {
+  padding: 20px 24px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  transition: color 0.15s;
+}
+.modal-close-btn:hover { color: var(--text-primary); }
+
+.modal-body-comp {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group-comp {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label-comp {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.form-input-comp, .form-select-comp, .form-textarea-comp {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-default);
+  background: var(--surface-base);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-weight: 600;
+  box-sizing: border-box;
+  outline: none;
+  transition: all 0.15s;
+}
+
+.form-input-comp:focus, .form-select-comp:focus, .form-textarea-comp:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-subtle);
+  background: var(--surface-1);
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 600px) {
+  .form-grid-2 { grid-template-columns: 1fr; }
+}
+
+.modal-footer-comp {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background: var(--surface-2);
 }
 </style>
 {% endblock %}
@@ -157,127 +718,620 @@
 {% block content %}
 <div class="companies-page">
 
-  <!-- Hero Header -->
+  <!-- ═════ Hero Header ═════ -->
   <div class="comp-hero">
     <div class="comp-hero-left">
       <h1 class="comp-hero-title">
         <div class="comp-hero-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18"/><path d="M9 8h1"/><path d="M9 12h1"/><path d="M9 16h1"/><path d="M14 8h1"/><path d="M14 12h1"/><path d="M14 16h1"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
         </div>
-        Companies & Externals
+        Entreprises & Partenaires
       </h1>
       <p class="comp-hero-sub">
-        Gestion et traçabilité des entités participantes : <strong>Cosmitto</strong> (principale) et toutes les entreprises externes ou partenaires (ex: Meninx) avec leurs employés associés.
+        Gestion, structuration et traçabilité des entités participantes : <strong>Cosmitto Coffee</strong> (société principale) ainsi que toutes les filiales, partenaires stratégiques (ex: Meninx, TotalEnergies) et prestataires externes avec leurs collaborateurs rattachés.
       </p>
     </div>
-    {% if current_user.has_permission('admin_dashboard.voir') or current_user.role.niveau >= 80 %}
+
+    {% if can_manage %}
     <div>
-      <a href="{{ url_for('companies.nouvelle') }}" class="btn-action primary" style="padding:10px 18px; border-radius:12px; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <button type="button" class="btn-primary-comp" onclick="openCreateModal()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Nouvelle Entreprise
-      </a>
+      </button>
     </div>
     {% endif %}
   </div>
 
-  <!-- KPI Stats -->
+  <!-- ═════ KPI Metrics Strip ═════ -->
   <div class="comp-stats-grid">
+    <!-- Total -->
     <div class="comp-stat-card">
-      <span class="comp-stat-label">Total Entités</span>
-      <div class="comp-stat-val">{{ total_companies }}</div>
+      <div class="comp-stat-icon-wrap total">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
+      </div>
+      <div class="comp-stat-body">
+        <div class="comp-stat-num">{{ total_companies }}</div>
+        <div class="comp-stat-lbl">Total Entités</div>
+        <div class="comp-stat-hint">Toutes organisations confondues</div>
+      </div>
     </div>
+
+    <!-- Active -->
     <div class="comp-stat-card">
-      <span class="comp-stat-label">Société Principale</span>
-      <div class="comp-stat-val" style="color:var(--brand);">{{ main_company.nom if main_company else 'Cosmitto' }}</div>
+      <div class="comp-stat-icon-wrap active">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="comp-stat-body">
+        <div class="comp-stat-num" style="color:#16a34a;">{{ active_companies }}</div>
+        <div class="comp-stat-lbl">Organisations Actives</div>
+        <div class="comp-stat-hint">Opérationnelles sur le réseau</div>
+      </div>
     </div>
+
+    <!-- Archived -->
     <div class="comp-stat-card">
-      <span class="comp-stat-label">Sociétés Externes / Partenaires</span>
-      <div class="comp-stat-val" style="color:#8B5CF6;">{{ external_companies }}</div>
+      <div class="comp-stat-icon-wrap archive">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      </div>
+      <div class="comp-stat-body">
+        <div class="comp-stat-num" style="color:#d97706;">{{ archived_companies }}</div>
+        <div class="comp-stat-lbl">Archivées</div>
+        <div class="comp-stat-hint">Entités dormantes ou désactivées</div>
+      </div>
     </div>
+
+    <!-- External Collaborators -->
     <div class="comp-stat-card">
-      <span class="comp-stat-label">Collaborateurs Externes</span>
-      <div class="comp-stat-val" style="color:#10B981;">{{ external_users }}</div>
+      <div class="comp-stat-icon-wrap team">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="comp-stat-body">
+        <div class="comp-stat-num" style="color:#7c3aed;">{{ external_users }}</div>
+        <div class="comp-stat-lbl">Membres Externes</div>
+        <div class="comp-stat-hint">Collaborateurs partenaires rattachés</div>
+      </div>
     </div>
   </div>
 
-  <!-- Controls & Search -->
-  <div class="comp-controls">
-    <div class="comp-filters-pills">
-      <a href="{{ url_for('companies.liste', type='all') }}" class="comp-pill {% if current_type == 'all' %}active{% endif %}">Toutes</a>
-      <a href="{{ url_for('companies.liste', type='principale') }}" class="comp-pill {% if current_type == 'principale' %}active{% endif %}">Principale</a>
-      <a href="{{ url_for('companies.liste', type='partenaire') }}" class="comp-pill {% if current_type == 'partenaire' %}active{% endif %}">Partenaires</a>
-      <a href="{{ url_for('companies.liste', type='externe') }}" class="comp-pill {% if current_type == 'externe' %}active{% endif %}">Externes</a>
-      <a href="{{ url_for('companies.liste', type='prestataire') }}" class="comp-pill {% if current_type == 'prestataire' %}active{% endif %}">Prestataires</a>
-    </div>
+  <!-- ═════ Filters & Controls Bar (Single Row Dropdowns) ═════ -->
+  <form method="GET" action="{{ url_for('companies.liste') }}" class="comp-controls-bar" style="flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 18px;">
+    
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1;">
+      <!-- Statut Dropdown -->
+      <div class="comp-filter-select-wrap">
+        <select name="statut" class="comp-filter-select {% if current_statut != 'all' %}is-filtered{% endif %}" onchange="this.form.submit()">
+          <option value="all" {% if current_statut == 'all' %}selected{% endif %}>Statut : Tous ({{ total_companies }})</option>
+          <option value="actif" {% if current_statut == 'actif' %}selected{% endif %}>Actives ({{ active_companies }})</option>
+          <option value="archive" {% if current_statut == 'archive' %}selected{% endif %}>Archivées ({{ archived_companies }})</option>
+        </select>
+        <svg class="select-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
 
-    <form method="GET" action="{{ url_for('companies.liste') }}" class="comp-search">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" name="search" placeholder="Rechercher une entreprise..." value="{{ search_query }}">
-      {% if current_type != 'all' %}
-      <input type="hidden" name="type" value="{{ current_type }}">
+      <!-- Type Dropdown -->
+      <div class="comp-filter-select-wrap">
+        <select name="type" class="comp-filter-select {% if current_type != 'all' %}is-filtered{% endif %}" onchange="this.form.submit()">
+          <option value="all" {% if current_type == 'all' %}selected{% endif %}>Type : Tous types</option>
+          <option value="principale" {% if current_type == 'principale' %}selected{% endif %}>Principale (Maison Mère)</option>
+          <option value="partenaire" {% if current_type == 'partenaire' %}selected{% endif %}>Partenaires</option>
+          <option value="filiale" {% if current_type == 'filiale' %}selected{% endif %}>Filiales</option>
+          <option value="externe" {% if current_type == 'externe' %}selected{% endif %}>Externes</option>
+          <option value="prestataire" {% if current_type == 'prestataire' %}selected{% endif %}>Prestataires</option>
+        </select>
+        <svg class="select-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <!-- Reset button if filtered -->
+      {% if search_query or current_type != 'all' or current_statut != 'all' %}
+      <a href="{{ url_for('companies.liste') }}" style="font-size: 12px; font-weight: 700; color: var(--brand); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 8px; background: rgba(232, 33, 63, 0.08);">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Réinitialiser
+      </a>
       {% endif %}
-    </form>
-  </div>
+    </div>
 
-  <!-- Cards Grid -->
+    <!-- Search Input -->
+    <div class="comp-search-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" name="search" class="comp-search-input" placeholder="Rechercher par nom, code, email..." value="{{ search_query }}">
+    </div>
+
+  </form>
+
+  <!-- ═════ Companies Grid ═════ -->
   {% if entreprises %}
   <div class="comp-grid">
     {% for ent in entreprises %}
-    <div class="comp-card">
+    <div class="comp-card {{ 'is-archived' if not ent.actif else '' }}" onclick="if(!event.target.closest('a, button, input, select, textarea')) window.location.href='{{ url_for('companies.detail', id=ent.id) }}'">
+      <!-- Distinctive top stripe -->
+      <div class="comp-card-stripe" style="background: {{ ent.couleur or '#6366F1' }};"></div>
+
+      <!-- Main company ribbon -->
       {% if ent.type_entreprise == 'principale' %}
-      <div class="comp-card-badge-main">Maison Mère</div>
+      <div class="comp-card-badge-main">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Maison Mère
+      </div>
       {% endif %}
 
       <div>
+        <!-- Card Header -->
         <div class="comp-card-header">
           <div class="comp-avatar" style="background: {{ ent.couleur or '#6366F1' }};">
             {{ ent.nom[:2]|upper }}
+            <span class="comp-status-dot-avatar {{ 'active' if ent.actif else 'archived' }}" title="{{ 'Actif' if ent.actif else 'Archivée' }}"></span>
           </div>
           <div class="comp-header-text">
-            <h3 class="comp-name" title="{{ ent.nom }}">{{ ent.nom }}</h3>
-            <span class="comp-type-tag type-{{ ent.type_entreprise }}">
-              {{ ent.type_entreprise }}
-            </span>
+            <div class="comp-name-wrap">
+              <h3 class="comp-name" title="{{ ent.nom }}">
+                <a href="{{ url_for('companies.detail', id=ent.id) }}">{{ ent.nom }}</a>
+              </h3>
+              {% if ent.code %}
+              <span class="comp-code-badge">{{ ent.code }}</span>
+              {% endif %}
+            </div>
+
+            <div class="comp-tags-row">
+              <span class="comp-type-tag type-{{ ent.type_entreprise }}">
+                {{ ent.type_entreprise }}
+              </span>
+              {% if not ent.actif %}
+              <span class="badge-archive-tag">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/></svg>
+                Archivée
+              </span>
+              {% endif %}
+            </div>
           </div>
         </div>
 
+        <!-- Description -->
         <div class="comp-desc">
-          {{ ent.description or 'Aucune description disponible pour cette organisation.' }}
+          {{ ent.description or 'Aucune description renseignée pour cette organisation.' }}
         </div>
 
-        <div class="comp-staff-preview">
-          <div class="comp-staff-count">
+        <!-- Staff Count Box -->
+        <div class="comp-staff-banner">
+          <div class="comp-staff-num">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             {{ ent.nombre_employes }}
-            <span>collaborateur{{ 's' if ent.nombre_employes != 1 else '' }} rattaché{{ 's' if ent.nombre_employes != 1 else '' }}</span>
+            <span class="comp-staff-sub">collaborateur{{ 's' if ent.nombre_employes != 1 else '' }} rattaché{{ 's' if ent.nombre_employes != 1 else '' }}</span>
+          </div>
+        </div>
+
+        <!-- Contacts snippet (always 3 consistent rows) -->
+        <div class="comp-contact-row">
+          <div class="comp-contact-item {% if not ent.email %}empty{% endif %}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            {% if ent.email %}
+            <a href="mailto:{{ ent.email }}" title="{{ ent.email }}">{{ ent.email }}</a>
+            {% else %}
+            <span>Email non renseigné</span>
+            {% endif %}
+          </div>
+
+          <div class="comp-contact-item {% if not ent.telephone %}empty{% endif %}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            {% if ent.telephone %}
+            <span>{{ ent.telephone }}</span>
+            {% else %}
+            <span>Téléphone non renseigné</span>
+            {% endif %}
+          </div>
+
+          <div class="comp-contact-item {% if not ent.site_web %}empty{% endif %}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            {% if ent.site_web %}
+            <a href="{{ ent.site_web }}" target="_blank" rel="noopener noreferrer" title="{{ ent.site_web }}">{{ ent.site_web }}</a>
+            {% else %}
+            <span>Site web non renseigné</span>
+            {% endif %}
           </div>
         </div>
       </div>
 
-      <div class="comp-footer">
-        <div class="comp-meta-text">
-          {% if ent.email %}
-          <span>{{ ent.email }}</span>
-          {% elif ent.telephone %}
-          <span>{{ ent.telephone }}</span>
-          {% else %}
-          <span>Code: {{ ent.code or 'N/A' }}</span>
+      <!-- Card Footer Actions -->
+      <div class="comp-card-footer">
+        <a href="{{ url_for('companies.detail', id=ent.id) }}" class="btn-view-team">
+          Voir l'équipe
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+
+        {% if can_manage %}
+        <div class="comp-action-btn-group">
+          <!-- Edit button -->
+          <button type="button" class="btn-icon-action" title="Modifier l'entreprise" onclick="openEditModal('{{ ent.id }}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+
+          <!-- Archive toggle button (hidden for main company) -->
+          {% if ent.type_entreprise != 'principale' %}
+          <button type="button" class="btn-icon-action archive" title="{{ 'Désarchiver / Réactiver' if not ent.actif else 'Archiver l\'entreprise' }}" onclick="openArchiveModal('{{ ent.id }}', '{{ ent.nom|replace('\'', '\\\'') }}', {{ 'true' if ent.actif else 'false' }})">
+            {% if ent.actif %}
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+            {% else %}
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            {% endif %}
+          </button>
+
+          <!-- Delete button (hidden for main company) -->
+          <button type="button" class="btn-icon-action danger" title="Supprimer définitivement" onclick="openDeleteModal('{{ ent.id }}', '{{ ent.nom|replace('\'', '\\\'') }}', {{ ent.nombre_employes }})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
           {% endif %}
         </div>
-        <a href="{{ url_for('companies.detail', id=ent.id) }}" class="btn-action" style="padding:6px 14px; font-size:12px; border-radius:8px; text-decoration:none;">
-          Voir l'équipe →
-        </a>
+        {% endif %}
       </div>
     </div>
     {% endfor %}
   </div>
   {% else %}
-  <div style="background:var(--surface-1); border:1px solid var(--border-subtle); border-radius:18px; padding:60px 20px; text-align:center;">
-    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:12px; opacity:0.6;"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
+  <!-- Empty State -->
+  <div style="background:var(--surface-1); border:1px solid var(--border-subtle); border-radius:20px; padding:64px 24px; text-align:center;">
+    <div style="width:56px; height:56px; border-radius:18px; background:var(--surface-2); border:1px solid var(--border-subtle); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:var(--text-muted);">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
+    </div>
     <h3 style="font-size:16px; font-weight:800; color:var(--text-primary); margin:0 0 6px;">Aucune entreprise trouvée</h3>
-    <p style="font-size:13px; color:var(--text-muted); margin:0;">Modifiez vos critères de recherche ou ajoutez une nouvelle entreprise.</p>
+    <p style="font-size:13px; color:var(--text-muted); margin:0 0 20px;">Modifiez vos critères de recherche ou ajoutez une nouvelle organisation partenaire.</p>
+    {% if can_manage %}
+    <button type="button" class="btn-primary-comp" onclick="openCreateModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Ajouter une entreprise
+    </button>
+    {% endif %}
   </div>
   {% endif %}
 
 </div>
+
+<!-- ════════════ MODALS ════════════ -->
+
+<!-- 1. Modal Création / Modification Entreprise -->
+<div id="companyModal" class="modal-overlay" onclick="if(event.target===this) closeCompanyModal()">
+  <div class="modal-dialog-content">
+    <div class="modal-header-comp">
+      <h3 id="companyModalTitle" class="modal-header-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
+        <span>Ajouter une Entreprise</span>
+      </h3>
+      <button type="button" class="modal-close-btn" onclick="closeCompanyModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form id="companyForm" method="POST" action="{{ url_for('companies.nouvelle') }}" onsubmit="handleCompanySubmit(event)">
+      <div class="modal-body-comp">
+        <!-- Nom -->
+        <div class="form-group-comp">
+          <label class="form-label-comp" for="modal_nom">Nom de l'entreprise *</label>
+          <input type="text" id="modal_nom" name="nom" required class="form-input-comp" placeholder="Ex: Meninx Holding, TotalEnergies...">
+        </div>
+
+        <!-- Code & Type -->
+        <div class="form-grid-2">
+          <div class="form-group-comp">
+            <label class="form-label-comp" for="modal_code">Code / Sigle</label>
+            <input type="text" id="modal_code" name="code" class="form-input-comp" placeholder="Ex: MNX" style="text-transform:uppercase;">
+          </div>
+          <div class="form-group-comp">
+            <label class="form-label-comp" for="modal_type">Type d'organisation</label>
+            <select id="modal_type" name="type_entreprise" class="form-select-comp">
+              <option value="externe">Externe</option>
+              <option value="partenaire">Partenaire</option>
+              <option value="filiale">Filiale</option>
+              <option value="prestataire">Prestataire de service</option>
+              <option value="principale">Société Principale</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Email & Téléphone -->
+        <div class="form-grid-2">
+          <div class="form-group-comp">
+            <label class="form-label-comp" for="modal_email">Email de contact</label>
+            <input type="email" id="modal_email" name="email" class="form-input-comp" placeholder="contact@entreprise.tn">
+          </div>
+          <div class="form-group-comp">
+            <label class="form-label-comp" for="modal_telephone">Téléphone</label>
+            <input type="text" id="modal_telephone" name="telephone" class="form-input-comp" placeholder="+216 ...">
+          </div>
+        </div>
+
+        <!-- Couleur & Site Web -->
+        <div class="form-grid-2">
+          <div class="form-group-comp">
+            <label class="form-label-comp" for="modal_couleur">Couleur distinctive</label>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="color" id="modal_couleur" name="couleur" value="#6366F1" style="width:48px; height:40px; padding:2px; border-radius:8px; border:1px solid var(--border-default); background:var(--surface-base); cursor:pointer;">
+              <span id="modal_couleur_hex" style="font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--text-secondary);">#6366F1</span>
+            </div>
+          </div>
+          <div class="form-group-comp">
+            <label class="form-label-comp" for="modal_site_web">Site Web</label>
+            <input type="url" id="modal_site_web" name="site_web" class="form-input-comp" placeholder="https://...">
+          </div>
+        </div>
+
+        <!-- Adresse -->
+        <div class="form-group-comp">
+          <label class="form-label-comp" for="modal_adresse">Adresse</label>
+          <input type="text" id="modal_adresse" name="adresse" class="form-input-comp" placeholder="Adresse du siège...">
+        </div>
+
+        <!-- Description -->
+        <div class="form-group-comp">
+          <label class="form-label-comp" for="modal_description">Description / Rôle</label>
+          <textarea id="modal_description" name="description" rows="3" class="form-textarea-comp" placeholder="Contexte et mission de cette entité..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer-comp">
+        <button type="button" class="btn-action" style="padding:9px 18px; border-radius:10px; cursor:pointer;" onclick="closeCompanyModal()">Annuler</button>
+        <button type="submit" id="companyModalSubmitBtn" class="btn-primary-comp" style="padding:9px 22px; border-radius:10px;">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 2. Modal Confirmation Archivage -->
+<div id="archiveModal" class="modal-overlay" onclick="if(event.target===this) closeArchiveModal()">
+  <div class="modal-dialog-content" style="max-width:440px;">
+    <div class="modal-body-comp" style="padding:28px 24px; text-align:center;">
+      <div id="archiveModalIcon" style="width:52px; height:52px; border-radius:16px; background:rgba(245,158,11,0.12); color:#d97706; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      </div>
+      <h3 id="archiveModalTitle" style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0 0 8px;">Archiver l'entreprise</h3>
+      <p id="archiveModalDesc" style="font-size:13.5px; color:var(--text-muted); margin:0 0 24px; line-height:1.5;">Êtes-vous sûr de vouloir archiver cette organisation ?</p>
+      
+      <form id="archiveForm" method="POST" action="" onsubmit="handleArchiveSubmit(event)">
+        <div style="display:flex; justify-content:center; gap:12px;">
+          <button type="button" class="btn-action" style="padding:10px 18px; border-radius:10px; cursor:pointer;" onclick="closeArchiveModal()">Annuler</button>
+          <button type="submit" id="archiveConfirmBtn" style="padding:10px 22px; border-radius:10px; border:none; font-size:13px; font-weight:700; cursor:pointer; background:#d97706; color:#fff;">Confirmer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Modal Confirmation Suppression -->
+<div id="deleteModal" class="modal-overlay" onclick="if(event.target===this) closeDeleteModal()">
+  <div class="modal-dialog-content" style="max-width:440px;">
+    <div class="modal-body-comp" style="padding:28px 24px; text-align:center;">
+      <div style="width:52px; height:52px; border-radius:16px; background:rgba(239,68,68,0.12); color:#ef4444; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+      </div>
+      <h3 style="font-size:18px; font-weight:800; color:var(--text-primary); margin:0 0 8px;">Supprimer l'entreprise</h3>
+      <p id="deleteModalDesc" style="font-size:13.5px; color:var(--text-muted); margin:0 0 24px; line-height:1.5;">Cette action est irréversible. Les collaborateurs rattachés seront détachés.</p>
+      
+      <form id="deleteForm" method="POST" action="" onsubmit="handleDeleteSubmit(event)">
+        <div style="display:flex; justify-content:center; gap:12px;">
+          <button type="button" class="btn-action" style="padding:10px 18px; border-radius:10px; cursor:pointer;" onclick="closeDeleteModal()">Annuler</button>
+          <button type="submit" id="deleteConfirmBtn" style="padding:10px 22px; border-radius:10px; border:none; font-size:13px; font-weight:700; cursor:pointer; background:#ef4444; color:#fff;">Supprimer définitivement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Color picker listener ─────────────────────────────────── */
+document.getElementById('modal_couleur').addEventListener('input', function(e) {
+  document.getElementById('modal_couleur_hex').textContent = e.target.value;
+});
+
+/* ── Create Modal ──────────────────────────────────────────── */
+function openCreateModal() {
+  const form = document.getElementById('companyForm');
+  form.action = "{{ url_for('companies.nouvelle') }}";
+  document.getElementById('companyModalTitle').innerHTML = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
+    <span>Ajouter une Entreprise</span>
+  `;
+  document.getElementById('companyModalSubmitBtn').textContent = "Ajouter l'entreprise";
+  
+  // Reset fields
+  form.reset();
+  document.getElementById('modal_couleur').value = "#6366F1";
+  document.getElementById('modal_couleur_hex').textContent = "#6366F1";
+  document.getElementById('modal_type').value = "externe";
+  
+  document.getElementById('companyModal').style.display = 'flex';
+}
+
+/* ── Edit Modal ────────────────────────────────────────────── */
+function openEditModal(companyId) {
+  fetch(`/companies/${companyId}/json`)
+    .then(r => r.json())
+    .then(data => {
+      const form = document.getElementById('companyForm');
+      form.action = `/companies/${companyId}/modifier`;
+      
+      document.getElementById('companyModalTitle').innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span>Modifier : ${data.nom}</span>
+      `;
+      document.getElementById('companyModalSubmitBtn').textContent = "Enregistrer les modifications";
+
+      document.getElementById('modal_nom').value = data.nom || '';
+      document.getElementById('modal_code').value = data.code || '';
+      document.getElementById('modal_type').value = data.type_entreprise || 'externe';
+      document.getElementById('modal_email').value = data.email || '';
+      document.getElementById('modal_telephone').value = data.telephone || '';
+      document.getElementById('modal_adresse').value = data.adresse || '';
+      document.getElementById('modal_site_web').value = data.site_web || '';
+      document.getElementById('modal_couleur').value = data.couleur || '#6366F1';
+      document.getElementById('modal_couleur_hex').textContent = data.couleur || '#6366F1';
+      document.getElementById('modal_description').value = data.description || '';
+
+      document.getElementById('companyModal').style.display = 'flex';
+    })
+    .catch(() => {
+      showToast('Erreur lors du chargement des données', 'error');
+    });
+}
+
+function closeCompanyModal() {
+  document.getElementById('companyModal').style.display = 'none';
+}
+
+function handleCompanySubmit(e) {
+  e.preventDefault();
+  const form = document.getElementById('companyForm');
+  const btn = document.getElementById('companyModalSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enregistrement...';
+
+  const formData = new FormData(form);
+
+  fetch(form.action, {
+    method: 'POST',
+    body: formData,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(r => r.json())
+  .then(data => {
+    btn.disabled = false;
+    if (data.success) {
+      closeCompanyModal();
+      showToast(data.message || 'Opération réussie ✓', 'success');
+      setTimeout(() => window.location.reload(), 600);
+    } else {
+      showToast(data.message || 'Une erreur est survenue', 'error');
+    }
+  })
+  .catch(() => {
+    btn.disabled = false;
+    // Fallback to regular submission if json endpoint fails
+    form.submit();
+  });
+}
+
+/* ── Archive Modal ─────────────────────────────────────────── */
+function openArchiveModal(id, name, isActif) {
+  const form = document.getElementById('archiveForm');
+  form.action = `/companies/${id}/toggle-archive`;
+
+  const title = document.getElementById('archiveModalTitle');
+  const desc = document.getElementById('archiveModalDesc');
+  const btn = document.getElementById('archiveConfirmBtn');
+  const icon = document.getElementById('archiveModalIcon');
+
+  if (isActif) {
+    title.textContent = `Archiver ${name}`;
+    desc.textContent = `Voulez-vous archiver l'entreprise ${name} ? Elle sera marquée comme inactive et masquée par défaut des entités actives.`;
+    btn.textContent = "Archiver l'entreprise";
+    btn.style.background = "#d97706";
+    icon.style.background = "rgba(245,158,11,0.12)";
+    icon.style.color = "#d97706";
+  } else {
+    title.textContent = `Réactiver ${name}`;
+    desc.textContent = `Voulez-vous réactiver l'entreprise ${name} ? Elle apparaîtra de nouveau parmi les organisations actives.`;
+    btn.textContent = "Réactiver l'entreprise";
+    btn.style.background = "#16a34a";
+    icon.style.background = "rgba(34,197,94,0.12)";
+    icon.style.color = "#16a34a";
+  }
+
+  document.getElementById('archiveModal').style.display = 'flex';
+}
+
+function closeArchiveModal() {
+  document.getElementById('archiveModal').style.display = 'none';
+}
+
+function handleArchiveSubmit(e) {
+  e.preventDefault();
+  const form = document.getElementById('archiveForm');
+  const btn = document.getElementById('archiveConfirmBtn');
+  btn.disabled = true;
+
+  fetch(form.action, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      closeArchiveModal();
+      showToast(data.message || 'Statut mis à jour ✓', 'success');
+      setTimeout(() => window.location.reload(), 600);
+    } else {
+      btn.disabled = false;
+      showToast(data.message || 'Erreur lors du changement de statut', 'error');
+    }
+  })
+  .catch(() => {
+    form.submit();
+  });
+}
+
+/* ── Delete Modal ──────────────────────────────────────────── */
+function openDeleteModal(id, name, empCount) {
+  const form = document.getElementById('deleteForm');
+  form.action = `/companies/${id}/supprimer`;
+
+  const desc = document.getElementById('deleteModalDesc');
+  if (empCount > 0) {
+    desc.innerHTML = `Êtes-vous sûr de vouloir supprimer définitivement <strong>${name}</strong> ?<br><span style="color:#ef4444; font-weight:700;">Attention : ${empCount} collaborateur(s) actuellement rattaché(s) seront détachés.</span>`;
+  } else {
+    desc.innerHTML = `Êtes-vous sûr de vouloir supprimer définitivement <strong>${name}</strong> ? Cette action est irréversible.`;
+  }
+
+  document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+}
+
+function handleDeleteSubmit(e) {
+  e.preventDefault();
+  const form = document.getElementById('deleteForm');
+  const btn = document.getElementById('deleteConfirmBtn');
+  btn.disabled = true;
+
+  fetch(form.action, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      closeDeleteModal();
+      showToast(data.message || 'Entreprise supprimée ✓', 'success');
+      setTimeout(() => window.location.reload(), 600);
+    } else {
+      btn.disabled = false;
+      showToast(data.message || 'Erreur lors de la suppression', 'error');
+    }
+  })
+  .catch(() => {
+    form.submit();
+  });
+}
+
+/* ── Toast Notifications ───────────────────────────────────── */
+function showToast(msg, type) {
+  const colors = { success:'#16a34a', warning:'#f59e0b', error:'#ef4444' };
+  const toast = document.createElement('div');
+  toast.style.cssText = `position:fixed;bottom:28px;right:28px;z-index:99999;background:var(--surface-1);border:1px solid var(--border-subtle);border-left:4px solid ${colors[type]||'#6366f1'};border-radius:12px;padding:12px 18px;font-size:13px;font-weight:700;color:var(--text-primary);box-shadow:0 12px 30px rgba(0,0,0,0.18);animation:pageFadeIn .2s ease;max-width:340px;display:flex;align-items:center;gap:10px;`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(8px)';
+    toast.style.transition = 'all .25s ease';
+    setTimeout(() => toast.remove(), 250);
+  }, 2800);
+}
+
+/* ── Escape Key ────────────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeCompanyModal();
+    closeArchiveModal();
+    closeDeleteModal();
+  }
+});
+</script>
+
 {% endblock %}

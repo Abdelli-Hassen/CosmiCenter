@@ -71,8 +71,11 @@ def detail(id):
         return redirect(url_for('pdv.liste'))
         
     pdv = PointDeVente.query.get_or_404(id)
+    # Exclude Store Accounts and the current responsable from the selectable employees list
     utilisateurs = sorted(
-        Utilisateur.query.filter_by(actif=True).all(),
+        [u for u in Utilisateur.query.filter_by(actif=True).all()
+         if u.prenom != 'Store Account' and not (u.nom_complet or '').startswith('Store Account')
+         and (not pdv.responsable_id or u.id != pdv.responsable_id)],
         key=lambda u: (u.nom_complet or '').strip().upper()
     )
     from models import Departement

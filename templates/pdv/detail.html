@@ -851,6 +851,83 @@ dialog::backdrop {
     </div>
   </div>
 
+  <!-- ==================== RESPONSABLE & COORDONNÉES PDV ==================== -->
+  {% set actual_staff = [] %}
+  {% for emp in pdv.employes %}
+    {% set is_mgr = (pdv.responsable and emp.id == pdv.responsable.id) %}
+    {% set is_store_acc = (emp.prenom == 'Store Account' or emp.nom_complet.startswith('Store Account') or 'Store Account' in emp.nom_complet) %}
+    {% if not is_mgr and not is_store_acc %}
+      {% set _ = actual_staff.append(emp) %}
+    {% endif %}
+  {% endfor %}
+
+  <div class="pdv-lead-card" style="background:var(--surface-1); border:1px solid var(--border-subtle); border-radius:18px; padding:20px 24px; margin-bottom:24px; box-shadow:var(--shadow-xs); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;">
+    <!-- Bloc Responsable -->
+    <div style="display:flex; align-items:center; gap:16px; flex:1; min-width:280px;">
+      <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, color-mix(in srgb, var(--brand) 18%, var(--surface-2)), var(--surface-2)); border:1px solid var(--border-default); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; color:var(--brand); flex-shrink:0;">
+        {% if pdv.responsable %}
+          {{ pdv.responsable.nom_complet[0]|upper }}
+        {% else %}
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        {% endif %}
+      </div>
+      <div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+          <span>Responsable du Point de Vente</span>
+          <span style="background:rgba(220,38,38,0.1); color:var(--brand); padding:1px 6px; border-radius:4px; font-size:10px; font-weight:800;">Direction PDV</span>
+        </div>
+        {% if pdv.responsable %}
+          <div style="font-size:16px; font-weight:800; color:var(--text-primary); margin-top:2px;">
+            <a href="{{ url_for('utilisateurs.detail', id=pdv.responsable.id) }}" style="color:var(--text-primary); text-decoration:none; transition:color .15s;" onmouseover="this.style.color='var(--brand)'" onmouseout="this.style.color='var(--text-primary)'">
+              {{ pdv.responsable.nom_complet }}
+            </a>
+          </div>
+          <div style="display:flex; align-items:center; gap:14px; font-size:12.5px; color:var(--text-muted); margin-top:4px; flex-wrap:wrap;">
+            <a href="mailto:{{ pdv.responsable.email }}" style="color:var(--brand); text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:5px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              {{ pdv.responsable.email }}
+            </a>
+            {% if pdv.responsable.telephone %}
+            <span style="display:inline-flex; align-items:center; gap:5px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              {{ pdv.responsable.telephone }}
+            </span>
+            {% endif %}
+          </div>
+        {% else %}
+          <div style="font-size:14px; font-weight:600; color:var(--text-muted); font-style:italic; margin-top:2px;">
+            Aucun responsable assigné
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Bloc Email officiel du PDV -->
+    <div style="display:flex; align-items:center; gap:16px; flex:1; min-width:260px; border-left:1px solid var(--border-subtle); padding-left:20px;">
+      <div style="width:48px; height:48px; border-radius:14px; background:var(--surface-2); border:1px solid var(--border-default); display:flex; align-items:center; justify-content:center; color:var(--text-secondary); flex-shrink:0;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted);">
+          Canal officiel du magasin
+        </div>
+        <div style="margin-top:2px;">
+          {% if pdv.email %}
+            <a href="mailto:{{ pdv.email }}" style="font-size:14px; font-weight:700; color:var(--text-primary); text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              {{ pdv.email }}
+            </a>
+          {% else %}
+            <span style="font-size:13px; color:var(--text-muted); font-style:italic;">Email non renseigné</span>
+          {% endif %}
+        </div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">
+          {{ pdv.localisation or pdv.adresse or 'Magasin physique' }} {% if pdv.telephone %}• {{ pdv.telephone }}{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== STATS OVERVIEW ==================== -->
   {% set ticket_stats = namespace(total=0, ouvert=0, en_cours=0, en_attente=0, resolu=0, ferme=0) %}
   {% if pdv.tickets_associes %}
@@ -872,18 +949,18 @@ dialog::backdrop {
   {% set active_tickets_count = ticket_stats.ouvert + ticket_stats.en_cours + ticket_stats.en_attente %}
 
   <div class="pdv-stats-grid">
-    <!-- Employés -->
+    <!-- Personnel de vente -->
     <div class="pdv-stat-card accent-emerald">
       <div class="pdv-stat-top">
-        <span class="pdv-stat-label">Employés</span>
+        <span class="pdv-stat-label">Personnel de vente</span>
         <div class="pdv-stat-icon">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
       </div>
-      <div class="pdv-stat-num">{{ pdv.employes|length }}</div>
+      <div class="pdv-stat-num">{{ actual_staff|length }}</div>
       <div class="pdv-stat-footnote">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
-        Personnel rattaché
+        Personnel rattaché (hors responsable)
       </div>
     </div>
 
@@ -1010,13 +1087,13 @@ dialog::backdrop {
       </div>
     </div>
 
-    <!-- Employés Card -->
+    <!-- Personnel de Vente Card (Hors Responsable) -->
     <div class="pdv-card">
       <div class="pdv-card-header">
         <h2 class="pdv-card-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Employés
-          <span style="font-size:12px; font-weight:700; padding:2px 8px; border-radius:9999px; background:var(--surface-3); color:var(--text-muted);">{{ pdv.employes|length }}</span>
+          Personnel de vente
+          <span style="font-size:12px; font-weight:700; padding:2px 8px; border-radius:9999px; background:var(--surface-3); color:var(--text-muted);">{{ actual_staff|length }}</span>
         </h2>
         {% if current_user.has_permission('pdv.gerer') %}
         <button class="btn btn-primary btn-sm" onclick="document.getElementById('addEmployeeDialog').showModal()" style="display:inline-flex; align-items:center; gap:4px;">
@@ -1026,9 +1103,9 @@ dialog::backdrop {
         {% endif %}
       </div>
       <div class="pdv-card-body">
-        {% if pdv.employes %}
+        {% if actual_staff %}
         <div class="pdv-card-scroll-body">
-          {% for emp in (pdv.employes|sort(attribute='nom_complet')) %}
+          {% for emp in (actual_staff|sort(attribute='nom_complet')) %}
           <div class="pdv-staff-item">
             <div class="pdv-staff-left">
               <div class="pdv-staff-avatar">
@@ -1036,7 +1113,7 @@ dialog::backdrop {
               </div>
               <div>
                 <div class="pdv-staff-name">{{ emp.nom_complet }}</div>
-                <div class="pdv-staff-role">{{ emp.role.nom if emp.role else 'Employé' }}</div>
+                <div class="pdv-staff-role">{{ emp.role.nom if emp.role else 'Personnel Point de Vente' }}</div>
               </div>
             </div>
             {% if current_user.has_permission('pdv.gerer') %}
@@ -1054,8 +1131,8 @@ dialog::backdrop {
           <div class="pdv-empty-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
-          <div style="font-size:13px; font-weight:600; color:var(--text-primary);">Aucun employé rattaché</div>
-          <div style="font-size:12px; color:var(--text-muted);">Assignez des collaborateurs à ce point de vente.</div>
+          <div style="font-size:13px; font-weight:600; color:var(--text-primary);">Aucun personnel de vente rattaché</div>
+          <div style="font-size:12px; color:var(--text-muted);">Assignez des collaborateurs de vente à ce point de vente.</div>
         </div>
         {% endif %}
       </div>

@@ -190,14 +190,16 @@ def detail(id):
     stats = {
         'tickets_crees': len(utilisateur.tickets_crees),
         'tickets_assignes': len([t for t in utilisateur.tickets_assignes if t.statut not in ['resolu', 'ferme']]),
+        'total_assignes': len(utilisateur.tickets_assignes),
         'tickets_resolus': len([t for t in utilisateur.tickets_assignes if t.statut == 'resolu']),
         'commentaires': len(utilisateur.commentaires),
     }
     
-    # Tickets récents
+    # Tickets récents (dédupliqués et triés)
+    all_tickets = list({t.id: t for t in (utilisateur.tickets_crees + utilisateur.tickets_assignes)}.values())
     tickets_recents = sorted(
-        utilisateur.tickets_crees + utilisateur.tickets_assignes,
-        key=lambda x: x.date_creation,
+        all_tickets,
+        key=lambda x: x.date_creation if x.date_creation else datetime.min,
         reverse=True
     )[:10]
     
