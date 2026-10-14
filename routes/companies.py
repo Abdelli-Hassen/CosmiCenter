@@ -9,7 +9,7 @@ def can_manage_companies():
     """Verify if current user has permission to manage companies"""
     if not current_user.is_authenticated:
         return False
-    if current_user.has_permission('admin_dashboard.voir') or current_user.has_permission('utilisateurs.modifier') or current_user.has_permission('pdv.gerer'):
+    if current_user.has_permission('entreprises.modifier') or current_user.has_permission('entreprises.creer') or current_user.has_permission('admin_dashboard.voir'):
         return True
     if current_user.role and current_user.role.niveau >= 60:
         return True
@@ -20,7 +20,7 @@ def can_manage_companies():
 @login_required
 def liste():
     """List all companies and external entities with filtering, archiving and search"""
-    if not current_user.has_permission('pdv.voir') and not current_user.has_permission('utilisateurs.voir'):
+    if not current_user.has_permission('entreprises.voir') and not current_user.has_permission('pdv.voir') and not current_user.has_permission('utilisateurs.voir'):
         flash("Accès non autorisé.", "danger")
         return redirect(url_for('tickets.tableau_bord'))
 
@@ -81,7 +81,7 @@ def liste():
 @login_required
 def nouvelle():
     """Create a new company"""
-    if not can_manage_companies():
+    if not (current_user.has_permission('entreprises.creer') or can_manage_companies()):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
             return jsonify({'success': False, 'message': 'Accès réservé aux administrateurs.'}), 403
         flash("Accès réservé aux administrateurs.", "danger")
@@ -172,7 +172,7 @@ def get_json(id):
 @login_required
 def modifier(id):
     """Edit company attributes"""
-    if not can_manage_companies():
+    if not (current_user.has_permission('entreprises.modifier') or can_manage_companies()):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
             return jsonify({'success': False, 'message': 'Accès réservé aux administrateurs.'}), 403
         flash("Accès réservé aux administrateurs.", "danger")
@@ -223,7 +223,7 @@ def modifier(id):
 @login_required
 def toggle_archive(id):
     """Archive or unarchive a company"""
-    if not can_manage_companies():
+    if not (current_user.has_permission('entreprises.supprimer') or current_user.has_permission('entreprises.modifier') or can_manage_companies()):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
             return jsonify({'success': False, 'message': 'Accès réservé aux administrateurs.'}), 403
         flash("Accès réservé aux administrateurs.", "danger")
@@ -252,7 +252,7 @@ def toggle_archive(id):
 @login_required
 def supprimer(id):
     """Delete a company and detach associated users"""
-    if not can_manage_companies():
+    if not (current_user.has_permission('entreprises.supprimer') or can_manage_companies()):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
             return jsonify({'success': False, 'message': 'Accès réservé aux administrateurs.'}), 403
         flash("Accès réservé aux administrateurs.", "danger")

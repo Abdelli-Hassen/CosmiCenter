@@ -405,15 +405,21 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
           <!-- Dropdown for New Chat -->
-          <div id="newChatMenu" style="display: none; position: absolute; right: 0; top: 40px; background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); width: 220px; max-height: 300px; overflow-y: auto; z-index: 100;">
-            <div style="padding: 8px 12px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Démarrer une discussion avec :</div>
-            <div id="newChatUserList"></div>
+          <div id="newChatMenu" style="display: none; position: absolute; right: 0; top: 42px; background: var(--surface-base); border: 1px solid var(--border-subtle); border-radius: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.2); width: 280px; z-index: 100; overflow: hidden;">
+            <div style="padding: 12px 14px 8px; border-bottom: 1px solid var(--border-subtle);">
+              <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">Nouvelle discussion</div>
+              <div style="position: relative;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="newChatSearchInput" placeholder="Chercher un collègue..." style="width: 100%; padding: 7px 10px 7px 30px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 8px; font-size: 12px; color: var(--text-primary); outline: none;" oninput="filterNewChatUsers(this.value)">
+              </div>
+            </div>
+            <div id="newChatUserList" style="max-height: 260px; overflow-y: auto;"></div>
           </div>
         </div>
       </h2>
       <div class="chat-search-wrapper">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" class="chat-search-input" placeholder="Rechercher une conversation...">
+        <input type="text" class="chat-search-input" placeholder="Rechercher une conversation..." oninput="filterConversations(this.value)">
       </div>
     </div>
     
@@ -501,33 +507,69 @@
   let currentContactId = null;
   const currentUserId = "{{ current_user.id }}";
 
+  let allConversations = [];
+  let allColleagues = [];
+
+  function renderConversations(convos) {
+    const list = document.querySelector('.chat-list');
+    list.innerHTML = '';
+    if (!convos || convos.length === 0) {
+      list.innerHTML = `
+        <div style="padding: 30px 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="opacity:0.4; margin-bottom:8px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <div>Aucune discussion trouvée</div>
+        </div>
+      `;
+      return;
+    }
+    convos.forEach(chat => {
+      const isActive = chat.contact_id === currentContactId ? 'active' : '';
+      const unreadBadge = chat.unread_count > 0 ? `<div class="unread-badge">${chat.unread_count}</div>` : '';
+      const avatarHtml = chat.photo_profil ? `<img src="/static/uploads/${chat.photo_profil}" style="width:100%; height:100%; object-fit:cover;">` : chat.contact_initials;
+      
+      list.innerHTML += `
+        <div class="chat-item ${isActive}" onclick="loadMessages('${chat.contact_id}')">
+          <div class="chat-item-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb); overflow:hidden;">${avatarHtml}</div>
+          <div class="chat-item-info">
+            <div class="chat-item-name" style="${chat.unread_count > 0 ? 'font-weight:700;' : ''}">${chat.contact_name}</div>
+            <div class="chat-item-preview" style="${chat.unread_count > 0 ? 'color:var(--text-primary);font-weight:500;' : ''}">${chat.last_message || '<span style="color:var(--text-muted);font-style:italic;">Aucun message</span>'}</div>
+          </div>
+          <div class="chat-item-meta">
+            <div class="chat-item-time" style="${chat.unread_count > 0 ? 'color:var(--color-brand, #dc2626);font-weight:600;' : ''}">
+              ${chat.timestamp ? new Date(chat.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
+            </div>
+            ${unreadBadge}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  function filterConversations(query) {
+    const term = (query || '').toLowerCase().trim();
+    if (!term) {
+      renderConversations(allConversations);
+      return;
+    }
+    const filtered = allConversations.filter(c => {
+      const name = (c.contact_name || '').toLowerCase();
+      const msg = (c.last_message || '').toLowerCase();
+      return name.includes(term) || msg.includes(term);
+    });
+    renderConversations(filtered);
+  }
+
   function loadConversations() {
     fetch("{{ url_for('chat.get_conversations') }}")
       .then(res => res.json())
       .then(data => {
-        const list = document.querySelector('.chat-list');
-        list.innerHTML = '';
-        data.forEach(chat => {
-          const isActive = chat.contact_id === currentContactId ? 'active' : '';
-          const unreadBadge = chat.unread_count > 0 ? `<div class="unread-badge">${chat.unread_count}</div>` : '';
-          const avatarHtml = chat.photo_profil ? `<img src="/static/uploads/${chat.photo_profil}" style="width:100%; height:100%; object-fit:cover;">` : chat.contact_initials;
-          
-          list.innerHTML += `
-            <div class="chat-item ${isActive}" onclick="loadMessages('${chat.contact_id}')">
-              <div class="chat-item-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb); overflow:hidden;">${avatarHtml}</div>
-              <div class="chat-item-info">
-                <div class="chat-item-name" style="${chat.unread_count > 0 ? 'font-weight:700;' : ''}">${chat.contact_name}</div>
-                <div class="chat-item-preview" style="${chat.unread_count > 0 ? 'color:var(--text-primary);font-weight:500;' : ''}">${chat.last_message}</div>
-              </div>
-              <div class="chat-item-meta">
-                <div class="chat-item-time" style="${chat.unread_count > 0 ? 'color:var(--color-brand, #dc2626);font-weight:600;' : ''}">
-                  ${chat.timestamp ? new Date(chat.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
-                </div>
-                ${unreadBadge}
-              </div>
-            </div>
-          `;
-        });
+        allConversations = data || [];
+        const searchInput = document.querySelector('.chat-search-input');
+        if (searchInput && searchInput.value.trim()) {
+          filterConversations(searchInput.value);
+        } else {
+          renderConversations(allConversations);
+        }
       });
   }
 
@@ -606,33 +648,66 @@
     if (e.key === 'Enter') sendMessage();
   });
 
+  function renderNewChatUserList(users) {
+    const list = document.getElementById('newChatUserList');
+    list.innerHTML = '';
+    if (!users || users.length === 0) {
+      list.innerHTML = '<div style="padding: 24px 16px; text-align: center; color: var(--text-muted); font-size: 12px;">Aucun utilisateur trouvé</div>';
+      return;
+    }
+    users.forEach(user => {
+      const avatarHtml = user.photo_profil ? `<img src="/static/uploads/${user.photo_profil}" style="width:100%; height:100%; object-fit:cover;">` : user.initials;
+      const subtitle = user.poste || user.departement || '';
+      list.innerHTML += `
+        <div style="padding: 10px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-subtle); transition: background 0.15s ease;" 
+             onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='transparent'"
+             onclick="startNewChat('${user.id}', '${user.name.replace(/'/g, "\\'")}', '${user.initials}', '${user.photo_profil || ''}')">
+          <div class="chat-item-avatar" style="width: 34px; height: 34px; font-size: 11px; margin: 0; background: linear-gradient(135deg, #64748b, #475569); overflow:hidden; flex-shrink: 0;">${avatarHtml}</div>
+          <div style="min-width: 0; flex: 1;">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${user.name}</div>
+            ${subtitle ? `<div style="font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${subtitle}</div>` : ''}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  function filterNewChatUsers(query) {
+    const term = (query || '').toLowerCase().trim();
+    if (!term) {
+      renderNewChatUserList(allColleagues);
+      return;
+    }
+    const filtered = allColleagues.filter(u => {
+      const n = (u.name || '').toLowerCase();
+      const p = (u.poste || '').toLowerCase();
+      const d = (u.departement || '').toLowerCase();
+      return n.includes(term) || p.includes(term) || d.includes(term);
+    });
+    renderNewChatUserList(filtered);
+  }
+
   function toggleNewChatMenu() {
     const menu = document.getElementById('newChatMenu');
     if (menu.style.display === 'none') {
       menu.style.display = 'block';
+      const searchBox = document.getElementById('newChatSearchInput');
+      if (searchBox) {
+        searchBox.value = '';
+        setTimeout(() => searchBox.focus(), 50);
+      }
       fetch("{{ url_for('chat.get_users') }}")
         .then(res => res.json())
         .then(data => {
-          const list = document.getElementById('newChatUserList');
-          list.innerHTML = '';
-          data.forEach(user => {
-            const avatarHtml = user.photo_profil ? `<img src="/static/uploads/${user.photo_profil}" style="width:100%; height:100%; object-fit:cover;">` : user.initials;
-            list.innerHTML += `
-              <div style="padding: 10px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-subtle);" 
-                   onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='transparent'"
-                   onclick="startNewChat('${user.id}', '${user.name.replace(/'/g, "\\'")}', '${user.initials}', '${user.photo_profil || ''}')">
-                <div class="chat-item-avatar" style="width: 32px; height: 32px; font-size: 11px; margin: 0; background: linear-gradient(135deg, #64748b, #475569); overflow:hidden;">${avatarHtml}</div>
-                <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${user.name}</div>
-              </div>
-            `;
-          });
+          allColleagues = data || [];
+          renderNewChatUserList(allColleagues);
         });
     } else {
       menu.style.display = 'none';
     }
   }
 
-  function startNewChat(id, name, initials) {
+  function startNewChat(id, name, initials, photoProfil) {
     document.getElementById('newChatMenu').style.display = 'none';
     currentContactId = id;
     
@@ -644,7 +719,9 @@
     container.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 40px;">Envoyez le premier message à ' + name + ' !</div>';
     
     // Update Header
-    document.querySelector('.chat-active-header .chat-item-avatar').innerText = initials;
+    const headerAvatar = document.querySelector('.chat-active-header .chat-item-avatar');
+    headerAvatar.style.overflow = 'hidden';
+    headerAvatar.innerHTML = photoProfil ? `<img src="/static/uploads/${photoProfil}" style="width:100%; height:100%; object-fit:cover;">` : initials;
     const nameEl = document.querySelector('.chat-active-header .chat-header-user div div:first-child');
     if(nameEl) nameEl.innerText = name;
   }

@@ -10,65 +10,131 @@
         <tr>
             <td align="center">
                 <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);">
-                    <!-- Header -->
+                    <!-- Dynamic Priority (5 distinct levels matching the platform) & Type Colors -->
+                    {% set p_color = '#3b82f6' %}
+                    {% set p_gradient = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' %}
+                    {% set p_bg = '#eff6ff' %}
+                    {% set p_border = '#bfdbfe' %}
+                    {% set p_label = 'Moyenne' %}
+
+                    {% if ticket.priorite == 'critique' %}
+                        {% set p_color = '#ef4444' %}
+                        {% set p_gradient = 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)' %}
+                        {% set p_bg = '#fef2f2' %}
+                        {% set p_border = '#fca5a5' %}
+                        {% set p_label = 'Critique' %}
+                    {% elif ticket.priorite == 'urgente' %}
+                        {% set p_color = '#f97316' %}
+                        {% set p_gradient = 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)' %}
+                        {% set p_bg = '#fff7ed' %}
+                        {% set p_border = '#fed7aa' %}
+                        {% set p_label = 'Urgente' %}
+                    {% elif ticket.priorite == 'haute' %}
+                        {% set p_color = '#eab308' %}
+                        {% set p_gradient = 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)' %}
+                        {% set p_bg = '#fefce8' %}
+                        {% set p_border = '#fef08a' %}
+                        {% set p_label = 'Haute' %}
+                    {% elif ticket.priorite == 'moyenne' or ticket.priorite == 'normale' %}
+                        {% set p_color = '#3b82f6' %}
+                        {% set p_gradient = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' %}
+                        {% set p_bg = '#eff6ff' %}
+                        {% set p_border = '#bfdbfe' %}
+                        {% set p_label = 'Moyenne' %}
+                    {% elif ticket.priorite == 'basse' or ticket.priorite == 'faible' %}
+                        {% set p_color = '#6b7280' %}
+                        {% set p_gradient = 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' %}
+                        {% set p_bg = '#f9fafb' %}
+                        {% set p_border = '#e5e7eb' %}
+                        {% set p_label = 'Basse' %}
+                    {% endif %}
+
+                    <!-- Header with Priority Color -->
                     <tr>
-                        <td style="background-color: #dc2626; padding: 30px; text-align: center;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">Ticket #{{ ticket.numero }}</h1>
+                        <td style="background: {{ p_gradient }}; background-color: {{ p_color }}; padding: 32px 30px; text-align: center;">
+                            <div style="display: inline-block; padding: 4px 12px; background: rgba(255, 255, 255, 0.2); border-radius: 20px; color: #ffffff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+                                Priorité {{ p_label }}
+                            </div>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">Ticket #{{ ticket.numero }}</h1>
                         </td>
                     </tr>
                     
                     <!-- Body -->
                     <tr>
-                        <td style="padding: 40px 30px;">
-                            <h2 style="margin: 0 0 20px; font-size: 20px; color: #111827; font-weight: 600; line-height: 1.4;">{{ ticket.titre }}</h2>
+                        <td style="padding: 36px 32px;">
+                            <h2 style="margin: 0 0 16px; font-size: 20px; color: #111827; font-weight: 700; line-height: 1.4;">{{ ticket.titre }}</h2>
                             
                             <!-- Badges -->
-                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 25px;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
                                 <tr>
-                                    <td style="padding-bottom: 10px;">
-                                        <span style="display: inline-block; padding: 6px 12px; background-color: #fef2f2; color: #dc2626; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #fee2e2; margin-right: 8px;">
+                                    <td style="padding-bottom: 6px;">
+                                        <!-- Type Badge -->
+                                        {% set t_bg = '#f3f4f6' %}
+                                        {% set t_fg = '#374151' %}
+                                        {% if ticket.type_ticket == 'incident' %}
+                                            {% set t_bg = '#fef2f2' %}{% set t_fg = '#dc2626' %}
+                                        {% elif ticket.type_ticket == 'demande' %}
+                                            {% set t_bg = '#eff6ff' %}{% set t_fg = '#2563eb' %}
+                                        {% elif ticket.type_ticket == 'besoin' %}
+                                            {% set t_bg = '#fef3c7' %}{% set t_fg = '#d97706' %}
+                                        {% elif ticket.type_ticket == 'plainte' %}
+                                            {% set t_bg = '#f5f3ff' %}{% set t_fg = '#7c3aed' %}
+                                        {% elif ticket.type_ticket == 'tache' %}
+                                            {% set t_bg = '#ecfdf5' %}{% set t_fg = '#059669' %}
+                                        {% endif %}
+                                        <span style="display: inline-block; padding: 5px 12px; background-color: {{ t_bg }}; color: {{ t_fg }}; border-radius: 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid rgba(0,0,0,0.06); margin-right: 6px;">
                                             {{ ticket.type_ticket|capitalize }}
                                         </span>
                                         {% if ticket.departement %}
-                                        <span style="display: inline-block; padding: 6px 12px; background-color: #eff6ff; color: #2563eb; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #dbeafe;">
+                                        <span style="display: inline-block; padding: 5px 12px; background-color: #eff6ff; color: #1d4ed8; border-radius: 16px; font-size: 11px; font-weight: 600; border: 1px solid #dbeafe; margin-right: 6px;">
                                             {{ ticket.departement.nom }}
                                         </span>
                                         {% endif %}
+                                        <span style="display: inline-block; padding: 5px 12px; background-color: {{ p_bg }}; color: {{ p_color }}; border-radius: 16px; font-size: 11px; font-weight: 700; border: 1px solid {{ p_border }};">
+                                            ● {{ p_label }}
+                                        </span>
                                     </td>
                                 </tr>
                             </table>
 
-                            <div style="background-color: #f9fafb; border-left: 4px solid #dc2626; padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 30px;">
-                                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #4b5563;">
-                                    {{ ticket.description | replace('\n', '<br>') | safe if ticket.description else 'Aucune description fournie.' }}
+                            <div style="background-color: #f9fafb; border-left: 4px solid {{ p_color }}; padding: 18px 20px; border-radius: 0 10px 10px 0; margin-bottom: 28px;">
+                                <p style="margin: 0; font-size: 14.5px; line-height: 1.6; color: #374151;">
+                                    {{ ticket.description | replace('\n', '<br>') | safe if ticket.description else '<i>Aucune description fournie.</i>' }}
                                 </p>
                             </div>
 
                             <!-- Meta info -->
-                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-top: 1px solid #e5e7eb; padding-top: 25px; margin-bottom: 30px;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-top: 1px solid #e5e7eb; padding-top: 24px; margin-bottom: 28px;">
                                 <tr>
-                                    <td width="50%" valign="top">
-                                        <p style="margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; font-weight: 600;">Créé par</p>
-                                        <p style="margin: 0; font-size: 15px; color: #111827; font-weight: 500;">{{ current_user.nom_complet }}</p>
+                                    <td width="50%" valign="top" style="padding-bottom: 18px;">
+                                        <p style="margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; font-weight: 700;">Créé par</p>
+                                        <p style="margin: 0; font-size: 14px; color: #111827; font-weight: 600;">{{ current_user.nom_complet }}</p>
                                     </td>
-                                    <td width="50%" valign="top">
-                                        <p style="margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; font-weight: 600;">Priorité</p>
-                                        <p style="margin: 0; font-size: 15px; color: #111827; font-weight: 500; text-transform: capitalize;">{{ ticket.priorite }}</p>
+                                    <td width="50%" valign="top" style="padding-bottom: 18px;">
+                                        <p style="margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; font-weight: 700;">Priorité</p>
+                                        <p style="margin: 0; font-size: 14px; color: {{ p_color }}; font-weight: 700;">{{ p_label }}</p>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td width="50%" valign="top" style="padding-top: 20px;">
-                                        <p style="margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; font-weight: 600;">Date de création</p>
-                                        <p style="margin: 0; font-size: 15px; color: #111827; font-weight: 500;">{{ ticket.date_creation.strftime('%d/%m/%Y %H:%M') if ticket.date_creation else 'N/A' }}</p>
+                                    <td width="50%" valign="top">
+                                        <p style="margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; font-weight: 700;">Date de création</p>
+                                        <p style="margin: 0; font-size: 14px; color: #111827; font-weight: 500;">{{ ticket.date_creation.strftime('%d/%m/%Y %H:%M') if ticket.date_creation else 'N/A' }}</p>
                                     </td>
-                                    <td width="50%" valign="top" style="padding-top: 20px;">
-                                        <p style="margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; font-weight: 600;">Échéance</p>
-                                        <p style="margin: 0; font-size: 15px; color: #111827; font-weight: 500;">{{ ticket.date_echeance.strftime('%d/%m/%Y %H:%M') if ticket.date_echeance else 'Non définie' }}</p>
+                                    <td width="50%" valign="top">
+                                        <p style="margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; font-weight: 700;">Échéance</p>
+                                        <p style="margin: 0; font-size: 14px; color: #111827; font-weight: 500;">{{ ticket.date_echeance.strftime('%d/%m/%Y %H:%M') if ticket.date_echeance else 'Non définie' }}</p>
                                     </td>
                                 </tr>
                             </table>
 
-                            <!-- Action Button removed for local development -->
+                            {% if ticket_url %}
+                            <!-- Action Button -->
+                            <div style="text-align: center; margin-top: 10px;">
+                                <a href="{{ ticket_url }}" style="display: inline-block; padding: 12px 28px; background: {{ p_gradient }}; background-color: {{ p_color }}; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);">
+                                    Accéder au ticket
+                                </a>
+                            </div>
+                            {% endif %}
                         </td>
                     </tr>
                     

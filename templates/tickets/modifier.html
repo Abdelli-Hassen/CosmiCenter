@@ -314,10 +314,10 @@ textarea.fi { resize: vertical; min-height: 140px; }
   display: inline-flex;
 }
 .collab-agents-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 6px;
-  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 480px;
   overflow-y: auto;
   padding: 2px;
 }
@@ -418,31 +418,20 @@ textarea.fi { resize: vertical; min-height: 140px; }
 <div class="page" style="padding-bottom: 80px;">
 
   <!-- Page header -->
-  <div style="padding: 22px 28px 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-bottom: 1px solid var(--border-subtle);">
-    <div>
-      <nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 5px; margin-bottom: 8px;">
-        <a href="{{ url_for('tickets.liste') }}" class="breadcrumb-link" style="font-size: var(--text-xs); color: var(--text-muted);">Tickets</a>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-faint);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
-        <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" style="text-decoration:none; display:flex; align-items:center;">
-          <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--brand); background:var(--brand-subtle); border:1px solid var(--brand-light); border-radius:4px; padding:1px 7px;">{{ ticket.numero }}</span>
-        </a>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-faint);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
-        <span style="font-size:var(--text-xs); color:var(--text-secondary); font-weight:500;">Modifier</span>
-      </nav>
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <h1 style="font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -.02em; margin: 0; line-height: 1.2;">
-          Modifier le ticket
-        </h1>
-        <span id="unsavedDot" title="Modifications non enregistrees"></span>
+  <div style="padding: 18px 28px 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--border-subtle);">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-secondary" title="Retour" style="padding: 7px 12px; font-weight: 600; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--surface-1); display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </a>
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h1 style="font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -.02em; margin: 0; line-height: 1.2;">
+            Modifier le ticket
+          </h1>
+          <span id="unsavedDot" title="Modifications non enregistrees"></span>
+        </div>
+        <p style="margin: 3px 0 0; font-size: var(--text-sm); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 520px;">{{ ticket.titre }}</p>
       </div>
-      <p style="margin: 3px 0 0; font-size: var(--text-sm); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 480px;">{{ ticket.titre }}</p>
-    </div>
-    <div style="display: flex; gap: 8px; flex-shrink: 0; align-items: center; padding-top: 4px;">
-      <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-ghost btn-sm">Annuler</a>
-      <button form="editForm" type="submit" class="btn btn-primary btn-sm" style="display:flex; align-items:center; gap:6px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        Enregistrer
-      </button>
     </div>
   </div>
 
@@ -881,7 +870,25 @@ textarea.fi { resize: vertical; min-height: 140px; }
     var v = document.querySelector('input[name="routing_type"]:checked').value;
     document.getElementById('routingSpecificUI').style.display = v === 'specific' ? 'block' : 'none';
     document.getElementById('routingCollabUI').style.display = v === 'collab' ? 'flex' : 'none';
-    if (v === 'collab' && typeof updateCollabUsers === 'function') updateCollabUsers();
+    if (v === 'collab') {
+      var mainDeptId = deptSelect ? deptSelect.value : '';
+      if (mainDeptId && collabDeptSelect) {
+        var opt = collabDeptSelect.querySelector('option[value="' + mainDeptId + '"]');
+        var chip = document.querySelector('.collab-dept-chip[data-id="' + mainDeptId + '"]');
+        if (opt && chip && !opt.selected) {
+          opt.selected = true;
+          chip.classList.add('active');
+          var check = chip.querySelector('.chip-check');
+          if (check) check.style.display = 'inline-flex';
+          var selectedDepts = Array.prototype.filter.call(collabDeptSelect.options, function (o) { return o.selected; });
+          if (collabDeptCount) {
+            collabDeptCount.textContent = selectedDepts.length + ' sélectionné' + (selectedDepts.length > 1 ? 's' : '');
+            collabDeptCount.classList.toggle('has-selected', selectedDepts.length > 0);
+          }
+        }
+      }
+      if (typeof updateCollabUsers === 'function') updateCollabUsers();
+    }
   };
 
   /* ── Collaboration & Agent filtering logic ── */
@@ -942,6 +949,22 @@ textarea.fi { resize: vertical; min-height: 140px; }
     return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
   }
 
+  // Track the chronological activation order of departments
+  var activeDeptOrder = [];
+  if (collabDeptSelect) {
+    Array.prototype.forEach.call(collabDeptSelect.options, function(o) {
+      if (o.selected) activeDeptOrder.push(o.value);
+    });
+  }
+
+  function refreshCollabDeptBadges() {
+    var selectedDepts = collabDeptSelect ? Array.prototype.filter.call(collabDeptSelect.options, function (o) { return o.selected; }) : [];
+    if (collabDeptCount) {
+      collabDeptCount.textContent = selectedDepts.length + ' sélectionné' + (selectedDepts.length > 1 ? 's' : '');
+      collabDeptCount.classList.toggle('has-selected', selectedDepts.length > 0);
+    }
+  }
+
   window.toggleCollabDept = function(deptId) {
     var chip = document.querySelector('.collab-dept-chip[data-id="' + deptId + '"]');
     var opt = collabDeptSelect ? collabDeptSelect.querySelector('option[value="' + deptId + '"]') : null;
@@ -952,10 +975,26 @@ textarea.fi { resize: vertical; min-height: 140px; }
     var check = chip.querySelector('.chip-check');
     if (check) check.style.display = isActive ? 'inline-flex' : 'none';
 
-    var selectedDepts = collabDeptSelect ? Array.prototype.filter.call(collabDeptSelect.options, function (o) { return o.selected; }) : [];
-    if (collabDeptCount) {
-      collabDeptCount.textContent = selectedDepts.length + ' sélectionné' + (selectedDepts.length > 1 ? 's' : '');
-      collabDeptCount.classList.toggle('has-selected', selectedDepts.length > 0);
+    if (isActive) {
+      if (activeDeptOrder.indexOf(deptId) === -1) activeDeptOrder.push(deptId);
+    } else {
+      var idx = activeDeptOrder.indexOf(deptId);
+      if (idx !== -1) activeDeptOrder.splice(idx, 1);
+    }
+
+    refreshCollabDeptBadges();
+
+    // Sync main department with primary active collab department
+    if (activeDeptOrder.length > 0 && deptSelect) {
+      if (deptSelect.value !== activeDeptOrder[0]) {
+        deptSelect.value = activeDeptOrder[0];
+        previousModifierMainDept = activeDeptOrder[0];
+        filterAgents();
+      }
+    } else if (activeDeptOrder.length === 0 && deptSelect) {
+      deptSelect.value = '';
+      previousModifierMainDept = '';
+      filterAgents();
     }
 
     updateCollabUsers();
@@ -994,10 +1033,19 @@ textarea.fi { resize: vertical; min-height: 140px; }
   function updateCollabUsers() {
     if (!collabUsersContainer) return;
 
+    // Collect active department IDs preserving chronological activation order
     var activeDeptIds = [];
     if (collabDeptSelect) {
+      activeDeptOrder.forEach(function(dId) {
+        var opt = collabDeptSelect.querySelector('option[value="' + dId + '"]');
+        if (opt && opt.selected && activeDeptIds.indexOf(dId) === -1) {
+          activeDeptIds.push(dId);
+        }
+      });
       Array.prototype.forEach.call(collabDeptSelect.options, function (o) {
-        if (o.selected) activeDeptIds.push(o.value);
+        if (o.selected && activeDeptIds.indexOf(o.value) === -1) {
+          activeDeptIds.push(o.value);
+        }
       });
     }
 
@@ -1013,18 +1061,47 @@ textarea.fi { resize: vertical; min-height: 140px; }
       return;
     }
 
-    var filteredUsers = allCollabUsersData.filter(function (u) {
-      return activeDeptIds.indexOf(u.deptId) !== -1;
-    });
-
     if (collabNoDeptPrompt) collabNoDeptPrompt.style.display = 'none';
-    collabUsersContainer.style.display = 'grid';
+    collabUsersContainer.style.display = 'flex';
+    collabUsersContainer.style.flexDirection = 'column';
+    collabUsersContainer.style.gap = '12px';
     collabUsersContainer.innerHTML = '';
 
-    if (filteredUsers.length === 0) {
-      collabUsersContainer.innerHTML = '<div style="grid-column: 1 / -1; padding: 14px; text-align: center; color: var(--text-muted); font-size: 12px;">Aucun collaborateur trouvé dans les départements sélectionnés.</div>';
-    } else {
-      filteredUsers.forEach(function (user) {
+    var totalRendered = 0;
+
+    activeDeptIds.forEach(function (deptId) {
+      var deptOpt = collabDeptSelect ? collabDeptSelect.querySelector('option[value="' + deptId + '"]') : null;
+      var deptName = deptOpt ? deptOpt.textContent.trim() : (deptSelect && deptSelect.options[deptSelect.selectedIndex] ? deptSelect.options[deptSelect.selectedIndex].textContent.trim() : 'Département');
+
+      var deptUsers = allCollabUsersData.filter(function (u) {
+        return u.deptId === deptId;
+      }).sort(function (a, b) {
+        return a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' });
+      });
+
+      if (deptUsers.length === 0) return;
+      totalRendered += deptUsers.length;
+
+      var groupSection = document.createElement('div');
+      groupSection.className = 'collab-dept-group';
+      groupSection.setAttribute('data-dept-id', deptId);
+      groupSection.style.cssText = 'border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px; background: var(--surface-1);';
+
+      var groupHeader = document.createElement('div');
+      groupHeader.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dashed var(--border-subtle);';
+      groupHeader.innerHTML = 
+        '<div style="display:flex; align-items:center; gap:6px;">' +
+          '<div style="width:18px; height:18px; border-radius:4px; background:rgba(232,33,63,0.1); color:#dc2626; display:flex; align-items:center; justify-content:center; font-size:10px;">' +
+            '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>' +
+          '</div>' +
+          '<span style="font-size:12px; font-weight:700; color:var(--text-primary);">' + deptName + '</span>' +
+        '</div>' +
+        '<span style="font-size:10.5px; font-weight:600; color:var(--text-muted);">' + deptUsers.length + ' membre(s)</span>';
+
+      var usersGrid = document.createElement('div');
+      usersGrid.style.cssText = 'display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px;';
+
+      deptUsers.forEach(function (user) {
         var opt = collabUsersSelect.querySelector('option[value="' + user.id + '"]');
         var isSelected = opt ? opt.selected : false;
         var initials = getInitials(user.name);
@@ -1050,8 +1127,16 @@ textarea.fi { resize: vertical; min-height: 140px; }
           '</div>' +
           '<div class="collab-check-box">' + checkIcon + '</div>';
 
-        collabUsersContainer.appendChild(card);
+        usersGrid.appendChild(card);
       });
+
+      groupSection.appendChild(groupHeader);
+      groupSection.appendChild(usersGrid);
+      collabUsersContainer.appendChild(groupSection);
+    });
+
+    if (totalRendered === 0) {
+      collabUsersContainer.innerHTML = '<div style="padding: 14px; text-align: center; color: var(--text-muted); font-size: 12px;">Aucun collaborateur trouvé dans les départements sélectionnés.</div>';
     }
 
     renderSelectedCollabChips();
@@ -1102,11 +1187,80 @@ textarea.fi { resize: vertical; min-height: 140px; }
       var name = item.getAttribute('data-name') || '';
       item.style.display = (name.indexOf(query) !== -1) ? 'flex' : 'none';
     });
+    document.querySelectorAll('.collab-dept-group').forEach(function(group) {
+      var visibleInGroup = group.querySelectorAll('.collab-agent-card[style*="display: flex"]').length;
+      if (!query) {
+        group.style.display = 'block';
+      } else {
+        group.style.display = visibleInGroup > 0 ? 'block' : 'none';
+      }
+    });
   };
+
+  var previousModifierMainDept = deptSelect ? deptSelect.value : '';
 
   if (deptSelect) {
     deptSelect.addEventListener('change', function() {
+      var newDeptId = deptSelect.value;
       filterAgents();
+
+      var routingVal = document.querySelector('input[name="routing_type"]:checked') ? document.querySelector('input[name="routing_type"]:checked').value : 'all';
+      
+      if (routingVal === 'collab') {
+        if (previousModifierMainDept && previousModifierMainDept !== newDeptId && collabDeptSelect) {
+          var prevOpt = collabDeptSelect.querySelector('option[value="' + previousModifierMainDept + '"]');
+          var prevChip = document.querySelector('.collab-dept-chip[data-id="' + previousModifierMainDept + '"]');
+          if (prevOpt && prevChip) {
+            prevOpt.selected = false;
+            prevChip.classList.remove('active');
+            var prevCheck = prevChip.querySelector('.chip-check');
+            if (prevCheck) prevCheck.style.display = 'none';
+            var pIdx = activeDeptOrder.indexOf(previousModifierMainDept);
+            if (pIdx !== -1) activeDeptOrder.splice(pIdx, 1);
+          }
+        }
+
+        if (newDeptId && collabDeptSelect) {
+          var newOpt = collabDeptSelect.querySelector('option[value="' + newDeptId + '"]');
+          var newChip = document.querySelector('.collab-dept-chip[data-id="' + newDeptId + '"]');
+          if (newOpt && newChip) {
+            newOpt.selected = true;
+            newChip.classList.add('active');
+            var newCheck = newChip.querySelector('.chip-check');
+            if (newCheck) newCheck.style.display = 'inline-flex';
+            if (activeDeptOrder.indexOf(newDeptId) === -1) activeDeptOrder.push(newDeptId);
+          }
+        }
+      } else {
+        // Reset old collab selections if changed outside collab mode
+        if (collabDeptSelect) {
+          Array.prototype.forEach.call(collabDeptSelect.options, function(o) { o.selected = false; });
+          document.querySelectorAll('.collab-dept-chip').forEach(function(c) {
+            c.classList.remove('active');
+            var chk = c.querySelector('.chip-check');
+            if (chk) chk.style.display = 'none';
+          });
+          activeDeptOrder = [];
+          if (newDeptId) {
+            var nOpt = collabDeptSelect.querySelector('option[value="' + newDeptId + '"]');
+            var nChip = document.querySelector('.collab-dept-chip[data-id="' + newDeptId + '"]');
+            if (nOpt && nChip) {
+              nOpt.selected = true;
+              nChip.classList.add('active');
+              var nChk = nChip.querySelector('.chip-check');
+              if (nChk) nChk.style.display = 'inline-flex';
+              activeDeptOrder.push(newDeptId);
+            }
+          }
+        }
+        if (collabUsersSelect) {
+          Array.prototype.forEach.call(collabUsersSelect.options, function(uo) { uo.selected = false; });
+          renderSelectedCollabChips();
+        }
+      }
+
+      previousModifierMainDept = newDeptId;
+      refreshCollabDeptBadges();
       updateCollabUsers();
     });
   }

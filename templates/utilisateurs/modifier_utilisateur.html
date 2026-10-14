@@ -163,13 +163,9 @@
         </div>
 
         <div class="input-row" style="margin-bottom:0;">
-          <div class="input-group" style="margin-bottom:0;">
+          <div class="input-group" style="margin-bottom:0; width:100%;">
             <label class="input-label" for="poste">Intitulé du poste</label>
             <input type="text" id="poste" name="poste" class="input-field" placeholder="ex. Ingénieur support" value="{{ request.form.get('poste', utilisateur.poste or '') }}">
-          </div>
-          <div class="input-group" style="margin-bottom:0;">
-            <label class="input-label" for="matricule">Identifiant RH / Matricule</label>
-            <input type="text" id="matricule" name="matricule" class="input-field" placeholder="ex. EMP-0042" value="{{ request.form.get('matricule', utilisateur.matricule or '') }}">
           </div>
         </div>
       </div>

@@ -33,19 +33,28 @@ Cosmitto Coffee opère plusieurs points de vente (POS). Cosmicenter permet à ch
 ### Tickets
 - 5 types : incident, demande, besoin, plainte, tâche
 - Numérotation automatique (ex. `TK-2026-0042`)
+- Routage flexible : Département, Agent spécifique, ou **Collaboration multi-départements & multi-agents**
 - Catégories regroupées par département avec attribution automatique
 - Priorité calculée automatiquement via matrice Impact × Urgence
-- Sous-tâches, pièces jointes, commentaires (publics ou internes)
+- Sous-tâches, pièces jointes avec prévisualisation miniatures et visualiseur Lightbox in-tab
 - Historique d'audit complet de chaque modification
 - Évaluation de satisfaction (1–5 étoiles)
 - Suivi SLA : temps de première réponse et de résolution
 
 ### Utilisateurs
-- Profils complets : nom, poste, matricule, département, photo
-- Vue liste avec avatars colorés par département
-- Filtres : recherche, rôle, département, statut
+- Profils complets : nom, poste, département / point de vente, entreprise, photo
+- Vue liste avec avatars dynamiques colorés et surbrillance au survol
+- Tri interactif par clic de colonne (nom, e-mail, rôle, département)
+- Filtres : recherche instantanée, rôle, département, point de vente, statut
 - Activation / désactivation / réactivation
 - Statistiques par utilisateur (tickets créés, assignés, résolus)
+
+### Points de Vente (PDV)
+- Gestion des cafés du réseau Cosmitto avec KPI opérationnels et effectifs
+- Distinction visuelle ambrée avec icône dédiée pour les équipes terrain en PDV
+
+### Entreprises
+- Gestion multi-sociétés (filiales) avec code couleur d'entité et badges visuels
 
 ### Départements
 - Création avec code unique, couleur, icône, responsable

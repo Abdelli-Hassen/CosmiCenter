@@ -434,8 +434,35 @@ def detail(ticket_id):
     commentaires = Commentaire.query.filter_by(ticket_id=ticket_id)\
         .order_by(Commentaire.date_creation.asc()).all()
     
-    # Récupérer les utilisateurs pour l'assignation
-    utilisateurs = Utilisateur.query.filter_by(actif=True).all()
+    # Récupérer les utilisateurs pour l'assignation (filtrés par le département du ticket et les départements en collaboration si définis)
+    allowed_dept_ids = set()
+    if ticket.departement_id:
+        allowed_dept_ids.add(ticket.departement_id)
+    for cd in ticket.departements_collab:
+        allowed_dept_ids.add(cd.id)
+
+    if allowed_dept_ids:
+        users_query = Utilisateur.query.filter(
+            Utilisateur.actif == True,
+            Utilisateur.departement_id.in_(list(allowed_dept_ids))
+        )
+    else:
+        users_query = Utilisateur.query.filter_by(actif=True)
+
+    assignable_users = set(users_query.all())
+    # Inclure également les collaborateurs individuels explicitement ajoutés au ticket
+    for c_user in ticket.collaborateurs:
+        if c_user.actif:
+            assignable_users.add(c_user)
+
+    # Si le ticket est déjà assigné à quelqu'un d'autre, l'inclure quand même
+    if ticket.assigne_a:
+        assignable_users.add(ticket.assigne_a)
+
+    utilisateurs = sorted(
+        list(assignable_users),
+        key=lambda u: (u.nom_complet or '').strip().upper()
+    )
     
     return render_template('tickets/detail.html',
                          ticket=ticket,

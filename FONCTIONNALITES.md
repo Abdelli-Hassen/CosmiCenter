@@ -11,13 +11,15 @@ Plateforme de gestion des opérations interne de **Cosmitto Coffee** (réseau mu
 3. [Tickets](#3-tickets)
 4. [Annuaire des utilisateurs](#4-annuaire-des-utilisateurs)
 5. [Départements](#5-départements)
-6. [Administration](#6-administration)
-7. [Rapports](#7-rapports)
-8. [Paramètres du compte](#8-paramètres-du-compte)
-9. [API REST](#9-api-rest)
-10. [Modèles de données](#10-modèles-de-données)
-11. [Rôles et permissions](#11-rôles-et-permissions)
-12. [Architecture technique](#12-architecture-technique)
+6. [Points de Vente (PDV)](#6-points-de-vente-pdv)
+7. [Entreprises](#7-entreprises-multi-sociétés)
+8. [Administration](#8-administration)
+9. [Rapports](#9-rapports)
+10. [Paramètres du compte](#10-paramètres-du-compte)
+11. [API REST](#11-api-rest)
+12. [Modèles de données](#12-modèles-de-données)
+13. [Rôles et permissions](#13-rôles-et-permissions)
+14. [Architecture technique](#14-architecture-technique)
 
 ---
 
@@ -83,6 +85,10 @@ Route : `GET/POST /tickets/nouveau`
 - Impact et urgence → calcul automatique de priorité via matrice Impact × Urgence
 - Champs spécifiques par type : article demandé, quantité, unité, nature du besoin, personne concernée, date et lieu d'incident
 - Numéro unique généré automatiquement (ex. `TK-2026-0042`)
+- **Modes d'assignation & Routage** :
+  - *À tout le département* : assignation globale à l'équipe du département.
+  - *À une personne spécifique* : assignation directe à un agent filtré selon le département sélectionné.
+  - *Collaboration (multiples)* : implication de plusieurs départements avec sélection interactive par tags. Pré-sélectionne automatiquement le département principal et filtre la liste des collaborateurs éligibles uniquement parmi les membres des départements participants.
 
 ### 3.3 Détail d'un ticket
 
@@ -90,17 +96,21 @@ Route : `GET /tickets/<id>`
 
 - Affichage complet : description, historique, commentaires, pièces jointes, sous-tâches
 - Contrôle d'accès : créateur, agent assigné, ou admin/manager
-- Assignation d'un agent
-- Ajout de commentaires (publics ou internes)
-- Fermeture du ticket
+- Section **Collaboration** : visualisation des départements associés et des membres collaborateurs
+- Assignation d'un agent avec bouton explicite "Enregistrer" / "Annuler"
+- Visualiseur de médias : prévisualisation en cartes miniatures des images jointes et agrandissement dans la même page via une modale Lightbox avec fond flouté
+- Ajout de commentaires (publics ou internes) avec pièces jointes multiples
+- Fermeture du ticket via bouton d'action directe
 
 ### 3.4 Modifier un ticket
 
 Route : `GET/POST /tickets/<id>/modifier`
 
 - Modification du titre, description, priorité, statut, type, département et catégorie (filtrée par département)
+- Mode d'assignation (département, spécifique, ou collaboration multiple avec sélection interactive)
 - Assignation (réservée aux admins/managers)
 - Enregistrement automatique dans l'historique : titre, type, priorité, statut, description, département, catégorie et assignation
+- Bouton de retour rapide vers le détail du ticket
 
 ### 3.5 Commenter un ticket
 
@@ -142,14 +152,16 @@ Chaque modification d'un ticket crée une entrée d'audit :
 Route : `GET /utilisateurs/`
 
 - Liste de tous les utilisateurs (pagination 50 par page)
-- Filtres : recherche (nom, prénom, e-mail, matricule), rôle, département, statut actif/inactif
-- Vue en liste horizontale : avatar coloré par département, nom, poste, e-mail, rôle, département, statut, dernière connexion
+- Filtres : recherche instantanée (nom, prénom, e-mail), rôle, département, point de vente (PDV), statut actif/inactif
+- Tri dynamique par clic sur les colonnes (Nom, E-mail, Rôle, Département)
+- Vue en liste avec surbrillance au survol, avatars colorés, nom, poste, e-mail, rôle, département / PDV (avec distinction visuelle ambrée pour les équipes en point de vente), statut
+- Rattachement d'entreprise avec badge coloré
 
 ### 4.1 Profil utilisateur
 
 Route : `GET /utilisateurs/<id>`
 
-- Informations complètes : nom, poste, département, e-mail, téléphone, matricule
+- Informations complètes : nom, poste, département / PDV, entreprise, e-mail, téléphone
 - Statistiques : tickets créés, tickets en cours assignés, tickets résolus, commentaires
 - 10 derniers tickets récents
 
@@ -157,7 +169,7 @@ Route : `GET /utilisateurs/<id>`
 
 Route : `GET/POST /utilisateurs/nouveau`
 
-Champs : nom, prénom, e-mail, mot de passe, rôle, département, téléphone, poste, matricule (unique)
+Champs : nom, prénom, e-mail, mot de passe, rôle, département, point de vente, entreprise, téléphone, poste
 
 ### 4.3 Modifier un utilisateur
 
@@ -166,13 +178,13 @@ Route : `GET/POST /utilisateurs/<id>/modifier`
 - Auto-modification limitée (pas de changement de rôle)
 - Admin : modification complète
 - Changement de mot de passe optionnel
-- Validation unicité e-mail et matricule
+- Validation de l'unicité de l'e-mail
 
 ### 4.4 Activer / Désactiver
 
 Route : `POST /utilisateurs/<id>/toggle-actif`
 
-Blocage de la déconnexion sur son propre compte.
+Blocage de la désactivation sur son propre compte.
 
 ### 4.5 Supprimer
 
@@ -229,7 +241,33 @@ Routes : `GET/POST /departements/nouveau` · `GET/POST /departements/<id>/modifi
 
 ---
 
-## 6. Administration
+## 6. Points de Vente (PDV)
+
+Route : `GET /pdv/`
+
+Le module Points de Vente centralise la gestion du réseau de cafés Cosmitto :
+- Liste avec recherche, filtres par catégorie (Urbain, Mall, Drive, etc.) et statut opérationnel.
+- Détail d'un PDV (`GET /pdv/<id>`) :
+  - Métriques clés (Effectif, tickets ouverts, taux de résolution).
+  - Équipe rattachée au point de vente.
+  - Historique et tableau des tickets d'incidents / demandes liés au PDV.
+  - Coordonnées, localisation géographique et gérant.
+- Thème visuel distinctif : dans l'annuaire et les tickets, les équipes en PDV sont mises en valeur avec une palette ambrée et une icône boutique pour les distinguer immédiatement des départements du siège.
+
+---
+
+## 7. Entreprises (Multi-Sociétés)
+
+Route : `GET /companies/`
+
+Permet la structuration des filiales et entités juridiques du groupe (Cosmitto Coffee, etc.) :
+- Liste et détail des entreprises (`GET /companies/<id>`).
+- Code couleur d'entreprise personnalisé.
+- Rattachement automatique des utilisateurs et affichage de badges stylisés sur les profils et l'annuaire.
+
+---
+
+## 8. Administration
 
 Accès réservé aux utilisateurs avec `role.niveau >= 70`.
 

@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from models import db, Utilisateur, Role, Departement
+from models import db, Utilisateur, Role, Departement, Entreprise, PointDeVente
 from werkzeug.utils import secure_filename
 from functools import wraps
 import os
@@ -9,14 +9,12 @@ from datetime import datetime
 utilisateurs_bp = Blueprint('utilisateurs', __name__)
 
 
-from functools import wraps
-
 def require_permission(permission_code):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated or not current_user.has_permission(permission_code):
-                flash('éccès non autorisé.', 'danger')
+                flash('Accès non autorisé.', 'danger')
                 return redirect(request.referrer or url_for('tickets.tableau_bord'))
             return f(*args, **kwargs)
         return decorated_function
@@ -28,7 +26,6 @@ def liste():
     """Liste tous les utilisateurs"""
     page = request.args.get('page', 1, type=int)
     per_page = 50
-    
     
     if current_user.has_permission('utilisateurs.voir_tous'):
         base_query = Utilisateur.query
@@ -42,13 +39,28 @@ def liste():
     query = base_query
         
     # Filtres
-    search = request.args.get('search', '')
+    search = request.args.get('search', '').strip()
     if search:
+        search_pattern = f'%{search}%'
+        from sqlalchemy import or_, func, case
+        # If the search does not contain '@', only match the local username part (before '@')
+        # using split_part (supported across PostgreSQL and SQLAlchemy)
+        if '@' in search:
+            email_condition = Utilisateur.email.ilike(search_pattern)
+        else:
+            email_local_part = func.split_part(Utilisateur.email, '@', 1)
+            email_condition = email_local_part.ilike(search_pattern)
+
+        # Match individual fields or combined "prenom nom" / "nom prenom"
         query = query.filter(
-            (Utilisateur.nom.contains(search)) |
-            (Utilisateur.prenom.contains(search)) |
-            (Utilisateur.email.contains(search)) |
-            (Utilisateur.matricule.contains(search))
+            or_(
+                Utilisateur.nom.ilike(search_pattern),
+                Utilisateur.prenom.ilike(search_pattern),
+                (func.concat(Utilisateur.prenom, ' ', Utilisateur.nom)).ilike(search_pattern),
+                (func.concat(Utilisateur.nom, ' ', Utilisateur.prenom)).ilike(search_pattern),
+                email_condition,
+                Utilisateur.poste.ilike(search_pattern)
+            )
         )
     
     role_filter = request.args.get('role', '')
@@ -59,27 +71,110 @@ def liste():
     if dept_filter:
         query = query.filter_by(departement_id=dept_filter)
     
+    entreprise_filter = request.args.get('entreprise', '')
+    if entreprise_filter:
+        query = query.filter_by(entreprise_id=entreprise_filter)
+    
     actif_filter = request.args.get('actif', '')
     if actif_filter == '1':
         query = query.filter_by(actif=True)
     elif actif_filter == '0':
         query = query.filter_by(actif=False)
     
-    utilisateurs = query.order_by(Utilisateur.prenom.asc(), Utilisateur.nom.asc()).paginate(
+    # Sorting / Order By
+    sort_by = request.args.get('sort_by', '').strip()
+    order = request.args.get('order', 'asc').lower().strip()
+    if order not in ['asc', 'desc']:
+        order = 'asc'
+    is_desc = (order == 'desc')
+
+    order_clauses = []
+    
+    if sort_by:
+        from sqlalchemy import func
+        if sort_by == 'nom':
+            order_clauses = [Utilisateur.nom.desc() if is_desc else Utilisateur.nom.asc(),
+                             Utilisateur.prenom.desc() if is_desc else Utilisateur.prenom.asc()]
+        elif sort_by == 'prenom':
+            order_clauses = [Utilisateur.prenom.desc() if is_desc else Utilisateur.prenom.asc(),
+                             Utilisateur.nom.desc() if is_desc else Utilisateur.nom.asc()]
+        elif sort_by == 'email':
+            order_clauses = [Utilisateur.email.desc() if is_desc else Utilisateur.email.asc()]
+        elif sort_by == 'entreprise':
+            query = query.outerjoin(Entreprise, Utilisateur.entreprise_id == Entreprise.id)
+            order_clauses = [Entreprise.nom.desc() if is_desc else Entreprise.nom.asc(),
+                             Utilisateur.prenom.asc()]
+        elif sort_by == 'role':
+            query = query.outerjoin(Role, Utilisateur.role_id == Role.id)
+            order_clauses = [Role.nom.desc() if is_desc else Role.nom.asc(),
+                             Utilisateur.prenom.asc()]
+        elif sort_by in ['departement', 'pdv']:
+            query = query.outerjoin(Departement, Utilisateur.departement_id == Departement.id)\
+                         .outerjoin(PointDeVente, Utilisateur.pdv_id == PointDeVente.id)
+            dept_or_pdv_name = func.coalesce(Departement.nom, PointDeVente.nom, '')
+            order_clauses = [dept_or_pdv_name.desc() if is_desc else dept_or_pdv_name.asc(),
+                             Utilisateur.prenom.asc()]
+        elif sort_by == 'statut':
+            order_clauses = [Utilisateur.actif.desc() if is_desc else Utilisateur.actif.asc(),
+                             Utilisateur.prenom.asc()]
+        elif sort_by == 'connexion':
+            order_clauses = [Utilisateur.derniere_connexion.desc().nullslast() if is_desc else Utilisateur.derniere_connexion.asc().nullslast(),
+                             Utilisateur.prenom.asc()]
+
+    # If no explicit sorting selected but search is present, score relevance
+    if not order_clauses:
+        if search:
+            from sqlalchemy import func, case
+            exact = search
+            prefix = f'{search}%'
+            like_word = f'% {search}%'
+            full_name = func.concat(Utilisateur.prenom, ' ', Utilisateur.nom)
+            full_name_rev = func.concat(Utilisateur.nom, ' ', Utilisateur.prenom)
+
+            # Relevance score: lower number = higher relevance
+            relevance_score = case(
+                # Tier 1: Exact matches on name or exact email username
+                (Utilisateur.prenom.ilike(exact), 1),
+                (Utilisateur.nom.ilike(exact), 1),
+                (full_name.ilike(exact), 2),
+                # Tier 2: Word starts with search term (e.g. "IT Administrateur" when searching "IT")
+                (Utilisateur.prenom.ilike(prefix), 4),
+                (Utilisateur.nom.ilike(prefix), 5),
+                (full_name.ilike(prefix), 5),
+                (full_name_rev.ilike(prefix), 5),
+                (Utilisateur.poste.ilike(prefix), 6),
+                (Utilisateur.poste.ilike(like_word), 7),
+                (email_condition if '@' in search else email_local_part.ilike(prefix), 8),
+                # Tier 3: Substring matches
+                (Utilisateur.prenom.ilike(search_pattern), 9),
+                (Utilisateur.nom.ilike(search_pattern), 10),
+                (Utilisateur.poste.ilike(search_pattern), 11),
+                else_=12
+            )
+            order_clauses = [relevance_score.asc(), Utilisateur.prenom.asc(), Utilisateur.nom.asc()]
+        else:
+            order_clauses = [Utilisateur.prenom.asc(), Utilisateur.nom.asc()]
+
+    utilisateurs = query.order_by(*order_clauses).paginate(
         page=page, per_page=per_page, error_out=False
     )
     
     roles = Role.query.filter_by(actif=True).all()
     departements = Departement.query.filter_by(actif=True).all()
+    entreprises = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom.asc()).all()
     
     return render_template('utilisateurs/liste.html',
                          utilisateurs=utilisateurs,
                          roles=roles,
                          departements=departements,
+                         entreprises=entreprises,
                          search=search,
                          role_filter=role_filter,
                          dept_filter=dept_filter,
+                         entreprise_filter=entreprise_filter,
                          actif_filter=actif_filter,
+                         sort_by=sort_by,
+                         order=order,
                          total_actifs=total_actifs,
                          total_inactifs=total_inactifs)
 
@@ -96,7 +191,6 @@ def nouveau():
         password = request.form.get('password', '').strip()
         telephone = request.form.get('telephone', '').strip()
         poste = request.form.get('poste', '').strip()
-        matricule = request.form.get('matricule', '').strip()
         role_id = request.form.get('role_id', '').strip() or None
         departement_id = request.form.get('departement_id', '').strip() or None
         
@@ -124,15 +218,6 @@ def nouveau():
                                  entreprises=entreprises_all,
                                  pdvs=pdvs_all)
         
-        # Vérifier le matricule unique
-        if matricule and Utilisateur.query.filter_by(matricule=matricule).first():
-            flash('Un utilisateur avec ce matricule existe déjà.', 'danger')
-            return render_template('utilisateurs/nouveau_utilisateur.html',
-                                 roles=roles_all,
-                                 departements=departements_all,
-                                 entreprises=entreprises_all,
-                                 pdvs=pdvs_all)
-        
         # Créer l'utilisateur
         entreprise_id = request.form.get('entreprise_id', '').strip() or None
         pdv_id = request.form.get('pdv_id', '').strip() or None
@@ -142,7 +227,7 @@ def nouveau():
             email=email,
             telephone=telephone if telephone else None,
             poste=poste if poste else None,
-            matricule=matricule if matricule else None,
+            matricule=None,
             anydesk_id=request.form.get('anydesk_id', '').strip() or None,
             anydesk_password=request.form.get('anydesk_password', '').strip() or None,
             teamviewer_id=request.form.get('teamviewer_id', '').strip() or None,
@@ -227,7 +312,6 @@ def modifier(id):
         email = request.form.get('email', '').strip().lower()
         telephone = request.form.get('telephone', '').strip()
         poste = request.form.get('poste', '').strip()
-        matricule = request.form.get('matricule', '').strip()
         
         # Les admins ou ceux ayant utilisateurs.modifier peuvent modifier plus de champs
         if current_user.has_permission('utilisateurs.modifier'):
@@ -271,25 +355,12 @@ def modifier(id):
                                  entreprises=entreprises_all,
                                  pdvs=pdvs_all)
         
-        # Vérifier le matricule unique
-        if matricule:
-            existing = Utilisateur.query.filter_by(matricule=matricule).first()
-            if existing and existing.id != utilisateur.id:
-                flash('Un utilisateur avec ce matricule existe déjà.', 'danger')
-                return render_template('utilisateurs/modifier_utilisateur.html',
-                                     utilisateur=utilisateur,
-                                     roles=roles_all,
-                                     departements=departements_all,
-                                     entreprises=entreprises_all,
-                                     pdvs=pdvs_all)
-        
         # Mettre à jour
         utilisateur.nom = nom
         utilisateur.prenom = prenom
         utilisateur.email = email
         utilisateur.telephone = telephone if telephone else None
         utilisateur.poste = poste if poste else None
-        utilisateur.matricule = matricule if matricule else None
         utilisateur.anydesk_id = request.form.get('anydesk_id', '').strip() or None
         utilisateur.anydesk_password = request.form.get('anydesk_password', '').strip() or None
         utilisateur.teamviewer_id = request.form.get('teamviewer_id', '').strip() or None

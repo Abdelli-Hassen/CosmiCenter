@@ -5,6 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from models import db, Utilisateur
 from werkzeug.security import check_password_hash
+from datetime import datetime
 import logging
 
 # Créer le blueprint
@@ -46,8 +47,9 @@ def connexion():
                     logger.warning(f"Tentative de connexion d'un compte désactivé: {email}")
                     return render_template('auth/connexion.html')
                 
-                # Réinitialiser les tentatives de connexion
+                # Réinitialiser les tentatives de connexion et mettre à jour la date de dernière connexion
                 utilisateur.tentatives_connexion = 0
+                utilisateur.derniere_connexion = datetime.utcnow()
                 db.session.commit()
                 
                 # Connecter l'utilisateur

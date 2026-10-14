@@ -154,7 +154,7 @@
   <form method="GET" action="{{ url_for('admin.utilisateurs') }}" id="filterForm" class="filter-bar">
     <div class="search-wrap">
       <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" name="search" class="search-input" placeholder="Rechercher (Nom, email...)" value="{{ request.args.get('search', '') }}" autocomplete="off" onchange="this.form.submit()">
+      <input type="text" name="search" class="search-input" placeholder="Rechercher (Nom, email, poste...)" value="{{ request.args.get('search', '') }}" autocomplete="off" oninput="clearTimeout(this._t);this._t=setTimeout(()=>this.form.submit(),400)">
     </div>
 
     <select name="role_id" class="filter-select" onchange="this.form.submit()">
@@ -228,7 +228,7 @@
             <td>
               <div class="user-identity">
                 <span class="user-name">{{ u.prenom }} {{ u.nom }}</span>
-                <span class="user-poste">{{ u.poste or '—' }} {% if u.matricule %}• {{ u.matricule }}{% endif %}</span>
+                <span class="user-poste">{{ u.poste or '—' }}</span>
               </div>
             </td>
             
@@ -255,13 +255,27 @@
               {% endif %}
             </td>
             
-            <!-- Dept -->
+            <!-- Dept / PDV -->
             <td>
               {% if u.departement %}
               <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--text-secondary);">
                 <span style="width:8px; height:8px; border-radius:50%; background:{{ dept_color }};"></span>
                 {{ u.departement.nom }}
               </div>
+              {% elif u.pdv %}
+              <span style="display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 6px; border-radius:999px; font-size:11.5px; font-weight:700; background:linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(217,119,6,0.08) 100%); color:#b45309; border:1px solid rgba(245,158,11,0.28); box-shadow:0 1px 2px rgba(245,158,11,0.05);">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:#f59e0b; color:#fff; flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:10px; height:10px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </span>
+                {{ u.pdv.nom }}
+              </span>
+              {% elif u.role and ('point de vente' in u.role.nom|lower or 'pdv' in u.role.nom|lower) %}
+              <span style="display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 6px; border-radius:999px; font-size:11.5px; font-weight:700; background:var(--surface-2); color:var(--text-secondary); border:1px solid var(--border-subtle);">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:var(--text-muted); color:#fff; flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:10px; height:10px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </span>
+                Point de vente
+              </span>
               {% else %}
               <span style="color:var(--text-muted); font-weight:600;">—</span>
               {% endif %}

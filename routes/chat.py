@@ -133,10 +133,25 @@ def send_message():
 @chat_bp.route('/api/users')
 @login_required
 def get_users():
-    users = Utilisateur.query.filter(Utilisateur.id != current_user.id, Utilisateur.actif == True).all()
+    q = request.args.get('q', '').strip()
+    query = Utilisateur.query.filter(Utilisateur.id != current_user.id, Utilisateur.actif == True)
+    if q:
+        like_pat = f"%{q}%"
+        query = query.filter(
+            or_(
+                Utilisateur.prenom.ilike(like_pat),
+                Utilisateur.nom.ilike(like_pat),
+                (func.concat(Utilisateur.prenom, ' ', Utilisateur.nom)).ilike(like_pat),
+                (func.concat(Utilisateur.nom, ' ', Utilisateur.prenom)).ilike(like_pat),
+                Utilisateur.email.ilike(like_pat)
+            )
+        )
+    users = query.order_by(Utilisateur.prenom.asc(), Utilisateur.nom.asc()).all()
     return jsonify([{
         'id': u.id,
         'name': f"{u.prenom} {u.nom}",
         'initials': f"{u.prenom[0]}{u.nom[0]}".upper(),
-        'photo_profil': u.photo_profil if u.photo_profil else None
+        'photo_profil': u.photo_profil if u.photo_profil else None,
+        'poste': u.poste or '',
+        'departement': u.departement.nom if u.departement else (u.pdv.nom if u.pdv else '')
     } for u in users])

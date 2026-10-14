@@ -978,16 +978,6 @@
       </a>
     </div>
 
-    <!-- Quick ID Chip -->
-    {% if utilisateur.matricule %}
-    <div style="display:inline-flex; align-items:center; gap:8px; background:var(--surface-1); border:1px solid var(--border-subtle); padding:6px 12px; border-radius:10px; font-size:12px; color:var(--text-secondary); box-shadow:var(--shadow-xs);">
-      <span style="color:var(--text-muted); font-weight:600;">Matricule</span>
-      <span class="code-pill">{{ utilisateur.matricule }}</span>
-      <button class="copy-btn" onclick="copyText('{{ utilisateur.matricule }}', this)" title="Copier le matricule">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-      </button>
-    </div>
-    {% endif %}
   </div>
 
   <!-- ═════ Hero Profile Banner ═════ -->
@@ -1245,24 +1235,7 @@
           </div>
         </div>
 
-        <div class="user-prop-row">
-          <div class="user-prop-lead">
-            <div class="user-prop-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h0"/><path d="M2 9.5h20"/></svg>
-            </div>
-            <span class="user-prop-label">Matricule</span>
-          </div>
-          <div class="user-prop-val">
-            {% if utilisateur.matricule %}
-              <span class="code-pill">{{ utilisateur.matricule }}</span>
-              <button class="copy-btn" onclick="copyText('{{ utilisateur.matricule }}', this)" title="Copier le matricule">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              </button>
-            {% else %}
-              <span style="color:var(--text-muted); font-weight:500;">Non assigné</span>
-            {% endif %}
-          </div>
-        </div>
+
 
         <div class="user-prop-row">
           <div class="user-prop-lead">

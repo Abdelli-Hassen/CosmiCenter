@@ -303,14 +303,16 @@
           <td>
             {% if ticket.assigne_a %}
             <div style="display: flex; align-items: center; gap: 8px;">
-              <div class="user-avatar avatar-xs" style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; background: var(--surface-raised); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; flex-shrink: 0;">
+              {% set dept_c = ticket.assigne_a.departement.couleur if ticket.assigne_a.departement and ticket.assigne_a.departement.couleur else '#dc2626' %}
+              {% set initials = (ticket.assigne_a.prenom[0]|upper if ticket.assigne_a.prenom else '') ~ (ticket.assigne_a.nom[0]|upper if ticket.assigne_a.nom else '') %}
+              <div style="width: 26px; height: 26px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, {{ dept_c }}, color-mix(in srgb, {{ dept_c }} 75%, #000)); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 {% if ticket.assigne_a.photo_profil %}
-                <img src="{{ url_for('static', filename='uploads/' + ticket.assigne_a.photo_profil) }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                <img src="{{ url_for('static', filename='uploads/' + ticket.assigne_a.photo_profil) }}" alt="{{ ticket.assigne_a.prenom }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerHTML='{{ initials }}';">
                 {% else %}
-                {{ ticket.assigne_a.prenom[0]|upper }}
+                {{ initials }}
                 {% endif %}
               </div>
-              <span style="font-size: 13px; font-weight: 500; color: var(--text-primary);">{{ ticket.assigne_a.prenom }} {{ ticket.assigne_a.nom }}</span>
+              <span style="font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.2;">{{ ticket.assigne_a.prenom }} {{ ticket.assigne_a.nom }}</span>
             </div>
             {% else %}
             <span style="font-size: 13px; color: var(--text-muted); font-style: italic;">Non assigné</span>
@@ -319,7 +321,15 @@
           
           <td>
             {% if ticket.departement %}
-            <span style="font-size: 13px; color: var(--text-secondary);">{{ ticket.departement.nom }}</span>
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <span style="font-size: 13px; font-weight: 500; color: var(--text-secondary);">{{ ticket.departement.nom }}</span>
+              {% if ticket.departements_collab %}
+              <span style="font-size: 11px; font-weight: 600; color: #2563eb; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 4px; padding: 1px 5px; width: fit-content; display: inline-flex; align-items: center; gap: 3px;" title="{{ ticket.departements_collab | map(attribute='nom') | join(', ') }}">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                +{{ ticket.departements_collab | length }} collab
+              </span>
+              {% endif %}
+            </div>
             {% else %}
             <span style="font-size: 13px; color: var(--text-muted);">—</span>
             {% endif %}

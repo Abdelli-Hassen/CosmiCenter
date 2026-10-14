@@ -46,11 +46,12 @@ def liste():
     
     query = Departement.query
     
-    search = request.args.get('search', '')
+    search = request.args.get('search', '').strip()
     if search:
+        like = f'%{search}%'
         query = query.filter(
-            (Departement.nom.contains(search)) | 
-            (Departement.description.contains(search))
+            (Departement.nom.ilike(like)) | 
+            (Departement.description.ilike(like))
         )
     
     actif_filter = request.args.get('actif', '')

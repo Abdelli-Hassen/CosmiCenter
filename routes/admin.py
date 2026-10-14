@@ -85,11 +85,18 @@ def utilisateurs():
     q = Utilisateur.query
     if search:
         like = f'%{search}%'
+        if '@' in search:
+            email_cond = Utilisateur.email.ilike(like)
+        else:
+            email_cond = db.func.split_part(Utilisateur.email, '@', 1).ilike(like)
+
         q = q.filter(
             db.or_(
                 Utilisateur.nom.ilike(like),
                 Utilisateur.prenom.ilike(like),
-                Utilisateur.email.ilike(like),
+                (db.func.concat(Utilisateur.prenom, ' ', Utilisateur.nom)).ilike(like),
+                (db.func.concat(Utilisateur.nom, ' ', Utilisateur.prenom)).ilike(like),
+                email_cond,
                 Utilisateur.poste.ilike(like),
             )
         )
@@ -99,8 +106,34 @@ def utilisateurs():
         q = q.filter(Utilisateur.actif == (actif_str == '1'))
     if dept_id:
         q = q.filter(Utilisateur.departement_id == dept_id)
+    if search:
+        exact = search
+        prefix = f'{search}%'
+        like_word = f'% {search}%'
+        full_name = db.func.concat(Utilisateur.prenom, ' ', Utilisateur.nom)
+        full_name_rev = db.func.concat(Utilisateur.nom, ' ', Utilisateur.prenom)
 
-    utilisateurs_page = q.order_by(Utilisateur.prenom.asc(), Utilisateur.nom.asc()).paginate(
+        relevance_score = db.case(
+            (Utilisateur.prenom.ilike(exact), 1),
+            (Utilisateur.nom.ilike(exact), 1),
+            (full_name.ilike(exact), 2),
+            (Utilisateur.prenom.ilike(prefix), 3),
+            (Utilisateur.nom.ilike(prefix), 4),
+            (full_name.ilike(prefix), 4),
+            (full_name_rev.ilike(prefix), 4),
+            (Utilisateur.poste.ilike(prefix), 5),
+            (Utilisateur.poste.ilike(like_word), 6),
+            (email_cond if '@' in search else db.func.split_part(Utilisateur.email, '@', 1).ilike(prefix), 7),
+            (Utilisateur.prenom.ilike(like), 8),
+            (Utilisateur.nom.ilike(like), 9),
+            (Utilisateur.poste.ilike(like), 10),
+            else_=11
+        )
+        order_clauses = [relevance_score.asc(), Utilisateur.prenom.asc(), Utilisateur.nom.asc()]
+    else:
+        order_clauses = [Utilisateur.prenom.asc(), Utilisateur.nom.asc()]
+
+    utilisateurs_page = q.order_by(*order_clauses).paginate(
         page=page, per_page=20, error_out=False
     )
 
@@ -128,17 +161,10 @@ def nouvel_utilisateur():
     if request.method == 'POST':
         try:
             email = request.form.get('email', '').strip()
-            matricule = request.form.get('matricule', '').strip() or None
             
             # Vérifier l'unicité de l'email
             if Utilisateur.query.filter_by(email=email).first():
                 flash(f"L'adresse email {email} est déjà  utilisée par un autre compte.", 'danger')
-                from models import Role
-                return render_template('admin/nouvel_utilisateur.html', departements=Departement.query.filter_by(actif=True).all(), roles=Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all())
-            
-            # Vérifier l'unicité du matricule
-            if matricule and Utilisateur.query.filter_by(matricule=matricule).first():
-                flash(f"Le matricule {matricule} est déjà  utilisé.", 'danger')
                 from models import Role
                 return render_template('admin/nouvel_utilisateur.html', departements=Departement.query.filter_by(actif=True).all(), roles=Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all())
 
@@ -155,7 +181,7 @@ def nouvel_utilisateur():
                 entreprise_id=entreprise_id,
                 telephone=request.form.get('telephone', '').strip() or None,
                 poste=request.form.get('poste', '').strip() or None,
-                matricule=matricule,
+                matricule=None,
                 anydesk_id=request.form.get('anydesk_id', '').strip() or None,
                 anydesk_password=request.form.get('anydesk_password', '').strip() or None,
                 teamviewer_id=request.form.get('teamviewer_id', '').strip() or None,
@@ -195,19 +221,12 @@ def modifier_utilisateur(user_id):
     if request.method == 'POST':
         try:
             email = request.form.get('email', '').strip()
-            matricule = request.form.get('matricule', '').strip() or None
             
             # Vérifier l'unicité
             existing_email = Utilisateur.query.filter_by(email=email).first()
             if existing_email and existing_email.id != utilisateur.id:
                 flash(f"L'adresse email {email} est déjà  utilisée par un autre compte.", 'danger')
                 return redirect(url_for('admin.modifier_utilisateur', user_id=user_id))
-                
-            if matricule:
-                existing_mat = Utilisateur.query.filter_by(matricule=matricule).first()
-                if existing_mat and existing_mat.id != utilisateur.id:
-                    flash(f"Le matricule {matricule} est déjà  utilisé.", 'danger')
-                    return redirect(url_for('admin.modifier_utilisateur', user_id=user_id))
 
             utilisateur.nom = request.form.get('nom')
             utilisateur.prenom = request.form.get('prenom')
@@ -218,7 +237,6 @@ def modifier_utilisateur(user_id):
             utilisateur.entreprise_id = request.form.get('entreprise_id') or None
             utilisateur.telephone = request.form.get('telephone', '').strip() or None
             utilisateur.poste = request.form.get('poste', '').strip() or None
-            utilisateur.matricule = matricule
             utilisateur.actif = request.form.get('actif') == '1'
             utilisateur.anydesk_id = request.form.get('anydesk_id', '').strip() or None
             utilisateur.anydesk_password = request.form.get('anydesk_password', '').strip() or None

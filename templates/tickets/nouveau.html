@@ -228,10 +228,10 @@
 
   /* Agent Responsive Grid */
   .collab-agents-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 8px;
-    max-height: 230px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 480px;
     overflow-y: auto;
     padding: 2px;
   }
@@ -761,6 +761,19 @@
       specificUI.style.display = 'block';
     } else if (val === 'collab') {
       collabUI.style.display = 'flex';
+
+      // Ensure the selected main department is active in the collaboration chips
+      var mainDeptId = deptSelect ? deptSelect.value : '';
+      if (mainDeptId && collabDeptSelect) {
+        var opt = collabDeptSelect.querySelector('option[value="' + mainDeptId + '"]');
+        var chip = document.querySelector('.collab-dept-chip[data-id="' + mainDeptId + '"]');
+        if (opt && chip && !opt.selected) {
+          opt.selected = true;
+          chip.classList.add('active');
+          if (activeDeptOrder.indexOf(mainDeptId) === -1) activeDeptOrder.push(mainDeptId);
+        }
+      }
+      refreshCollabDeptBadges();
       if (typeof updateCollabUsers === 'function') updateCollabUsers();
     }
   };
@@ -824,6 +837,9 @@
   var selectedCollabSummary = document.getElementById('selectedCollabSummary');
   var selectedCollabChips = document.getElementById('selectedCollabChips');
 
+  // Track the chronological activation order of departments
+  var activeDeptOrder = [];
+
   // Cache user data
   var allCollabUsersData = [];
   if (collabUsersSelect) {
@@ -857,6 +873,14 @@
     return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
   }
 
+  function refreshCollabDeptBadges() {
+    var selectedDepts = collabDeptSelect ? Array.prototype.filter.call(collabDeptSelect.options, function (o) { return o.selected; }) : [];
+    if (collabDeptCount) {
+      collabDeptCount.textContent = selectedDepts.length + ' sélectionné' + (selectedDepts.length > 1 ? 's' : '');
+      collabDeptCount.classList.toggle('has-selected', selectedDepts.length > 0);
+    }
+  }
+
   window.toggleCollabDept = function(deptId) {
     var chip = document.querySelector('.collab-dept-chip[data-id="' + deptId + '"]');
     var opt = collabDeptSelect ? collabDeptSelect.querySelector('option[value="' + deptId + '"]') : null;
@@ -865,11 +889,28 @@
     var isActive = chip.classList.toggle('active');
     opt.selected = isActive;
     
-    // Update count badge
-    var selectedDepts = collabDeptSelect ? Array.prototype.filter.call(collabDeptSelect.options, function (o) { return o.selected; }) : [];
-    if (collabDeptCount) {
-      collabDeptCount.textContent = selectedDepts.length + ' sélectionné' + (selectedDepts.length > 1 ? 's' : '');
-      collabDeptCount.classList.toggle('has-selected', selectedDepts.length > 0);
+    if (isActive) {
+      if (activeDeptOrder.indexOf(deptId) === -1) activeDeptOrder.push(deptId);
+    } else {
+      var idx = activeDeptOrder.indexOf(deptId);
+      if (idx !== -1) activeDeptOrder.splice(idx, 1);
+    }
+
+    refreshCollabDeptBadges();
+
+    // Sync main department with the primary active collab department
+    if (activeDeptOrder.length > 0 && deptSelect) {
+      if (deptSelect.value !== activeDeptOrder[0]) {
+        deptSelect.value = activeDeptOrder[0];
+        previousMainDept = activeDeptOrder[0];
+        filterCategories();
+        filterAgents();
+      }
+    } else if (activeDeptOrder.length === 0 && deptSelect) {
+      deptSelect.value = '';
+      previousMainDept = '';
+      filterCategories();
+      filterAgents();
     }
 
     updateCollabUsers();
@@ -910,15 +951,24 @@
   function updateCollabUsers() {
     if (!collabUsersContainer) return;
 
-    // Collect active department IDs from collaborative dept selection + main ticket department
+    // Collect active department IDs preserving chronological activation order
     var activeDeptIds = [];
     if (collabDeptSelect) {
+      activeDeptOrder.forEach(function(dId) {
+        var opt = collabDeptSelect.querySelector('option[value="' + dId + '"]');
+        if (opt && opt.selected && activeDeptIds.indexOf(dId) === -1) {
+          activeDeptIds.push(dId);
+        }
+      });
+      // Catch any selected options not yet in activeDeptOrder
       Array.prototype.forEach.call(collabDeptSelect.options, function (o) {
-        if (o.selected) activeDeptIds.push(o.value);
+        if (o.selected && activeDeptIds.indexOf(o.value) === -1) {
+          activeDeptIds.push(o.value);
+        }
       });
     }
 
-    // If no collab department is picked, check if main ticket department is selected
+    // Fallback to main ticket department if none explicitly picked
     var mainDeptId = deptSelect ? deptSelect.value : '';
     if (activeDeptIds.length === 0 && mainDeptId) {
       activeDeptIds.push(mainDeptId);
@@ -932,20 +982,50 @@
       return;
     }
 
-    // Filter users: ONLY agents belonging to the selected departments!
-    var filteredUsers = allCollabUsersData.filter(function (u) {
-      return activeDeptIds.indexOf(u.deptId) !== -1;
-    });
-
     collabNoDeptPrompt.style.display = 'none';
     collabUserFilterWrap.style.display = 'block';
-    collabUsersContainer.style.display = 'grid';
+    collabUsersContainer.style.display = 'flex';
+    collabUsersContainer.style.flexDirection = 'column';
+    collabUsersContainer.style.gap = '14px';
     collabUsersContainer.innerHTML = '';
 
-    if (filteredUsers.length === 0) {
-      collabUsersContainer.innerHTML = '<div style="grid-column: 1 / -1; padding: 18px; text-align: center; color: var(--text-muted); font-size: 13px;">Aucun collaborateur trouvé dans les départements sélectionnés.</div>';
-    } else {
-      filteredUsers.forEach(function (user) {
+    var totalRendered = 0;
+
+    // For each department in order: render a department header then its users sorted alphabetically
+    activeDeptIds.forEach(function (deptId) {
+      var deptOpt = collabDeptSelect ? collabDeptSelect.querySelector('option[value="' + deptId + '"]') : null;
+      var deptName = deptOpt ? deptOpt.textContent.trim() : (deptSelect && deptSelect.options[deptSelect.selectedIndex] ? deptSelect.options[deptSelect.selectedIndex].textContent.trim() : 'Département');
+
+      // Filter and sort users alphabetically by name
+      var deptUsers = allCollabUsersData.filter(function (u) {
+        return u.deptId === deptId;
+      }).sort(function (a, b) {
+        return a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' });
+      });
+
+      if (deptUsers.length === 0) return;
+      totalRendered += deptUsers.length;
+
+      var groupSection = document.createElement('div');
+      groupSection.className = 'collab-dept-group';
+      groupSection.setAttribute('data-dept-id', deptId);
+      groupSection.style.cssText = 'border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px 14px; background: var(--surface-1);';
+
+      var groupHeader = document.createElement('div');
+      groupHeader.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px dashed var(--border-subtle);';
+      groupHeader.innerHTML = 
+        '<div style="display:flex; align-items:center; gap:8px;">' +
+          '<div style="width:20px; height:20px; border-radius:4px; background:rgba(232,33,63,0.1); color:#dc2626; display:flex; align-items:center; justify-content:center; font-size:11px;">' +
+            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>' +
+          '</div>' +
+          '<span style="font-size:12.5px; font-weight:700; color:var(--text-primary);">' + deptName + '</span>' +
+        '</div>' +
+        '<span style="font-size:11px; font-weight:600; color:var(--text-muted);">' + deptUsers.length + ' membre(s)</span>';
+
+      var usersGrid = document.createElement('div');
+      usersGrid.style.cssText = 'display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px;';
+
+      deptUsers.forEach(function (user) {
         var opt = collabUsersSelect.querySelector('option[value="' + user.id + '"]');
         var isSelected = opt ? opt.selected : false;
         var initials = getInitials(user.name);
@@ -971,8 +1051,16 @@
           '</div>' +
           '<div class="collab-check-box">' + checkIcon + '</div>';
 
-        collabUsersContainer.appendChild(card);
+        usersGrid.appendChild(card);
       });
+
+      groupSection.appendChild(groupHeader);
+      groupSection.appendChild(usersGrid);
+      collabUsersContainer.appendChild(groupSection);
+    });
+
+    if (totalRendered === 0) {
+      collabUsersContainer.innerHTML = '<div style="padding: 18px; text-align: center; color: var(--text-muted); font-size: 13px;">Aucun collaborateur trouvé dans les départements sélectionnés.</div>';
     }
 
     renderSelectedCollabChips();
@@ -1025,13 +1113,74 @@
       var name = item.getAttribute('data-name') || '';
       item.style.display = (name.indexOf(query) !== -1) ? 'flex' : 'none';
     });
+    // Hide empty department sections if all cards in it are hidden by search
+    document.querySelectorAll('.collab-dept-group').forEach(function(group) {
+      var visibleInGroup = group.querySelectorAll('.collab-agent-card[style*="display: flex"]').length;
+      if (!query) {
+        group.style.display = 'block';
+      } else {
+        group.style.display = visibleInGroup > 0 ? 'block' : 'none';
+      }
+    });
   };
+
+  var previousMainDept = deptSelect ? deptSelect.value : '';
 
   if (deptSelect) {
     if (catSelect) deptSelect.addEventListener('change', filterCategories);
     deptSelect.addEventListener('change', function() {
+      var newDeptId = deptSelect.value;
       filterAgents();
-      // If collaboration mode is active, refresh available agents based on main dept fallback
+
+      var routingVal = document.querySelector('input[name="routing_type"]:checked') ? document.querySelector('input[name="routing_type"]:checked').value : 'all';
+
+      if (routingVal === 'collab') {
+        // In collab mode, switching the main dropdown updates collaboration departments
+        if (previousMainDept && previousMainDept !== newDeptId && collabDeptSelect) {
+          var prevOpt = collabDeptSelect.querySelector('option[value="' + previousMainDept + '"]');
+          var prevChip = document.querySelector('.collab-dept-chip[data-id="' + previousMainDept + '"]');
+          if (prevOpt && prevChip) {
+            prevOpt.selected = false;
+            prevChip.classList.remove('active');
+            var pIdx = activeDeptOrder.indexOf(previousMainDept);
+            if (pIdx !== -1) activeDeptOrder.splice(pIdx, 1);
+          }
+        }
+
+        if (newDeptId && collabDeptSelect) {
+          var newOpt = collabDeptSelect.querySelector('option[value="' + newDeptId + '"]');
+          var newChip = document.querySelector('.collab-dept-chip[data-id="' + newDeptId + '"]');
+          if (newOpt && newChip) {
+            newOpt.selected = true;
+            newChip.classList.add('active');
+            if (activeDeptOrder.indexOf(newDeptId) === -1) activeDeptOrder.push(newDeptId);
+          }
+        }
+      } else {
+        // If not in collab mode, changing the main department resets previous collab selections
+        // so that switching back to collab later starts fresh from the newly chosen department
+        if (collabDeptSelect) {
+          Array.prototype.forEach.call(collabDeptSelect.options, function(o) { o.selected = false; });
+          document.querySelectorAll('.collab-dept-chip').forEach(function(c) { c.classList.remove('active'); });
+          activeDeptOrder = [];
+          if (newDeptId) {
+            var nOpt = collabDeptSelect.querySelector('option[value="' + newDeptId + '"]');
+            var nChip = document.querySelector('.collab-dept-chip[data-id="' + newDeptId + '"]');
+            if (nOpt && nChip) {
+              nOpt.selected = true;
+              nChip.classList.add('active');
+              activeDeptOrder.push(newDeptId);
+            }
+          }
+        }
+        if (collabUsersSelect) {
+          Array.prototype.forEach.call(collabUsersSelect.options, function(uo) { uo.selected = false; });
+          renderSelectedCollabChips();
+        }
+      }
+
+      previousMainDept = newDeptId;
+      refreshCollabDeptBadges();
       updateCollabUsers();
     });
     if (catSelect) filterCategories();

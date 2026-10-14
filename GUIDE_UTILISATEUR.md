@@ -156,10 +156,11 @@ Cliquez sur **Nouvel utilisateur** et remplissez le formulaire :
 | Adresse e-mail | ✓ | Utilisée pour la connexion |
 | Mot de passe | ✓ | Minimum 8 caractères |
 | Rôle | ✓ | Définit les permissions de l'utilisateur |
-| Département | ✓ | Service d'appartenance |
+| Département | — | Service d'appartenance (siège) |
+| Point de Vente | — | Café d'affectation (si en boutique) |
+| Entreprise | — | Entité juridique de rattachement |
 | Téléphone | — | Numéro de contact interne |
 | Poste | — | Intitulé du poste |
-| Matricule | — | Identifiant RH (doit être unique) |
 
 > **Rôles disponibles :** Administrateur, Manager, Agent, Utilisateur — chacun avec un niveau d'accès différent.
 
@@ -278,7 +279,7 @@ Accédez à vos paramètres via le menu utilisateur → **Paramètres**.
 - Prénom et nom d'affichage
 - Adresse e-mail
 - Numéro de téléphone
-- Poste et matricule
+- Intitulé du poste
 - Photo de profil (avatar)
 
 Cliquez sur **Enregistrer** pour sauvegarder vos modifications.

@@ -2,6 +2,43 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.3.0] - 2026-10-14
+
+### 🚀 Nouveautés majeures & Refontes Opérationnelles
+
+#### Ajouté
+- 🤝 **Collaboration Multi-Départements & Multi-Agents sur les Tickets**
+  - Mode d'assignation « Collaboration (multiples) » dans la création et modification de tickets.
+  - Sélection interactive par tags/puces des départements impliqués avec pré-sélection automatique du département principal.
+  - Filtrage dynamique et ciblé des collaborateurs affichés selon les départements participants.
+  - Affichage clair de la collaboration dans la barre latérale du ticket (liste des départements associés et des membres collaborateurs).
+  - Badge `+N collab` dans la colonne Département de la liste des tickets.
+  - Inclusion automatique des utilisateurs de tous les départements collaborateurs dans la liste déroulante d'assignation directe.
+  - Sauvegarde explicite avec boutons Enregistrer / Annuler lors des réassignations sur le détail du ticket.
+- 🏪 **Module Points de Vente (PDV)**
+  - Gestion dédiée des Points de Vente du réseau Cosmitto avec indicateurs spécifiques, adresses, gérants et contacts.
+  - Affichage différencié dans l'annuaire : thème ambré chaleureux et icône magasin distincte pour identifier immédiatement les membres en PDV par rapport aux départements du siège.
+- 🏢 **Gestion des Entreprises (Cosmitto Coffee, etc.)**
+  - Entité `Entreprise` permettant le rattachement multi-sociétés des utilisateurs avec code couleur personnalisé et badges dédiés.
+- 🖼️ **Visualiseur d'images Lightbox & Prévisualisations in-tab**
+  - Prévisualisation directe sous forme de miniatures pour les pièces jointes d'images dans les tickets et commentaires.
+  - Visualisation agrandie dans la même page via une modale plein écran sombre avec backdrop blur, zoom interactif et raccourci touche Échap.
+- 💬 **Recherche améliorée dans la Messagerie**
+  - Filtrage en temps réel des conversations et recherche dynamique des collègues dans la fenêtre de nouveau message.
+- ↕️ **Tri des Colonnes & Ergonomie**
+  - Tri par clic sur les en-têtes de colonnes (Nom, E-mail, Rôle, Département) dans l'annuaire des utilisateurs.
+  - Survol interactif de ligne avec surbrillance de marque et indicateur latéral.
+
+#### Modifié & Nettoyé
+- 🗑️ **Suppression intégrale du Matricule**
+  - Suppression complète du champ matricule de l'ensemble des formulaires, tableaux, filtres de recherche et routes (profils, annuaire, administration, création d'utilisateurs).
+- 🎨 **Harmonisation UI / UX des boutons et en-têtes**
+  - Correction du contraste et de la visibilité du bouton « Fermer » du ticket (suppression du conflit d'héritage `.btn-danger` blanc sur fond clair).
+  - Simplification de l'en-tête de modification de ticket : suppression des liens de fil d'Ariane superflus et suppression des boutons de sauvegarde dupliqués en haut.
+  - Avatars utilisateurs modernisés avec dégradés dynamiques aux couleurs du département et initiales contrastées en fallback.
+
+---
+
 ## [2.2.0] - 2026-10-03
 
 ### 🚀 Nouveautés & Améliorations UI
