@@ -87,6 +87,26 @@ def _check_role_assignment(role_id):
     return None
 
 
+def _system_health():
+    """État réel du système : requête de test sur la base (avec latence), e-mail configuré, dossier d'envoi écrivable."""
+    import time
+    from flask import current_app
+    health = {'db_ok': False, 'db_ms': None, 'mail': False, 'uploads': False}
+    try:
+        start = time.perf_counter()
+        db.session.execute(db.text('SELECT 1'))
+        health['db_ms'] = max(1, round((time.perf_counter() - start) * 1000))
+        health['db_ok'] = True
+    except Exception:
+        db.session.rollback()
+    cfg = current_app.config
+    health['mail'] = bool(cfg.get('MAIL_SERVER') and cfg.get('MAIL_USERNAME') and cfg.get('MAIL_PASSWORD'))
+    folder = cfg.get('UPLOAD_FOLDER')
+    health['uploads'] = bool(folder and os.path.isdir(folder) and os.access(folder, os.W_OK))
+    health['ok'] = health['db_ok'] and health['uploads']
+    return health
+
+
 @admin_bp.route('/tableau-bord')
 @login_required
 @admin_required
@@ -112,6 +132,7 @@ def tableau_bord():
 
     return render_template('admin/tableau_bord.html',
                            stats=stats,
+                           health=_system_health(),
                            tickets_par_statut=tickets_par_statut,
                            tickets_par_priorite=tickets_par_priorite)
 
@@ -716,6 +737,66 @@ def parametres_systeme():
     return render_template('admin/parametres.html', config=config_vals)
 
 
+@admin_bp.route('/parametres/test-email', methods=['POST'])
+@login_required
+def tester_email():
+    """Teste la configuration SMTP enregistrée dans .env : connexion, authentification, envoi à l'administrateur connecté."""
+    import smtplib
+    import ssl
+    from email.message import EmailMessage
+    from dotenv import dotenv_values
+
+    if not current_user.has_permission('admin_parametres.modifier'):
+        flash("Vous n'avez pas la permission de tester les paramètres.", "danger")
+        return redirect(url_for('admin.parametres_systeme'))
+
+    dotenv_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '.env')
+    cfg = dotenv_values(dotenv_path) if os.path.exists(dotenv_path) else {}
+    server = (cfg.get('MAIL_SERVER') or '').strip()
+    user = (cfg.get('MAIL_USERNAME') or '').strip()
+    password = cfg.get('MAIL_PASSWORD') or ''
+    sender = (cfg.get('MAIL_DEFAULT_SENDER') or user).strip()
+    use_ssl = (cfg.get('MAIL_USE_SSL') or '').strip().lower() == 'true'
+    use_tls = (cfg.get('MAIL_USE_TLS') or '').strip().lower() == 'true'
+    port = parse_int(cfg.get('MAIL_PORT'), 465 if use_ssl else 587, 1, 65535)
+
+    if not (server and user and password):
+        flash("Configuration incomplète : serveur, nom d'utilisateur et mot de passe sont nécessaires.", "danger")
+        return redirect(url_for('admin.parametres_systeme'))
+
+    smtp = None
+    try:
+        context = ssl.create_default_context()
+        smtp = smtplib.SMTP_SSL(server, port, timeout=15, context=context) if use_ssl else smtplib.SMTP(server, port, timeout=15)
+        if use_tls and not use_ssl:
+            smtp.starttls(context=context)
+        smtp.login(user, password)
+        msg = EmailMessage()
+        msg['Subject'] = 'Test de configuration e-mail — CosmiCenter'
+        msg['From'] = sender
+        msg['To'] = current_user.email
+        msg.set_content("Ce message confirme que CosmiCenter peut envoyer des e-mails avec la configuration SMTP actuelle.")
+        smtp.send_message(msg)
+        flash(f"E-mail de test envoyé à {current_user.email} : la configuration SMTP fonctionne.", "success")
+        logger.info("Test e-mail SMTP réussi par %s", current_user.email)
+    except smtplib.SMTPAuthenticationError as e:
+        code = getattr(e, 'smtp_code', '')
+        flash(f"Authentification refusée par le serveur (code {code}). Vérifiez l'identifiant et le mot de passe "
+              f"(avec Gmail ou Microsoft 365 il faut en général un « mot de passe d'application », et l'authentification "
+              f"SMTP doit être autorisée pour la boîte).", "danger")
+        logger.warning("Test e-mail SMTP : authentification refusée (code %s)", code)
+    except Exception as e:
+        flash(f"Échec de l'envoi : {type(e).__name__} — {str(e)[:200]}", "danger")
+        logger.warning("Test e-mail SMTP : %s", type(e).__name__)
+    finally:
+        if smtp is not None:
+            try:
+                smtp.quit()
+            except Exception:
+                pass
+    return redirect(url_for('admin.parametres_systeme'))
+
+
 def _tail_lines(path, max_bytes=1024 * 1024):
     """Dernières lignes d'un fichier sans le charger entièrement en mémoire."""
     size = os.path.getsize(path)
@@ -743,7 +824,8 @@ def logs():
             lines = _tail_lines(log_file_path)
             # Ne garder que les erreurs/anomalies et les tracebacks
             filtered = [line for line in lines if ' - INFO - ' not in line and ' - DEBUG - ' not in line]
-            logs_content = filtered[-500:]
+            # chaque ligne garde son saut de ligne : le gabarit les concatène dans un bloc <pre>
+            logs_content = [line + '\n' for line in filtered[-500:]]
             logs_content.reverse()
         except Exception as e:
             logger.error(f"Lecture des logs impossible: {e}")

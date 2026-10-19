@@ -143,11 +143,11 @@
             <input type="number" name="MAIL_PORT" class="input" value="{{ config.get('MAIL_PORT', '') }}">
           </div>
           <div class="form-group" style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" name="MAIL_USE_TLS" id="use_tls" {% if config.get('MAIL_USE_TLS', '').lower() == 'true' %}checked{% endif %}>
+            <input type="checkbox" name="MAIL_USE_TLS" id="use_tls" style="width:auto; flex:none; margin:0;" {% if config.get('MAIL_USE_TLS', '').lower() == 'true' %}checked{% endif %}>
             <label for="use_tls" style="margin:0; font-size:14px; color:var(--text-secondary);">Utiliser TLS (Sécurité)</label>
           </div>
           <div class="form-group" style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" name="MAIL_USE_SSL" id="use_ssl" {% if config.get('MAIL_USE_SSL', '').lower() == 'true' %}checked{% endif %}>
+            <input type="checkbox" name="MAIL_USE_SSL" id="use_ssl" style="width:auto; flex:none; margin:0;" {% if config.get('MAIL_USE_SSL', '').lower() == 'true' %}checked{% endif %}>
             <label for="use_ssl" style="margin:0; font-size:14px; color:var(--text-secondary);">Utiliser SSL (Port 465)</label>
           </div>
           <div class="form-group">
@@ -167,6 +167,10 @@
             <small style="display:block; margin-top:4px; font-size:12px; color:var(--text-muted);">
               L'adresse email qui apparaîtra dans le champ "De :" (Expéditeur) lorsque les utilisateurs recevront des notifications.
             </small>
+          </div>
+          <div class="form-group" style="border-top:1px dashed var(--border-subtle); padding-top:14px;">
+            <button type="submit" form="testMailForm" class="btn btn-ghost btn-sm" title="Envoie un message de test à votre adresse ({{ current_user.email }}) avec les paramètres enregistrés dans .env">Envoyer un e-mail de test</button>
+            <small style="display:block; margin-top:6px; font-size:12px; color:var(--text-muted);">Teste la connexion et l'authentification au serveur SMTP avec les valeurs enregistrées, puis envoie un message à {{ current_user.email }}.</small>
           </div>
         </div>
       </div>
@@ -215,4 +219,5 @@
 
   </form>
 </div>
+<form id="testMailForm" method="POST" action="{{ url_for('admin.tester_email') }}" hidden></form>
 {% endblock %}

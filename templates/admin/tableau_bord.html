@@ -289,23 +289,32 @@
 
   </div>
 
-  <!-- System Health Strip -->
+  <!-- System Health Strip : état réel (requête de test sur la base, configuration e-mail, dossier d'envoi) -->
   <div class="system-health">
     <div style="display:flex;align-items:center;gap:8px;">
-      <span style="width:10px;height:10px;background:#10b981;border-radius:50%;box-shadow:0 0 10px rgba(16,185,129,0.5);"></span>
-      <span style="font-size:13px;font-weight:800;color:var(--text-primary);">Système Opérationnel</span>
+      <span style="width:10px;height:10px;background:{{ '#10b981' if health.ok else '#ef4444' }};border-radius:50%;box-shadow:0 0 10px {{ 'rgba(16,185,129,0.5)' if health.ok else 'rgba(239,68,68,0.5)' }};"></span>
+      <span style="font-size:13px;font-weight:800;color:var(--text-primary);">{{ 'Système opérationnel' if health.ok else 'Système dégradé' }}</span>
     </div>
-    
+
     <div style="display:flex;align-items:center;gap:8px;">
       <span style="font-size:12px;font-weight:700;color:var(--text-muted);">Version</span>
       <span class="status-badge" style="background:var(--surface-hover); color:var(--text-primary);">v{{ config.get('APP_VERSION', '2.0.0') }}</span>
     </div>
-    
+
     <div style="display:flex;align-items:center;gap:8px;">
       <span style="font-size:12px;font-weight:700;color:var(--text-muted);">Base de données</span>
-      <span class="status-badge resolu">{% if stats %}Connectée{% else %}Erreur{% endif %}</span>
+      <span class="status-badge {{ 'resolu' if health.db_ok else 'urgent' }}">{% if health.db_ok %}Connectée · {{ health.db_ms }} ms{% else %}Erreur{% endif %}</span>
     </div>
-    
+
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:12px;font-weight:700;color:var(--text-muted);">E-mail</span>
+      <span class="status-badge {{ 'resolu' if health.mail else '' }}" title="{{ 'Identifiants SMTP renseignés (la livraison réelle dépend du fournisseur)' if health.mail else 'Identifiants SMTP manquants : aucun e-mail ne sera envoyé' }}">{{ 'Configuré' if health.mail else 'Non configuré' }}</span>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:12px;font-weight:700;color:var(--text-muted);">Fichiers</span>
+      <span class="status-badge {{ 'resolu' if health.uploads else 'urgent' }}">{{ 'Dossier d\'envoi accessible' if health.uploads else 'Dossier d\'envoi inaccessible' }}</span>
+    </div>
     <div style="margin-left:auto;">
       <a href="{{ url_for('admin.logs') }}" class="btn-action">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>

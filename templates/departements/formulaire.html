@@ -19,6 +19,7 @@
 {% endblock %}
 
 {% block content %}
+{% from '_macros.html' import info_tip, SLA_TIPS %}
 <div class="page">
 
   <!-- Page Header -->
@@ -164,6 +165,20 @@
           </div>
         </div>
         <div class="card-body" style="padding: 32px;">
+
+          <!-- SLA : délais d'engagement du département -->
+          <div class="form-row" style="margin-bottom: 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div class="form-group">
+              <label class="form-label" for="sla_reponse_heures">SLA de réponse (heures){{ info_tip(SLA_TIPS.reponse, 'tip-left') }}</label>
+              <input type="number" id="sla_reponse_heures" name="sla_reponse_heures" class="input" min="1" max="10000" required
+                     value="{{ request.form.get('sla_reponse_heures', (departement.sla_reponse_heures if is_edit and departement.sla_reponse_heures else 4)) }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sla_resolution_heures">SLA de résolution (heures){{ info_tip(SLA_TIPS.resolution, 'tip-right') }}</label>
+              <input type="number" id="sla_resolution_heures" name="sla_resolution_heures" class="input" min="1" max="100000" required
+                     value="{{ request.form.get('sla_resolution_heures', (departement.sla_resolution_heures if is_edit and departement.sla_resolution_heures else 24)) }}">
+            </div>
+          </div>
 
           <!-- Couleur + Icône (2 cols) -->
           <div class="form-row" style="margin-bottom: 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">

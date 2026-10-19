@@ -1,6 +1,11 @@
+import logging
+import mimetypes
+import os
+import re
+import uuid
 from functools import wraps
 
-from flask import Blueprint, render_template, request, jsonify, url_for
+from flask import Blueprint, render_template, request, jsonify, url_for, send_file, current_app, abort
 from flask_login import login_required, current_user
 from models import db, Message, Utilisateur, Notification
 from sqlalchemy import or_, and_, func
@@ -9,7 +14,17 @@ from datetime import datetime, timedelta
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 
+logger = logging.getLogger(__name__)
+
 MAX_MESSAGE_LENGTH = 4000
+MAX_CHAT_FILE_BYTES = 25 * 1024 * 1024   # 25 Mo par fichier, tout type de fichier accepté
+INLINE_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'}  # affichées dans la page ; le reste est téléchargé
+
+
+def chat_files_dir():
+    path = os.path.join(current_app.instance_path, 'chat_files')  # hors du dossier public /static
+    os.makedirs(path, exist_ok=True)
+    return path
 
 
 def chat_permission_required(f):
@@ -34,6 +49,10 @@ def _initials(user):
 @login_required
 @chat_permission_required
 def inbox():
+    # Ouvrir la messagerie marque les notifications de chat comme lues
+    if Notification.query.filter_by(utilisateur_id=current_user.id, type_notification='chat', lue=False) \
+            .update({'lue': True, 'date_lecture': datetime.utcnow()}):
+        db.session.commit()
     return render_template('chat/inbox.html')
 
 
@@ -72,7 +91,7 @@ def get_conversations():
             'contact_name': f"{contact.prenom} {contact.nom}",
             'contact_initials': _initials(contact),
             'photo_profil': contact.photo_profil or None,
-            'last_message': last_msg.content,
+            'last_message': last_msg.content or ('📎 ' + (last_msg.fichier_nom or 'Fichier')),
             'timestamp': last_msg.timestamp.isoformat() + 'Z',
             'unread_count': unread.get(contact_id, 0)
         })
@@ -125,15 +144,32 @@ def get_messages(contact_id):
     })
 
 
+def _clean_filename(name):
+    """Nom affiché : sans chemin ni caractères de contrôle, tronqué ; le nom sur disque est aléatoire."""
+    name = os.path.basename((name or '').replace('\\', '/')).replace('\x00', '')
+    name = re.sub(r'[\r\n\t]', ' ', name).strip()
+    return name[:200] or 'fichier'
+
+
 @chat_bp.route('/api/send', methods=['POST'])
 @login_required
 @chat_permission_required
 def send_message():
-    data = request.get_json(silent=True) or {}
-    receiver_id = data.get('receiver_id')
-    content = (data.get('content') or '').strip() if isinstance(data.get('content'), str) else ''
+    # Deux formats : JSON (texte seul) ou multipart/form-data (texte et/ou fichier)
+    upload = None
+    if (request.content_type or '').startswith('multipart/'):
+        data = request.form
+        upload = request.files.get('file')
+        if upload is not None and not upload.filename:
+            upload = None
+    else:
+        data = request.get_json(silent=True) or {}
 
-    if not receiver_id or not content:
+    receiver_id = data.get('receiver_id')
+    raw_content = data.get('content')
+    content = raw_content.strip() if isinstance(raw_content, str) else ''
+
+    if not receiver_id or (not content and upload is None):
         return jsonify({'error': 'Données invalides'}), 400
     if len(content) > MAX_MESSAGE_LENGTH:
         return jsonify({'error': f'Message trop long (max {MAX_MESSAGE_LENGTH} caractères)'}), 400
@@ -145,18 +181,64 @@ def send_message():
         return jsonify({'error': 'Destinataire introuvable ou inactif'}), 404
 
     msg = Message(sender_id=current_user.id, receiver_id=receiver.id, content=content)
-    db.session.add(msg)
-    db.session.add(Notification(
-        utilisateur_id=receiver.id,
-        titre="Nouveau message",
-        message=f"{current_user.prenom} {current_user.nom} vous a envoyé un message.",
-        type_notification="chat",
-        lien=url_for('chat.inbox')
-    ))
-    db.session.commit()
+    saved_path = None
+    if upload is not None:
+        original = _clean_filename(upload.filename)
+        ext = original.rsplit('.', 1)[-1].lower() if '.' in original else ''
+        ext = ext if re.fullmatch(r'[a-z0-9]{1,8}', ext) else ''
+        stored = uuid.uuid4().hex + (('.' + ext) if ext else '')
+        saved_path = os.path.join(chat_files_dir(), stored)
+        upload.save(saved_path)
+        size = os.path.getsize(saved_path)
+        if size == 0:
+            os.remove(saved_path)
+            return jsonify({'error': 'Le fichier est vide'}), 400
+        if size > MAX_CHAT_FILE_BYTES:
+            os.remove(saved_path)
+            return jsonify({'error': f'Fichier trop volumineux (max {MAX_CHAT_FILE_BYTES // (1024 * 1024)} Mo)'}), 413
+        msg.fichier_nom = original
+        msg.fichier_chemin = stored
+        msg.fichier_type = (upload.mimetype or mimetypes.guess_type(original)[0] or 'application/octet-stream')[:150]
+        msg.fichier_taille = size
+
+    try:
+        db.session.add(msg)
+        db.session.add(Notification(
+            utilisateur_id=receiver.id,
+            titre="Nouveau message",
+            message=f"{current_user.prenom} {current_user.nom} vous a envoyé " + ("un fichier." if upload is not None and not content else "un message."),
+            type_notification="chat",
+            lien=url_for('chat.inbox')
+        ))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        if saved_path and os.path.isfile(saved_path):
+            os.remove(saved_path)
+        logger.error(f'Erreur envoi message: {e}', exc_info=True)
+        return jsonify({'error': "Erreur lors de l'envoi"}), 500
 
     return jsonify(msg.to_dict())
 
+
+@chat_bp.route('/fichier/<message_id>')
+@login_required
+@chat_permission_required
+def telecharger_fichier(message_id):
+    """Sert le fichier d'un message, uniquement à l'expéditeur et au destinataire."""
+    msg = Message.query.get_or_404(message_id)
+    if current_user.id not in (msg.sender_id, msg.receiver_id) or not msg.fichier_chemin:
+        abort(404)
+    path = os.path.join(chat_files_dir(), os.path.basename(msg.fichier_chemin))
+    if not os.path.isfile(path):
+        abort(404)
+    ext = msg.fichier_chemin.rsplit('.', 1)[-1].lower() if '.' in msg.fichier_chemin else ''
+    inline = ext in INLINE_IMAGE_EXTENSIONS and request.args.get('download') != '1'
+    resp = send_file(path, mimetype=mimetypes.guess_type('x.' + ext)[0] or 'application/octet-stream',
+                     as_attachment=not inline, download_name=msg.fichier_nom or 'fichier')
+    resp.headers['Content-Security-Policy'] = "sandbox; default-src 'none'; img-src 'self' data:"
+    resp.headers['Cache-Control'] = 'private, max-age=3600'
+    return resp
 
 @chat_bp.route('/api/users')
 @login_required

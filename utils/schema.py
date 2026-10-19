@@ -15,6 +15,11 @@ STATEMENTS = [
     "ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0",
     "ALTER TABLE pieces_jointes ADD COLUMN IF NOT EXISTS commentaire_id VARCHAR(36) "
     "REFERENCES commentaires(id) ON DELETE CASCADE",
+    # Messagerie : fichier joint à un message (nom d'origine, nom stocké, type, taille)
+    "ALTER TABLE messages ADD COLUMN IF NOT EXISTS fichier_nom VARCHAR(255)",
+    "ALTER TABLE messages ADD COLUMN IF NOT EXISTS fichier_chemin VARCHAR(100)",
+    "ALTER TABLE messages ADD COLUMN IF NOT EXISTS fichier_type VARCHAR(150)",
+    "ALTER TABLE messages ADD COLUMN IF NOT EXISTS fichier_taille INTEGER",
 ]
 
 # Les mots de passe distants sont désormais chiffrés (jeton plus long que VARCHAR(100)).

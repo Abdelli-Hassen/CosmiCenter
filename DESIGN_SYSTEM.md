@@ -142,4 +142,8 @@ When updating a new page (e.g., `inbox.html` or the admin dashboard):
 - **Déconnexion** : bouton dans un formulaire `POST` (icône de la barre supérieure), plus un lien.
 - **Pages d'erreur** : `errors/400.html`, `403.html`, `404.html`, `413.html`, `500.html` (même gabarit centré : titre, explication, bouton de retour).
 - **Statut « Ouvert »** : regroupe les statuts `nouveau` et `ouvert` dans les compteurs et filtres.
+- **Listes de choix pilotées par la base** (catégories de PDV, palette de thèmes) : ne pas les écrire dans les gabarits ; les lire via `services/referentiels.py` (`get_categories()`, `get_themes()`, cache vidé par `invalidate()`). Elles sont stockées en JSON dans `configurations_systeme`. Les icônes de catégorie sont des clés (champ `icone` de chaque catégorie) dessinées par le macro `templates/pdv/_icons.html`.
+- **Info-bulles d'aide** : `{% from '_macros.html' import info_tip %}` puis `{{ info_tip("texte") }}` à côté d'un libellé. La bulle est affichée par `static/js/tooltip.js` dans un calque flottant (jamais rognée par un parent en `overflow: hidden`, y compris dans un `<dialog>`). Les textes SLA sont centralisés dans `SLA_TIPS` (`templates/_macros.html`).
+- **Styles dans un gabarit enfant** : tout `<style>` / `<script>` doit se trouver DANS un `{% block %}` ; hors bloc, Jinja l'ignore silencieusement.
+- **Champs vides** : dans un `value="..."`, écrire `{{ (obj.champ if obj else '')|default('', true) }}` pour ne pas afficher « None ».
 

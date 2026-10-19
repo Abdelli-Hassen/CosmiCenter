@@ -64,7 +64,7 @@ def _read_department_form(departement=None):
     code = request.form.get('code', '').strip().upper()
     email = request.form.get('email', '').strip()
     sla_reponse = parse_int(request.form.get('sla_reponse_heures', 4), None, 1, 10000)
-    sla_resolution = parse_int(request.form.get('sla_resolution_heures', 48), None, 1, 100000)
+    sla_resolution = parse_int(request.form.get('sla_resolution_heures', 24), None, 1, 100000)
 
     if not nom:
         errors.append('Le nom du département est requis.')

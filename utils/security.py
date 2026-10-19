@@ -130,6 +130,9 @@ def init_security_headers(app):
             # Neutralise tout contenu actif (HTML/SVG/JS) qui aurait été uploadé.
             resp.headers['Content-Security-Policy'] = "sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'"
             resp.headers['Cache-Control'] = 'private, max-age=3600'
+            # Seules les images s'affichent dans le navigateur ; tout le reste (PDF, Office, ZIP...) est téléchargé
+            if not (resp.mimetype or '').startswith('image/'):
+                resp.headers['Content-Disposition'] = 'attachment'
         if app.config.get('SESSION_COOKIE_SECURE'):
             resp.headers.setdefault('Strict-Transport-Security', 'max-age=31536000')
         return resp

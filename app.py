@@ -54,6 +54,11 @@ def create_app(config_name='default'):
 
     validate_config(app)
 
+    # Reverse proxy (Nginx) : récupère l'adresse IP du visiteur, le schéma https et l'hôte d'origine
+    if app.config.get('BEHIND_PROXY'):
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
     # Créer les dossiers nécessaires
     for folder in [os.path.join(_BASE_DIR, 'instance'), _LOG_DIR, app.config['UPLOAD_FOLDER']]:
         os.makedirs(folder, exist_ok=True)
@@ -65,6 +70,8 @@ def create_app(config_name='default'):
     with app.app_context():
         db.create_all()
         ensure_schema(db)
+        from services.referentiels import ensure_defaults
+        ensure_defaults()
 
     # Sécurité : CSRF, en-têtes, accès aux uploads
     init_csrf(app)
@@ -164,10 +171,15 @@ def create_app(config_name='default'):
             user_notifications = Notification.query.filter_by(utilisateur_id=current_user.id).order_by(Notification.date_creation.desc()).limit(20).all()
             notifications_non_lues = sum(1 for n in user_notifications if not n.lue)
             ticket_notifs_count = sum(1 for n in user_notifications if not n.lue and getattr(n, 'type_notification', '') == 'ticket')
+            from utils.permissions import unopened_tickets_count, unread_messages_count
+            tickets_non_ouverts = unopened_tickets_count(current_user)
+            messages_non_lus = unread_messages_count(current_user)
         else:
             user_notifications = []
             notifications_non_lues = 0
             ticket_notifs_count = 0
+            tickets_non_ouverts = 0
+            messages_non_lus = 0
 
         return {
             'now': datetime.now(),
@@ -176,6 +188,8 @@ def create_app(config_name='default'):
             'support_email': app.config['SUPPORT_EMAIL'],
             'notifications_count': notifications_non_lues,
             'ticket_notifs_count': ticket_notifs_count,
+            'tickets_non_ouverts': tickets_non_ouverts,
+            'messages_non_lus': messages_non_lus,
             'notifications': user_notifications
         }
 

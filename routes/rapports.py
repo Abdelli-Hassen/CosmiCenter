@@ -92,26 +92,30 @@ def tableau_bord():
         Ticket.date_creation >= date_debut
     ).group_by(db.cast(Ticket.date_creation, db.Date)).order_by(db.cast(Ticket.date_creation, db.Date)).all()
 
-    temps_moyen_resolution = db.session.query(
+    # Durées stockées en minutes, affichées en heures ; None (« — ») lorsqu'il n'y a aucune donnée
+    avg_resolution = db.session.query(
         func.avg(Ticket.temps_resolution_minutes)
     ).filter(
         Ticket.date_resolution >= date_debut,
         Ticket.temps_resolution_minutes.isnot(None)
-    ).scalar() or 0
+    ).scalar()
+    temps_moyen_resolution = float(avg_resolution) / 60 if avg_resolution is not None else None
 
-    temps_moyen_premiere_reponse = db.session.query(
+    avg_reponse = db.session.query(
         func.avg(Ticket.temps_premiere_reponse_minutes)
     ).filter(
         Ticket.date_premiere_reponse >= date_debut,
         Ticket.temps_premiere_reponse_minutes.isnot(None)
-    ).scalar() or 0
+    ).scalar()
+    temps_moyen_premiere_reponse = float(avg_reponse) / 60 if avg_reponse is not None else None
 
-    satisfaction_moyenne = db.session.query(
+    avg_satisfaction = db.session.query(
         func.avg(Ticket.satisfaction)
     ).filter(
         Ticket.satisfaction.isnot(None),
         Ticket.date_fermeture >= date_debut
-    ).scalar() or 0
+    ).scalar()
+    satisfaction_moyenne = float(avg_satisfaction) if avg_satisfaction is not None else None
 
     # Top 10 des agents par tickets résolus
     top_agents = db.session.query(
@@ -138,7 +142,7 @@ def tableau_bord():
         Ticket.date_creation >= date_debut,
         Ticket.sla_respecte == True  # noqa: E712
     ).count()
-    taux_sla = (tickets_sla_respecte / tickets_avec_sla * 100) if tickets_avec_sla > 0 else 0
+    taux_sla = (tickets_sla_respecte / tickets_avec_sla * 100) if tickets_avec_sla > 0 else None
 
     return render_template('rapports/tableau_bord.html',
                            periode=periode,
@@ -162,7 +166,8 @@ def _agent_stats(tickets):
     en_cours = [t for t in tickets if t.statut in STATUTS_OUVERTS]
     temps = [t.temps_resolution_minutes for t in resolus if t.temps_resolution_minutes is not None]
     notes = [t.satisfaction for t in resolus if t.satisfaction is not None]
-    return resolus, en_cours, (sum(temps) / len(temps) if temps else 0), (sum(notes) / len(notes) if notes else 0)
+    # temps en minutes -> heures (les gabarits affichent des heures)
+    return resolus, en_cours, (sum(temps) / len(temps) / 60 if temps else 0), (sum(notes) / len(notes) if notes else 0)
 
 
 @rapports_bp.route('/performance-agents')
@@ -172,12 +177,15 @@ def performance_agents():
     """Rapport de performance des agents"""
     periode, date_fin, date_debut = _periode()
 
-    agents = Utilisateur.query.filter_by(actif=True).all()
     # Un seul chargement des tickets de la période, regroupés par agent
     tickets_by_agent = {}
     for t in Ticket.query.filter(Ticket.assigne_a_id.isnot(None), Ticket.date_creation >= date_debut).all():
         tickets_by_agent.setdefault(t.assigne_a_id, []).append(t)
 
+    # « Agents » = utilisateurs qui traitent des tickets : rôle autorisé à modifier/clôturer les tickets,
+    # ou ayant des tickets assignés sur la période (le personnel de point de vente n'est pas classé)
+    agents = [u for u in Utilisateur.query.filter_by(actif=True).all()
+              if u.id in tickets_by_agent or u.has_permission('tickets.modifier') or u.has_permission('tickets.cloturer')]
     stats_agents = []
     for agent in agents:
         tickets_assignes = tickets_by_agent.get(agent.id, [])
@@ -200,17 +208,22 @@ def performance_agents():
             'tickets_en_cours': len(tickets_en_cours),
             'temps_moyen_resolution': temps_moyen,
             'satisfaction_moyenne': satisfaction_moyenne,
-            'taux_resolution': (len(tickets_resolus) / len(tickets_assignes) * 100) if tickets_assignes else 0,
+            # None (affiché « — ») quand l'agent n'a aucun ticket : 0 % serait trompeur
+            'taux_resolution': (len(tickets_resolus) / len(tickets_assignes) * 100) if tickets_assignes else None,
             'tickets_details': tickets_details
         })
 
-    stats_agents.sort(key=lambda x: x['tickets_resolus'], reverse=True)
+    # Classement : résolus d'abord, puis tickets assignés, puis nom (ordre stable et lisible)
+    stats_agents.sort(key=lambda x: (-x['tickets_resolus'], -x['total_tickets'], (x['agent'].nom_complet or '').upper()))
     for i, stat in enumerate(stats_agents):
         stat['rank'] = i + 1
 
+    # Le podium n'a de sens que pour les agents ayant réellement résolu des tickets
+    podium = [s for s in stats_agents if s['tickets_resolus'] > 0][:3]
+
     return render_template('rapports/performance_agents.html',
                            stats_agents=stats_agents,
-                           top_3_agents=stats_agents[:3],
+                           top_3_agents=podium,
                            periode=periode,
                            date_debut=date_debut,
                            date_fin=date_fin)

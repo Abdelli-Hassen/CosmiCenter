@@ -39,7 +39,7 @@ class Config:
     _upload = os.getenv('UPLOAD_FOLDER', 'static/uploads')
     UPLOAD_FOLDER = _upload if os.path.isabs(_upload) else os.path.join(_BASE_DIR, _upload)
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50 MB par requête (10 MB par fichier, voir utils/uploads.py)
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'zip', 'rar'}
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'log', 'csv', 'zip', 'rar'}
 
     # Session / cookies. SESSION_COOKIE_SECURE=true uniquement derrière HTTPS.
     PERMANENT_SESSION_LIFETIME = timedelta(hours=12)
@@ -50,6 +50,10 @@ class Config:
     REMEMBER_COOKIE_SAMESITE = 'Lax'
     REMEMBER_COOKIE_SECURE = SESSION_COOKIE_SECURE
     CSRF_ENABLED = True
+
+    # Derrière un reverse proxy (Nginx) : fait confiance aux en-têtes X-Forwarded-* (adresse IP réelle, HTTPS, nom d'hôte).
+    # À activer UNIQUEMENT si l'application n'est joignable que via le proxy (FLASK_HOST=127.0.0.1).
+    BEHIND_PROXY = _env_bool('BEHIND_PROXY', False)
 
     # URL publique (liens dans les emails). Ex: http://192.168.1.20:8080 ; sinon l'hôte de la requête est utilisé.
     PUBLIC_BASE_URL = os.getenv('PUBLIC_BASE_URL', '').rstrip('/')
@@ -84,7 +88,7 @@ class Config:
 
     # Application
     APP_NAME = 'CosmiCenter'
-    APP_VERSION = '2.4.0'
+    APP_VERSION = '2.5.0'
     SUPPORT_EMAIL = os.getenv('SUPPORT_EMAIL', 'support@example.com')
 
     # Langues disponibles

@@ -92,6 +92,10 @@ def liste():
     entreprise_filter = request.args.get('entreprise', '')
     if entreprise_filter:
         query = query.filter_by(entreprise_id=entreprise_filter)
+
+    pdv_filter = request.args.get('pdv', '')
+    if pdv_filter:
+        query = query.filter_by(pdv_id=pdv_filter)
     
     actif_filter = request.args.get('actif', '')
     if actif_filter == '1':
@@ -190,6 +194,8 @@ def liste():
                          role_filter=role_filter,
                          dept_filter=dept_filter,
                          entreprise_filter=entreprise_filter,
+                         pdv_filter=pdv_filter,
+                         pdvs_filtre=PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all(),
                          actif_filter=actif_filter,
                          sort_by=sort_by,
                          order=order,

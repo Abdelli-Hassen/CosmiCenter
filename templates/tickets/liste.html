@@ -162,6 +162,8 @@
       <a href="{{ url_for(request.endpoint, statut='en_cours') }}" class="{% if request.args.get('statut') == 'en_cours' %}active{% endif %}">En cours</a>
       <a href="{{ url_for(request.endpoint, statut='en_attente') }}" class="{% if request.args.get('statut') == 'en_attente' %}active{% endif %}">En attente</a>
       <a href="{{ url_for(request.endpoint, statut='resolu') }}" class="{% if request.args.get('statut') == 'resolu' %}active{% endif %}">Résolu</a>
+      <a href="{{ url_for(request.endpoint, statut='ferme') }}" class="{% if request.args.get('statut') == 'ferme' %}active{% endif %}">Fermé</a>
+      <a href="{{ url_for(request.endpoint, statut='annule') }}" class="{% if request.args.get('statut') == 'annule' %}active{% endif %}">Annulé</a>
     </div>
 
     <!-- Advanced filters -->
@@ -170,7 +172,9 @@
       <input type="hidden" name="statut" value="{{ request.args.get('statut') }}">
       {% endif %}
 
-      <select name="priorite" style="padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-subtle, #e5e7eb); background: var(--surface-base); font-size: 13px; color: var(--text-primary); cursor: pointer; outline: none;" onchange="this.form.submit()">
+      <input type="search" name="q" value="{{ q or '' }}" placeholder="Rechercher (n°, titre, description)" aria-label="Rechercher un ticket" maxlength="100" style="padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-subtle, #e5e7eb); background: var(--surface-base); font-size: 13px; color: var(--text-primary); min-width: 220px;">
+
+      <select name="priorite" aria-label="Filtrer par priorité" style="padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-subtle, #e5e7eb); background: var(--surface-base); font-size: 13px; color: var(--text-primary); cursor: pointer; outline: none;" onchange="this.form.submit()">
         <option value="">Toutes les priorités</option>
         <option value="critique" {% if request.args.get('priorite') == 'critique' %}selected{% endif %}>Critique</option>
         <option value="urgente" {% if request.args.get('priorite') == 'urgente' %}selected{% endif %}>Urgente</option>
@@ -179,7 +183,7 @@
         <option value="basse" {% if request.args.get('priorite') == 'basse' %}selected{% endif %}>Basse</option>
       </select>
 
-      <select name="departement_id" style="padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-subtle, #e5e7eb); background: var(--surface-base); font-size: 13px; color: var(--text-primary); cursor: pointer; outline: none;" onchange="this.form.submit()">
+      <select name="departement_id" aria-label="Filtrer par département" style="padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-subtle, #e5e7eb); background: var(--surface-base); font-size: 13px; color: var(--text-primary); cursor: pointer; outline: none;" onchange="this.form.submit()">
         <option value="">Tous les départements</option>
         {% for dept in departements %}
         <option value="{{ dept.id }}" {% if request.args.get('departement_id')|string == dept.id|string %}selected{% endif %}>
@@ -188,7 +192,7 @@
         {% endfor %}
       </select>
 
-      {% if request.args.get('statut') or request.args.get('priorite') or request.args.get('departement_id') %}
+      {% if request.args.get('statut') or request.args.get('priorite') or request.args.get('departement_id') or q %}
       <a href="{{ url_for(request.endpoint) }}" style="font-size: 13px; color: var(--color-brand, #dc2626); text-decoration: none; font-weight: 500; margin-left: 4px;" title="Effacer tous les filtres">Effacer</a>
       {% endif %}
     </form>
@@ -196,11 +200,20 @@
 
   <!-- Bulk Action Bar -->
   <div id="bulkBar" style="display:none; align-items:center; gap:16px; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); padding: 10px 20px; border-radius: 8px; margin-top: 16px;">
-    <span id="bulkCount" style="font-size:13px;font-weight:600;color: rgb(30, 64, 175);"></span>
-    <button id="bulkClear" class="btn btn-ghost btn-sm" style="color: rgb(30, 64, 175);">Tout désélectionner</button>
-    <div style="display:flex;gap:6px;margin-left:auto;">
-      <button class="btn btn-outline btn-sm" style="background: white;">Assigner</button>
-      <button class="btn btn-outline btn-sm" style="background: white;">Changer le statut</button>
+    <span id="bulkCount" style="font-size:13px;font-weight:600;color: var(--text-primary);"></span>
+    <button id="bulkClear" type="button" class="btn btn-ghost btn-sm" style="color: var(--color-brand, #dc2626);">Tout désélectionner</button>
+    <div style="display:flex;gap:8px;margin-left:auto;align-items:center;flex-wrap:wrap;">
+      <select id="bulkStatut" aria-label="Changer le statut des tickets sélectionnés" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border-subtle,#e5e7eb);background:var(--surface-base);color:var(--text-primary);font-size:13px;">
+        <option value="">Changer le statut…</option>
+        {% for code, label in statuts_choix %}<option value="{{ code }}">{{ label }}</option>{% endfor %}
+      </select>
+      {% if assignables %}
+      <select id="bulkAssign" aria-label="Assigner les tickets sélectionnés" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border-subtle,#e5e7eb);background:var(--surface-base);color:var(--text-primary);font-size:13px;max-width:220px;">
+        <option value="">Assigner à…</option>
+        <option value="__none__">— Non assigné —</option>
+        {% for u in assignables %}<option value="{{ u.id }}">{{ u.nom_complet }}</option>{% endfor %}
+      </select>
+      {% endif %}
     </div>
   </div>
 
@@ -214,7 +227,7 @@
           {% set current_order = request.args.get('order', 'desc') %}
           {% macro sort_th(title, column, width="") %}
           <th style="{{ width }}">
-            <a href="{{ url_for('tickets.liste', statut=request.args.get('statut',''), priorite=request.args.get('priorite',''), departement_id=request.args.get('departement_id',''), page=1, sort_by=column, order='asc' if current_sort == column and current_order == 'desc' else 'desc') }}" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='inherit'">
+            <a href="{{ url_for('tickets.liste', statut=request.args.get('statut',''), priorite=request.args.get('priorite',''), departement_id=request.args.get('departement_id',''), q=q or '', page=1, sort_by=column, order='asc' if current_sort == column and current_order == 'desc' else 'desc') }}" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='inherit'">
               {{ title }}
               {% if current_sort == column %}
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
@@ -459,6 +472,29 @@
       updateBulkBar();
     });
   }
+
+  // Actions groupées : changement de statut / assignation
+  function sendBulk(action, value, selectEl) {
+    var ids = Array.prototype.map.call(document.querySelectorAll('.ticket-select:checked'), function (cb) { return cb.getAttribute('data-id'); });
+    if (!ids.length || !value) return;
+    selectEl.disabled = true;
+    fetch('{{ url_for("tickets.bulk_update") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: ids, action: action, value: value === '__none__' ? '' : value })
+    })
+    .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+    .then(function (res) {
+      if (!res.ok || !res.d.success) { alert(res.d.message || 'Action impossible.'); selectEl.disabled = false; selectEl.value = ''; return; }
+      if (res.d.skipped) { alert(res.d.updated + ' ticket(s) modifié(s), ' + res.d.skipped + ' ignoré(s) (droits insuffisants).'); }
+      window.location.reload();
+    })
+    .catch(function () { alert('Erreur réseau.'); selectEl.disabled = false; selectEl.value = ''; });
+  }
+  var bulkStatut = document.getElementById('bulkStatut');
+  var bulkAssign = document.getElementById('bulkAssign');
+  if (bulkStatut) bulkStatut.addEventListener('change', function () { sendBulk('statut', bulkStatut.value, bulkStatut); });
+  if (bulkAssign) bulkAssign.addEventListener('change', function () { sendBulk('assigner', bulkAssign.value, bulkAssign); });
 })();
 </script>
 {% endblock %}

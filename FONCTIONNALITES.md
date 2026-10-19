@@ -230,7 +230,7 @@ Routes : `GET/POST /departements/nouveau` · `GET/POST /departements/<id>/modifi
 | Icône | Icône SVG ou emoji |
 | Responsable | Utilisateur responsable |
 | SLA réponse | Délai de première réponse (heures, défaut : 4h) |
-| SLA résolution | Délai de résolution (heures, défaut : 48h) |
+| SLA résolution | Délai de résolution (heures, défaut : 24h) |
 | Horaires de travail | JSON (jours, heures) |
 
 ### 5.4 Activer / Désactiver / Archiver / Supprimer

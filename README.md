@@ -38,7 +38,8 @@ Cosmitto Coffee opère plusieurs points de vente (POS). CosmiCenter permet à ch
 - Priorité calculée automatiquement via matrice Impact × Urgence
 - Sous-tâches, pièces jointes avec prévisualisation miniatures et visualiseur Lightbox in-tab
 - Historique d'audit complet de chaque modification
-- Évaluation de satisfaction (1–5 étoiles)
+- Évaluation de satisfaction (1–5 étoiles) donnée par le créateur une fois le ticket résolu ou fermé
+- Liste avec filtres (statut, priorité, département), **recherche** (n°, titre, description) et **actions groupées** (statut, assignation)
 - Suivi SLA : temps de première réponse et de résolution
 
 ### Utilisateurs
@@ -49,16 +50,21 @@ Cosmitto Coffee opère plusieurs points de vente (POS). CosmiCenter permet à ch
 - Activation / désactivation / réactivation
 - Statistiques par utilisateur (tickets créés, assignés, résolus)
 
+### Messagerie
+- Conversations privées entre utilisateurs, avec **fichiers et images joints** (25 Mo max, tout type de fichier) enregistrés en base et visibles uniquement par les deux participants
+- Badge de messages non lus dans la barre latérale (interrogation toutes les 2,5 s)
+
 ### Points de Vente (PDV)
 - Gestion des cafés du réseau Cosmitto avec KPI opérationnels et effectifs
-- Distinction visuelle ambrée avec icône dédiée pour les équipes terrain en PDV
+- **Thème couleur propre à chaque PDV** (palette rapide sur la carte ou formulaire avec sélecteur personnalisé)
+- **Catégories et palette de thèmes stockées en base** (table existante `configurations_systeme`, clés `pdv_categories` et `pdv_themes`), mises en cache et modifiables depuis *Points de vente → Catégories & thèmes* (`/pdv/referentiels`)
 
 ### Entreprises
 - Gestion multi-sociétés (filiales) avec code couleur d'entité et badges visuels
 
 ### Départements
 - Création avec code unique, couleur, icône, responsable
-- SLA configurables par département (réponse : défaut 4h, résolution : défaut 48h)
+- SLA configurables par département (réponse : défaut 4h, résolution : défaut 24h) ; l'échéance d'un ticket utilise le délai de sa catégorie, sinon le SLA de résolution du département
 - Horaires de travail personnalisés
 - Statistiques : membres, tickets par statut, catégories
 
@@ -125,6 +131,11 @@ Accès : `http://127.0.0.1:8080` (port défini par `FLASK_PORT`).
 
 > Le script `seed_db.py` **vide toutes les tables** avant d'insérer des données de démonstration : il demande une
 > confirmation explicite (taper `EFFACER`) et utilise le mot de passe `SEED_PASSWORD` (ou une valeur aléatoire affichée en fin d'exécution).
+
+### Mettre le site en ligne sur un serveur Ubuntu
+
+Installation automatique en une commande (`sudo bash deploy/install.sh`) : Python, PostgreSQL, Nginx, HTTPS, service systemd, pare-feu et sauvegardes quotidiennes.
+Pas à pas : **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)**.
 
 ### Partager la plateforme sur le réseau (tests par d'autres personnes)
 

@@ -245,7 +245,7 @@ class Departement(db.Model):
     
     # Paramètres SLA
     sla_reponse_heures = db.Column(db.Integer, default=4)  # Heures pour première réponse
-    sla_resolution_heures = db.Column(db.Integer, default=48)  # Heures pour résolution
+    sla_resolution_heures = db.Column(db.Integer, default=24)  # Heures pour résolution (24 h par défaut)
     horaires_travail = db.Column(db.JSON)  # JSON des horaires
     
     # État
@@ -557,17 +557,27 @@ class Message(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     sender_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), nullable=False, index=True)
     receiver_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), nullable=False, index=True)
-    content = db.Column(db.Text, nullable=False)
+    content = db.Column(db.Text, nullable=False, default='')  # vide si le message ne contient qu'un fichier
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     is_read = db.Column(db.Boolean, default=False)
-    
+
+    # Fichier joint (n'importe quel type) : le fichier est stocké hors du dossier public, servi par /chat/fichier/<id>
+    fichier_nom = db.Column(db.String(255))      # nom d'origine affiché
+    fichier_chemin = db.Column(db.String(100))   # nom aléatoire sur le disque
+    fichier_type = db.Column(db.String(150))     # type MIME déclaré
+    fichier_taille = db.Column(db.Integer)       # octets
+
     # Relations
     sender = db.relationship('Utilisateur', foreign_keys=[sender_id], backref=db.backref('messages_sent', lazy='dynamic'))
     receiver = db.relationship('Utilisateur', foreign_keys=[receiver_id], backref=db.backref('messages_received', lazy='dynamic'))
 
     def __repr__(self):
         return f'<Message {self.id}>'
-    
+
+    @property
+    def a_fichier(self):
+        return bool(self.fichier_chemin)
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -575,7 +585,14 @@ class Message(db.Model):
             'receiver_id': self.receiver_id,
             'content': self.content,
             'timestamp': self.timestamp.isoformat() + 'Z',
-            'is_read': self.is_read
+            'is_read': self.is_read,
+            'fichier': {
+                'nom': self.fichier_nom,
+                'taille': self.fichier_taille,
+                'type': self.fichier_type,
+                'url': f'/chat/fichier/{self.id}',
+                'est_image': (self.fichier_chemin or '').rsplit('.', 1)[-1].lower() in ('png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'),
+            } if self.fichier_chemin else None
         }
 
 class PlanActionTask(db.Model):

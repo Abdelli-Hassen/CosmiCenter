@@ -728,7 +728,7 @@
         Entreprises & Partenaires
       </h1>
       <p class="comp-hero-sub">
-        Gestion, structuration et traçabilité des entités participantes : <strong>Cosmitto Coffee</strong> (société principale) ainsi que toutes les filiales, partenaires stratégiques (ex: Meninx, TotalEnergies) et prestataires externes avec leurs collaborateurs rattachés.
+        Gestion, structuration et traçabilité des entités participantes : {% if main_company %}<strong>{{ main_company.nom }}</strong> (société principale) ainsi que toutes les{% else %}la société principale ainsi que toutes les{% endif %} filiales, partenaires stratégiques et prestataires externes avec leurs collaborateurs rattachés.
       </p>
     </div>
 

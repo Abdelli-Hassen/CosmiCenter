@@ -1,0 +1,12 @@
+{# Macros partagées. Usage : {% from '_macros.html' import info_tip, SLA_TIPS %} puis {{ info_tip(SLA_TIPS.resolution) }} #}
+{% set SLA_TIPS = {
+  'general': "SLA = Service Level Agreement (engagement de niveau de service) : le délai maximum que le département s'engage à respecter pour traiter les tickets. Il se mesure en heures et sert à calculer l'échéance de chaque ticket.",
+  'reponse': "SLA de réponse : délai maximum, en heures, pour qu'un agent du département réponde pour la première fois à un ticket (4 h par défaut).",
+  'resolution': "SLA de résolution : délai maximum, en heures, pour résoudre un ticket du département (24 h par défaut). Échéance du ticket = date de création + ce délai, sauf si la catégorie choisie impose son propre délai. Un ticket résolu avant son échéance respecte le SLA.",
+  'conformite': "Conformité SLA : part des tickets résolus avant leur échéance (SLA) parmi les tickets de la période ayant une échéance. Objectif : 90 %. « — » signifie qu'aucun ticket n'a encore été résolu avec une échéance.",
+  'echeance': "Date limite de résolution (SLA) : date de création + délai de la catégorie, ou à défaut le SLA de résolution du département (24 h par défaut)."
+} %}
+
+{% macro info_tip(text, side='') -%}
+<span class="info-tip {{ side }}" tabindex="0" role="note" aria-label="{{ text }}" data-tip="{{ text }}"><span class="info-tip-arrow"></span></span>
+{%- endmacro %}

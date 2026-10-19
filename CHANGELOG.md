@@ -2,6 +2,64 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.5.0] - 2026-10-19
+
+### 🚀 Déploiement sur serveur Ubuntu
+- **`deploy/install.sh`** : installateur / mise à jour en une commande (`sudo bash deploy/install.sh`) — installe Python, PostgreSQL, Nginx et Certbot, crée la base et le `.env` (mots de passe et clé secrète générés), restaure éventuellement votre base et vos fichiers, crée le service systemd, configure Nginx (50 Mo d'envoi), le pare-feu (SSH, 80, 443) et le HTTPS Let's Encrypt, et programme des sauvegardes quotidiennes. Relançable sans danger ; les relances suivantes mettent simplement à jour.
+- **`deploy/backup.sh`** : sauvegarde de la base et des fichiers envoyés (14 jours conservés).
+- **`DEPLOYMENT_GUIDE.md`** : guide pas à pas, avec dépannage.
+- **Reverse proxy** : option `BEHIND_PROXY=true` (`ProxyFix`) pour que l'application voie la vraie adresse IP, le HTTPS et le nom d'hôte derrière Nginx.
+- `.gitattributes` : les scripts `.sh` gardent des fins de ligne Unix.
+
+## [2.4.4] - 2026-10-19
+
+### 🔍 Revue visuelle des pages restantes
+- **Info-bulles** : la bulle est désormais dessinée dans un calque flottant (`static/js/tooltip.js`) ; elle n'est plus rognée par les cartes en `overflow: hidden` (rapports), reste dans la fenêtre, se place sous l'icône s'il n'y a pas de place au-dessus, et s'affiche aussi dans les fenêtres modales (`<dialog>`).
+- **Performance des agents** : seuls les vrais agents sont classés (rôle autorisé à modifier/clôturer, ou tickets assignés) au lieu des 69 utilisateurs ; le podium n'apparaît que si des tickets ont été résolus ; « — » au lieu d'un « 0 % » rouge pour un agent sans ticket.
+- **Administration** : le bandeau d'état est réel (requête de test sur la base avec latence, e-mail configuré, dossier d'envoi accessible) ; « Connectée » était affiché même base arrêtée.
+- **Accès à distance** : la page semblait vide (filtre « Avec identifiant » alors que personne n'a d'identifiant) → bascule sur « Tous » et message explicatif ; grille qui passe à la ligne au lieu d'une seule rangée à défilement horizontal.
+- **Paramètres système** : cases TLS/SSL alignées ; bouton **« Envoyer un e-mail de test »** (connexion, authentification et envoi à l'administrateur, avec un message d'erreur explicite).
+- **Logs système** : une entrée par ligne (les lignes étaient collées après le passage à la lecture par la fin du fichier).
+- **Sécurité du compte** : la carte « Sessions actives » affiche le navigateur et le système réels, l'adresse IP et l'heure de connexion (textes génériques auparavant).
+- **Notifications** : styles appliqués (le bloc `<style>` était hors de tout bloc et ignoré), champ `type_notification` correct, titre cliquable vers le ticket ou la messagerie.
+- **Base de connaissance** : icônes `settings`, `shield`, `tool` des catégories enregistrées en base désormais affichées.
+
+## [2.4.3] - 2026-10-19
+
+### 💬 Messagerie, badges, SLA
+- **Pièces jointes dans la messagerie** : bouton trombone (fichier ou image, n'importe quel type, 25 Mo max), aperçu avant envoi, glisser-déposer et collage d'image. Les fichiers sont enregistrés en base (colonnes `fichier_nom`, `fichier_chemin`, `fichier_type`, `fichier_taille` de `messages`) et sur disque dans `instance/chat_files/` (hors dossier public) ; ils sont servis par `/chat/fichier/<id>` uniquement à l'expéditeur et au destinataire. Les images s'affichent dans la conversation, les autres fichiers sont téléchargés.
+- **Badges de la barre latérale** : « Tous les tickets » = nombre de tickets que l'utilisateur n'a pas encore ouverts ; « Messagerie » = nombre de messages non lus (chiffre, plus un simple point).
+- **Notifications** : retour à une interrogation toutes les 2,5 secondes.
+- **SLA** : info-bulle explicative (au-dessus du libellé) sur les SLA de réponse / résolution (formulaire et fiche département), la conformité SLA (rapports) et l'échéance d'un ticket ; le formulaire département permet maintenant de saisir les deux SLA ; **SLA de résolution par défaut : 24 h** (les 9 départements existants, restés à 48 h, passent à 24 h). Le ticket affiche « SLA respecté / dépassé » une fois résolu.
+- Contraste de la barre d'actions groupées de la liste des tickets.
+
+## [2.4.2] - 2026-10-19
+
+### 🔎 Revue page par page de la navigation
+- **Liste des tickets** : les actions groupées (« Changer le statut », « Assigner à ») fonctionnent (`POST /tickets/bulk`, droits vérifiés ticket par ticket, historique et notifications) ; filtres **Fermé** et **Annulé** ; **recherche** par numéro (`#12`), titre ou description.
+- **Satisfaction** : le créateur peut noter (1 à 5) et commenter un ticket résolu ou fermé (`POST /tickets/<id>/evaluer`) ; sans cela le rapport « Satisfaction client » ne pouvait jamais contenir de données.
+- **Rapports** : durées moyennes affichées correctement (elles étaient stockées en minutes mais affichées comme des heures : 90 min s'affichait « 90 h ») ; « — » au lieu de « 0 % » / « 0/5 » lorsqu'il n'y a aucune donnée.
+- **SLA des départements** : sans délai de catégorie, l'échéance d'un ticket est calculée avec le SLA de résolution du département (il n'était jamais utilisé).
+- **Messagerie** : une seule adresse (`/chat/`, l'ancienne `/tickets/chat` redirige) ; menu actif correct ; contact fictif « Amine Larbi » retiré ; boutons sans fonction (« Supprimer la conversation », pièce jointe) retirés.
+- **Notifications** : interrogation toutes les 15 s (2,5 s auparavant) et suspendue quand l'onglet est masqué ; le badge de « Tous les tickets » ne compte plus que les notifications de tickets.
+- **Profil** : sélecteur de langue (sans effet, rien n'est traduit) remplacé par l'option **notifications par e-mail**, désormais respectée à l'envoi.
+- **Annuaire** : filtre par point de vente. **Formulaires de ticket** : limites de longueur, description obligatoire, types de fichiers alignés sur le serveur (`.log` était proposé mais refusé).
+- **Fichiers** : seules les images s'affichent dans le navigateur, les autres types (PDF, Office, ZIP) sont téléchargés.
+- **Données** : descriptions des rôles passées en français.
+- **Retiré** : pages `/tickets/faq` (contenu codé en dur, non liées), texte d'accueil des entreprises avec noms codés en dur.
+- **Accessibilité** : lignes et cartes cliquables utilisables au clavier (Entrée / Espace), boutons-icônes nommés (`static/js/a11y.js`).
+
+## [2.4.1] - 2026-10-19
+
+### 🏪 Points de vente : tout vient de la base
+- Aucune nouvelle table : la catégorie et la couleur de chaque PDV restent dans `points_de_vente` (`categorie`, `couleur`) ; les listes de choix (catégories avec description et icône, palette de 11 couleurs) sont stockées en JSON dans la table existante `configurations_systeme` (clés `pdv_categories` et `pdv_themes`), amorcées une seule fois avec les valeurs historiques puis gérées en base.
+- La page des PDV (filtres, icônes, palette rapide de chaque carte) et le formulaire de création/modification lisent ces listes via un cache ; plus aucune liste codée en dur dans les gabarits.
+- Nouvelle page **Catégories & thèmes** (`/pdv/referentiels`, permissions `pdv.modifier` / `pdv.gerer` ou niveau ≥ 90) : ajout, modification, désactivation et suppression des catégories (refusée si des PDV l'utilisent), ajout / retrait de couleurs.
+- Une catégorie « personnalisée » saisie dans le formulaire est enregistrée automatiquement dans les catégories en base.
+- Cache mémoire des référentiels (`services/referentiels.py`, TTL 5 min), vidé à chaque modification.
+- Chaque PDV a désormais sa propre couleur de thème en base (8 PDV, 8 couleurs).
+- Corrigé : le changement de thème depuis la carte n'était pas enregistré (mauvaise URL `/pdvs/...`) ; coche de la couleur active ; les champs vides des formulaires PDV / entreprises affichaient « None ».
+
 ## [2.4.0] - 2026-10-19
 
 ### 🔒 Audit de sécurité et de fiabilité (correctifs)

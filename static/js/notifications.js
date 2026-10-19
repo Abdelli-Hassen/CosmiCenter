@@ -440,18 +440,21 @@
             // Tickets nav badge
             const ticketsBadge = document.getElementById('navTicketsBadge');
             if (ticketsBadge) {
-              ticketsBadge.textContent = notifs;
-              ticketsBadge.style.display = notifs > 0 ? 'inline-block' : 'none';
+              // nombre de tickets que l'utilisateur n'a pas encore ouverts
+              const unopened = data.data.unopened_tickets !== undefined ? data.data.unopened_tickets : 0;
+              ticketsBadge.textContent = unopened > 99 ? '99+' : unopened;
+              ticketsBadge.style.display = unopened > 0 ? 'inline-block' : 'none';
             }
 
-            // Messagerie nav badge
+            // Messagerie nav badge : nombre de messages non lus
             const msgBadge = document.getElementById('navMessagesBadge');
             if (msgBadge) {
+              msgBadge.textContent = msgs > 99 ? '99+' : msgs;
               msgBadge.style.display = msgs > 0 ? 'inline-block' : 'none';
             }
           }
         }).catch(err => console.error(err));
-    }, 2500); // 2.5 second polling
+    }, 2500); // interrogation toutes les 2,5 secondes
   }
 
 

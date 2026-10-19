@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% from 'pdv/_icons.html' import cat_icon %}
+{% block title %}Catégories & thèmes des PDV{% endblock %}
+
+{% block extra_head %}
+<style>
+  .ref-wrap { max-width: 1000px; margin: 0 auto; padding: 24px 16px 60px; }
+  .ref-head { display:flex; align-items:center; gap:12px; margin-bottom: 6px; }
+  .ref-head h1 { font-size: 22px; margin: 0; }
+  .ref-sub { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+  .ref-card { background: var(--surface-1, #1e1b3a); border: 1px solid var(--border-default, rgba(255,255,255,.08)); border-radius: 14px; padding: 18px; margin-bottom: 22px; }
+  .ref-card h2 { font-size: 15px; margin: 0 0 4px; }
+  .ref-note { color: var(--text-muted); font-size: 12px; margin-bottom: 14px; }
+  .ref-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .ref-table th { text-align: left; color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 6px 8px; }
+  .ref-table td { padding: 8px; border-top: 1px solid var(--border-subtle, rgba(255,255,255,.06)); vertical-align: middle; }
+  .ref-in { background: var(--surface-base, #14122b); color: var(--text-primary); border: 1px solid var(--border-default, rgba(255,255,255,.12)); border-radius: 8px; padding: 6px 9px; font-size: 13px; }
+  .ref-in.sm { width: 64px; }
+  .ref-actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .ref-add { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border-default, rgba(255,255,255,.12)); }
+  .ref-dot { display:inline-block; width:18px; height:18px; border-radius:50%; vertical-align:middle; border:2px solid rgba(255,255,255,.35); }
+  .ref-badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(148,163,184,.15); }
+  .ref-icon { display:inline-flex; width:30px; height:30px; align-items:center; justify-content:center; border-radius:8px; background: rgba(148,163,184,.12); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ref-wrap">
+  <div class="ref-head">
+    <a href="{{ url_for('pdv.liste') }}" class="btn btn-ghost btn-sm" title="Retour aux points de vente" aria-label="Retour">←</a>
+    <h1>Catégories &amp; thèmes des points de vente</h1>
+  </div>
+  <div class="ref-sub">Ces listes sont enregistrées en base de données (table configurations_systeme) : elles alimentent la page des PDV, le formulaire de création/modification et la palette de couleurs.</div>
+
+  <!-- Catégories -->
+  <div class="ref-card">
+    <h2>Catégories</h2>
+    <div class="ref-note">Une catégorie utilisée par au moins un point de vente ne peut pas être supprimée : désactivez-la pour la masquer des nouvelles saisies.</div>
+    <div style="overflow-x:auto;">
+    <table class="ref-table">
+      <thead><tr><th></th><th>Nom</th><th>Description</th><th>Icône</th><th>Ordre</th><th>Active</th><th>PDV</th><th></th></tr></thead>
+      <tbody>
+      {% for c in categories %}
+        {% set n = loop.index %}
+        <tr>
+          <td><span class="ref-icon">{{ cat_icon(c.icone, 16, 2.2) }}</span></td>
+          <td><strong>{{ c.nom }}</strong></td>
+          <td><input form="cat_{{ n }}" class="ref-in" name="description" value="{{ c.description or '' }}" maxlength="200" style="min-width:200px;" aria-label="Description"></td>
+          <td>
+            <select form="cat_{{ n }}" class="ref-in" name="icone" aria-label="Icône">
+              {% for k in icon_keys %}<option value="{{ k }}" {% if c.icone == k %}selected{% endif %}>{{ k }}</option>{% endfor %}
+            </select>
+          </td>
+          <td><input form="cat_{{ n }}" class="ref-in sm" type="number" name="ordre" value="{{ c.ordre or 0 }}" aria-label="Ordre"></td>
+          <td><input form="cat_{{ n }}" type="checkbox" name="actif" {% if c.actif %}checked{% endif %} aria-label="Active"></td>
+          <td><span class="ref-badge">{{ usage.get(c.nom, 0) }}</span></td>
+          <td>
+            <div class="ref-actions">
+              <button form="cat_{{ n }}" type="submit" class="btn btn-primary btn-sm">Enregistrer</button>
+              <button form="del_cat_{{ n }}" type="submit" class="btn btn-ghost btn-sm" style="color:#ef4444;" {% if usage.get(c.nom, 0) %}disabled title="Utilisée par des PDV"{% endif %}>Supprimer</button>
+            </div>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8" style="color:var(--text-muted);">Aucune catégorie.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {# Formulaires rattachés aux champs de chaque ligne via l'attribut form="..." (un <form> ne peut pas être placé dans un <tr>) #}
+    {% for c in categories %}
+    <form method="post" action="{{ url_for('pdv.modifier_categorie') }}" id="cat_{{ loop.index }}" hidden><input type="hidden" name="nom" value="{{ c.nom }}"></form>
+    <form method="post" action="{{ url_for('pdv.supprimer_categorie') }}" id="del_cat_{{ loop.index }}" hidden><input type="hidden" name="nom" value="{{ c.nom }}"></form>
+    {% endfor %}
+
+    <form method="post" action="{{ url_for('pdv.ajouter_categorie') }}" class="ref-add">
+      <strong style="font-size:13px;">Nouvelle catégorie</strong>
+      <input class="ref-in" name="nom" placeholder="Nom (ex: Gare, Aéroport)" maxlength="50" required aria-label="Nom de la catégorie">
+      <input class="ref-in" name="description" placeholder="Description" maxlength="200" aria-label="Description" style="min-width:200px;">
+      <select class="ref-in" name="icone" aria-label="Icône">{% for k in icon_keys %}<option value="{{ k }}">{{ k }}</option>{% endfor %}</select>
+      <button type="submit" class="btn btn-primary btn-sm">Ajouter</button>
+    </form>
+  </div>
+
+  <!-- Thèmes -->
+  <div class="ref-card">
+    <h2>Palette de thèmes</h2>
+    <div class="ref-note">Couleurs proposées sur chaque carte (icône palette) et dans le formulaire. Retirer une couleur ne change pas les PDV qui l'utilisent déjà.</div>
+    <div style="overflow-x:auto;">
+    <table class="ref-table">
+      <thead><tr><th></th><th>Nom</th><th>Couleur</th><th>PDV</th><th></th></tr></thead>
+      <tbody>
+      {% for t in themes %}
+        <tr>
+          <td><span class="ref-dot" style="background: {{ t.couleur }};"></span></td>
+          <td>{{ t.nom }}</td>
+          <td><code>{{ t.couleur }}</code></td>
+          <td><span class="ref-badge">{{ theme_usage.get(t.couleur, 0) }}</span></td>
+          <td>
+            <form method="post" action="{{ url_for('pdv.supprimer_theme') }}" style="margin:0;">
+              <input type="hidden" name="couleur" value="{{ t.couleur }}">
+              <button type="submit" class="btn btn-ghost btn-sm" style="color:#ef4444;">Retirer</button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" style="color:var(--text-muted);">Palette vide.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+
+    <form method="post" action="{{ url_for('pdv.ajouter_theme') }}" class="ref-add">
+      <strong style="font-size:13px;">Nouvelle couleur</strong>
+      <input class="ref-in" name="nom" placeholder="Nom (ex: Bordeaux)" maxlength="50" required aria-label="Nom du thème">
+      <input type="color" name="couleur" value="#8b5cf6" aria-label="Couleur" style="width:44px;height:34px;border:none;background:none;padding:0;">
+      <button type="submit" class="btn btn-primary btn-sm">Ajouter</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

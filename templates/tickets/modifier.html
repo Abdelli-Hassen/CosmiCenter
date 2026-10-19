@@ -484,7 +484,7 @@ textarea.fi { resize: vertical; min-height: 140px; }
               </label>
             </div>
             <div id="customTypeContainer" style="display:{% if tc not in ['incident','demande','besoin','tache','plainte'] %}block{% else %}none{% endif %}; margin-top: 12px;">
-              <input type="text" id="custom_type_input" name="custom_type" class="fi" placeholder="Precisez le type..."
+              <input type="text" id="custom_type_input" name="custom_type" class="fi" maxlength="20" placeholder="Precisez le type..."
                 value="{{ tc if tc not in ['incident','demande','besoin','tache','plainte'] else '' }}">
             </div>
           </div>
@@ -501,12 +501,12 @@ textarea.fi { resize: vertical; min-height: 140px; }
           <div class="edit-section-body">
             <div style="margin-bottom: 16px;">
               <label class="fl" for="titre">Titre <span class="req">*</span></label>
-              <input type="text" id="titre" name="titre" class="fi" value="{{ ticket.titre }}" required
+              <input type="text" id="titre" name="titre" class="fi" value="{{ ticket.titre }}" required maxlength="200"
                 style="font-size: var(--text-base); font-weight: 500;" placeholder="Decrivez le sujet en une phrase claire...">
             </div>
             <div>
               <label class="fl" for="description">Description</label>
-              <textarea id="description" name="description" class="fi" rows="8"
+              <textarea id="description" name="description" class="fi" rows="8" required maxlength="20000"
                 placeholder="Contexte, impact, etapes de reproduction...">{{ ticket.description or '' }}</textarea>
             </div>
           </div>
@@ -826,7 +826,7 @@ textarea.fi { resize: vertical; min-height: 140px; }
               <p style="margin:0;font-size:11px;color:var(--text-faint);">ou glisser-deposer ici</p>
               <div id="fileList" style="margin-top:8px;display:flex;flex-direction:column;gap:5px;"></div>
             </div>
-            <input type="file" id="fileInput" name="attachments" multiple accept="image/*,.pdf,.zip,.txt,.log,.docx,.xlsx" style="display:none;">
+            <input type="file" id="fileInput" name="attachments" multiple accept="{% for e in config.ALLOWED_EXTENSIONS|sort %}.{{ e }}{% if not loop.last %},{% endif %}{% endfor %}" style="display:none;">
           </div>
         </div>
 

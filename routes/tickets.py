@@ -7,7 +7,9 @@ from html import escape
 from models import (db, Ticket, Utilisateur, Departement, CategorieTicket, Commentaire, HistoriqueTicket,
                     Tache, PieceJointe, Notification)
 from services.email_service import send_email_notification
+from sqlalchemy import or_
 from utils.permissions import (visible_tickets_query, can_access_ticket, can_manage_ticket, role_level)
+from utils.security import like_escape
 from utils.uploads import save_upload, UploadError, MAX_ATTACHMENT_BYTES
 from datetime import datetime, timedelta
 import logging
@@ -18,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 STATUTS = ['nouveau', 'ouvert', 'en_cours', 'en_attente', 'resolu', 'ferme', 'annule']
 STATUTS_OUVERTS = ['nouveau', 'ouvert']          # « ouvert » est un ancien synonyme de « nouveau »
+STATUTS_CHOIX = [('nouveau', 'Nouveau'), ('en_cours', 'En cours'), ('en_attente', 'En attente'),
+                 ('resolu', 'Résolu'), ('ferme', 'Fermé'), ('annule', 'Annulé')]
 PRIORITES = ['critique', 'urgente', 'haute', 'moyenne', 'basse']
 TYPES_STANDARD = ['incident', 'demande', 'besoin', 'tache', 'plainte']
 SORTABLE = {
@@ -100,6 +104,8 @@ def _filtered_listing(base_query, page_title):
     priorite = request.args.get('priorite')
     departement_id = request.args.get('departement_id')
 
+    q = (request.args.get('q') or '').strip()
+
     query = base_query
     if statut:
         if statut in STATUTS_OUVERTS:
@@ -110,6 +116,13 @@ def _filtered_listing(base_query, page_title):
         query = query.filter(Ticket.priorite == priorite)
     if departement_id:
         query = query.filter(Ticket.departement_id == departement_id)
+    if q:
+        like = f'%{like_escape(q[:100])}%'
+        query = query.filter(or_(
+            Ticket.numero == q.lstrip('#'),
+            Ticket.titre.ilike(like, escape='\\'),
+            Ticket.description.ilike(like, escape='\\'),
+        ))
 
     sort_column = SORTABLE.get(request.args.get('sort_by', 'date_creation'), Ticket.date_creation)
     if request.args.get('order', 'desc') == 'asc':
@@ -132,11 +145,20 @@ def _filtered_listing(base_query, page_title):
             ).all()
         ]
 
+    # Agents assignables (actions groupées), uniquement pour les détenteurs de tickets.assigner
+    assignables = []
+    if current_user.has_permission('tickets.assigner'):
+        assignables = sorted(Utilisateur.query.filter_by(actif=True).all(),
+                             key=lambda u: (u.nom_complet or '').strip().upper())
+
     return render_template('tickets/liste.html',
                            tickets=tickets,
                            departements=departements,
                            page_title=page_title,
-                           viewed_ticket_ids=viewed_ticket_ids)
+                           viewed_ticket_ids=viewed_ticket_ids,
+                           assignables=assignables,
+                           statuts_choix=STATUTS_CHOIX,
+                           q=q)
 
 
 @tickets_bp.route('/tableau-bord')
@@ -269,6 +291,12 @@ def nouveau():
                     if cat.delai_resolution_jours:
                         ticket.date_echeance = datetime.utcnow() + timedelta(days=cat.delai_resolution_jours)
 
+            # Sans délai de catégorie, le SLA de résolution du département fixe l'échéance
+            if not ticket.date_echeance and departement_id:
+                dept_sla = db.session.get(Departement, departement_id)
+                if dept_sla and dept_sla.sla_resolution_heures:
+                    ticket.date_echeance = datetime.utcnow() + timedelta(hours=dept_sla.sla_resolution_heures)
+
             db.session.add(ticket)
             db.session.flush()  # obtenir l'ID du ticket
 
@@ -345,7 +373,8 @@ def _notify_new_ticket(ticket):
 
     users_to_notify.discard(current_user._get_current_object())
 
-    recipients = [current_user.email] + [u.email for u in users_to_notify]
+    # Le créateur reçoit toujours l'accusé de réception ; les autres selon leur préférence « notifications par e-mail »
+    recipients = [current_user.email] + [u.email for u in users_to_notify if u.notifications_email is not False]
     send_email_notification(
         current_app._get_current_object(),
         f"Ticket : [#{ticket.numero}] {ticket.titre}",
@@ -656,8 +685,10 @@ def commenter(ticket_id):
 
     if not interne:
         try:
-            recipients = {ticket.createur.email}
-            if ticket.assigne_a:
+            recipients = set()
+            if ticket.createur and ticket.createur.notifications_email is not False:
+                recipients.add(ticket.createur.email)
+            if ticket.assigne_a and ticket.assigne_a.notifications_email is not False:
                 recipients.add(ticket.assigne_a.email)
             recipients.discard(current_user.email)
             if recipients:
@@ -796,38 +827,99 @@ def toggle_tache(tache_id):
         return jsonify({'error': 'Erreur serveur'}), 500
 
 
-# ─── Base de connaissances (FAQ) ────────────────────────────────────────────
-
-@tickets_bp.route('/faq')
+@tickets_bp.route('/bulk', methods=['POST'])
 @login_required
-def faq_liste():
-    """Liste des guides de la base de connaissances"""
-    return render_template('faq/liste.html')
+def bulk_update():
+    """Actions groupées depuis la liste : changer le statut ou assigner plusieurs tickets."""
+    data = request.get_json(silent=True) or {}
+    ids = data.get('ids')
+    action = data.get('action')
+    value = data.get('value')
+    if not isinstance(ids, list) or not ids or len(ids) > 100 or not all(isinstance(i, str) for i in ids):
+        return jsonify({'success': False, 'message': 'Sélection invalide.'}), 400
+
+    if action == 'statut':
+        if value not in STATUTS:
+            return jsonify({'success': False, 'message': 'Statut invalide.'}), 400
+    elif action == 'assigner':
+        if not current_user.has_permission('tickets.assigner'):
+            return jsonify({'success': False, 'message': "Vous n'avez pas le droit d'assigner."}), 403
+        assignee = None
+        if value:
+            assignee = db.session.get(Utilisateur, value)
+            if not assignee or not assignee.actif:
+                return jsonify({'success': False, 'message': 'Utilisateur introuvable ou inactif.'}), 400
+    else:
+        return jsonify({'success': False, 'message': 'Action inconnue.'}), 400
+
+    updated = skipped = 0
+    try:
+        for ticket in Ticket.query.filter(Ticket.id.in_(ids)).all():
+            if not can_access_ticket(current_user, ticket) or not can_manage_ticket(current_user, ticket):
+                skipped += 1
+                continue
+            if action == 'statut':
+                if ticket.statut == value:
+                    continue
+                db.session.add(HistoriqueTicket(
+                    ticket_id=ticket.id, utilisateur_id=current_user.id, action='Modification de statut',
+                    champ_modifie='Statut', ancienne_valeur=ticket.statut, nouvelle_valeur=value))
+                _apply_status(ticket, value)
+            else:
+                new_id = assignee.id if assignee else None
+                if ticket.assigne_a_id == new_id:
+                    continue
+                old = ticket.assigne_a.nom_complet if ticket.assigne_a else 'Non assigné'
+                db.session.add(HistoriqueTicket(
+                    ticket_id=ticket.id, utilisateur_id=current_user.id, action="Changement d'assignation",
+                    champ_modifie='Assigné à', ancienne_valeur=old,
+                    nouvelle_valeur=assignee.nom_complet if assignee else 'Non assigné'))
+                if assignee and assignee.id != current_user.id:
+                    db.session.add(Notification(
+                        utilisateur_id=assignee.id, titre="Nouveau ticket assigné",
+                        message=f'Le ticket "{ticket.titre}" vous a été assigné.', type_notification="ticket",
+                        lien=url_for('tickets.detail', ticket_id=ticket.id)))
+                ticket.assigne_a_id = new_id
+            updated += 1
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Erreur action groupée: {e}', exc_info=True)
+        return jsonify({'success': False, 'message': 'Erreur serveur.'}), 500
+
+    logger.info(f'Action groupée {action} par {current_user.email}: {updated} modifié(s), {skipped} ignoré(s)')
+    return jsonify({'success': True, 'updated': updated, 'skipped': skipped})
 
 
-@tickets_bp.route('/faq/<article_id>')
+@tickets_bp.route('/<ticket_id>/evaluer', methods=['POST'])
 @login_required
-def faq_detail(article_id):
-    """Lecture d'un article de la base de connaissances"""
-    return render_template('faq/detail.html')
+def evaluer(ticket_id):
+    """Note de satisfaction (1 à 5) donnée par le créateur d'un ticket résolu ou fermé."""
+    ticket = Ticket.query.get_or_404(ticket_id)
+    if ticket.createur_id != current_user.id:
+        flash("Seul le créateur du ticket peut l'évaluer.", 'danger')
+        return redirect(url_for('tickets.detail', ticket_id=ticket_id))
+    if ticket.statut not in ('resolu', 'ferme'):
+        flash("Le ticket doit être résolu ou fermé pour être évalué.", 'warning')
+        return redirect(url_for('tickets.detail', ticket_id=ticket_id))
+    try:
+        note = int(request.form.get('satisfaction', ''))
+    except ValueError:
+        note = 0
+    if note < 1 or note > 5:
+        flash("Choisissez une note entre 1 et 5.", 'danger')
+        return redirect(url_for('tickets.detail', ticket_id=ticket_id))
+    ticket.satisfaction = note
+    ticket.commentaire_satisfaction = (request.form.get('commentaire') or '').strip()[:1000] or None
+    db.session.add(HistoriqueTicket(ticket_id=ticket.id, utilisateur_id=current_user.id, action='Évaluation',
+                                    champ_modifie='Satisfaction', nouvelle_valeur=str(note)))
+    db.session.commit()
+    flash('Merci pour votre évaluation !', 'success')
+    return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
-
-# ─── Chat / Messagerie ───────────────────────────────────────────────────────
 
 @tickets_bp.route('/chat')
 @login_required
 def chat_inbox():
-    """Centre de messagerie"""
-    unread_chat_notifs = Notification.query.filter_by(
-        utilisateur_id=current_user.id,
-        type_notification='chat',
-        lue=False
-    ).all()
-
-    if unread_chat_notifs:
-        for notif in unread_chat_notifs:
-            notif.lue = True
-            notif.date_lecture = datetime.utcnow()
-        db.session.commit()
-
-    return render_template('chat/inbox.html')
+    """Ancienne adresse de la messagerie : redirige vers /chat/."""
+    return redirect(url_for('chat.inbox'))

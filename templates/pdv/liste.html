@@ -309,6 +309,7 @@
 {% endblock %}
 
 {% block content %}
+{% from 'pdv/_icons.html' import cat_icon %}
 <div class="pdv-page">
 
   <!-- Hero Header -->
@@ -344,23 +345,20 @@
       <span class="pdv-filter-count">{{ pdvs|length }}</span>
     </button>
     {% for cat in categories %}
-      {% set count_cat = pdvs | selectattr('categorie', 'equalto', cat) | list | length %}
+      {% set count_cat = pdvs | selectattr('categorie', 'equalto', cat.nom) | list | length %}
       {% if count_cat > 0 %}
-      <button type="button" class="pdv-filter-chip" onclick="filterCategory({{ cat|tojson|forceescape }}, this)">
-        {% if cat == 'Urbain' %}
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h1M9 13h1M9 17h1M15 13h1M15 17h1"/></svg>
-        {% elif cat == 'Express' %}
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        {% elif cat == 'Mall' %}
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-        {% else %}
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-        {% endif %}
-        <span>{{ cat }}</span>
+      <button type="button" class="pdv-filter-chip" onclick="filterCategory({{ cat.nom|tojson|forceescape }}, this)" title="{{ cat.description }}">
+        {{ cat_icon(cat.icone, 13, 2.5) }}
+        <span>{{ cat.nom }}</span>
         <span class="pdv-filter-count">{{ count_cat }}</span>
       </button>
       {% endif %}
     {% endfor %}
+    {% if can_configure %}
+    <a href="{{ url_for('pdv.gerer_referentiels') }}" class="pdv-filter-chip" style="margin-left:auto;text-decoration:none;" title="Gérer les catégories et la palette de thèmes">
+      <span>⚙ Catégories &amp; thèmes</span>
+    </a>
+    {% endif %}
   </div>
   {% endif %}
 
@@ -411,17 +409,13 @@
       <div class="pdv-theme-popover" id="themePopover_{{ pdv.id }}" onclick="event.stopPropagation()">
         <div class="popover-title">Choisir le thème</div>
         <div class="popover-swatches">
-          {% set colors = [
-            '#10b981', '#0ea5e9', '#2563eb', '#6366f1', '#8b5cf6',
-            '#ec4899', '#f97316', '#f59e0b', '#ef4444', '#14b8a6'
-          ] %}
-          {% for c in colors %}
-          <button type="button" 
-                  class="popover-swatch {% if theme_color == c %}active{% endif %}"
-                  style="background-color: {{ c }};"
-                  data-color="{{ c }}"
-                  title="Appliquer cette couleur"
-                  onclick="applyThemeQuick('{{ pdv.id }}', '{{ c }}')"></button>
+          {% for t in themes %}
+          <button type="button"
+                  class="popover-swatch {% if theme_color|lower == t.couleur|lower %}active{% endif %}"
+                  style="background-color: {{ t.couleur }};"
+                  data-color="{{ t.couleur }}"
+                  title="{{ t.nom }}"
+                  onclick="applyThemeQuick('{{ pdv.id }}', '{{ t.couleur }}')"></button>
           {% endfor %}
         </div>
       </div>

@@ -1,0 +1,68 @@
+/* CosmiCenter — info-bulle d'aide (icône « i »).
+   Le texte est affiché par static/js/tooltip.js dans un calque flottant (.info-tip-pop) attaché à <body>,
+   afin qu'aucun conteneur en overflow:hidden ne puisse le rogner. */
+.info-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  font-size: 10px;
+  font-weight: 800;
+  font-style: normal;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-muted, #94a3b8);
+  cursor: help;
+  vertical-align: middle;
+  outline: none;
+}
+.info-tip::before { content: "i"; }
+.info-tip:hover, .info-tip:focus { color: var(--text-primary, #f8fafc); }
+.info-tip:focus-visible { box-shadow: 0 0 0 2px var(--brand, #e8213f); }
+.info-tip > .info-tip-arrow { display: none; }  /* ancien marqueur, remplacé par le calque flottant */
+
+.info-tip-pop {
+  position: fixed;
+  display: none;
+  z-index: 100000;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: normal;
+  pointer-events: none;
+}
+.info-tip-pop-arrow {
+  position: absolute;
+  bottom: -6px;
+  width: 10px;
+  height: 10px;
+  background: #0f172a;
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  transform: rotate(45deg);
+}
+.info-tip-pop.below .info-tip-pop-arrow {
+  bottom: auto;
+  top: -6px;
+  border-right: none;
+  border-bottom: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}

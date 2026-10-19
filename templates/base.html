@@ -40,6 +40,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v=102">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tickets.css') }}?v=102">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=102">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tooltip.css') }}?v=2">
 
   {% block extra_head %}{% endblock %}
 
@@ -149,7 +150,7 @@
             <a href="{{ url_for('tickets.liste') }}" class="nav-item {% if request.endpoint in ['tickets.liste','tickets.detail','tickets.modifier'] %}active{% endif %}">
               <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
               <span class="nav-item-label">Tous les tickets</span>
-              <span class="nav-item-badge" id="navTicketsBadge" style="{% if notifications_count == 0 %}display:none;{% endif %}">{{ notifications_count }}</span>
+              <span class="nav-item-badge" id="navTicketsBadge" title="Tickets non ouverts" style="{% if tickets_non_ouverts == 0 %}display:none;{% endif %}">{{ tickets_non_ouverts if tickets_non_ouverts < 100 else '99+' }}</span>
             </a>
             {% endif %}
             
@@ -168,10 +169,10 @@
             {% endif %}
             
             {% if current_user.has_permission('messagerie.voir') %}
-            <a href="{{ url_for('tickets.chat_inbox') }}" class="nav-item {% if request.endpoint == 'tickets.chat_inbox' %}active{% endif %}">
+            <a href="{{ url_for('chat.inbox') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('chat.') %}active{% endif %}">
               <svg class="nav-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               <span class="nav-item-label">Messagerie</span>
-              <span class="nav-item-dot" id="navMessagesBadge" style="display:none;"></span>
+              <span class="nav-item-badge" id="navMessagesBadge" title="Messages non lus" style="{% if messages_non_lus == 0 %}display:none;{% endif %}">{{ messages_non_lus if messages_non_lus < 100 else '99+' }}</span>
             </a>
             {% endif %}
             
@@ -383,6 +384,8 @@
     };
   </script>
 
+  <script src="{{ url_for('static', filename='js/a11y.js') }}?v=1"></script>
+  <script src="{{ url_for('static', filename='js/tooltip.js') }}?v=2"></script>
   <script src="{{ url_for('static', filename='js/app.js') }}?v=102"></script>
   <script src="{{ url_for('static', filename='js/theme.js') }}?v=102"></script>
   <script src="{{ url_for('static', filename='js/notifications.js') }}?v=102"></script>

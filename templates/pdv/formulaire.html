@@ -185,6 +185,7 @@
 {% endblock %}
 
 {% block content %}
+{% from 'pdv/_icons.html' import cat_icon %}
 <div class="form-container">
     <div class="form-card">
         <div class="form-header" style="justify-content: space-between;">
@@ -207,66 +208,29 @@
                 <!-- Nom du PDV -->
                 <div class="form-group">
                     <label for="nom" class="form-label">Nom du Magasin / PDV <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="nom" name="nom" value="{{ pdv.nom if pdv else '' }}" required placeholder="Ex: PDV Azur" oninput="updatePreviewTitle(this.value)">
+                    <input type="text" class="form-control" id="nom" name="nom" value="{{ (pdv.nom if pdv else '')|default('', true) }}" required placeholder="Ex: PDV Azur" oninput="updatePreviewTitle(this.value)">
                 </div>
 
                 <!-- Catégorie du PDV -->
                 <div class="form-group">
                     <label class="form-label">Catégorie du Point de Vente <span class="text-danger">*</span></label>
                     <div style="font-size:12px; color:var(--text-muted); margin-bottom: 6px;">
-                        Choisissez un type prédéfini (Urbain, Express, Mall) ou définissez votre propre catégorie :
+                        Choisissez une catégorie existante ou définissez la vôtre :
                     </div>
-                    {% set current_cat = pdv.categorie if pdv and pdv.categorie else 'Urbain' %}
-                    {% set is_custom = current_cat not in ['Urbain', 'Express', 'Mall'] and current_cat not in categories %}
+                    {% set cat_names = categories | map(attribute='nom') | list %}
+                    {% set current_cat = pdv.categorie if pdv and pdv.categorie else (cat_names[0] if cat_names else '') %}
+                    {% set is_custom = current_cat not in cat_names %}
                     <input type="hidden" id="categorieInput" name="categorie" value="{% if is_custom %}custom{% else %}{{ current_cat }}{% endif %}">
 
                     <div class="category-cards-grid">
-                        <!-- Urbain -->
-                        <div class="cat-card {% if current_cat == 'Urbain' %}active{% endif %}" onclick="selectCategory('Urbain', this)">
-                            <div class="cat-card-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h1M9 13h1M9 17h1M15 13h1M15 17h1"/></svg>
-                            </div>
-                            <div class="cat-card-content">
-                                <div class="cat-card-title">Urbain</div>
-                                <div class="cat-card-desc">Centre-ville & quartiers</div>
-                            </div>
-                        </div>
-
-                        <!-- Express -->
-                        <div class="cat-card {% if current_cat == 'Express' %}active{% endif %}" onclick="selectCategory('Express', this)">
-                            <div class="cat-card-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                            </div>
-                            <div class="cat-card-content">
-                                <div class="cat-card-title">Express</div>
-                                <div class="cat-card-desc">Station-service, kiosque</div>
-                            </div>
-                        </div>
-
-                        <!-- Mall -->
-                        <div class="cat-card {% if current_cat == 'Mall' %}active{% endif %}" onclick="selectCategory('Mall', this)">
-                            <div class="cat-card-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                            </div>
-                            <div class="cat-card-content">
-                                <div class="cat-card-title">Mall</div>
-                                <div class="cat-card-desc">Centre commercial</div>
-                            </div>
-                        </div>
-
-                        <!-- Other existing categories from DB -->
                         {% for c in categories %}
-                            {% if c not in ['Urbain', 'Express', 'Mall'] %}
-                            <div class="cat-card {% if current_cat == c %}active{% endif %}" onclick="selectCategory({{ c|tojson|forceescape }}, this)">
-                                <div class="cat-card-icon">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-                                </div>
-                                <div class="cat-card-content">
-                                    <div class="cat-card-title">{{ c }}</div>
-                                    <div class="cat-card-desc">Catégorie existante</div>
-                                </div>
+                        <div class="cat-card {% if current_cat == c.nom %}active{% endif %}" onclick="selectCategory({{ c.nom|tojson|forceescape }}, this)">
+                            <div class="cat-card-icon">{{ cat_icon(c.icone, 20, 2.2) }}</div>
+                            <div class="cat-card-content">
+                                <div class="cat-card-title">{{ c.nom }}</div>
+                                <div class="cat-card-desc">{{ c.description }}</div>
                             </div>
-                            {% endif %}
+                        </div>
                         {% endfor %}
 
                         <!-- Custom category option -->
@@ -280,7 +244,6 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Custom input field -->
                     <div id="customCatInputWrap" style="margin-top: 10px; display: {% if is_custom %}block{% else %}none{% endif %};">
                         <input type="text" class="form-control" id="customCatInput" name="categorie_custom" 
@@ -292,32 +255,19 @@
                 <!-- Theme Color Selector -->
                 <div class="form-group">
                     <label class="form-label">Thème Couleur du Point de Vente</label>
-                    {% set current_color = pdv.couleur if pdv and pdv.couleur else '#10b981' %}
+                    {% set current_color = pdv.couleur if pdv and pdv.couleur else (themes[0].couleur if themes else '#10b981') %}
                     <input type="hidden" id="couleurInput" name="couleur" value="{{ current_color }}">
                     
                     <div class="theme-picker-card">
                         <div style="font-size:12px; color:var(--text-muted); margin-bottom: -4px;">Choisissez une palette prédéfinie ou sélectionnez votre propre couleur :</div>
                         <div class="swatches-grid">
-                            {% set swatches = [
-                                ('#10b981', 'Émeraude'),
-                                ('#0ea5e9', 'Azur'),
-                                ('#2563eb', 'Saphir'),
-                                ('#6366f1', 'Indigo'),
-                                ('#8b5cf6', 'Violet'),
-                                ('#ec4899', 'Rose'),
-                                ('#f97316', 'Corail'),
-                                ('#f59e0b', 'Ambre'),
-                                ('#ef4444', 'Rouge'),
-                                ('#14b8a6', 'Sarcelle'),
-                                ('#64748b', 'Ardoise')
-                            ] %}
-                            {% for hex, name in swatches %}
-                            <button type="button" 
-                                    class="color-swatch-btn {% if current_color == hex %}active{% endif %}" 
-                                    style="background-color: {{ hex }}; color: {{ hex }};"
-                                    data-color="{{ hex }}" 
-                                    title="{{ name }}"
-                                    onclick="selectThemeColor('{{ hex }}', this)">
+                            {% for t in themes %}
+                            <button type="button"
+                                    class="color-swatch-btn {% if current_color|lower == t.couleur|lower %}active{% endif %}"
+                                    style="background-color: {{ t.couleur }}; color: {{ t.couleur }};"
+                                    data-color="{{ t.couleur }}"
+                                    title="{{ t.nom }}"
+                                    onclick="selectThemeColor('{{ t.couleur }}', this)">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                             </button>
                             {% endfor %}
@@ -347,22 +297,22 @@
                 <div class="row-2">
                     <div class="form-group">
                         <label for="telephone" class="form-label">Téléphone</label>
-                        <input type="text" class="form-control" id="telephone" name="telephone" value="{{ pdv.telephone if pdv else '' }}" placeholder="Ex: +216 71 123 456">
+                        <input type="text" class="form-control" id="telephone" name="telephone" value="{{ (pdv.telephone if pdv else '')|default('', true) }}" placeholder="Ex: +216 71 123 456">
                     </div>
                     <div class="form-group">
                         <label for="email" class="form-label">Email de contact</label>
-                        <input type="email" class="form-control" id="email" name="email" value="{{ pdv.email if pdv else '' }}" placeholder="Ex: pdv.azur@example.com">
+                        <input type="email" class="form-control" id="email" name="email" value="{{ (pdv.email if pdv else '')|default('', true) }}" placeholder="Ex: pdv.azur@example.com">
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label for="localisation" class="form-label">Localisation (Ville / Centre commercial)</label>
-                    <input type="text" class="form-control" id="localisation" name="localisation" value="{{ pdv.localisation if pdv else '' }}" placeholder="Ex: Azur City, Tunis">
+                    <input type="text" class="form-control" id="localisation" name="localisation" value="{{ (pdv.localisation if pdv else '')|default('', true) }}" placeholder="Ex: Azur City, Tunis">
                 </div>
                 
                 <div class="form-group">
                     <label for="adresse" class="form-label">Adresse Complète</label>
-                    <textarea class="form-control" id="adresse" name="adresse" rows="3" placeholder="Numéro, rue, zone...">{{ pdv.adresse if pdv else '' }}</textarea>
+                    <textarea class="form-control" id="adresse" name="adresse" rows="3" placeholder="Numéro, rue, zone...">{{ (pdv.adresse if pdv else '')|default('', true) }}</textarea>
                 </div>
                 
                 <div class="form-group">

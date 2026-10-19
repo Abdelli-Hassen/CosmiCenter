@@ -7,13 +7,14 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 
 from models import db, PointDeVente, Equipement, Utilisateur, Ticket
-from utils.security import safe_color
+from services import referentiels
+from utils.permissions import role_level
+from utils.security import safe_color, is_hex_color
 
 pdv_bp = Blueprint('pdv', __name__)
 logger = logging.getLogger(__name__)
 
 EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-PRESET_CATEGORIES = ['Urbain', 'Express', 'Mall']
 EQUIPEMENT_STATUTS = ['actif', 'en_panne', 'maintenance', 'hors_service']
 
 
@@ -22,9 +23,19 @@ def _can_edit():
 
 
 def _categories(pdvs=None):
-    pdvs = pdvs if pdvs is not None else PointDeVente.query.all()
-    db_cats = [p.categorie for p in pdvs if p.categorie]
-    return list(dict.fromkeys(PRESET_CATEGORIES + [c for c in db_cats if c not in PRESET_CATEGORIES]))
+    """Catégories issues de la base (cache) + toute catégorie encore portée par un PDV mais absente du référentiel."""
+    cats = referentiels.get_categories()
+    known = {c['nom'].lower() for c in cats}
+    for p in (pdvs if pdvs is not None else PointDeVente.query.all()):
+        if p.categorie and p.categorie.lower() not in known:
+            cats.append({'id': None, 'nom': p.categorie, 'description': 'Catégorie existante', 'icone': 'circle'})
+            known.add(p.categorie.lower())
+    return cats
+
+
+def _default_category():
+    cats = referentiels.get_categories()
+    return cats[0]['nom'] if cats else 'Urbain'
 
 
 def _read_pdv_form(pdv=None):
@@ -46,7 +57,7 @@ def _read_pdv_form(pdv=None):
     # Catégorie : préréglage ou personnalisée
     cat_select = request.form.get('categorie')
     cat_custom = request.form.get('categorie_custom', '').strip()
-    categorie = cat_custom if (cat_select == 'custom' and cat_custom) else (cat_select or 'Urbain')
+    categorie = cat_custom if (cat_select == 'custom' and cat_custom) else (cat_select or _default_category())
     if len(categorie) > 50:
         errors.append('La catégorie est trop longue (50 caractères maximum).')
 
@@ -77,7 +88,8 @@ def liste():
         return redirect(url_for('tickets.tableau_bord'))
 
     pdvs = PointDeVente.query.order_by(PointDeVente.nom).all()
-    return render_template('pdv/liste.html', pdvs=pdvs, categories=_categories(pdvs))
+    return render_template('pdv/liste.html', pdvs=pdvs, categories=_categories(pdvs),
+                           themes=referentiels.get_themes(), can_configure=_can_configure())
 
 
 @pdv_bp.route('/nouveau', methods=['GET', 'POST'])
@@ -93,9 +105,10 @@ def nouveau():
             for msg in errors:
                 flash(msg, 'danger')
         else:
-            values.setdefault('couleur', '#10b981')
+            values.setdefault('couleur', (referentiels.get_themes() or [{'couleur': '#10b981'}])[0]['couleur'])
             nouveau_pdv = PointDeVente(**values)
             try:
+                referentiels.register_category(values['categorie'])
                 db.session.add(nouveau_pdv)
                 db.session.commit()
                 flash(f"Point de vente '{nouveau_pdv.nom}' créé avec succès.", "success")
@@ -108,7 +121,8 @@ def nouveau():
         Utilisateur.query.filter_by(actif=True).all(),
         key=lambda u: (u.nom_complet or '').strip().upper()
     )
-    return render_template('pdv/formulaire.html', utilisateurs=utilisateurs, categories=_categories())
+    return render_template('pdv/formulaire.html', utilisateurs=utilisateurs, categories=_categories(),
+                           themes=referentiels.get_themes())
 
 
 @pdv_bp.route('/<string:id>')
@@ -151,6 +165,7 @@ def modifier(id):
             for key, value in values.items():
                 setattr(pdv, key, value)
             try:
+                referentiels.register_category(values['categorie'])
                 db.session.commit()
                 flash("Point de vente mis à jour.", "success")
                 return redirect(url_for('pdv.detail', id=id))
@@ -159,7 +174,8 @@ def modifier(id):
                 flash('Un point de vente portant ce nom existe déjà.', 'danger')
 
     utilisateurs = Utilisateur.query.filter_by(actif=True).all()
-    return render_template('pdv/formulaire.html', pdv=pdv, utilisateurs=utilisateurs, categories=_categories())
+    return render_template('pdv/formulaire.html', pdv=pdv, utilisateurs=utilisateurs, categories=_categories(),
+                           themes=referentiels.get_themes())
 
 
 @pdv_bp.route('/<string:id>/equipement/nouveau', methods=['POST'])
@@ -273,3 +289,145 @@ def changer_couleur(id):
         db.session.commit()
         return jsonify({'success': True, 'couleur': pdv.couleur})
     return jsonify({'success': False, 'message': 'Couleur invalide'}), 400
+
+
+# ─── Référentiels : catégories et palette de thèmes (stockés en base) ─────────
+
+def _can_configure():
+    return _can_edit() or role_level(current_user) >= 90
+
+
+def _config_denied():
+    flash("Accès non autorisé.", "danger")
+    return redirect(url_for('pdv.liste'))
+
+
+def _back_to_config():
+    return redirect(url_for('pdv.gerer_referentiels'))
+
+
+@pdv_bp.route('/referentiels')
+@login_required
+def gerer_referentiels():
+    if not _can_configure():
+        return _config_denied()
+    usage = dict(db.session.query(PointDeVente.categorie, db.func.count(PointDeVente.id))
+                 .group_by(PointDeVente.categorie).all())
+    theme_usage = dict(db.session.query(PointDeVente.couleur, db.func.count(PointDeVente.id))
+                       .group_by(PointDeVente.couleur).all())
+    return render_template('pdv/referentiels.html', categories=referentiels.get_all_categories(),
+                           themes=referentiels.get_themes(), usage=usage, theme_usage=theme_usage,
+                           icon_keys=referentiels.ICON_KEYS)
+
+
+def _find(items, key, value):
+    return next((i for i in items if str(i.get(key, '')).lower() == (value or '').lower()), None)
+
+
+@pdv_bp.route('/referentiels/categorie', methods=['POST'])
+@login_required
+def ajouter_categorie():
+    if not _can_configure():
+        return _config_denied()
+    nom = request.form.get('nom', '').strip()
+    description = request.form.get('description', '').strip()[:200]
+    icone = request.form.get('icone', 'circle')
+    cats = referentiels.get_all_categories()
+    if not nom or len(nom) > 50:
+        flash("Le nom de la catégorie est obligatoire (50 caractères maximum).", "danger")
+    elif icone not in referentiels.ICON_KEYS:
+        flash("Icône invalide.", "danger")
+    elif _find(cats, 'nom', nom):
+        flash("Cette catégorie existe déjà.", "danger")
+    else:
+        cats.append({'nom': nom, 'description': description, 'icone': icone,
+                     'ordre': max([c['ordre'] for c in cats] + [0]) + 1, 'actif': True})
+        referentiels.save_categories(cats)
+        db.session.commit()
+        flash(f"Catégorie « {nom} » ajoutée.", "success")
+    return _back_to_config()
+
+
+@pdv_bp.route('/referentiels/categorie/modifier', methods=['POST'])
+@login_required
+def modifier_categorie():
+    if not _can_configure():
+        return _config_denied()
+    cats = referentiels.get_all_categories()
+    cat = _find(cats, 'nom', request.form.get('nom'))
+    if cat is None:
+        flash("Catégorie introuvable.", "danger")
+        return _back_to_config()
+    icone = request.form.get('icone', cat['icone'])
+    try:
+        ordre = int(request.form.get('ordre', cat['ordre']))
+    except (TypeError, ValueError):
+        ordre = cat['ordre']
+    if icone not in referentiels.ICON_KEYS:
+        flash("Icône invalide.", "danger")
+        return _back_to_config()
+    cat.update(description=request.form.get('description', '').strip()[:200], icone=icone, ordre=ordre,
+               actif=request.form.get('actif') == 'on')
+    referentiels.save_categories(cats)
+    db.session.commit()
+    flash(f"Catégorie « {cat['nom']} » mise à jour.", "success")
+    return _back_to_config()
+
+
+@pdv_bp.route('/referentiels/categorie/supprimer', methods=['POST'])
+@login_required
+def supprimer_categorie():
+    if not _can_configure():
+        return _config_denied()
+    cats = referentiels.get_all_categories()
+    cat = _find(cats, 'nom', request.form.get('nom'))
+    if cat is None:
+        flash("Catégorie introuvable.", "danger")
+        return _back_to_config()
+    used = PointDeVente.query.filter(db.func.lower(PointDeVente.categorie) == cat['nom'].lower()).count()
+    if used:
+        flash(f"Impossible de supprimer « {cat['nom']} » : {used} point(s) de vente l'utilisent. Désactivez-la plutôt.", "danger")
+    else:
+        referentiels.save_categories([c for c in cats if c is not cat])
+        db.session.commit()
+        flash("Catégorie supprimée.", "success")
+    return _back_to_config()
+
+
+@pdv_bp.route('/referentiels/theme', methods=['POST'])
+@login_required
+def ajouter_theme():
+    if not _can_configure():
+        return _config_denied()
+    nom = request.form.get('nom', '').strip()
+    couleur = request.form.get('couleur', '').strip().lower()
+    themes = referentiels.get_themes()
+    if not nom or len(nom) > 50:
+        flash("Le nom du thème est obligatoire (50 caractères maximum).", "danger")
+    elif not is_hex_color(couleur):
+        flash("Couleur invalide (format #RRGGBB).", "danger")
+    elif _find(themes, 'couleur', couleur):
+        flash("Cette couleur est déjà dans la palette.", "danger")
+    else:
+        themes.append({'nom': nom, 'couleur': couleur, 'ordre': max([t['ordre'] for t in themes] + [0]) + 1})
+        referentiels.save_themes(themes)
+        db.session.commit()
+        flash(f"Thème « {nom} » ajouté à la palette.", "success")
+    return _back_to_config()
+
+
+@pdv_bp.route('/referentiels/theme/supprimer', methods=['POST'])
+@login_required
+def supprimer_theme():
+    if not _can_configure():
+        return _config_denied()
+    themes = referentiels.get_themes()
+    theme = _find(themes, 'couleur', request.form.get('couleur'))
+    if theme is None:
+        flash("Thème introuvable.", "danger")
+    else:
+        # Les PDV qui utilisent déjà cette couleur la conservent : seule la proposition dans la palette disparaît
+        referentiels.save_themes([t for t in themes if t is not theme])
+        db.session.commit()
+        flash("Thème retiré de la palette.", "success")
+    return _back_to_config()

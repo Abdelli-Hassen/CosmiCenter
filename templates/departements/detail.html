@@ -310,6 +310,7 @@ dialog::backdrop {
 {% endblock %}
 
 {% block content %}
+{% from '_macros.html' import info_tip, SLA_TIPS %}
 <div class="dept-detail-container">
 
   <!-- Header -->
@@ -376,11 +377,11 @@ dialog::backdrop {
           <div style="font-size:14px; color:var(--text-primary); font-weight:500;">{{ departement.telephone or 'N/A' }}</div>
         </div>
         <div>
-          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">SLA Réponse</div>
+          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">SLA Réponse{{ info_tip(SLA_TIPS.reponse, 'tip-left') }}</div>
           <div style="font-size:14px; color:var(--text-primary); font-weight:500;">{{ departement.sla_reponse_heures }} h</div>
         </div>
         <div>
-          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">SLA Résolution</div>
+          <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">SLA Résolution{{ info_tip(SLA_TIPS.resolution, 'tip-left') }}</div>
           <div style="font-size:14px; color:var(--text-primary); font-weight:500;">{{ departement.sla_resolution_heures }} h</div>
         </div>
       </div>

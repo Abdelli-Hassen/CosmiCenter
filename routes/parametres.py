@@ -23,6 +23,22 @@ def _stats():
     }
 
 
+def _describe_device(user_agent):
+    """Libellé lisible (« Chrome sur Windows ») déduit du User-Agent de la requête."""
+    ua = user_agent or ''
+    browser = next((name for key, name in (('Edg/', 'Edge'), ('OPR/', 'Opera'), ('Firefox/', 'Firefox'), ('Chrome/', 'Chrome'), ('Safari/', 'Safari')) if key in ua), 'Navigateur')
+    system = next((name for key, name in (('Windows', 'Windows'), ('Android', 'Android'), ('iPhone', 'iOS'), ('iPad', 'iOS'), ('Mac OS', 'macOS'), ('Linux', 'Linux')) if key in ua), 'système inconnu')
+    return f'{browser} sur {system}'
+
+
+def _session_info():
+    return {
+        'appareil': _describe_device(request.headers.get('User-Agent', '')), 
+        'ip': request.remote_addr or '—', 
+        'depuis': current_user.derniere_connexion, 
+    }
+
+
 @parametres_bp.route('/profil')
 @login_required
 def profil():
@@ -47,9 +63,7 @@ def modifier_profil():
     poste_machine = request.form.get('poste_machine', '').strip()
 
     theme_str = 'dark' if request.form.get('theme_sombre') == 'on' else 'light'
-    langue = request.form.get('langue', 'fr')
-    if langue not in LANGUES:
-        langue = 'fr'
+    notifications_email = request.form.get('notifications_email') == 'on'
     couleur = request.form.get('couleur', '').strip()
 
     if not all([nom, prenom, email]):
@@ -98,7 +112,7 @@ def modifier_profil():
     current_user.poste_machine = poste_machine[:100] or None
 
     current_user.theme = theme_str
-    current_user.langue = langue
+    current_user.notifications_email = notifications_email
     if couleur:
         current_user.couleur = couleur
 
@@ -146,19 +160,19 @@ def securite():
 
             if not current_user.check_password(ancien_password):
                 flash('Ancien mot de passe incorrect.', 'danger')
-                return render_template('parametres/securite.html', stats=stats)
+                return render_template('parametres/securite.html', stats=stats, session_info=_session_info())
 
             if len(nouveau_password) < min_len:
                 flash(f'Le nouveau mot de passe doit contenir au moins {min_len} caractères.', 'danger')
-                return render_template('parametres/securite.html', stats=stats)
+                return render_template('parametres/securite.html', stats=stats, session_info=_session_info())
 
             if nouveau_password != confirmation_password:
                 flash('Les mots de passe ne correspondent pas.', 'danger')
-                return render_template('parametres/securite.html', stats=stats)
+                return render_template('parametres/securite.html', stats=stats, session_info=_session_info())
 
             if nouveau_password == ancien_password:
                 flash("Le nouveau mot de passe doit être différent de l'ancien.", 'danger')
-                return render_template('parametres/securite.html', stats=stats)
+                return render_template('parametres/securite.html', stats=stats, session_info=_session_info())
 
             current_user.set_password(nouveau_password)
             current_user.revoke_sessions()  # déconnecte les autres appareils
@@ -173,7 +187,7 @@ def securite():
                 logger.error(f'Erreur changement mot de passe: {e}', exc_info=True)
                 flash('Erreur lors du changement de mot de passe.', 'danger')
 
-    return render_template('parametres/securite.html', stats=stats)
+    return render_template('parametres/securite.html', stats=stats, session_info=_session_info())
 
 
 @parametres_bp.route('/notifications')

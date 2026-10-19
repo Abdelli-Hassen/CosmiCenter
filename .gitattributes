@@ -1,0 +1,4 @@
+# Les scripts d'installation Linux doivent toujours garder des fins de ligne Unix (LF),
+# sinon bash affiche « \r : command not found » quand le dépôt est cloné depuis Windows.
+*.sh text eol=lf
+deploy/* text eol=lf

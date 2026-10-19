@@ -252,15 +252,15 @@
       
       <div class="form-row-2">
         <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
-          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Langue de l'interface</label>
-          <select name="langue" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); font-weight:600; color:var(--text-primary); appearance:none;">
-            {% set cur_lang = request.form.get('langue', current_user.langue or 'fr') %}
-            <option value="fr" {% if cur_lang == 'fr' %}selected{% endif %}>Français</option>
-            <option value="en" {% if cur_lang == 'en' %}selected{% endif %}>English</option>
-            <option value="ar" {% if cur_lang == 'ar' %}selected{% endif %}>العربية</option>
-          </select>
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Notifications par e-mail</label>
+          <div style="display:flex; align-items:center; height:100%; padding:0 8px;">
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; font-weight:600; color:var(--text-primary);">
+              <input type="checkbox" name="notifications_email" {% if current_user.notifications_email %}checked{% endif %}>
+              Recevoir un e-mail pour les tickets qui me concernent
+            </label>
+          </div>
         </div>
-        
+
         <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
           <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Thème de l'interface</label>
           <div style="display:flex; align-items:center; height:100%; padding:0 8px;">

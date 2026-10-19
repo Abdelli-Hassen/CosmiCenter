@@ -1,7 +1,7 @@
 """Règles d'accès communes (visibilité des tickets, niveaux de rôle)."""
 from sqlalchemy import false, or_
 
-from models import Departement, Ticket, Utilisateur
+from models import db, Departement, HistoriqueTicket, Message, Ticket, Utilisateur
 
 
 def role_level(user):
@@ -35,6 +35,22 @@ def visible_tickets_query(user):
     if user.has_permission('tickets.voir_tous'):
         return Ticket.query
     return Ticket.query.filter(ticket_visibility_filter(user))
+
+
+def unopened_tickets_count(user):
+    """Tickets visibles par `user` qu'il n'a jamais ouverts (hors tickets qu'il a créés, fermés ou annulés)."""
+    seen = db.session.query(HistoriqueTicket.ticket_id).filter(
+        HistoriqueTicket.utilisateur_id == user.id, HistoriqueTicket.action == 'Consultation')
+    return visible_tickets_query(user).filter(
+        Ticket.createur_id != user.id,
+        Ticket.statut.notin_(['ferme', 'annule']),
+        ~Ticket.id.in_(seen)
+    ).count()
+
+
+def unread_messages_count(user):
+    """Messages privés reçus par `user` et pas encore lus."""
+    return Message.query.filter_by(receiver_id=user.id, is_read=False).count()
 
 
 def can_access_ticket(user, ticket):

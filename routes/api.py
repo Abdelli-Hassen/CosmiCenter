@@ -4,7 +4,8 @@ API REST pour CosmiCenter
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 from models import db, Ticket, Utilisateur, Departement, Notification, Message
-from utils.permissions import visible_tickets_query, can_access_ticket, can_manage_ticket, ticket_visibility_filter
+from utils.permissions import (visible_tickets_query, can_access_ticket, can_manage_ticket, ticket_visibility_filter,
+                               unopened_tickets_count)
 from utils.security import like_escape
 from datetime import datetime, timedelta
 import logging
@@ -286,6 +287,7 @@ def poll_notifications():
 
     return json_response(data={
         'unread_notifications': unread_notifs,
+        'unopened_tickets': unopened_tickets_count(current_user),
         'unread_messages': unread_msgs,
         'notifications': notifs_data
     })

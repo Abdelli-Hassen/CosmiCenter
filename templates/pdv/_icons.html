@@ -1,0 +1,14 @@
+{# Icônes des catégories de PDV : la base stocke la clé (colonne pdv_categories.icone), ce macro la dessine. #}
+{% macro cat_icon(key, size=20, stroke=2.2) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ stroke }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+{%- if key == 'building' -%}<path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h1M9 13h1M9 17h1M15 13h1M15 17h1"/>
+{%- elif key == 'bolt' -%}<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+{%- elif key == 'bag' -%}<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+{%- elif key == 'store' -%}<path d="M3 9l1-5h16l1 5"/><path d="M4 9v11h16V9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>
+{%- elif key == 'coffee' -%}<path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/>
+{%- elif key == 'map-pin' -%}<path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+{%- elif key == 'star' -%}<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+{%- else -%}<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}
