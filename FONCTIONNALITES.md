@@ -34,7 +34,7 @@ Plateforme de gestion des opérations interne de **Cosmitto Coffee** (réseau mu
 
 **Sécurité**
 - Hashage des mots de passe avec Werkzeug (scrypt)
-- Verrouillage du compte après tentatives échouées
+- Verrouillage temporaire du compte après 7 tentatives échouées (30 minutes, configurable)
 - Protection CSRF sur tous les formulaires POST
 - Sessions sécurisées Flask-Login
 

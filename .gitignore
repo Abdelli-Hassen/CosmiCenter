@@ -56,6 +56,10 @@ Thumbs.db
 
 # Uploads — all files tracked by git (no ignore rules)
 
+# Scratch / local experiments
+scratch/
+scratch_out*.txt
+
 # Temporary files
 *.tmp
 *.temp

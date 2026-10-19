@@ -1,89 +1,70 @@
 @echo off
 chcp 65001 >nul
 echo.
-echo ╔════════════════════════════════════════════════════════╗
-echo ║     COSMITTODESK 2.0 - DÉMARRAGE RAPIDE                ║
-echo ╚════════════════════════════════════════════════════════╝
+echo ========================================================
+echo      COSMICENTER - DEMARRAGE RAPIDE
+echo ========================================================
 echo.
 
-REM Vérifier si Python est installé
+REM Verifier si Python est installe
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo [ERREUR] Python n'est pas installé ou n'est pas dans le PATH
-    echo Téléchargez Python depuis https://www.python.org/downloads/
+    echo [ERREUR] Python n'est pas installe ou n'est pas dans le PATH
+    echo Telechargez Python depuis https://www.python.org/downloads/
     pause
     exit /b 1
 )
 
-echo [1/5] Vérification de Python...
+echo [1/5] Verification de Python...
 python --version
 
-REM Créer l'environnement virtuel s'il n'existe pas
+REM Creer l'environnement virtuel s'il n'existe pas
 if not exist "venv" (
-    echo [2/5] Création de l'environnement virtuel...
+    echo [2/5] Creation de l'environnement virtuel...
     python -m venv venv
 ) else (
-    echo [2/5] Environnement virtuel déjà existant
+    echo [2/5] Environnement virtuel deja existant
 )
 
 REM Activer l'environnement virtuel
 echo [3/5] Activation de l'environnement virtuel...
 call venv\Scripts\activate.bat
 
-REM Installer les dépendances
-echo [4/5] Installation des dépendances...
+REM Installer les dependances
+echo [4/5] Installation des dependances...
 pip install -r requirements.txt --quiet
 
-REM Créer le fichier .env s'il n'existe pas
+REM Creer le fichier .env s'il n'existe pas
 if not exist ".env" (
-    echo [5/5] Création du fichier .env...
+    echo [5/5] Creation du fichier .env...
     copy .env.example .env
-    echo ⚠ ATTENTION: Modifiez le fichier .env avec vos paramètres
+    echo ATTENTION: Modifiez le fichier .env (DATABASE_URL, SECRET_KEY...) avant de continuer
+    pause
 )
 
-REM Créer les dossiers nécessaires
+REM Creer les dossiers necessaires
 if not exist "instance" mkdir instance
 if not exist "logs" mkdir logs
 if not exist "static\uploads" mkdir static\uploads
 
 echo.
-echo ═══════════════════════════════════════════════════════
-echo.
-
-REM Vérifier si la base de données PostgreSQL est initialisée
-python -c "import psycopg, sys; conn=psycopg.connect('postgresql+psycopg://Cosmicenter:testtest@localhost:5432/Cosmicenter'.replace('postgresql+psycopg','postgresql')); cur=conn.cursor(); cur.execute(\"SELECT COUNT(*) FROM pg_tables WHERE schemaname='public'\"); n=cur.fetchone()[0]; conn.close(); sys.exit(0 if n>0 else 1)" >nul 2>&1
+echo Verification de la connexion a la base de donnees (DATABASE_URL du fichier .env)...
+python scripts\check_db.py
 if errorlevel 1 (
-    echo La base de données PostgreSQL n'est pas encore initialisée.
     echo.
-    set /p init="Voulez-vous initialiser la base de données? (O/N): "
-    if /i "%init%"=="O" (
-        echo.
-        echo Initialisation de la base de données...
-        set DATABASE_URL=postgresql+psycopg://Cosmicenter:testtest@localhost:5432/Cosmicenter
-        python scripts\init_db.py
-        echo.
-    )
+    echo [ERREUR] Connexion a la base impossible : verifiez DATABASE_URL dans .env
+    pause
+    exit /b 1
 )
+
 echo.
-echo ╔════════════════════════════════════════════════════════╗
-echo ║           LANCEMENT DE L'APPLICATION                  ║
-echo ╚════════════════════════════════════════════════════════╝
+echo Si la base est vide, initialisez-la avec :  python -m flask --app app init-db
+echo (le mot de passe administrateur initial est affiche une seule fois, ou defini via ADMIN_PASSWORD)
 echo.
-echo L'application va démarrer sur http://127.0.0.1:8080
-echo.
-echo Connexion par défaut:
-echo   Email: admin@example.com
-echo   Mot de passe: testtest
-echo.
-echo Appuyez sur Ctrl+C pour arrêter l'application
-echo.
-echo ═══════════════════════════════════════════════════════
+echo L'application demarre sur http://127.0.0.1:8080  (voir FLASK_HOST / FLASK_PORT dans .env)
+echo Pour un partage sur le reseau, utilisez run_prod.bat (serveur Waitress, sans debogueur).
+echo Appuyez sur Ctrl+C pour arreter l'application
 echo.
 
-REM Lancer l'application
-set DATABASE_URL=postgresql+psycopg://Cosmicenter:testtest@localhost:5432/Cosmicenter
 python app.py
-pause
-python app.py
-
 pause

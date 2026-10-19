@@ -38,7 +38,7 @@ Pour accéder à Cosmicenter, rendez-vous sur l'URL fournie par votre administra
 3. Cochez **Se souvenir de moi** si vous souhaitez rester connecté sur cet appareil.
 4. Cliquez sur **Se connecter**.
 
-> Si vous avez oublié votre mot de passe, cliquez sur **Mot de passe oublié ?** pour recevoir un lien de réinitialisation par e-mail.
+> Si vous avez oublié votre mot de passe, cliquez sur **Mot de passe oublié ?** : la page vous indique le contact du support IT, seul un administrateur peut réinitialiser un mot de passe. Après 7 tentatives de connexion échouées, le compte est verrouillé 30 minutes.
 
 ---
 

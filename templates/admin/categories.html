@@ -49,7 +49,7 @@
           <tr>
             <td style="padding:12px 20px;">
               <div style="display:flex;align-items:center;gap:8px;">
-                <span {{ 'styl' ~ 'e="display:inline-block;width:10px;height:10px;border-radius:50%;background:' ~ (cat.couleur or '#3B82F6') ~ ';flex-shrink:0;"'|safe }}></span>
+                <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:{{ cat.couleur or '#3B82F6' }};flex-shrink:0;"></span>
                 <span style="font-weight:600;font-size:13px;color:var(--text-primary);">{{ cat.nom }}</span>
               </div>
             </td>
@@ -57,7 +57,7 @@
               {{ cat.departement.nom if cat.departement else '—' }}
             </td>
             <td>
-              <span {{ 'styl' ~ 'e="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:rgba(16,185,129,.12);color:#10B981;"'|safe if cat.actif else 'styl' ~ 'e="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--surface-4);color:var(--text-muted);"'|safe }}>
+              <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;{% if cat.actif %}background:rgba(16,185,129,.12);color:#10B981;{% else %}background:var(--surface-4);color:var(--text-muted);{% endif %}">
                 {% if cat.actif %}Active{% else %}Inactive{% endif %}
               </span>
             </td>

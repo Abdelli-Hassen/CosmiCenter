@@ -1,6 +1,43 @@
-# Changelog - CosmittoDesk
+# Changelog - CosmiCenter
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
+
+## [2.4.0] - 2026-10-19
+
+### 🔒 Audit de sécurité et de fiabilité (correctifs)
+
+#### Sécurité
+- **CSRF** réellement appliqué : jeton de session vérifié sur tous les POST/PUT/DELETE (`utils/security.py`, `static/js/csrf.js`). La déconnexion passe en POST.
+- **XSS** : messagerie interne (échappement de tout contenu serveur), attributs `onclick` / `onsubmit` (valeurs passées en JSON échappé), e-mails (description du ticket, commentaires, suggestions échappés).
+- **Débogueur Werkzeug** désactivé automatiquement dès que `FLASK_HOST` n'est pas une adresse locale (partage réseau sans exposer l'exécution de code).
+- **Verrouillage de compte** : 7 tentatives (`MAX_LOGIN_ATTEMPTS`), verrouillage **temporaire** de 30 min (`LOCKOUT_DURATION_MINUTES`), levée automatique ou par un administrateur ; message d'erreur identique pour comptes inconnus/existants.
+- Redirection `?next=` limitée aux chemins locaux (open redirect corrigé) ; e-mails de connexion insensibles à la casse.
+- Sessions : `session_version` — le changement de mot de passe, « Déconnecter les autres sessions » (désormais réel) et la désactivation d'un compte invalident les sessions existantes. Les comptes désactivés ne peuvent plus utiliser une session ouverte.
+- Fichiers uploadés : accès réservé aux utilisateurs connectés, extensions contrôlées (images pour photos/logos), noms aléatoires, 10 Mo/fichier, en-têtes `nosniff` + CSP sandbox.
+- Mots de passe AnyDesk/TeamViewer chiffrés en base et masqués aux autres utilisateurs.
+- Contrôles d'accès : commenter / changer le statut / fermer / cocher une tâche exigent l'accès au ticket ; rapports et exports CSV soumis aux permissions `rapports_*` ; plan d'action (`.modifier`) ; paramètres système (`admin_parametres.modifier`, mots de passe jamais renvoyés au navigateur, clés autorisées en liste blanche) ; création/modification de rôles et d'utilisateurs limitée au niveau de l'acteur (plus d'escalade) ; un utilisateur sans droit ne peut plus changer son entreprise.
+- Suppression de la route `/admin/api/migrate_db` (sans authentification) et de la route `test_davmail` (module inexistant).
+- `seed_db.py` : confirmation explicite avant de vider la base ; mots de passe de démonstration aléatoires (`SEED_PASSWORD`). `init-db` : mot de passe admin aléatoire (`ADMIN_PASSWORD`). Identifiants de base retirés de `start.bat`, `check_db.py`, `.env.example`.
+- En-têtes `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` ; `SECRET_KEY` obligatoire hors développement.
+
+#### Corrigé
+- Corruption de caractères (`A` → `é`) dans le code : export Excel du plan d'action, enregistrement des paramètres `.env`, upload de photo de profil, dossiers d'upload, messages d'accès.
+- API : permissions (comparaison rôle/chaînes), attribut inexistant `assigne_id`, statuts, route de lecture des notifications (identifiants UUID).
+- Statuts : « Ouvert » regroupe `nouveau` + `ouvert` (compteurs à 0 sur le tableau de bord, l'admin et l'API) ; le menu « Ouvert » du détail ticket n'était pas accepté par le serveur.
+- Visibilité des tickets : un utilisateur sans département ne voit plus les tickets sans département ; liste, détail et actions utilisent les mêmes règles (collaborateurs et départements en collaboration inclus).
+- Numéros de ticket : séquence PostgreSQL atomique (plus de doublons en cas de créations simultanées).
+- Création de ticket : validations (titre, description, priorité, type, département), échec des notifications sans annuler un ticket déjà créé, pièces jointes refusées individuellement avec message.
+- Délais de première réponse et de résolution (SLA) désormais calculés.
+- E-mail → ticket : numéro de ticket reconnu, valeurs par défaut valides, expéditeur contrôlé, désactivé par défaut (`IMAP_ENABLE_POLLING`).
+- Pages 400 / 403 / 413 ajoutées ; redirections vers des routes inexistantes corrigées ; `flask create-admin` fonctionnel.
+- Départements : statistiques du détail alignées sur la liste (par département du ticket), requêtes regroupées.
+- PDV, entreprises, base de connaissance, suggestions, rôles, catégories : validations et gestion des doublons (au lieu d'erreurs 500).
+- Libellés : « InterComm » / « CosmittoHUB » / « CosmittoDesk » / contact `support@example.com` remplacés par « CosmiCenter » / `SUPPORT_EMAIL`.
+
+#### Exploitation
+- Journal applicatif avec rotation (5 Mo × 5), lecture des logs par la fin du fichier.
+- Dernière activité écrite au plus une fois par minute et par utilisateur.
+- Colonnes ajoutées automatiquement au démarrage (`utils/schema.py`).
 
 ## [2.3.0] - 2026-10-14
 

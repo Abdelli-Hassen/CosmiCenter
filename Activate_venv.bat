@@ -1,6 +1,6 @@
 @echo off
 echo ====================================================
-echo  Activation de l'environnement virtuel (CosmittoHUB)
+echo  Activation de l'environnement virtuel (CosmiCenter)
 echo ====================================================
 echo.
 echo Environnement active ! Vous pouvez maintenant taper vos commandes (ex: python seed_db.py)

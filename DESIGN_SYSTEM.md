@@ -132,3 +132,14 @@ When updating a new page (e.g., `inbox.html` or the admin dashboard):
 3. Replace all standard tables with the `.table-card` and `.agents-table` classes defined above.
 4. Replace raw text statuses with the `.status-badge` pills.
 5. Inject the `@keyframes` block to ensure the page glides smoothly into view upon load.
+
+---
+
+## Mise à jour 2.4.0 — conventions front-end liées à la sécurité
+
+- **Formulaires POST** : le jeton CSRF est ajouté automatiquement par `static/js/csrf.js` (champ caché `csrf_token` et en-tête `X-CSRFToken` pour `fetch`/XHR). Un formulaire créé dynamiquement n'a rien à faire de plus.
+- **Données serveur dans du JavaScript** : ne jamais écrire `onclick="fn('{{ valeur }}')"`. Utiliser `onclick="fn({{ valeur|tojson|forceescape }})"`. Dans le JS client, échapper tout texte injecté via `innerHTML` (fonction `esc()` de la messagerie) ou utiliser `textContent`.
+- **Déconnexion** : bouton dans un formulaire `POST` (icône de la barre supérieure), plus un lien.
+- **Pages d'erreur** : `errors/400.html`, `403.html`, `404.html`, `413.html`, `500.html` (même gabarit centré : titre, explication, bouton de retour).
+- **Statut « Ouvert »** : regroupe les statuts `nouveau` et `ouvert` dans les compteurs et filtres.
+

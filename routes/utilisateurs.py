@@ -1,12 +1,18 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from models import db, Utilisateur, Role, Departement, Entreprise, PointDeVente
-from werkzeug.utils import secure_filename
 from functools import wraps
-import os
+import logging
+import re
 from datetime import datetime
 
+from utils.permissions import role_level, can_assign_role
+
 utilisateurs_bp = Blueprint('utilisateurs', __name__)
+logger = logging.getLogger(__name__)
+
+EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+PASSWORD_MIN_LENGTH = 8
 
 
 def require_permission(permission_code):
@@ -15,10 +21,22 @@ def require_permission(permission_code):
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated or not current_user.has_permission(permission_code):
                 flash('Accès non autorisé.', 'danger')
-                return redirect(request.referrer or url_for('tickets.tableau_bord'))
+                return redirect(url_for('tickets.tableau_bord'))
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+
+def _role_error(role_id):
+    """Erreur si le rôle n'existe pas ou dépasse le niveau de l'utilisateur connecté."""
+    if not role_id:
+        return None
+    role = db.session.get(Role, role_id)
+    if role is None:
+        return 'Rôle introuvable.'
+    if not can_assign_role(current_user, role):
+        return "Vous ne pouvez pas attribuer un rôle de niveau supérieur au vôtre."
+    return None
 
 @utilisateurs_bp.route('/')
 @login_required
@@ -188,12 +206,12 @@ def nouveau():
         nom = request.form.get('nom', '').strip()
         prenom = request.form.get('prenom', '').strip()
         email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '').strip()
+        password = request.form.get('password', '')
         telephone = request.form.get('telephone', '').strip()
         poste = request.form.get('poste', '').strip()
         role_id = request.form.get('role_id', '').strip() or None
         departement_id = request.form.get('departement_id', '').strip() or None
-        
+
         # Validation
         from models import Entreprise, PointDeVente
         roles_all = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
@@ -201,22 +219,31 @@ def nouveau():
         entreprises_all = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
         pdvs_all = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
 
+        def _back():
+            return render_template('utilisateurs/nouveau_utilisateur.html',
+                                   roles=roles_all,
+                                   departements=departements_all,
+                                   entreprises=entreprises_all,
+                                   pdvs=pdvs_all)
+
         if not all([nom, prenom, email, password]):
             flash('Tous les champs obligatoires doivent être remplis.', 'danger')
-            return render_template('utilisateurs/nouveau_utilisateur.html',
-                                 roles=roles_all,
-                                 departements=departements_all,
-                                 entreprises=entreprises_all,
-                                 pdvs=pdvs_all)
-        
+            return _back()
+        if not EMAIL_RE.match(email) or len(email) > 120:
+            flash("L'adresse email est invalide.", 'danger')
+            return _back()
+        if len(password) < PASSWORD_MIN_LENGTH:
+            flash(f'Le mot de passe doit contenir au moins {PASSWORD_MIN_LENGTH} caractères.', 'danger')
+            return _back()
+        role_err = _role_error(role_id)
+        if role_err:
+            flash(role_err, 'danger')
+            return _back()
+
         # Vérifier l'email unique
-        if Utilisateur.query.filter_by(email=email).first():
+        if Utilisateur.query.filter(db.func.lower(Utilisateur.email) == email).first():
             flash('Un utilisateur avec cet email existe déjà.', 'danger')
-            return render_template('utilisateurs/nouveau_utilisateur.html',
-                                 roles=roles_all,
-                                 departements=departements_all,
-                                 entreprises=entreprises_all,
-                                 pdvs=pdvs_all)
+            return _back()
         
         # Créer l'utilisateur
         entreprise_id = request.form.get('entreprise_id', '').strip() or None
@@ -248,8 +275,9 @@ def nouveau():
             return redirect(url_for('utilisateurs.detail', id=utilisateur.id))
         except Exception as e:
             db.session.rollback()
-            flash(f'Erreur lors de la création: {str(e)}', 'danger')
-    
+            logger.error(f'Erreur lors de la création utilisateur: {e}', exc_info=True)
+            flash('Erreur lors de la création de l\'utilisateur.', 'danger')
+
     from models import Entreprise, PointDeVente
     roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
@@ -288,10 +316,16 @@ def detail(id):
         reverse=True
     )[:10]
     
+    # Les mots de passe AnyDesk / TeamViewer ne sont visibles que par l'intéressé et les administrateurs d'accès distant
+    can_see_remote_secrets = (current_user.id == utilisateur.id
+                              or current_user.has_permission('admin_acces.voir')
+                              or role_level(current_user) >= 90)
+
     return render_template('utilisateurs/detail.html',
                          utilisateur=utilisateur,
                          stats=stats,
-                         tickets_recents=tickets_recents)
+                         tickets_recents=tickets_recents,
+                         can_see_remote_secrets=can_see_remote_secrets)
 
 
 @utilisateurs_bp.route('/<string:id>/modifier', methods=['GET', 'POST'])
@@ -301,32 +335,38 @@ def modifier(id):
     utilisateur = Utilisateur.query.get_or_404(id)
     
     # Vérifier les permissions
-    if not current_user.has_permission('utilisateurs.modifier'):
-        if current_user.id != utilisateur.id:
-            flash('éccès non autorisé.', 'danger')
-            return redirect(request.referrer or url_for('tickets.tableau_bord'))
-    
+    peut_modifier = current_user.has_permission('utilisateurs.modifier')
+    if not peut_modifier and current_user.id != utilisateur.id:
+        flash('Accès non autorisé.', 'danger')
+        return redirect(url_for('tickets.tableau_bord'))
+    # Pas de modification d'un compte de niveau supérieur au sien (sauf soi-même)
+    if current_user.id != utilisateur.id and role_level(utilisateur) > role_level(current_user):
+        flash("Vous ne pouvez pas modifier un compte de niveau supérieur au vôtre.", 'danger')
+        return redirect(url_for('utilisateurs.detail', id=id))
+
     if request.method == 'POST':
         nom = request.form.get('nom', '').strip()
         prenom = request.form.get('prenom', '').strip()
         email = request.form.get('email', '').strip().lower()
         telephone = request.form.get('telephone', '').strip()
         poste = request.form.get('poste', '').strip()
-        
-        # Les admins ou ceux ayant utilisateurs.modifier peuvent modifier plus de champs
-        if current_user.has_permission('utilisateurs.modifier'):
+
+        # Les détenteurs de utilisateurs.modifier peuvent modifier rôle / affectations / statut
+        if peut_modifier:
             role_id = request.form.get('role_id', '').strip() or None
             departement_id = request.form.get('departement_id', '').strip() or None
             pdv_id = request.form.get('pdv_id', '').strip() or None
+            entreprise_id = request.form.get('entreprise_id', '').strip() or None
             actif = request.form.get('actif') == '1'
         else:
             role_id = utilisateur.role_id
             departement_id = utilisateur.departement_id
             pdv_id = utilisateur.pdv_id
+            entreprise_id = utilisateur.entreprise_id
             actif = utilisateur.actif
-        
+
         # Mot de passe optionnel (supporte 'nouveau_password' et 'password')
-        password = request.form.get('nouveau_password', '').strip() or request.form.get('password', '').strip()
+        password = request.form.get('nouveau_password', '') or request.form.get('password', '')
         
         # Validation
         from models import Entreprise, PointDeVente
@@ -335,25 +375,37 @@ def modifier(id):
         entreprises_all = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
         pdvs_all = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
 
+        def _back():
+            return render_template('utilisateurs/modifier_utilisateur.html',
+                                   utilisateur=utilisateur,
+                                   roles=roles_all,
+                                   departements=departements_all,
+                                   entreprises=entreprises_all,
+                                   pdvs=pdvs_all)
+
         if not all([nom, prenom, email]):
             flash('Tous les champs obligatoires doivent être remplis.', 'danger')
-            return render_template('utilisateurs/modifier_utilisateur.html',
-                                 utilisateur=utilisateur,
-                                 roles=roles_all,
-                                 departements=departements_all,
-                                 entreprises=entreprises_all,
-                                 pdvs=pdvs_all)
-        
+            return _back()
+        if not EMAIL_RE.match(email) or len(email) > 120:
+            flash("L'adresse email est invalide.", 'danger')
+            return _back()
+        if password and len(password) < PASSWORD_MIN_LENGTH:
+            flash(f'Le mot de passe doit contenir au moins {PASSWORD_MIN_LENGTH} caractères.', 'danger')
+            return _back()
+        if peut_modifier and role_id != utilisateur.role_id:
+            role_err = _role_error(role_id)
+            if role_err:
+                flash(role_err, 'danger')
+                return _back()
+        if utilisateur.id == current_user.id and not actif:
+            flash('Vous ne pouvez pas vous désactiver vous-même.', 'danger')
+            return _back()
+
         # Vérifier l'email unique (sauf pour l'utilisateur actuel)
-        existing = Utilisateur.query.filter_by(email=email).first()
+        existing = Utilisateur.query.filter(db.func.lower(Utilisateur.email) == email).first()
         if existing and existing.id != utilisateur.id:
             flash('Un utilisateur avec cet email existe déjà.', 'danger')
-            return render_template('utilisateurs/modifier_utilisateur.html',
-                                 utilisateur=utilisateur,
-                                 roles=roles_all,
-                                 departements=departements_all,
-                                 entreprises=entreprises_all,
-                                 pdvs=pdvs_all)
+            return _back()
         
         # Mettre à jour
         utilisateur.nom = nom
@@ -369,19 +421,27 @@ def modifier(id):
         utilisateur.role_id = role_id
         utilisateur.departement_id = departement_id
         utilisateur.pdv_id = pdv_id
-        utilisateur.entreprise_id = request.form.get('entreprise_id', '').strip() or None
+        utilisateur.entreprise_id = entreprise_id
+        if utilisateur.actif and not actif:
+            utilisateur.revoke_sessions()
         utilisateur.actif = actif
-        
+
         if password:
             utilisateur.set_password(password)
-        
+            utilisateur.revoke_sessions()
+
         try:
             db.session.commit()
+            if password and utilisateur.id == current_user.id:
+                # L'utilisateur vient de changer son propre mot de passe : rester connecté
+                from flask_login import login_user
+                login_user(utilisateur, remember=False)
             flash(f'Utilisateur "{utilisateur.nom_complet}" modifié avec succès!', 'success')
             return redirect(url_for('utilisateurs.detail', id=utilisateur.id))
         except Exception as e:
             db.session.rollback()
-            flash(f'Erreur lors de la modification: {str(e)}', 'danger')
+            logger.error(f'Erreur lors de la modification utilisateur: {e}', exc_info=True)
+            flash('Erreur lors de la modification.', 'danger')
     
     from models import Entreprise, PointDeVente
     roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
@@ -398,37 +458,57 @@ def modifier(id):
 
 @utilisateurs_bp.route('/<string:id>/toggle-actif', methods=['POST'])
 @login_required
-@require_permission('admin.utilisateurs')
+@require_permission('utilisateurs.modifier')
 def toggle_actif(id):
-    """éctiver/Désactiver un utilisateur"""
+    """Activer/Désactiver un utilisateur"""
     utilisateur = Utilisateur.query.get_or_404(id)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     # Ne pas se désactiver soi-même
     if utilisateur.id == current_user.id:
         msg = 'Vous ne pouvez pas vous désactiver vous-même.'
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if is_ajax:
+            return jsonify({'error': msg}), 403
+        flash(msg, 'danger')
+        return redirect(url_for('utilisateurs.detail', id=id))
+
+    # Ni un compte de niveau supérieur au sien
+    if role_level(utilisateur) > role_level(current_user):
+        msg = "Vous ne pouvez pas modifier un compte de niveau supérieur au vôtre."
+        if is_ajax:
             return jsonify({'error': msg}), 403
         flash(msg, 'danger')
         return redirect(url_for('utilisateurs.detail', id=id))
 
     utilisateur.actif = not utilisateur.actif
+    if not utilisateur.actif:
+        utilisateur.revoke_sessions()
+    else:
+        utilisateur.verrouille = False
+        utilisateur.date_verrouillage = None
+        utilisateur.tentatives_connexion = 0
 
     try:
         db.session.commit()
         status = 'réactivé' if utilisateur.actif else 'désactivé'
         msg = f'Utilisateur « {utilisateur.nom_complet} » {status} avec succès.'
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if is_ajax:
             return jsonify({'actif': utilisateur.actif, 'message': msg})
         flash(msg, 'success')
     except Exception as e:
         db.session.rollback()
-        err = f'Erreur : {str(e)}'
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'error': err}), 500
-        flash(err, 'danger')
+        logger.error(f'Erreur toggle_actif: {e}', exc_info=True)
+        if is_ajax:
+            return jsonify({'error': 'Erreur serveur'}), 500
+        flash('Erreur lors de la mise à jour.', 'danger')
 
-    # Non-éJéX: stay on same page via referrer
-    return redirect(request.referrer or url_for('utilisateurs.detail', id=id))
+    # Hors AJAX : revenir à la page d'origine si elle appartient à l'application
+    from utils.security import is_safe_redirect
+    from urllib.parse import urlparse
+    ref = request.referrer
+    if ref and urlparse(ref).netloc == request.host and is_safe_redirect(urlparse(ref).path or '/'):
+        return redirect(ref)
+    return redirect(url_for('utilisateurs.detail', id=id))
 
 
 
@@ -444,6 +524,10 @@ def supprimer(id):
         flash('Vous ne pouvez pas vous supprimer vous-même.', 'danger')
         return redirect(url_for('utilisateurs.detail', id=id))
     
+    if role_level(utilisateur) > role_level(current_user):
+        flash("Vous ne pouvez pas supprimer un compte de niveau supérieur au vôtre.", 'danger')
+        return redirect(url_for('utilisateurs.detail', id=id))
+
     # Vérifier s'il y a des tickets
     if utilisateur.tickets_crees or utilisateur.tickets_assignes:
         flash('Impossible de supprimer: cet utilisateur a des tickets associés. Désactivez-le plutôt.', 'danger')
@@ -457,5 +541,6 @@ def supprimer(id):
         return redirect(url_for('utilisateurs.liste'))
     except Exception as e:
         db.session.rollback()
-        flash(f'Erreur lors de la suppression: {str(e)}', 'danger')
+        logger.error(f'Erreur suppression utilisateur: {e}', exc_info=True)
+        flash('Erreur lors de la suppression.', 'danger')
         return redirect(url_for('utilisateurs.detail', id=id))

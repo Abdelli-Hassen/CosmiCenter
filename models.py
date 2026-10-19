@@ -4,6 +4,8 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 
+from utils.crypto import EncryptedString
+
 db = SQLAlchemy()
 
 def generate_uuid():
@@ -86,9 +88,9 @@ class Utilisateur(UserMixin, db.Model):
     
     # Remote Access
     anydesk_id = db.Column(db.String(50))
-    anydesk_password = db.Column(db.String(100))
+    anydesk_password = db.Column(EncryptedString)      # chiffré au repos
     teamviewer_id = db.Column(db.String(50))
-    teamviewer_password = db.Column(db.String(100))
+    teamviewer_password = db.Column(EncryptedString)   # chiffré au repos
     poste_machine = db.Column(db.String(100))
     
     # Rôle & Attachements
@@ -107,6 +109,8 @@ class Utilisateur(UserMixin, db.Model):
     # État
     actif = db.Column(db.Boolean, default=True)
     verrouille = db.Column(db.Boolean, default=False)
+    date_verrouillage = db.Column(db.DateTime)  # début du verrouillage temporaire
+    session_version = db.Column(db.Integer, nullable=False, default=0, server_default='0')  # invalide les sessions
     tentatives_connexion = db.Column(db.Integer, default=0)
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
     derniere_connexion = db.Column(db.DateTime)
@@ -127,6 +131,13 @@ class Utilisateur(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.mot_de_passe_hash, password)
+
+    def get_id(self):
+        """Identifiant de session = id + version : incrémenter session_version déconnecte toutes les sessions."""
+        return f"{self.id}:{self.session_version or 0}"
+
+    def revoke_sessions(self):
+        self.session_version = (self.session_version or 0) + 1
 
     @property
     def nom_complet(self):
@@ -251,8 +262,10 @@ class Departement(db.Model):
 
     @property
     def tickets_actifs(self):
-        return sum(1 for cat in self.categories for ticket in cat.tickets 
-                  if ticket.statut not in ['resolu', 'ferme'])
+        return Ticket.query.filter(
+            Ticket.departement_id == self.id,
+            Ticket.statut.notin_(['resolu', 'ferme', 'annule'])
+        ).count()
 
     def __repr__(self):
         return f'<Departement {self.nom}>'
@@ -353,11 +366,6 @@ class Ticket(db.Model):
     departement_associe = db.relationship('Departement', foreign_keys=[departement_id])
     pdv_associe = db.relationship('PointDeVente', foreign_keys=[pdv_id], backref='tickets_associes')
 
-    @property
-    def departement(self):
-        """Alias utilisé par les templates (liste, détail, modification)."""
-        return self.departement_associe
-    
     # Collaborations
     collaborateurs = db.relationship('Utilisateur', secondary=ticket_collaborateurs, lazy='subquery',
                                      backref=db.backref('tickets_en_collaboration', lazy=True))
@@ -374,7 +382,12 @@ class Ticket(db.Model):
 
     @staticmethod
     def generer_numero():
-        """Génère un numéro de ticket séquentiel"""
+        """Génère un numéro de ticket séquentiel (séquence PostgreSQL atomique, repli sur comptage)"""
+        if db.engine.dialect.name == 'postgresql':
+            try:
+                return str(db.session.execute(db.text("SELECT nextval('ticket_numero_seq')")).scalar())
+            except Exception:
+                db.session.rollback()
         count = db.session.query(db.func.count(Ticket.id)).scalar()
         next_num = count + 1
         while Ticket.query.filter_by(numero=str(next_num)).first() is not None:

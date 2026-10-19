@@ -1210,7 +1210,7 @@
           </div>
           <div class="user-prop-val">
             <a href="mailto:{{ utilisateur.email }}">{{ utilisateur.email }}</a>
-            <button class="copy-btn" onclick="copyText('{{ utilisateur.email }}', this)" title="Copier l'e-mail">
+            <button class="copy-btn" onclick="copyText({{ utilisateur.email|tojson|forceescape }}, this)" title="Copier l'e-mail">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
           </div>
@@ -1226,7 +1226,7 @@
           <div class="user-prop-val">
             {% if utilisateur.telephone %}
               <a href="tel:{{ utilisateur.telephone }}">{{ utilisateur.telephone }}</a>
-              <button class="copy-btn" onclick="copyText('{{ utilisateur.telephone }}', this)" title="Copier le numéro">
+              <button class="copy-btn" onclick="copyText({{ utilisateur.telephone|tojson|forceescape }}, this)" title="Copier le numéro">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               </button>
             {% else %}
@@ -1393,11 +1393,11 @@
         {% if utilisateur.anydesk_id %}
           <div class="remote-item-row">
             <span class="code-pill" style="font-size:13px; font-weight:700;">{{ utilisateur.anydesk_id }}</span>
-            <button class="copy-btn" onclick="copyText('{{ utilisateur.anydesk_id }}', this)" title="Copier ID AnyDesk">
+            <button class="copy-btn" onclick="copyText({{ utilisateur.anydesk_id|tojson|forceescape }}, this)" title="Copier ID AnyDesk">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
           </div>
-          {% if utilisateur.anydesk_password %}
+          {% if utilisateur.anydesk_password and can_see_remote_secrets %}
           <div style="font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px; margin-top:2px;">
             <span>MDP :</span>
             <span id="ad_pwd_mask">••••••••</span>
@@ -1421,11 +1421,11 @@
         {% if utilisateur.teamviewer_id %}
           <div class="remote-item-row">
             <span class="code-pill" style="font-size:13px; font-weight:700;">{{ utilisateur.teamviewer_id }}</span>
-            <button class="copy-btn" onclick="copyText('{{ utilisateur.teamviewer_id }}', this)" title="Copier ID TeamViewer">
+            <button class="copy-btn" onclick="copyText({{ utilisateur.teamviewer_id|tojson|forceescape }}, this)" title="Copier ID TeamViewer">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
           </div>
-          {% if utilisateur.teamviewer_password %}
+          {% if utilisateur.teamviewer_password and can_see_remote_secrets %}
           <div style="font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px; margin-top:2px;">
             <span>MDP :</span>
             <span id="tv_pwd_mask">••••••••</span>
@@ -1449,7 +1449,7 @@
         {% if utilisateur.poste_machine %}
           <div class="remote-item-row">
             <span class="code-pill" style="font-size:13px; font-weight:700;">{{ utilisateur.poste_machine }}</span>
-            <button class="copy-btn" onclick="copyText('{{ utilisateur.poste_machine }}', this)" title="Copier le nom de machine">
+            <button class="copy-btn" onclick="copyText({{ utilisateur.poste_machine|tojson|forceescape }}, this)" title="Copier le nom de machine">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
           </div>
@@ -1720,7 +1720,7 @@ function openToggleModal() {
     icon.style.background = 'rgba(239,68,68,0.12)';
     icon.style.border = '1px solid rgba(239,68,68,0.25)';
     title.textContent = 'Désactiver le compte';
-    desc.textContent  = `Voulez-vous désactiver l'accès de ${name} ? Cet utilisateur ne pourra plus se connecter à CosmittoHUB.`;
+    desc.textContent  = `Voulez-vous désactiver l'accès de ${name} ? Cet utilisateur ne pourra plus se connecter à CosmiCenter.`;
     conf.textContent  = 'Désactiver le compte';
     conf.style.cssText = 'padding:10px 20px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;background:#ef4444;color:white;';
   } else {

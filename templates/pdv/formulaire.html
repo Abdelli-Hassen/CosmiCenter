@@ -257,7 +257,7 @@
                         <!-- Other existing categories from DB -->
                         {% for c in categories %}
                             {% if c not in ['Urbain', 'Express', 'Mall'] %}
-                            <div class="cat-card {% if current_cat == c %}active{% endif %}" onclick="selectCategory('{{ c }}', this)">
+                            <div class="cat-card {% if current_cat == c %}active{% endif %}" onclick="selectCategory({{ c|tojson|forceescape }}, this)">
                                 <div class="cat-card-icon">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
                                 </div>

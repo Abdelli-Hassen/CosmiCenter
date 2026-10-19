@@ -5,7 +5,7 @@
     <div class="auth-box" style="background: #18181b; padding: 40px; border-radius: 16px; border: 1px solid rgba(255,255,255,.08); max-width: 440px; text-align: center; margin: 20px; box-shadow: 0 32px 80px rgba(0,0,0,.6);">
         <h1 style="color: #f4f4f5; font-size: 22px; margin-bottom: 16px;">Mot de passe oublié</h1>
         <p style="color: #a1a1aa; line-height: 1.6; margin-bottom: 32px; font-size: 14px;">
-            En cas de mot de passe oublié, contactez votre administrateur IT (<a href="mailto:support@example.com" style="color: #dc2626; text-decoration: none; font-weight: 600;">support@example.com</a>) : lui seul peut réinitialiser un mot de passe et vous communiquer un nouveau mot de passe temporaire.
+            En cas de mot de passe oublié, contactez votre administrateur IT (<a href="mailto:{{ support_email }}" style="color: #dc2626; text-decoration: none; font-weight: 600;">{{ support_email }}</a>) : lui seul peut réinitialiser un mot de passe et vous communiquer un nouveau mot de passe temporaire.
         </p>
         <a href="{{ url_for('auth.connexion') }}" style="display: inline-block; width: 100%; padding: 12px 24px; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 14px; box-shadow: 0 4px 16px rgba(220,38,38,.3);">Retour à la connexion</a>
     </div>

@@ -99,7 +99,7 @@
 
                             <div style="background-color: #f9fafb; border-left: 4px solid {{ p_color }}; padding: 18px 20px; border-radius: 0 10px 10px 0; margin-bottom: 28px;">
                                 <p style="margin: 0; font-size: 14.5px; line-height: 1.6; color: #374151;">
-                                    {{ ticket.description | replace('\n', '<br>') | safe if ticket.description else '<i>Aucune description fournie.</i>' }}
+                                    {% if ticket.description %}{{ ticket.description | e | replace('\n', '<br>'|safe) }}{% else %}<i>Aucune description fournie.</i>{% endif %}
                                 </p>
                             </div>
 

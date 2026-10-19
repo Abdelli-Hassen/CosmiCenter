@@ -309,13 +309,13 @@
                 </a>
                 {% if u.id != current_user.id %}
                   {% if u.actif %}
-                  <form method="POST" action="{{ url_for('admin.desactiver_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm('Désactiver {{ u.prenom }} {{ u.nom }} ?');">
+                  <form method="POST" action="{{ url_for('admin.desactiver_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm({{ ('Désactiver ' ~ u.prenom ~ ' ' ~ u.nom ~ ' ?')|tojson|forceescape }});">
                     <button type="submit" class="btn-action" style="padding:6px; border-radius:8px; color:#ef4444;" title="Désactiver" onclick="event.stopPropagation();">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
                     </button>
                   </form>
                   {% else %}
-                  <form method="POST" action="{{ url_for('admin.reactiver_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm('Réactiver {{ u.prenom }} {{ u.nom }} ?');">
+                  <form method="POST" action="{{ url_for('admin.reactiver_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm({{ ('Réactiver ' ~ u.prenom ~ ' ' ~ u.nom ~ ' ?')|tojson|forceescape }});">
                     <button type="submit" class="btn-action" style="padding:6px; border-radius:8px; color:#10b981;" title="Réactiver" onclick="event.stopPropagation();">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                     </button>

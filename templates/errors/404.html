@@ -1,2 +1,11 @@
 {% extends "base.html" %}
-{% block content %}<h1>404 - Page non trouvée</h1>{% endblock %}
+{% block title %}Page introuvable{% endblock %}
+{% block content %}
+<div style="max-width:520px;margin:80px auto;text-align:center;padding:0 16px;">
+  <h1 style="font-size:22px;margin-bottom:12px;">404 — Page non trouvée</h1>
+  <p style="color:var(--text-muted);line-height:1.6;margin-bottom:24px;">
+    La page demandée n'existe pas ou a été déplacée.
+  </p>
+  <a href="{{ url_for('index') }}" class="btn btn-primary">Retour à l'accueil</a>
+</div>
+{% endblock %}

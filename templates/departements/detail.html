@@ -566,7 +566,7 @@ dialog::backdrop {
             </a>
             {% if current_user.has_permission('departements.modifier') or current_user.role.niveau >= 80 %}
             <form action="{{ url_for('departements.retirer_membre', id=departement.id, user_id=m.id) }}" method="POST" style="margin:0;">
-              <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--text-muted); padding:6px;" title="Retirer du département" onclick="return confirm('Retirer {{ m.nom_complet }} de ce département ?')">
+              <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--text-muted); padding:6px;" title="Retirer du département" onclick="return confirm({{ ('Retirer ' ~ m.nom_complet ~ ' de ce département ?')|tojson|forceescape }})">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </form>
@@ -664,7 +664,7 @@ dialog::backdrop {
            data-poste="{{ (u.poste or '')|lower }}" 
            data-dept="{% if u.departement_id %}dept_{{ u.departement_id }}{% else %}none{% endif %}"
            data-pdv="{% if u.pdv_id %}pdv_{{ u.pdv_id }}{% endif %}"
-           onclick="selectDeptUser(this, '{{ u.id }}', '{{ u.nom_complet }}', '{{ u.poste or 'Sans poste' }}')"
+           onclick="selectDeptUser(this, {{ u.id|tojson|forceescape }}, {{ u.nom_complet|tojson|forceescape }}, {{ (u.poste or 'Sans poste')|tojson|forceescape }})"
            style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-radius:10px; cursor:pointer; background:var(--surface-base); border:1.5px solid transparent; transition:all 0.15s ease;">
         <div style="display:flex; align-items:center; gap:10px; min-width:0;">
           <div style="width:34px; height:34px; border-radius:50%; background:var(--surface-3); color:var(--text-primary); font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">

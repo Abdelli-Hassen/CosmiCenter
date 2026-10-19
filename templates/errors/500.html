@@ -1,2 +1,11 @@
 {% extends "base.html" %}
-{% block content %}<h1>500 - Erreur serveur</h1>{% endblock %}
+{% block title %}Erreur serveur{% endblock %}
+{% block content %}
+<div style="max-width:520px;margin:80px auto;text-align:center;padding:0 16px;">
+  <h1 style="font-size:22px;margin-bottom:12px;">500 — Erreur serveur</h1>
+  <p style="color:var(--text-muted);line-height:1.6;margin-bottom:24px;">
+    Une erreur inattendue s'est produite. L'incident a été enregistré ; réessayez dans un instant.
+  </p>
+  <a href="{{ url_for('index') }}" class="btn btn-primary">Retour à l'accueil</a>
+</div>
+{% endblock %}

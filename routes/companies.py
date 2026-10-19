@@ -2,8 +2,19 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from models import db, Entreprise, Utilisateur, Ticket
 from datetime import datetime
+from utils.security import safe_color
 
 companies_bp = Blueprint('companies', __name__)
+
+TYPES_ENTREPRISE = ['principale', 'filiale', 'externe', 'partenaire', 'prestataire']
+
+
+def _code_conflict(code, exclude_id=None):
+    """Vrai si un autre enregistrement utilise déjà ce code (colonne unique)."""
+    if not code:
+        return False
+    existing = Entreprise.query.filter_by(code=code).first()
+    return bool(existing and existing.id != exclude_id)
 
 def can_manage_companies():
     """Verify if current user has permission to manage companies"""
@@ -97,20 +108,27 @@ def nouvelle():
         telephone = request.form.get('telephone', '').strip()
         adresse = request.form.get('adresse', '').strip()
         site_web = request.form.get('site_web', '').strip()
-        couleur = request.form.get('couleur', '#6366F1')
+        couleur = safe_color(request.form.get('couleur', ''), '#6366F1')
         description = request.form.get('description', '').strip()
 
-        if not nom:
+        def _fail(message):
             if is_ajax:
-                return jsonify({'success': False, 'message': "Le nom de l'entreprise est obligatoire."}), 400
-            flash("Le nom de l'entreprise est obligatoire.", "danger")
+                return jsonify({'success': False, 'message': message}), 400
+            flash(message, "danger")
             return redirect(url_for('companies.nouvelle'))
 
+        if not nom:
+            return _fail("Le nom de l'entreprise est obligatoire.")
+        if len(nom) > 100:
+            return _fail("Le nom de l'entreprise est trop long (100 caractères maximum).")
+        if type_ent not in TYPES_ENTREPRISE:
+            return _fail("Type d'entreprise invalide.")
+        if type_ent == 'principale' and Entreprise.query.filter_by(type_entreprise='principale').first():
+            return _fail("La société principale existe déjà.")
         if Entreprise.query.filter_by(nom=nom).first():
-            if is_ajax:
-                return jsonify({'success': False, 'message': "Une entreprise avec ce nom existe déjà."}), 400
-            flash("Une entreprise avec ce nom existe déjà.", "danger")
-            return redirect(url_for('companies.nouvelle'))
+            return _fail("Une entreprise avec ce nom existe déjà.")
+        if _code_conflict(code):
+            return _fail("Une entreprise avec ce code existe déjà.")
 
         ent = Entreprise(
             nom=nom,
@@ -190,23 +208,37 @@ def modifier(id):
             return redirect(url_for('companies.modifier', id=id))
 
         # Check unique name if changed
-        existing = Entreprise.query.filter(Entreprise.nom == nom, Entreprise.id != ent.id).first()
-        if existing:
+        def _fail(message):
             if is_ajax:
-                return jsonify({'success': False, 'message': "Une autre entreprise porte déjà ce nom."}), 400
-            flash("Une autre entreprise porte déjà ce nom.", "danger")
+                return jsonify({'success': False, 'message': message}), 400
+            flash(message, "danger")
             return redirect(url_for('companies.modifier', id=id))
 
-        ent.nom = nom
-        ent.code = request.form.get('code', '').strip().upper() or None
-        # Main company type cannot be demoted
+        if len(nom) > 100:
+            return _fail("Le nom est trop long (100 caractères maximum).")
+        existing = Entreprise.query.filter(Entreprise.nom == nom, Entreprise.id != ent.id).first()
+        if existing:
+            return _fail("Une autre entreprise porte déjà ce nom.")
+        new_code = request.form.get('code', '').strip().upper() or None
+        if _code_conflict(new_code, ent.id):
+            return _fail("Une autre entreprise utilise déjà ce code.")
+        new_type = request.form.get('type_entreprise', ent.type_entreprise)
         if ent.type_entreprise != 'principale':
-            ent.type_entreprise = request.form.get('type_entreprise', ent.type_entreprise)
+            if new_type not in TYPES_ENTREPRISE:
+                return _fail("Type d'entreprise invalide.")
+            if new_type == 'principale' and Entreprise.query.filter_by(type_entreprise='principale').first():
+                return _fail("La société principale existe déjà.")
+
+        ent.nom = nom
+        ent.code = new_code
+        # La société principale ne peut pas être rétrogradée
+        if ent.type_entreprise != 'principale':
+            ent.type_entreprise = new_type
         ent.email = request.form.get('email', '').strip() or None
         ent.telephone = request.form.get('telephone', '').strip() or None
         ent.adresse = request.form.get('adresse', '').strip() or None
         ent.site_web = request.form.get('site_web', '').strip() or None
-        ent.couleur = request.form.get('couleur', ent.couleur)
+        ent.couleur = safe_color(request.form.get('couleur', ''), ent.couleur)
         ent.description = request.form.get('description', '').strip() or None
 
         db.session.commit()

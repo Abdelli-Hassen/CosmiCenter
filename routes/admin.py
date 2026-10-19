@@ -1,27 +1,45 @@
 """
 Routes d'administration pour CosmiCenter
 """
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from flask_login import login_required, current_user
-from functools import wraps
-from models import db, Utilisateur, Departement, CategorieTicket, Ticket, Statistique
+import io
+import json
+import os
+import re
 from datetime import datetime, timedelta
+from functools import wraps
+
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
+from flask_login import login_required, current_user
+
+from models import (db, Utilisateur, Departement, CategorieTicket, Ticket, Role, Permission,
+                    PointDeVente, Entreprise, PlanActionTask, ConfigurationSysteme)
+from utils.permissions import role_level, can_assign_role
+from utils.security import csv_safe, safe_color, parse_int
 import logging
 
 # Créer le blueprint
 admin_bp = Blueprint('admin', __name__)
 logger = logging.getLogger(__name__)
 
+EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+PERMISSION_CODE_RE = re.compile(r'^[a-z0-9_]+(\.[a-z0-9_]+)*$')
+TICKET_TYPES = ['demande', 'besoin', 'plainte', 'incident', 'tache']
+CATEGORY_PRIORITIES = ['basse', 'moyenne', 'haute', 'urgente', 'critique']
+STATUTS_OUVERTS = ['nouveau', 'ouvert']
+
 
 def admin_required(f):
     """Décorateur pour restreindre l'accès aux administrateurs (niveau >= 90)"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.role or current_user.role.niveau < 90:
-            flash('éccès réservé aux administrateurs', 'danger')
-            return redirect(request.referrer or url_for('tickets.tableau_bord'))
+        if not current_user.is_authenticated:
+            return redirect(url_for('auth.connexion'))
+        if role_level(current_user) < 90:
+            flash('Accès réservé aux administrateurs', 'danger')
+            return redirect(url_for('tickets.tableau_bord'))
         return f(*args, **kwargs)
     return decorated_function
+
 
 def permission_required(permission_name):
     """Décorateur pour restreindre l'accès selon une permission spécifique"""
@@ -29,13 +47,44 @@ def permission_required(permission_name):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated:
-                return redirect(url_for('auth.login'))
-            if not current_user.has_permission(permission_name) and not (current_user.role and current_user.role.niveau >= 90):
-                flash('éccès non autorisé', 'danger')
-                return redirect(request.referrer or url_for('tickets.tableau_bord'))
+                return redirect(url_for('auth.connexion'))
+            if not current_user.has_permission(permission_name) and role_level(current_user) < 90:
+                flash('Accès non autorisé', 'danger')
+                return redirect(url_for('tickets.tableau_bord'))
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+
+def _parse_datetime(value):
+    """Date ISO -> datetime ; None si vide ou invalide."""
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _user_form_context():
+    return dict(
+        departements=Departement.query.filter_by(actif=True).order_by(Departement.nom).all(),
+        roles=Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all(),
+        pdvs=PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all(),
+        entreprises=Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all(),
+    )
+
+
+def _check_role_assignment(role_id):
+    """Retourne un message d'erreur si le rôle est inexistant ou de niveau supérieur à celui de l'acteur."""
+    if not role_id:
+        return None
+    role = db.session.get(Role, role_id)
+    if role is None:
+        return 'Rôle introuvable.'
+    if not can_assign_role(current_user, role):
+        return "Vous ne pouvez pas attribuer un rôle de niveau supérieur au vôtre."
+    return None
 
 
 @admin_bp.route('/tableau-bord')
@@ -43,31 +92,28 @@ def permission_required(permission_name):
 @admin_required
 def tableau_bord():
     """Tableau de bord administrateur"""
-    # Statistiques globales
     stats = {
         'utilisateurs': Utilisateur.query.filter_by(actif=True).count(),
         'departements': Departement.query.filter_by(actif=True).count(),
         'tickets_total': Ticket.query.count(),
-        'tickets_ouverts': Ticket.query.filter_by(statut='ouvert').count(),
+        'tickets_ouverts': Ticket.query.filter(Ticket.statut.in_(STATUTS_OUVERTS)).count(),
         'tickets_mois': Ticket.query.filter(
             Ticket.date_creation >= datetime.utcnow() - timedelta(days=30)
         ).count()
     }
-    
-    # Tickets par statut
+
     tickets_par_statut = db.session.query(
         Ticket.statut, db.func.count(Ticket.id).label('total_count')
     ).group_by(Ticket.statut).all()
-    
-    # Tickets par priorité
+
     tickets_par_priorite = db.session.query(
         Ticket.priorite, db.func.count(Ticket.id).label('total_count')
     ).group_by(Ticket.priorite).all()
-    
+
     return render_template('admin/tableau_bord.html',
-                         stats=stats,
-                         tickets_par_statut=tickets_par_statut,
-                         tickets_par_priorite=tickets_par_priorite)
+                           stats=stats,
+                           tickets_par_statut=tickets_par_statut,
+                           tickets_par_priorite=tickets_par_priorite)
 
 
 @admin_bp.route('/utilisateurs')
@@ -75,12 +121,11 @@ def tableau_bord():
 @admin_required
 def utilisateurs():
     """Liste des utilisateurs"""
-    from models import Role
-    page        = request.args.get('page', 1, type=int)
-    search      = request.args.get('search', '').strip()
-    role_id     = request.args.get('role_id', '')
-    actif_str   = request.args.get('actif', '')
-    dept_id     = request.args.get('departement_id', '')
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '').strip()
+    role_id = request.args.get('role_id', '')
+    actif_str = request.args.get('actif', '')
+    dept_id = request.args.get('departement_id', '')
 
     q = Utilisateur.query
     if search:
@@ -133,14 +178,12 @@ def utilisateurs():
     else:
         order_clauses = [Utilisateur.prenom.asc(), Utilisateur.nom.asc()]
 
-    utilisateurs_page = q.order_by(*order_clauses).paginate(
-        page=page, per_page=20, error_out=False
-    )
+    utilisateurs_page = q.order_by(*order_clauses).paginate(page=page, per_page=20, error_out=False)
 
-    total_actifs   = Utilisateur.query.filter_by(actif=True).count()
+    total_actifs = Utilisateur.query.filter_by(actif=True).count()
     total_inactifs = Utilisateur.query.filter_by(actif=False).count()
 
-    roles        = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
+    roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
 
     return render_template(
@@ -153,62 +196,77 @@ def utilisateurs():
     )
 
 
+def _read_user_form(existing=None):
+    """Lit et valide le formulaire utilisateur. Retourne (valeurs, erreurs)."""
+    errors = []
+    nom = request.form.get('nom', '').strip()
+    prenom = request.form.get('prenom', '').strip()
+    email = request.form.get('email', '').strip().lower()
+    if not nom or not prenom:
+        errors.append('Le nom et le prénom sont obligatoires.')
+    if not email or not EMAIL_RE.match(email):
+        errors.append("L'adresse email est invalide.")
+    elif len(email) > 120:
+        errors.append("L'adresse email est trop longue (120 caractères maximum).")
+    else:
+        other = Utilisateur.query.filter(db.func.lower(Utilisateur.email) == email).first()
+        if other and (existing is None or other.id != existing.id):
+            errors.append(f"L'adresse email {email} est déjà utilisée par un autre compte.")
+
+    role_id = request.form.get('role_id') or None
+    err = _check_role_assignment(role_id)
+    if err:
+        errors.append(err)
+
+    values = dict(
+        nom=nom, prenom=prenom, email=email, role_id=role_id,
+        departement_id=request.form.get('departement_id') or None,
+        pdv_id=request.form.get('pdv_id') or None,
+        entreprise_id=request.form.get('entreprise_id') or None,
+        telephone=request.form.get('telephone', '').strip()[:20] or None,
+        poste=request.form.get('poste', '').strip()[:100] or None,
+        anydesk_id=request.form.get('anydesk_id', '').strip()[:50] or None,
+        anydesk_password=request.form.get('anydesk_password', '').strip()[:100] or None,
+        teamviewer_id=request.form.get('teamviewer_id', '').strip()[:50] or None,
+        teamviewer_password=request.form.get('teamviewer_password', '').strip()[:100] or None,
+        poste_machine=request.form.get('poste_machine', '').strip()[:100] or None,
+    )
+    return values, errors
+
+
 @admin_bp.route('/utilisateurs/nouveau', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def nouvel_utilisateur():
     """Créer un nouvel utilisateur"""
     if request.method == 'POST':
-        try:
-            email = request.form.get('email', '').strip()
-            
-            # Vérifier l'unicité de l'email
-            if Utilisateur.query.filter_by(email=email).first():
-                flash(f"L'adresse email {email} est déjà  utilisée par un autre compte.", 'danger')
-                from models import Role
-                return render_template('admin/nouvel_utilisateur.html', departements=Departement.query.filter_by(actif=True).all(), roles=Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all())
+        values, errors = _read_user_form()
+        password = request.form.get('password', '')
+        min_len = 8
+        if len(password) < min_len:
+            errors.append(f'Le mot de passe doit contenir au moins {min_len} caractères.')
 
-            dept_id = request.form.get('departement_id') or None
-            pdv_id = request.form.get('pdv_id') or None
-            entreprise_id = request.form.get('entreprise_id') or None
-            utilisateur = Utilisateur(
-                nom=request.form.get('nom'),
-                prenom=request.form.get('prenom'),
-                email=request.form.get('email'),
-                role_id=request.form.get('role_id') or None,
-                departement_id=dept_id,
-                pdv_id=pdv_id,
-                entreprise_id=entreprise_id,
-                telephone=request.form.get('telephone', '').strip() or None,
-                poste=request.form.get('poste', '').strip() or None,
-                matricule=None,
-                anydesk_id=request.form.get('anydesk_id', '').strip() or None,
-                anydesk_password=request.form.get('anydesk_password', '').strip() or None,
-                teamviewer_id=request.form.get('teamviewer_id', '').strip() or None,
-                teamviewer_password=request.form.get('teamviewer_password', '').strip() or None,
-                poste_machine=request.form.get('poste_machine', '').strip() or None,
-            )
-            utilisateur.set_password(request.form.get('password', 'testtest'))
-            
+        if errors:
+            for msg in errors:
+                flash(msg, 'danger')
+            return render_template('admin/nouvel_utilisateur.html', **_user_form_context())
+
+        try:
+            utilisateur = Utilisateur(matricule=None, **values)
+            utilisateur.set_password(password)
             db.session.add(utilisateur)
             db.session.commit()
-            
+
             flash('Utilisateur créé avec succès', 'success')
             logger.info(f'Nouvel utilisateur créé: {utilisateur.email} par {current_user.email}')
-            
             return redirect(url_for('admin.utilisateurs'))
-        
+
         except Exception as e:
             db.session.rollback()
-            logger.error(f'Erreur lors de la création de l\'utilisateur: {str(e)}')
-            flash('Erreur lors de la création de l\'utilisateur', 'danger')
-    
-    from models import Role, PointDeVente, Entreprise
-    departements = Departement.query.filter_by(actif=True).all()
-    roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
-    pdvs = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
-    entreprises = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
-    return render_template('admin/nouvel_utilisateur.html', departements=departements, roles=roles, pdvs=pdvs, entreprises=entreprises)
+            logger.error(f"Erreur lors de la création de l'utilisateur: {e}", exc_info=True)
+            flash("Erreur lors de la création de l'utilisateur", 'danger')
+
+    return render_template('admin/nouvel_utilisateur.html', **_user_form_context())
 
 
 @admin_bp.route('/utilisateurs/<user_id>/modifier', methods=['GET', 'POST'])
@@ -217,60 +275,48 @@ def nouvel_utilisateur():
 def modifier_utilisateur(user_id):
     """Modifier un utilisateur"""
     utilisateur = Utilisateur.query.get_or_404(user_id)
-    
+
+    # Un administrateur ne peut pas modifier un compte de niveau supérieur au sien
+    if role_level(utilisateur) > role_level(current_user):
+        flash("Vous ne pouvez pas modifier un compte de niveau supérieur au vôtre.", 'danger')
+        return redirect(url_for('admin.utilisateurs'))
+
     if request.method == 'POST':
+        values, errors = _read_user_form(existing=utilisateur)
+        actif = request.form.get('actif') == '1'
+        if utilisateur.id == current_user.id and not actif:
+            errors.append('Vous ne pouvez pas vous désactiver vous-même.')
+        nouveau_mdp = request.form.get('nouveau_password', '')
+        if nouveau_mdp and len(nouveau_mdp) < 8:
+            errors.append('Le nouveau mot de passe doit contenir au moins 8 caractères.')
+
+        if errors:
+            for msg in errors:
+                flash(msg, 'danger')
+            return redirect(url_for('admin.modifier_utilisateur', user_id=user_id))
+
         try:
-            email = request.form.get('email', '').strip()
-            
-            # Vérifier l'unicité
-            existing_email = Utilisateur.query.filter_by(email=email).first()
-            if existing_email and existing_email.id != utilisateur.id:
-                flash(f"L'adresse email {email} est déjà  utilisée par un autre compte.", 'danger')
-                return redirect(url_for('admin.modifier_utilisateur', user_id=user_id))
+            for key, value in values.items():
+                setattr(utilisateur, key, value)
+            if utilisateur.actif and not actif:
+                utilisateur.revoke_sessions()
+            utilisateur.actif = actif
 
-            utilisateur.nom = request.form.get('nom')
-            utilisateur.prenom = request.form.get('prenom')
-            utilisateur.email = email
-            utilisateur.role_id = request.form.get('role_id') or None
-            utilisateur.departement_id = request.form.get('departement_id') or None
-            utilisateur.pdv_id = request.form.get('pdv_id') or None
-            utilisateur.entreprise_id = request.form.get('entreprise_id') or None
-            utilisateur.telephone = request.form.get('telephone', '').strip() or None
-            utilisateur.poste = request.form.get('poste', '').strip() or None
-            utilisateur.actif = request.form.get('actif') == '1'
-            utilisateur.anydesk_id = request.form.get('anydesk_id', '').strip() or None
-            utilisateur.anydesk_password = request.form.get('anydesk_password', '').strip() or None
-            utilisateur.teamviewer_id = request.form.get('teamviewer_id', '').strip() or None
-            utilisateur.teamviewer_password = request.form.get('teamviewer_password', '').strip() or None
-            utilisateur.poste_machine = request.form.get('poste_machine', '').strip() or None
-
-            nouveau_mdp = request.form.get('nouveau_password')
             if nouveau_mdp:
                 utilisateur.set_password(nouveau_mdp)
+                utilisateur.revoke_sessions()  # force une reconnexion avec le nouveau mot de passe
 
             db.session.commit()
-
             flash('Utilisateur modifié avec succès', 'success')
             logger.info(f'Utilisateur modifié: {utilisateur.email} par {current_user.email}')
-
             return redirect(url_for('admin.utilisateurs'))
 
         except Exception as e:
             db.session.rollback()
-            logger.error(f'Erreur lors de la modification de l\'utilisateur: {str(e)}')
+            logger.error(f"Erreur lors de la modification de l'utilisateur: {e}", exc_info=True)
             flash('Erreur lors de la modification', 'danger')
 
-    from models import Role, PointDeVente, Entreprise
-    departements = Departement.query.filter_by(actif=True).all()
-    roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
-    pdvs = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
-    entreprises = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
-    return render_template('admin/modifier_utilisateur.html',
-                         utilisateur=utilisateur,
-                         departements=departements,
-                         roles=roles,
-                         pdvs=pdvs,
-                         entreprises=entreprises)
+    return render_template('admin/modifier_utilisateur.html', utilisateur=utilisateur, **_user_form_context())
 
 
 @admin_bp.route('/utilisateurs/<user_id>/desactiver', methods=['POST'])
@@ -279,23 +325,27 @@ def modifier_utilisateur(user_id):
 def desactiver_utilisateur(user_id):
     """Désactiver un utilisateur"""
     if user_id == current_user.id:
-        flash('Vous ne pouvez pas vous désactiver vous-màªme', 'danger')
+        flash('Vous ne pouvez pas vous désactiver vous-même', 'danger')
         return redirect(url_for('admin.utilisateurs'))
-    
+
     utilisateur = Utilisateur.query.get_or_404(user_id)
-    
+    if role_level(utilisateur) > role_level(current_user):
+        flash("Vous ne pouvez pas désactiver un compte de niveau supérieur au vôtre.", 'danger')
+        return redirect(url_for('admin.utilisateurs'))
+
     try:
         utilisateur.actif = False
+        utilisateur.revoke_sessions()
         db.session.commit()
-        
+
         flash('Utilisateur désactivé', 'success')
         logger.info(f'Utilisateur désactivé: {utilisateur.email} par {current_user.email}')
-    
+
     except Exception as e:
         db.session.rollback()
-        logger.error(f'Erreur lors de la désactivation: {str(e)}')
+        logger.error(f'Erreur lors de la désactivation: {e}', exc_info=True)
         flash('Erreur lors de la désactivation', 'danger')
-    
+
     return redirect(url_for('admin.utilisateurs'))
 
 
@@ -303,18 +353,22 @@ def desactiver_utilisateur(user_id):
 @login_required
 @admin_required
 def reactiver_utilisateur(user_id):
-    """Réactiver un utilisateur désactivé"""
+    """Réactiver un utilisateur désactivé (et lever un éventuel verrouillage)"""
     utilisateur = Utilisateur.query.get_or_404(user_id)
+    if role_level(utilisateur) > role_level(current_user):
+        flash("Vous ne pouvez pas modifier un compte de niveau supérieur au vôtre.", 'danger')
+        return redirect(url_for('admin.utilisateurs'))
     try:
         utilisateur.actif = True
         utilisateur.verrouille = False
+        utilisateur.date_verrouillage = None
         utilisateur.tentatives_connexion = 0
         db.session.commit()
         flash(f'{utilisateur.prenom} {utilisateur.nom} a été réactivé', 'success')
         logger.info(f'Utilisateur réactivé: {utilisateur.email} par {current_user.email}')
     except Exception as e:
         db.session.rollback()
-        logger.error(f'Erreur lors de la réactivation: {str(e)}')
+        logger.error(f'Erreur lors de la réactivation: {e}', exc_info=True)
         flash('Erreur lors de la réactivation', 'danger')
     return redirect(url_for('admin.utilisateurs'))
 
@@ -324,8 +378,6 @@ def reactiver_utilisateur(user_id):
 @admin_required
 def roles():
     """Gestion des rôles et permissions"""
-    import json
-    from models import Role, Permission, ConfigurationSysteme
     roles = Role.query.order_by(Role.niveau.desc()).all()
     permissions = Permission.query.order_by(Permission.categorie, Permission.nom).all()
     perms_by_cat_raw = {}
@@ -333,7 +385,7 @@ def roles():
         cat = 'Espace de travail' if p.categorie == 'Tickets Actions' else p.categorie
         perms_by_cat_raw.setdefault(cat, []).append(p)
 
-    # Récupérer l'ordre enregistré des catégories (s'il existe)
+    # Ordre enregistré des catégories (s'il existe)
     saved_order_raw = ConfigurationSysteme.get_valeur('roles_categories_order', '[]')
     try:
         saved_order = json.loads(saved_order_raw)
@@ -344,26 +396,24 @@ def roles():
     for cat in saved_order:
         if cat in perms_by_cat_raw:
             perms_by_cat[cat] = perms_by_cat_raw.pop(cat)
-    # Ajouter les catégories restantes qui ne sont pas encore ordonnées
     for cat, items in perms_by_cat_raw.items():
         perms_by_cat[cat] = items
 
     return render_template('admin/roles.html', roles=roles, perms_by_cat=perms_by_cat)
+
 
 @admin_bp.route('/roles/ordonner-categories', methods=['POST'])
 @login_required
 @admin_required
 def ordonner_categories_roles():
     """Sauvegarde l'ordre permanent des catégories de permissions (drag & drop)"""
-    import json
-    from models import ConfigurationSysteme
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     order = data.get('order', [])
-    if isinstance(order, list) and order:
+    if isinstance(order, list) and order and all(isinstance(c, str) for c in order):
         ConfigurationSysteme.set_valeur(
             cle='roles_categories_order',
             valeur=json.dumps(order, ensure_ascii=False),
-            description='Ordre d affichage des catégories de permissions dans la gestion des rôles'
+            description="Ordre d'affichage des catégories de permissions dans la gestion des rôles"
         )
         return jsonify({'success': True, 'order': order})
     return jsonify({'success': False, 'error': 'Format invalide'}), 400
@@ -374,39 +424,40 @@ def ordonner_categories_roles():
 @admin_required
 def permissions():
     """Liste de toutes les permissions système"""
-    from models import Permission
     permissions_list = Permission.query.order_by(Permission.categorie, Permission.nom).all()
     perms_by_cat = {}
     for p in permissions_list:
         perms_by_cat.setdefault(p.categorie, []).append(p)
     return render_template('admin/permissions.html', perms_by_cat=perms_by_cat)
 
+
 @admin_bp.route('/permissions/creer', methods=['POST'])
 @login_required
 @admin_required
 def creer_permission():
-    from models import Permission
-    nom = request.form.get('nom')
-    code = request.form.get('code')
-    description = request.form.get('description')
-    categorie = request.form.get('categorie')
+    nom = request.form.get('nom', '').strip()
+    code = request.form.get('code', '').strip()
+    description = request.form.get('description', '').strip()
+    categorie = request.form.get('categorie', '').strip()
     if not nom or not code:
-        flash("Le nom et le code sont obligatoires.", "error")
+        flash("Le nom et le code sont obligatoires.", "danger")
+        return redirect(url_for('admin.permissions'))
+    if not PERMISSION_CODE_RE.match(code) or len(code) > 100:
+        flash("Code invalide : utilisez des minuscules, chiffres, « _ » et « . » (ex. tickets.voir_tous).", "danger")
         return redirect(url_for('admin.permissions'))
     if Permission.query.filter_by(code=code).first():
-        flash("Ce code de permission existe déjà .", "error")
+        flash("Ce code de permission existe déjà.", "danger")
         return redirect(url_for('admin.permissions'))
-    p = Permission(nom=nom, code=code, description=description, categorie=categorie)
-    db.session.add(p)
+    db.session.add(Permission(nom=nom[:100], code=code, description=description, categorie=categorie[:50] or None))
     db.session.commit()
     flash(f"Permission {code} créée avec succès.", "success")
     return redirect(url_for('admin.permissions'))
+
 
 @admin_bp.route('/permissions/<string:id>/supprimer', methods=['POST'])
 @login_required
 @admin_required
 def supprimer_permission(id):
-    from models import Permission
     p = Permission.query.get_or_404(id)
     db.session.delete(p)
     db.session.commit()
@@ -419,12 +470,14 @@ def supprimer_permission(id):
 @admin_required
 def modifier_permissions_role(role_id):
     """Modifier les permissions d'un rôle"""
-    from models import Role, Permission
     role = Role.query.get_or_404(role_id)
+    if (role.niveau or 0) > role_level(current_user):
+        flash("Vous ne pouvez pas modifier un rôle de niveau supérieur au vôtre.", 'danger')
+        return redirect(url_for('admin.roles'))
     perm_ids = request.form.getlist('permissions')
     role.permissions = Permission.query.filter(Permission.id.in_(perm_ids)).all()
     db.session.commit()
-    flash(f'Permissions du rôle "{role.nom}" mises à  jour.', 'success')
+    flash(f'Permissions du rôle "{role.nom}" mises à jour.', 'success')
     return redirect(url_for('admin.roles'))
 
 
@@ -432,19 +485,28 @@ def modifier_permissions_role(role_id):
 @login_required
 @admin_required
 def creer_role():
-    from models import Role
     nom = request.form.get('nom', '').strip()
     if not nom:
         flash('Le nom du rôle est requis.', 'danger')
         return redirect(url_for('admin.roles'))
+    if len(nom) > 100:
+        flash('Le nom du rôle est trop long (100 caractères maximum).', 'danger')
+        return redirect(url_for('admin.roles'))
     if Role.query.filter_by(nom=nom).first():
-        flash(f'Un rôle nommé "{nom}" existe déjà .', 'danger')
+        flash(f'Un rôle nommé "{nom}" existe déjà.', 'danger')
+        return redirect(url_for('admin.roles'))
+    niveau = parse_int(request.form.get('niveau', 0), None, 0, 100)
+    if niveau is None:
+        flash('Le niveau doit être un entier entre 0 et 100.', 'danger')
+        return redirect(url_for('admin.roles'))
+    if niveau > role_level(current_user):
+        flash("Vous ne pouvez pas créer un rôle de niveau supérieur au vôtre.", 'danger')
         return redirect(url_for('admin.roles'))
     role = Role(
         nom=nom,
         description=request.form.get('description', '').strip(),
-        couleur=request.form.get('couleur', '#3B82F6'),
-        niveau=int(request.form.get('niveau', 0)),
+        couleur=safe_color(request.form.get('couleur', ''), '#3B82F6'),
+        niveau=niveau,
         systeme=False,
         actif=True,
     )
@@ -458,53 +520,69 @@ def creer_role():
 @login_required
 @admin_required
 def modifier_role(role_id):
-    from models import Role
     role = Role.query.get_or_404(role_id)
     if role.systeme:
-        flash('Les rôles système ne peuvent pas àªtre modifiés.', 'warning')
+        flash('Les rôles système ne peuvent pas être modifiés.', 'warning')
         return redirect(url_for('admin.roles'))
-    role.nom = request.form.get('nom', role.nom).strip()
+    if (role.niveau or 0) > role_level(current_user):
+        flash("Vous ne pouvez pas modifier un rôle de niveau supérieur au vôtre.", 'danger')
+        return redirect(url_for('admin.roles'))
+    nom = request.form.get('nom', role.nom).strip()
+    niveau = parse_int(request.form.get('niveau', role.niveau), None, 0, 100)
+    if not nom or len(nom) > 100 or niveau is None:
+        flash('Nom ou niveau invalide (niveau : entier entre 0 et 100).', 'danger')
+        return redirect(url_for('admin.roles'))
+    if niveau > role_level(current_user):
+        flash("Vous ne pouvez pas attribuer un niveau supérieur au vôtre.", 'danger')
+        return redirect(url_for('admin.roles'))
+    other = Role.query.filter(Role.nom == nom, Role.id != role.id).first()
+    if other:
+        flash(f'Un rôle nommé "{nom}" existe déjà.', 'danger')
+        return redirect(url_for('admin.roles'))
+    role.nom = nom
     role.description = request.form.get('description', '').strip()
-    role.couleur = request.form.get('couleur', role.couleur)
-    role.niveau = int(request.form.get('niveau', role.niveau))
+    role.couleur = safe_color(request.form.get('couleur', ''), role.couleur)
+    role.niveau = niveau
     db.session.commit()
-    flash(f'Rôle "{role.nom}" mis à  jour.', 'success')
+    flash(f'Rôle "{role.nom}" mis à jour.', 'success')
     return redirect(url_for('admin.roles'))
+
 
 @admin_bp.route('/roles/<role_id>/supprimer', methods=['POST'])
 @login_required
 @admin_required
 def supprimer_role(role_id):
-    from models import Role
     role = Role.query.get_or_404(role_id)
     if role.systeme:
         flash('Les rôles système ne peuvent pas être supprimés.', 'warning')
         return redirect(url_for('admin.roles'))
-    
+
     if role.utilisateurs:
         flash(f'Impossible de supprimer ce rôle car il est assigné à {len(role.utilisateurs)} utilisateur(s).', 'danger')
         return redirect(url_for('admin.roles'))
-        
+
+    nom = role.nom
     db.session.delete(role)
     db.session.commit()
-    flash(f'Le rôle "{role.nom}" a été supprimé.', 'success')
+    flash(f'Le rôle "{nom}" a été supprimé.', 'success')
     return redirect(url_for('admin.roles'))
+
 
 @admin_bp.route('/roles/<role_id>/toggle-actif', methods=['POST'])
 @login_required
 @admin_required
 def toggle_role_actif(role_id):
-    from models import Role
     role = Role.query.get_or_404(role_id)
     if role.systeme:
         flash('Les rôles système ne peuvent pas être désactivés.', 'warning')
         return redirect(url_for('admin.roles'))
-        
+
     role.actif = not role.actif
     db.session.commit()
     etat = "activé" if role.actif else "désactivé"
     flash(f'Le rôle "{role.nom}" a été {etat}.', 'success')
     return redirect(url_for('admin.roles'))
+
 
 @admin_bp.route('/categories')
 @login_required
@@ -525,23 +603,39 @@ def creer_categorie():
     if not nom:
         flash('Le nom de la catégorie est requis.', 'danger')
         return redirect(url_for('admin.categories'))
+    if len(nom) > 100:
+        flash('Le nom de la catégorie est trop long (100 caractères maximum).', 'danger')
+        return redirect(url_for('admin.categories'))
+
+    departement_id = request.form.get('departement_id') or None
+    if not departement_id or not db.session.get(Departement, departement_id):
+        flash('Veuillez choisir un département valide.', 'danger')
+        return redirect(url_for('admin.categories'))
+
+    type_ticket = request.form.get('type_ticket', 'demande')
+    priorite = request.form.get('priorite_defaut', 'moyenne')
+    delai = parse_int(request.form.get('delai_resolution_jours') or 7, None, 1, 3650)
+    if type_ticket not in TICKET_TYPES or priorite not in CATEGORY_PRIORITIES or delai is None:
+        flash('Type, priorité ou délai de résolution invalide.', 'danger')
+        return redirect(url_for('admin.categories'))
+
     try:
         cat = CategorieTicket(
             nom=nom,
             description=request.form.get('description', '').strip() or None,
-            type_ticket=request.form.get('type_ticket', 'demande'),
-            departement_id=request.form.get('departement_id') or None,
-            priorite_defaut=request.form.get('priorite_defaut', 'moyenne'),
-            delai_resolution_jours=int(request.form.get('delai_resolution_jours') or 7),
-            couleur=request.form.get('couleur', '#3B82F6'),
+            type_ticket=type_ticket,
+            departement_id=departement_id,
+            priorite_defaut=priorite,
+            delai_resolution_jours=delai,
+            couleur=safe_color(request.form.get('couleur', ''), '#3B82F6'),
         )
         db.session.add(cat)
         db.session.commit()
-        flash(f'Catégorie Â« {nom} Â» créée avec succès.', 'success')
+        flash(f'Catégorie « {nom} » créée avec succès.', 'success')
         logger.info(f'Catégorie créée: {nom} par {current_user.email}')
     except Exception as e:
         db.session.rollback()
-        logger.error(f'Erreur création catégorie: {e}')
+        logger.error(f'Erreur création catégorie: {e}', exc_info=True)
         flash('Erreur lors de la création de la catégorie.', 'danger')
     return redirect(url_for('admin.categories'))
 
@@ -550,96 +644,132 @@ def creer_categorie():
 @login_required
 @admin_required
 def toggle_categorie(cat_id):
-    """éctiver/désactiver une catégorie"""
+    """Activer/désactiver une catégorie"""
     cat = CategorieTicket.query.get_or_404(cat_id)
     cat.actif = not cat.actif
     db.session.commit()
     return redirect(url_for('admin.categories'))
 
 
+# ─── Paramètres système (.env) ─────────────────────────────────────────────
+_ENV_KEYS = ['MAIL_SERVER', 'MAIL_PORT', 'MAIL_USERNAME', 'MAIL_PASSWORD', 'MAIL_DEFAULT_SENDER', 'TIMEZONE']
+_ENV_SECRETS = {'MAIL_PASSWORD'}
+_ENV_BOOLS = ['MAIL_USE_TLS', 'MAIL_USE_SSL']
+
+
 @admin_bp.route('/parametres', methods=['GET', 'POST'])
 @login_required
 def parametres_systeme():
-    if not current_user.has_permission('admin_parametres.voir'):
-        flash("éccès non autorisé.", "error")
-        return redirect(url_for('tickets.tous'))
-    """Paramètres système"""
-    import os
+    """Paramètres système (fichier .env)"""
     from dotenv import dotenv_values, set_key
-    
+
+    if not current_user.has_permission('admin_parametres.voir'):
+        flash("Accès non autorisé.", "danger")
+        return redirect(url_for('tickets.tableau_bord'))
+
     dotenv_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '.env')
-    
+
     if request.method == 'POST':
-        try:
-            # Update values
-            keys_to_update = [
-                'MéIL_SERVER', 'MéIL_PORT', 'MéIL_USE_TLS', 'MéIL_USERNéME', 'MéIL_PéSSWORD', 'MéIL_DEFéULT_SENDER',
-                'IMéP_SERVER', 'IMéP_PORT', 'IMéP_USE_SSL', 'IMéP_USERNéME', 'IMéP_PéSSWORD', 'IMéP_POLL_INTERVéL',
-                'TIMEZONE'
-            ]
-            for key in keys_to_update:
-                val = request.form.get(key, '')
-                # Handle checkboxes
-                if key in ['MéIL_USE_TLS', 'IMéP_USE_SSL']:
-                    val = 'True' if request.form.get(key) else 'False'
-                
-                set_key(dotenv_path, key, val)
-                
-            flash('Paramètres mis à jour avec succès. Un redémarrage du serveur peut être nécessaire pour appliquer certains changements.', 'success')
+        if not current_user.has_permission('admin_parametres.modifier'):
+            flash("Vous n'avez pas la permission de modifier les paramètres.", "danger")
             return redirect(url_for('admin.parametres_systeme'))
+        try:
+            updates = {}
+            for key in _ENV_KEYS:
+                if key not in request.form:
+                    continue
+                val = request.form.get(key, '').strip()
+                if re.search(r'[\r\n\x00]', val):
+                    raise ValueError(f'Valeur invalide pour {key}')
+                if key in _ENV_SECRETS and not val:
+                    continue  # champ vide = conserver le mot de passe actuel
+                if key == 'MAIL_PORT':
+                    port = parse_int(val, None, 1, 65535)
+                    if port is None:
+                        raise ValueError('Le port doit être un entier entre 1 et 65535')
+                    val = str(port)
+                if key == 'TIMEZONE':
+                    import pytz
+                    if val not in pytz.all_timezones_set:
+                        raise ValueError('Fuseau horaire inconnu')
+                updates[key] = val
+            if 'MAIL_SERVER' in request.form:
+                for key in _ENV_BOOLS:
+                    updates[key] = 'True' if request.form.get(key) else 'False'
+
+            for key, val in updates.items():
+                set_key(dotenv_path, key, val)
+
+            logger.info("Paramètres système modifiés par %s : %s", current_user.email, sorted(updates))
+            flash('Paramètres mis à jour avec succès. Un redémarrage du serveur est nécessaire pour les appliquer.', 'success')
+            return redirect(url_for('admin.parametres_systeme'))
+        except ValueError as e:
+            flash(str(e), "danger")
         except Exception as e:
-            logger.error(f"Erreur lors de la mise à jour des paramètres: {str(e)}")
+            logger.error(f"Erreur lors de la mise à jour des paramètres: {e}", exc_info=True)
             flash("Erreur lors de l'enregistrement des paramètres.", "danger")
 
-    # Read current values
-    config_vals = dotenv_values(dotenv_path) if os.path.exists(dotenv_path) else {}
-    
+    config_vals = dict(dotenv_values(dotenv_path)) if os.path.exists(dotenv_path) else {}
+    for secret in _ENV_SECRETS:  # ne jamais renvoyer les secrets au navigateur
+        config_vals[secret] = ''
+
     return render_template('admin/parametres.html', config=config_vals)
+
+
+def _tail_lines(path, max_bytes=1024 * 1024):
+    """Dernières lignes d'un fichier sans le charger entièrement en mémoire."""
+    size = os.path.getsize(path)
+    with open(path, 'rb') as f:
+        if size > max_bytes:
+            f.seek(-max_bytes, os.SEEK_END)
+            f.readline()  # ligne probablement tronquée
+        data = f.read()
+    return data.decode('utf-8', errors='replace').splitlines()
 
 
 @admin_bp.route('/logs')
 @login_required
 def logs():
-    if not current_user.has_permission('admin_logs.voir'):
-        flash("éccès non autorisé.", "error")
-        return redirect(url_for('tickets.tous'))
     """Visualisation des logs système"""
-    import os
+    if not current_user.has_permission('admin_logs.voir'):
+        flash("Accès non autorisé.", "danger")
+        return redirect(url_for('tickets.tableau_bord'))
+
     log_file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'logs', 'app.log')
     logs_content = []
-    
+
     if os.path.exists(log_file_path):
         try:
-            with open(log_file_path, 'r', encoding='utf-8', errors='replace') as f:
-                lines = f.readlines()
-                # Filtrer les logs normaux (INFO/DEBUG) pour ne garder que les erreurs/anomalies et les tracebacks
-                filtered_lines = [line for line in lines if ' - INFO - ' not in line and ' - DEBUG - ' not in line]
-                logs_content = filtered_lines[-500:]
-                logs_content.reverse()
+            lines = _tail_lines(log_file_path)
+            # Ne garder que les erreurs/anomalies et les tracebacks
+            filtered = [line for line in lines if ' - INFO - ' not in line and ' - DEBUG - ' not in line]
+            logs_content = filtered[-500:]
+            logs_content.reverse()
         except Exception as e:
-            logs_content = [f"Erreur lors de la lecture des logs: {str(e)}"]
+            logger.error(f"Lecture des logs impossible: {e}")
+            logs_content = ["Erreur lors de la lecture des logs."]
     else:
         logs_content = ["Aucun fichier de log trouvé."]
-        
+
     return render_template('admin/logs.html', logs=logs_content)
 
+
+# ─── Plan d'action ─────────────────────────────────────────────────────────
 
 @admin_bp.route('/plan-action')
 @login_required
 @permission_required('admin_plan_action.voir')
 def plan_action():
     """Plan d'action - calendrier et projets IT"""
-    from models import PlanActionTask, Utilisateur
     tasks = PlanActionTask.query.order_by(PlanActionTask.date_debut).all()
     utilisateurs = Utilisateur.query.filter_by(actif=True).all()
     return render_template('admin/plan_action.html', tasks=tasks, utilisateurs=utilisateurs)
+
 
 @admin_bp.route('/api/plan-action/tasks')
 @login_required
 @permission_required('admin_plan_action.voir')
 def api_plan_action_tasks():
-    from models import PlanActionTask
-    from flask import jsonify
     tasks = PlanActionTask.query.all()
     events = []
     for t in tasks:
@@ -658,107 +788,104 @@ def api_plan_action_tasks():
         })
     return jsonify(events)
 
+
+def _plan_action_edit_allowed():
+    return current_user.has_permission('admin_plan_action.modifier') or role_level(current_user) >= 90
+
+
+def _read_plan_action_form():
+    """Valide le formulaire du plan d'action. Retourne (valeurs, erreur)."""
+    titre = request.form.get('titre', '').strip()
+    date_debut = _parse_datetime(request.form.get('date_debut'))
+    date_fin_str = request.form.get('date_fin')
+    date_fin = _parse_datetime(date_fin_str)
+    if not titre:
+        return None, "Le titre est obligatoire."
+    if len(titre) > 200:
+        return None, "Le titre est trop long (200 caractères maximum)."
+    if not date_debut:
+        return None, "Une date de début valide est obligatoire."
+    if date_fin_str and not date_fin:
+        return None, "La date de fin est invalide."
+    if date_fin and date_fin < date_debut:
+        return None, "La date de fin doit être postérieure à la date de début."
+    assigne = request.form.get('assigne_a_id') or None
+    if assigne and not db.session.get(Utilisateur, assigne):
+        return None, "Utilisateur assigné introuvable."
+    return dict(titre=titre, description=request.form.get('description', '').strip(),
+                date_debut=date_debut, date_fin=date_fin,
+                urgent=request.form.get('urgent') == 'on', assigne_a_id=assigne), None
+
+
 @admin_bp.route('/plan-action/creer', methods=['POST'])
 @login_required
 @permission_required('admin_plan_action.voir')
 def creer_plan_action():
-    from models import PlanActionTask
-    from datetime import datetime
-    from flask import request, flash, redirect, url_for
-    from app import db
-    from flask_login import current_user
-    
-    titre = request.form.get('titre')
-    description = request.form.get('description')
-    date_debut_str = request.form.get('date_debut')
-    date_fin_str = request.form.get('date_fin')
-    urgent = request.form.get('urgent') == 'on'
-    assigne_a_id = request.form.get('assigne_a_id')
-    
-    if not titre or not date_debut_str:
-        flash("Titre et Date de début sont obligatoires.", "error")
+    if not _plan_action_edit_allowed():
+        flash("Vous n'avez pas la permission de modifier le plan d'action.", "danger")
         return redirect(url_for('admin.plan_action'))
-        
-    date_debut = datetime.fromisoformat(date_debut_str) if date_debut_str else datetime.utcnow()
-    date_fin = datetime.fromisoformat(date_fin_str) if date_fin_str else None
-    
-    task = PlanActionTask(
-        titre=titre,
-        description=description,
-        date_debut=date_debut,
-        date_fin=date_fin,
-        urgent=urgent,
-        statut='planned',
-        createur_id=current_user.id,
-        assigne_a_id=assigne_a_id if assigne_a_id else None
-    )
-    db.session.add(task)
+    values, error = _read_plan_action_form()
+    if error:
+        flash(error, "danger")
+        return redirect(url_for('admin.plan_action'))
+
+    db.session.add(PlanActionTask(statut='planned', createur_id=current_user.id, **values))
     db.session.commit()
     flash("Tâche ajoutée au plan d'action.", "success")
     return redirect(url_for('admin.plan_action'))
+
+
+def _set_plan_status(id, statut, message):
+    if not _plan_action_edit_allowed():
+        flash("Vous n'avez pas la permission de modifier le plan d'action.", "danger")
+        return redirect(url_for('admin.plan_action'))
+    task = PlanActionTask.query.get_or_404(id)
+    task.statut = statut
+    db.session.commit()
+    flash(message, 'success')
+    return redirect(url_for('admin.plan_action'))
+
 
 @admin_bp.route('/plan-action/<string:id>/terminer', methods=['POST'])
 @login_required
 @permission_required('admin_plan_action.voir')
 def terminer_plan_action(id):
-    from models import PlanActionTask
-    from app import db
-    from flask import flash, redirect, url_for
-    task = PlanActionTask.query.get_or_404(id)
-    task.statut = 'completed'
-    db.session.commit()
-    flash('Tâche marquée comme terminée.', 'success')
-    return redirect(url_for('admin.plan_action'))
+    return _set_plan_status(id, 'completed', 'Tâche marquée comme terminée.')
+
 
 @admin_bp.route('/plan-action/<string:id>/annuler-terminer', methods=['POST'])
 @login_required
 @permission_required('admin_plan_action.voir')
 def annuler_terminer_plan_action(id):
-    from models import PlanActionTask
-    from app import db
-    from flask import flash, redirect, url_for
-    task = PlanActionTask.query.get_or_404(id)
-    task.statut = 'planned'
-    db.session.commit()
-    flash('Le statut de la tâche a été réinitialisé.', 'success')
-    return redirect(url_for('admin.plan_action'))
+    return _set_plan_status(id, 'planned', 'Le statut de la tâche a été réinitialisé.')
+
 
 @admin_bp.route('/plan-action/<string:id>/modifier', methods=['POST'])
 @login_required
 @permission_required('admin_plan_action.voir')
 def modifier_plan_action(id):
-    from models import PlanActionTask
-    from datetime import datetime
-    from app import db
-    from flask import request, flash, redirect, url_for
+    if not _plan_action_edit_allowed():
+        flash("Vous n'avez pas la permission de modifier le plan d'action.", "danger")
+        return redirect(url_for('admin.plan_action'))
     task = PlanActionTask.query.get_or_404(id)
-    
-    task.titre = request.form.get('titre') or task.titre
-    task.description = request.form.get('description')
-    
-    date_debut_str = request.form.get('date_debut')
-    if date_debut_str:
-        task.date_debut = datetime.fromisoformat(date_debut_str)
-        
-    date_fin_str = request.form.get('date_fin')
-    task.date_fin = datetime.fromisoformat(date_fin_str) if date_fin_str else None
-    
-    task.urgent = request.form.get('urgent') == 'on'
-    
-    assigne_a_id = request.form.get('assigne_a_id')
-    task.assigne_a_id = assigne_a_id if assigne_a_id else None
-    
+    values, error = _read_plan_action_form()
+    if error:
+        flash(error, "danger")
+        return redirect(url_for('admin.plan_action'))
+    for key, value in values.items():
+        setattr(task, key, value)
     db.session.commit()
     flash('Tâche modifiée avec succès.', 'success')
     return redirect(url_for('admin.plan_action'))
+
 
 @admin_bp.route('/plan-action/<string:id>/supprimer', methods=['POST'])
 @login_required
 @permission_required('admin_plan_action.voir')
 def supprimer_plan_action(id):
-    from models import PlanActionTask
-    from app import db
-    from flask import flash, redirect, url_for
+    if not _plan_action_edit_allowed():
+        flash("Vous n'avez pas la permission de modifier le plan d'action.", "danger")
+        return redirect(url_for('admin.plan_action'))
     task = PlanActionTask.query.get_or_404(id)
     db.session.delete(task)
     db.session.commit()
@@ -771,40 +898,29 @@ def supprimer_plan_action(id):
 @permission_required('admin_plan_action.voir')
 def export_plan_action_excel():
     """Export du plan d'action en fichier Excel formaté"""
-    from models import PlanActionTask
-    from flask import request, send_file
     import openpyxl
-    from openpyxl.styles import (Font, PatternFill, élignment, Border, Side,
-                                  GradientFill)
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
-    from datetime import datetime, date
-    import io
 
     # ── Paramètres de filtrage ──────────────────────────────────
-    mode      = request.args.get('mode', 'all')      # all | day | periode
+    mode = request.args.get('mode', 'all')      # all | day | periode
     date_jour = request.args.get('date_jour', '')
     date_from = request.args.get('date_from', '')
-    date_to   = request.args.get('date_to', '')
+    date_to = request.args.get('date_to', '')
 
     query = PlanActionTask.query
 
     if mode == 'day' and date_jour:
-        try:
-            d = datetime.fromisoformat(date_jour).date()
-            query = query.filter(
-                db.func.date(PlanActionTask.date_debut) == d
-            )
-        except ValueError:
-            pass
+        d = _parse_datetime(date_jour)
+        if d:
+            query = query.filter(db.func.date(PlanActionTask.date_debut) == d.date())
     elif mode == 'periode' and date_from:
-        try:
-            df = datetime.fromisoformat(date_from)
+        df = _parse_datetime(date_from)
+        if df:
             query = query.filter(PlanActionTask.date_debut >= df)
-            if date_to:
-                dt = datetime.fromisoformat(date_to)
+            dt = _parse_datetime(date_to)
+            if dt:
                 query = query.filter(PlanActionTask.date_debut <= dt)
-        except ValueError:
-            pass
 
     tasks = query.order_by(PlanActionTask.date_debut).all()
 
@@ -813,83 +929,78 @@ def export_plan_action_excel():
     ws = wb.active
     ws.title = "Plan d'action"
 
-    # Palette
-    COLOR_HEéDER_BG  = "1E1B4B"   # deep indigo
-    COLOR_HEéDER_FG  = "FFFFFF"
-    COLOR_URGENT     = "FEE2E2"   # light red tint
-    COLOR_COMPLETED  = "D1FéE5"   # light green tint
-    COLOR_PLéNNED    = "F1F5F9"   # light slate
-    COLOR_éLT        = "F8FéFC"
+    COLOR_HEADER_BG = "1E1B4B"
+    COLOR_HEADER_FG = "FFFFFF"
+    COLOR_URGENT = "FEE2E2"
+    COLOR_COMPLETED = "D1FAE5"
+    COLOR_ALT = "F8FAFC"
 
     thin = Side(style='thin', color="E2E8F0")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    header_font    = Font(bold=True, color=COLOR_HEéDER_FG, size=11, name="Calibri")
-    header_fill    = PatternFill("solid", fgColor=COLOR_HEéDER_BG)
-    header_align   = élignment(horizontal="center", vertical="center", wrap_text=True)
+    header_font = Font(bold=True, color=COLOR_HEADER_FG, size=11, name="Calibri")
+    header_fill = PatternFill("solid", fgColor=COLOR_HEADER_BG)
+    header_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
-    title_font     = Font(bold=True, size=16, color=COLOR_HEéDER_BG, name="Calibri")
-    subtitle_font  = Font(size=10, color="64748B", name="Calibri")
-    cell_font      = Font(size=10, name="Calibri")
-    bold_font      = Font(bold=True, size=10, name="Calibri")
+    title_font = Font(bold=True, size=16, color=COLOR_HEADER_BG, name="Calibri")
+    subtitle_font = Font(size=10, color="64748B", name="Calibri")
+    cell_font = Font(size=10, name="Calibri")
+    bold_font = Font(bold=True, size=10, name="Calibri")
 
-    center = élignment(horizontal="center", vertical="center")
-    left   = élignment(horizontal="left", vertical="center", wrap_text=True)
+    center = Alignment(horizontal="center", vertical="center")
+    left = Alignment(horizontal="left", vertical="center", wrap_text=True)
 
-    # ── Title block ─────────────────────────────────────────────
-    ws.merge_cells("é1:H1")
-    ws["é1"] = "Plan d'Action — CosmiCenter"
-    ws["é1"].font = title_font
-    ws["é1"].alignment = élignment(horizontal="left", vertical="center")
+    # ── Bloc titre ──────────────────────────────────────────────
+    ws.merge_cells("A1:H1")
+    ws["A1"] = "Plan d'Action — CosmiCenter"
+    ws["A1"].font = title_font
+    ws["A1"].alignment = Alignment(horizontal="left", vertical="center")
     ws.row_dimensions[1].height = 32
 
-    ws.merge_cells("é2:H2")
+    ws.merge_cells("A2:H2")
     label_map = {
-        'all':     'Toutes les tâches',
-        'day':     f'Jour : {date_jour}',
+        'all': 'Toutes les tâches',
+        'day': f'Jour : {date_jour}',
         'periode': f'Période : {date_from} → {date_to or "…"}',
     }
-    ws["é2"] = f"Exporté le {datetime.now().strftime('%d/%m/%Y à %H:%M')}  |  Filtre : {label_map.get(mode, mode)}  |  {len(tasks)} tâche(s)"
-    ws["é2"].font = subtitle_font
-    ws["é2"].alignment = élignment(horizontal="left", vertical="center")
+    ws["A2"] = f"Exporté le {datetime.now().strftime('%d/%m/%Y à %H:%M')}  |  Filtre : {csv_safe(label_map.get(mode, 'Toutes les tâches'))}  |  {len(tasks)} tâche(s)"
+    ws["A2"].font = subtitle_font
+    ws["A2"].alignment = Alignment(horizontal="left", vertical="center")
     ws.row_dimensions[2].height = 18
+    ws.row_dimensions[3].height = 10
 
-    ws.row_dimensions[3].height = 10   # spacer
-
-    # ── Column headers (row 4) ───────────────────────────────────
+    # ── En-têtes (ligne 4) ──────────────────────────────────────
     headers = ["#", "Titre", "Description", "Statut", "Urgent", "Date début", "Date fin", "Assigné à"]
-    widths  = [5,    35,      45,            12,        10,       14,           14,          22]
+    widths = [5, 35, 45, 12, 10, 14, 14, 22]
 
     for col, (h, w) in enumerate(zip(headers, widths), start=1):
         cell = ws.cell(row=4, column=col, value=h)
-        cell.font      = header_font
-        cell.fill      = header_fill
+        cell.font = header_font
+        cell.fill = header_fill
         cell.alignment = header_align
-        cell.border    = border
+        cell.border = border
         ws.column_dimensions[get_column_letter(col)].width = w
-
     ws.row_dimensions[4].height = 28
 
-    # ── Data rows ────────────────────────────────────────────────
+    # ── Lignes de données ───────────────────────────────────────
     statut_labels = {'planned': 'Planifiée', 'progress': 'En cours', 'completed': 'Terminée'}
 
     for i, task in enumerate(tasks, start=1):
         row = 4 + i
 
-        # Row background
         if task.statut == 'completed':
             row_fill = PatternFill("solid", fgColor=COLOR_COMPLETED)
         elif task.urgent:
             row_fill = PatternFill("solid", fgColor=COLOR_URGENT)
         elif i % 2 == 0:
-            row_fill = PatternFill("solid", fgColor=COLOR_éLT)
+            row_fill = PatternFill("solid", fgColor=COLOR_ALT)
         else:
             row_fill = PatternFill("solid", fgColor="FFFFFF")
 
         values = [
             i,
-            task.titre,
-            task.description or "",
+            csv_safe(task.titre),
+            csv_safe(task.description or ""),
             statut_labels.get(task.statut, task.statut),
             "🔥 Oui" if task.urgent else "Non",
             task.date_debut.strftime('%d/%m/%Y') if task.date_debut else "",
@@ -900,39 +1011,35 @@ def export_plan_action_excel():
 
         for col, (val, aln) in enumerate(zip(values, aligns), start=1):
             cell = ws.cell(row=row, column=col, value=val)
-            cell.font      = bold_font if col == 2 else cell_font
-            cell.fill      = row_fill
+            cell.font = bold_font if col == 2 else cell_font
+            cell.fill = row_fill
             cell.alignment = aln
-            cell.border    = border
+            cell.border = border
 
         ws.row_dimensions[row].height = 22
 
-    # Freeze header
-    ws.freeze_panes = "é5"
+    ws.freeze_panes = "A5"
 
-    # ── Summary row ─────────────────────────────────────────────
+    # ── Ligne de synthèse ───────────────────────────────────────
     summary_row = 4 + len(tasks) + 2
-    ws.merge_cells(f"é{summary_row}:C{summary_row}")
-    ws[f"é{summary_row}"] = f"Total : {len(tasks)} tâche(s)"
-    ws[f"é{summary_row}"].font = bold_font
-    ws[f"é{summary_row}"].fill = PatternFill("solid", fgColor="E2E8F0")
+    ws.merge_cells(f"A{summary_row}:C{summary_row}")
+    ws[f"A{summary_row}"] = f"Total : {len(tasks)} tâche(s)"
+    ws[f"A{summary_row}"].font = bold_font
+    ws[f"A{summary_row}"].fill = PatternFill("solid", fgColor="E2E8F0")
 
     completed_count = sum(1 for t in tasks if t.statut == 'completed')
-    urgent_count    = sum(1 for t in tasks if t.urgent)
+    urgent_count = sum(1 for t in tasks if t.urgent)
     ws.merge_cells(f"D{summary_row}:F{summary_row}")
     ws[f"D{summary_row}"] = f"Terminées : {completed_count}  |  Urgentes : {urgent_count}"
     ws[f"D{summary_row}"].font = bold_font
     ws[f"D{summary_row}"].fill = PatternFill("solid", fgColor="E2E8F0")
     ws[f"D{summary_row}"].alignment = center
 
-    # ── Stream to browser ────────────────────────────────────────
     buf = io.BytesIO()
     wb.save(buf)
     buf.seek(0)
 
-    now_str  = datetime.now().strftime('%Y%m%d_%H%M')
-    filename = f"plan_action_{now_str}.xlsx"
-
+    filename = f"plan_action_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
     return send_file(
         buf,
         as_attachment=True,
@@ -945,18 +1052,5 @@ def export_plan_action_excel():
 @login_required
 @permission_required('admin_acces.voir')
 def acces_distance():
-    from models import Utilisateur, db
-    # Fetch all active users, sorted by name, so the admin can add IDs for new users
     users = Utilisateur.query.filter_by(actif=True).order_by(Utilisateur.prenom.asc(), Utilisateur.nom.asc()).all()
     return render_template('admin/acces_distance.html', users=users)
-
-
-@admin_bp.route('/api/migrate_db')
-def migrate_db():
-    from models import db
-    try:
-        db.session.execute('éLTER TéBLE pieces_jointes éDD COLUMN commentaire_id VéRCHéR(36) REFERENCES commentaires(id) ON DELETE CéSCéDE;')
-        db.session.commit()
-        return "Migration successful"
-    except Exception as e:
-        return f"Migration failed: {str(e)}"

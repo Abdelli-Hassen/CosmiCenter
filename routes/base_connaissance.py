@@ -2,6 +2,9 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from models import db, ArticleConnaissance, CategorieConnaissance
 
+# Note : l'URL /article/nouveau est déclarée après /article/<id> ; Flask privilégie les routes statiques,
+# « nouveau » n'est donc jamais interprété comme un identifiant d'article.
+
 base_connaissance_bp = Blueprint('base_connaissance', __name__)
 
 @base_connaissance_bp.route('/')
@@ -32,8 +35,10 @@ def article(id):
         return redirect(url_for('tickets.mes_tickets'))
 
     art = ArticleConnaissance.query.get_or_404(id)
-    art.vues += 1
+    # Incrément atomique côté base (pas de perte de comptage en cas de lectures simultanées)
+    ArticleConnaissance.query.filter_by(id=id).update({'vues': ArticleConnaissance.vues + 1})
     db.session.commit()
+    db.session.refresh(art)
     return render_template('base_connaissance/article.html', article=art)
 
 @base_connaissance_bp.route('/article/nouveau', methods=['GET', 'POST'])
@@ -46,12 +51,18 @@ def nouvel_article():
     categories = CategorieConnaissance.query.all()
 
     if request.method == 'POST':
-        titre = request.form.get('titre')
-        contenu = request.form.get('contenu')
+        titre = (request.form.get('titre') or '').strip()
+        contenu = (request.form.get('contenu') or '').strip()
         categorie_id = request.form.get('categorie_id')
 
         if not titre or not contenu or not categorie_id:
             flash("Tous les champs sont obligatoires.", "danger")
+            return render_template('base_connaissance/nouveau.html', categories=categories)
+        if len(titre) > 255:
+            flash("Le titre est trop long (255 caractères maximum).", "danger")
+            return render_template('base_connaissance/nouveau.html', categories=categories)
+        if not db.session.get(CategorieConnaissance, categorie_id):
+            flash("Catégorie introuvable.", "danger")
             return render_template('base_connaissance/nouveau.html', categories=categories)
 
         nouvel_art = ArticleConnaissance(
@@ -78,9 +89,15 @@ def modifier_article(id):
     categories = CategorieConnaissance.query.all()
 
     if request.method == 'POST':
-        art.titre = request.form.get('titre', art.titre)
-        art.contenu = request.form.get('contenu', art.contenu)
-        art.categorie_id = request.form.get('categorie_id', art.categorie_id)
+        titre = (request.form.get('titre', art.titre) or '').strip()
+        contenu = (request.form.get('contenu', art.contenu) or '').strip()
+        categorie_id = request.form.get('categorie_id', art.categorie_id)
+        if not titre or not contenu or len(titre) > 255 or not db.session.get(CategorieConnaissance, categorie_id):
+            flash("Titre, contenu et catégorie valides sont obligatoires.", "danger")
+            return render_template('base_connaissance/modifier.html', article=art, categories=categories)
+        art.titre = titre
+        art.contenu = contenu
+        art.categorie_id = categorie_id
 
         db.session.commit()
         flash("Article mis à jour avec succès.", "success")
@@ -109,12 +126,15 @@ def nouvelle_categorie():
         return redirect(url_for('base_connaissance.index'))
 
     if request.method == 'POST':
-        nom = request.form.get('nom')
+        nom = (request.form.get('nom') or '').strip()
         description = request.form.get('description', '')
-        icone = request.form.get('icone', 'folder')
+        icone = (request.form.get('icone', 'folder') or 'folder')[:50]
 
         if not nom:
             flash("Le nom de la catégorie est obligatoire.", "danger")
+            return render_template('base_connaissance/nouvelle_categorie.html')
+        if len(nom) > 100:
+            flash("Le nom de la catégorie est trop long (100 caractères maximum).", "danger")
             return render_template('base_connaissance/nouvelle_categorie.html')
 
         nouvelle_cat = CategorieConnaissance(

@@ -188,15 +188,20 @@ def creer_admin():
             role_id=role_admin.id if role_admin else None,
             actif=True
         )
-        admin.set_password('testtest')  # Mot de passe par défaut
-        
+        # Mot de passe : variable d'environnement ADMIN_PASSWORD, sinon valeur aléatoire (affichée une seule fois)
+        import os
+        import secrets
+        initial_password = os.getenv('ADMIN_PASSWORD') or secrets.token_urlsafe(12)
+        admin.set_password(initial_password)
+
         db.session.add(admin)
         db.session.commit()
-        
+
         print(f"✓ Utilisateur administrateur créé:")
         print(f"  Email: admin@example.com")
-        print(f"  Mot de passe: testtest")
-        print(f"  ⚠️  IMPORTANT: Changez ce mot de passe immédiatement!")
+        if not os.getenv('ADMIN_PASSWORD'):
+            print(f"  Mot de passe initial: {initial_password}  (noter maintenant, il ne sera plus affiché)")
+        print(f"  ⚠️  IMPORTANT: Changez ce mot de passe dès la première connexion!")
     else:
         print("✓ Utilisateur administrateur existe déjà")
     

@@ -341,22 +341,21 @@
   <div class="view-container grid-view" id="viewContainer">
     {% for user in users %}
     <div class="access-card user-item" data-name="{{ user.prenom|lower }} {{ user.nom|lower }} {{ user.poste|lower }}" data-has-id="{{ 'true' if user.anydesk_id or user.teamviewer_id else 'false' }}">
-      <div class="access-card-header" onclick="openUserModal({
-          prenom: '{{ user.prenom|replace("'", "\'") if user.prenom else "" }}',
-          nom: '{{ user.nom|replace("'", "\'") if user.nom else "" }}',
-          email: '{{ user.email|replace("'", "\'") if user.email else "" }}',
-          telephone: '{{ user.telephone|replace("'", "\'") if user.telephone else "" }}',
-          poste: '{{ user.poste|replace("'", "\'") if user.poste else "" }}',
-          departement: '{{ user.departement.nom|replace("'", "\'") if user.departement else "Aucun" }}',
-          role: '{{ user.role.nom|replace("'", "\'") if user.role else "Standard" }}',
-          matricule: '{{ user.matricule|replace("'", "\'") if user.matricule else "" }}',
-          photo: '{{ user.photo_profil|replace("'", "\'") if user.photo_profil else "" }}',
-          initials: '{{ (user.prenom[0]|upper ~ user.nom[0]|upper) if user.prenom and user.nom else "" }}',
-          editUrl: '{{ url_for("admin.modifier_utilisateur", user_id=user.id) }}'
-        })">
+      <div class="access-card-header" onclick="openUserModal({{ {
+          'prenom': user.prenom or '',
+          'nom': user.nom or '',
+          'email': user.email or '',
+          'telephone': user.telephone or '',
+          'poste': user.poste or '',
+          'departement': user.departement.nom if user.departement else 'Aucun',
+          'role': user.role.nom if user.role else 'Standard',
+          'photo': user.photo_profil or '',
+          'initials': (user.prenom[0]|upper ~ user.nom[0]|upper) if user.prenom and user.nom else '',
+          'editUrl': url_for('admin.modifier_utilisateur', user_id=user.id)
+        }|tojson|forceescape }})">
         <div class="access-avatar">
           {% if user.photo_profil %}
-          <img src="{{ url_for('static', filename='uploads/' + user.photo_profil) }}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" onerror="this.onerror=null; this.outerHTML=`<span style='font-size:16px; font-weight:800;'>{{ (user.prenom[0]|upper if user.prenom else '') ~ (user.nom[0]|upper if user.nom else '') }}</span>`;">
+          <img src="{{ url_for('static', filename='uploads/' + user.photo_profil) }}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" onerror="this.onerror=null; var s=document.createElement('span'); s.style.cssText='font-size:16px; font-weight:800;'; s.textContent={{ ((user.prenom[0]|upper if user.prenom else '') ~ (user.nom[0]|upper if user.nom else ''))|tojson|forceescape }}; this.replaceWith(s);">
           {% else %}
           {{ (user.prenom[0]|upper if user.prenom else "") ~ (user.nom[0]|upper if user.nom else "") }}
           {% endif %}
@@ -394,7 +393,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           Connecter AnyDesk
         </a>
-        <button class="btn-action btn-copy" title="Copier l'adresse AnyDesk" onclick="copyToClipboard(this, '{{ user.anydesk_id }}')">
+        <button class="btn-action btn-copy" title="Copier l'adresse AnyDesk" onclick="copyToClipboard(this, {{ user.anydesk_id|tojson|forceescape }})">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         </button>
         {% elif user.teamviewer_id %}
@@ -402,7 +401,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           Connecter TeamViewer
         </a>
-        <button class="btn-action btn-copy" title="Copier l'ID TeamViewer" onclick="copyToClipboard(this, '{{ user.teamviewer_id }}')">
+        <button class="btn-action btn-copy" title="Copier l'ID TeamViewer" onclick="copyToClipboard(this, {{ user.teamviewer_id|tojson|forceescape }})">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         </button>
         {% endif %}
@@ -576,14 +575,25 @@ function copyToClipboard(btn, text) {
 </style>
 
 <script>
-function openUserModal(user) {
+function esc(value) {
+  return String(value === null || value === undefined ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function openUserModal(raw) {
   const modal = document.getElementById('userInfoModal');
   const body = document.getElementById('modalBodyContent');
-  
-  const avatarHtml = user.photo ? 
-    `<img src="/static/uploads/profiles/${user.photo}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : 
+
+  // Toutes les valeurs proviennent de la base : échappées avant insertion dans le HTML
+  const user = {};
+  Object.keys(raw).forEach(k => { user[k] = esc(raw[k]); });
+  user.editUrl = raw.editUrl;  // URL générée par le serveur (url_for), échappée à l'usage
+
+  const avatarHtml = raw.photo ?
+    `<img src="/static/uploads/${encodeURI(raw.photo)}" alt="" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` :
     `${user.initials}`;
-    
+
   body.innerHTML = `
     <div class="profile-header">
       <div class="profile-avatar">${avatarHtml}</div>
@@ -627,7 +637,7 @@ function openUserModal(user) {
     
     {% if current_user.role and current_user.role.niveau >= 90 %}
     <div style="margin-top: 32px; display: flex; justify-content: stretch;">
-      <a href="${user.editUrl}" class="btn-action primary" style="flex: 1; justify-content: center; padding: 12px; font-weight: 600; border-radius: 12px; text-decoration: none; display: flex; gap: 8px;">
+      <a href="${esc(user.editUrl)}" class="btn-action primary" style="flex: 1; justify-content: center; padding: 12px; font-weight: 600; border-radius: 12px; text-decoration: none; display: flex; gap: 8px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
         Voir & Modifier le Profil Complet
       </a>

@@ -258,7 +258,7 @@
               </td>
               {% if current_user.has_permission('admin_dashboard.voir') or current_user.role.niveau >= 80 %}
               <td style="text-align:right;">
-                <form method="POST" action="{{ url_for('companies.retirer_employe', user_id=u.id) }}" onsubmit="return confirm('Détacher ce collaborateur de {{ entreprise.nom }} ?');" style="display:inline;">
+                <form method="POST" action="{{ url_for('companies.retirer_employe', user_id=u.id) }}" onsubmit="return confirm({{ ('Détacher ce collaborateur de ' ~ entreprise.nom ~ ' ?')|tojson|forceescape }});" style="display:inline;">
                   <button type="submit" class="btn-action" style="padding:4px 8px; font-size:11px; color:#ef4444; border-color:rgba(239,68,68,0.2);">
                     Détacher
                   </button>

@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="{{ app_name }} — Plateforme de service d'assistance">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="{{ url_for('static', filename='js/csrf.js') }}?v=1"></script>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo-icon.png') }}">
   <title>{% block title %}{{ app_name }}{% endblock %} — {{ app_name }}</title>
 
@@ -109,7 +111,7 @@
           <a href="{{ url_for('parametres.profil') }}" class="chrome-btn" title="Profil & Paramètres" style="padding: 0; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: transparent; border: none; box-shadow: none;">
             <div style="width: 100%; height: 100%; border-radius: 50%; background: rgba(220,38,38,0.1); color: var(--color-brand, #dc2626); border: 1px solid rgba(220,38,38,0.2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-family: var(--font-sans); overflow: hidden;">
               {% if current_user.photo_profil %}
-              <img src="{{ url_for('static', filename='uploads/' + current_user.photo_profil) }}" alt="{{ current_user.prenom }}" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; this.outerHTML='{{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}';">
+              <img src="{{ url_for('static', filename='uploads/' + current_user.photo_profil) }}" alt="{{ current_user.prenom }}" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; this.replaceWith(document.createTextNode({{ (current_user.prenom[0]|upper ~ current_user.nom[0]|upper)|tojson|forceescape }}));">
               {% else %}
               {{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}
               {% endif %}
@@ -117,9 +119,11 @@
           </a>
         </div>
 
-        <a href="{{ url_for('auth.deconnexion') }}" class="chrome-btn" style="color: #ef4444;" title="Déconnexion">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        </a>
+        <form method="post" action="{{ url_for('auth.deconnexion') }}" style="display:inline-flex;margin:0;">
+          <button type="submit" class="chrome-btn" style="color: #ef4444;background:none;border:none;cursor:pointer;" title="Déconnexion" aria-label="Déconnexion">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </form>
       </div><!-- /chrome-right -->
     </header>
 

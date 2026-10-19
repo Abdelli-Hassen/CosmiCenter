@@ -346,7 +346,7 @@
     {% for cat in categories %}
       {% set count_cat = pdvs | selectattr('categorie', 'equalto', cat) | list | length %}
       {% if count_cat > 0 %}
-      <button type="button" class="pdv-filter-chip" onclick="filterCategory('{{ cat }}', this)">
+      <button type="button" class="pdv-filter-chip" onclick="filterCategory({{ cat|tojson|forceescape }}, this)">
         {% if cat == 'Urbain' %}
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h1M9 13h1M9 17h1M15 13h1M15 17h1"/></svg>
         {% elif cat == 'Express' %}
@@ -419,6 +419,7 @@
           <button type="button" 
                   class="popover-swatch {% if theme_color == c %}active{% endif %}"
                   style="background-color: {{ c }};"
+                  data-color="{{ c }}"
                   title="Appliquer cette couleur"
                   onclick="applyThemeQuick('{{ pdv.id }}', '{{ c }}')"></button>
           {% endfor %}
@@ -529,23 +530,31 @@ document.addEventListener('click', function(e) {
   }
 });
 
+function setActiveSwatch(pdvId, color) {
+  const popover = document.getElementById('themePopover_' + pdvId);
+  if (!popover) return;
+  popover.querySelectorAll('.popover-swatch').forEach(sw => {
+    sw.classList.toggle('active', (sw.getAttribute('data-color') || '').toLowerCase() === color.toLowerCase());
+  });
+}
+
 function applyThemeQuick(pdvId, color) {
   const card = document.getElementById('pdvCard_' + pdvId);
+  const previous = card ? card.style.getPropertyValue('--pdv-color').trim() : '';
   if (card) {
     card.style.setProperty('--pdv-color', color);
   }
-  
-  // Update active swatch indicator in this popover
+  setActiveSwatch(pdvId, color);
   const popover = document.getElementById('themePopover_' + pdvId);
-  if (popover) {
-    popover.querySelectorAll('.popover-swatch').forEach(sw => {
-      sw.classList.toggle('active', sw.style.backgroundColor === color || sw.getAttribute('data-color') === color);
-    });
-    popover.classList.remove('open');
-  }
+  if (popover) popover.classList.remove('open');
 
-  // Persist to database via AJAX
-  fetch(`/pdvs/${pdvId}/couleur`, {
+  // Enregistrement en base (route /pdv/<id>/couleur) ; retour à l'ancienne couleur si l'enregistrement échoue
+  const revert = () => {
+    if (card && previous) card.style.setProperty('--pdv-color', previous);
+    if (previous) setActiveSwatch(pdvId, previous);
+    if (window.CHUB && CHUB.toast) CHUB.toast("Le thème n'a pas pu être enregistré.", 'error');
+  };
+  fetch('/pdv/' + encodeURIComponent(pdvId) + '/couleur', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -553,13 +562,14 @@ function applyThemeQuick(pdvId, color) {
     },
     body: JSON.stringify({ couleur: color })
   })
-  .then(res => res.json())
-  .then(data => {
-    if (!data.success) {
+  .then(res => res.json().then(data => ({ ok: res.ok, data })))
+  .then(({ ok, data }) => {
+    if (!ok || !data.success) {
       console.error('Erreur lors du changement de couleur:', data.message);
+      revert();
     }
   })
-  .catch(err => console.error('Erreur réseau:', err));
+  .catch(err => { console.error('Erreur réseau:', err); revert(); });
 }
 
 function filterCategory(cat, btn) {
