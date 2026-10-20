@@ -4,8 +4,8 @@ from logging.handlers import RotatingFileHandler
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
-# Charger les variables d'environnement
-load_dotenv(override=True)
+# Charger les variables d'environnement (.env à côté de app.py, quel que soit le dossier de lancement)
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'), override=True)
 
 from flask import Flask, render_template, redirect, url_for, request
 from flask_login import LoginManager, current_user
@@ -13,7 +13,7 @@ from flask_migrate import Migrate
 from models import db, Utilisateur, Notification
 from config import config, validate_config
 from utils.security import init_csrf, init_security_headers, is_loopback
-from utils.schema import ensure_schema
+from utils.schema import ensure_schema, ensure_permissions
 
 # Configuration du logging (rotation : 5 Mo x 5 fichiers)
 _BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -70,6 +70,7 @@ def create_app(config_name='default'):
     with app.app_context():
         db.create_all()
         ensure_schema(db)
+        ensure_permissions(db)
         from services.referentiels import ensure_defaults
         ensure_defaults()
 

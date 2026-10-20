@@ -49,7 +49,8 @@ Open **PowerShell** in your project folder:
 
 ```powershell
 # 1) Database  (replace USER and DBNAME with the values from your .env DATABASE_URL)
-& "C:\Program Files\PostgreSQL\16\bin\pg_dump.exe" -U USER -d DBNAME --no-owner --no-acl -f cosmicenter.sql
+pg_dump -U USER -d DBNAME --no-owner --no-acl -f cosmicenter.sql
+# (si « pg_dump » n'est pas reconnu : ajoutez le dossier « bin » de PostgreSQL au PATH, ou lancez l'outil depuis ce dossier)
 
 # 2) Uploaded files (ticket attachments, photos, chat files)
 tar -czf uploads.tar.gz static/uploads instance/chat_files
@@ -70,7 +71,7 @@ ssh your-user@SERVER_IP
 git clone https://github.com/YOUR-ACCOUNT/YOUR-REPO.git cosmicenter-src
 
 # Option B: from your PC (run this on your PC, not on the server)
-#   scp -r C:\Users\hassen.abdeli\Documents\GitHub\CosmittoHUB your-user@SERVER_IP:~/cosmicenter-src
+#   (depuis le dossier qui CONTIENT le projet)   scp -r CosmittoHUB your-user@SERVER_IP:~/cosmicenter-src
 ```
 
 If you did Step 1, upload the two files too (run on your PC):
@@ -92,9 +93,9 @@ It asks 5 short questions (press **Enter** to skip any):
 
 1. **Domain name** → `support.mycompany.com` (empty = use the IP over HTTP)
 2. **Your e-mail** → used for the free HTTPS certificate
-3. **Database file** → `/home/your-user/cosmicenter.sql` (empty = fresh database)
+3. **Database file** → `~/cosmicenter.sql` (empty = fresh database)
 4. **Old SECRET_KEY** → paste it if you answered 3 (empty = new key)
-5. **Uploads archive** → `/home/your-user/uploads.tar.gz` (empty = none)
+5. **Uploads archive** → `~/uploads.tar.gz` (empty = none)
 
 Then wait 3–6 minutes. It prints **✔ TERMINÉ** when finished.
 

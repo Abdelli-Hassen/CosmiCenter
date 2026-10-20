@@ -80,16 +80,16 @@ Cosmitto Coffee opère plusieurs points de vente (POS). CosmiCenter permet à ch
 20+ permissions granulaires (tickets, admin, rapports, base de connaissances) sont désormais appliquées dynamiquement sur toutes les interfaces et les routes au lieu de vérifications statiques, garantissant un contrôle précis des actions (Création, Modification, Suppression, Désactivation).
 
 ### Rapports
-- Tableau de bord analytique : métriques SLA, satisfaction, évolution quotidienne
-- Performance par agent : tickets résolus, temps moyen, taux de résolution
-- Satisfaction client : distribution des notes, commentaires par département
-- Export CSV avec filtres de dates
+- **Rapport global** : 10 indicateurs comparés à la période précédente (créés, résolus, en attente, en retard, taux de résolution, SLA, 1ère réponse, résolution moyenne/médiane, satisfaction, réouvertures), courbe créés/résolus, répartitions (statut, type, priorité), ancienneté du backlog, carte de chaleur jour × heure, performance par département, catégories et points de vente les plus actifs, agents, tickets en retard, satisfaction
+- Filtres combinables : période (ou dates personnalisées), département, point de vente, type, priorité, agent
+- **Performance des agents** : classement simple (résolus, en cours, en retard, délai moyen, respect du SLA, satisfaction, situation) et fiche détaillée par agent comparée à l'équipe
+- Export CSV filtré (même filtres que le rapport) et impression / PDF
 
 ### Administration
 - Gestion des utilisateurs avec filtres avancés et stat chips (total / actifs / inactifs)
 - Gestion des rôles et permissions par cases à cocher hiérarchisées (interface en accordéon avec logique de désactivation en cascade)
 - Création, modification, désactivation et suppression des rôles personnalisés
-- Gestion des catégories de tickets (type, priorité par défaut, délai SLA, couleur)
+- Gestion des catégories de tickets : créer, modifier, activer/désactiver, archiver, supprimer (type, département, priorité par défaut, délai de résolution, couleur). Réservée à la permission `admin.categories`, attribuable à n'importe quel rôle ; le bouton « Gérer les catégories » apparaît alors sur la page Nouveau ticket.
 - Logs système et paramètres (en cours)
 
 ### Paramètres du compte
@@ -128,6 +128,10 @@ python serve.py          # serveur Waitress (partage réseau / production)
 ```
 
 Accès : `http://127.0.0.1:8080` (port défini par `FLASK_PORT`).
+
+> **Projet portable** : le dossier peut être copié ou déplacé (autre PC, disque externe…). Il suffit de lancer `start.bat` (ou `run_dev.bat` / `run_prod.bat`) :
+> les scripts travaillent depuis leur propre dossier et recréent automatiquement l'environnement Python (`venv`) s'il vient d'un autre emplacement.
+> Pensez à copier aussi le fichier `.env` (non versionné) et, pour garder vos données, la base PostgreSQL et les dossiers `static/uploads/` et `instance/chat_files/`.
 
 > Le script `seed_db.py` **vide toutes les tables** avant d'insérer des données de démonstration : il demande une
 > confirmation explicite (taper `EFFACER`) et utilise le mot de passe `SEED_PASSWORD` (ou une valeur aléatoire affichée en fin d'exécution).

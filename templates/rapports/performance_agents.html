@@ -1,425 +1,101 @@
 {% extends "base.html" %}
+{% block title %}Performance des agents{% endblock %}
 
-{% block title %}Performance des Agents{% endblock %}
-{% block body_class %}page-reports-agents{% endblock %}
-
-{% block extra_head %}
-<style>
-/* ── Page ──────────────────────────────────────────────────── */
-.reports-page { padding: 28px 36px; max-width: 100%; }
-@media (max-width:768px) { .reports-page { padding: 16px 20px; } }
-
-/* ── Hero ──────────────────────────────────────────────────── */
-.reports-hero { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; gap:20px; flex-wrap:wrap; animation: fade-in-up 0.5s ease-out; }
-.reports-hero-left { display:flex; flex-direction:column; gap:6px; }
-.reports-hero-title {
-  font-size:30px; font-weight:900; color:var(--text-primary);
-  letter-spacing:-0.03em; margin:0;
-  display:flex; align-items:center; gap:12px;
-}
-.reports-hero-icon {
-  width:42px; height:42px; border-radius:13px;
-  background:linear-gradient(135deg, var(--surface-2), var(--surface-1)); border:1px solid var(--border-subtle);
-  display:flex; align-items:center; justify-content:center; color:var(--text-primary);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-.reports-hero-sub { font-size:14px; color:var(--text-muted); font-weight:500; margin:0; display:flex; align-items:center; gap:10px; }
-
-/* Segmented Period Control */
-.reports-period-ctrl {
-  display:flex; gap:4px; padding:4px;
-  background:var(--surface-2); border:1px solid var(--border-default);
-  border-radius:12px; box-shadow:inset 0 2px 4px rgba(0,0,0,0.03);
-}
-.reports-period-btn {
-  padding:6px 14px; border-radius:8px; font-size:13px; font-weight:700;
-  text-decoration:none; transition:all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.reports-period-btn.active {
-  background:var(--surface-1); color:var(--brand);
-  box-shadow:0 2px 8px rgba(0,0,0,0.1); border:1px solid var(--border-subtle);
-  transform: scale(1.05);
-}
-.reports-period-btn:not(.active) {
-  background:transparent; color:var(--text-muted); border:1px solid transparent;
-}
-.reports-period-btn:not(.active):hover { color:var(--text-primary); background:rgba(255,255,255,0.08); transform: translateY(-1px); }
-
-/* ── Top 3 Showcase ────────────────────────────────────────── */
-.top3-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-bottom:28px; animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.1s; }
-@media (max-width:900px) { .top3-grid { grid-template-columns:1fr; } }
-
-.top3-card {
-  background:var(--surface-1); border-radius:20px; border:1px solid var(--border-subtle);
-  padding:24px; position:relative; overflow:hidden; display:flex; flex-direction:column; gap:16px;
-  box-shadow:0 8px 16px rgba(0,0,0,0.02); transition:all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  cursor: pointer;
-}
-.top3-card::before {
-  content:''; position:absolute; inset:0; border-radius:20px; padding:2px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none; opacity:0; transition:opacity 0.4s ease;
-}
-.top3-card:hover { 
-  transform:translateY(-6px) scale(1.02); 
-  box-shadow:0 20px 40px rgba(0,0,0,0.08), 0 0 0 1px var(--brand) inset; 
-}
-.top3-card:hover::before { opacity:1; }
-
-.top3-rank {
-  position:absolute; top:16px; right:20px; font-size:40px; font-weight:900; line-height:1; opacity:0.08; transition:all 0.3s ease;
-}
-.top3-card:hover .top3-rank { transform: scale(1.1) rotate(5deg); opacity:0.15; }
-.top3-card[data-rank="1"] .top3-rank { color:#f59e0b; opacity:0.15; }
-.top3-card[data-rank="2"] .top3-rank { color:#94a3b8; opacity:0.15; }
-.top3-card[data-rank="3"] .top3-rank { color:#cd7c1e; opacity:0.15; }
-
-.top3-header { display:flex; align-items:center; gap:16px; }
-.top3-avatar {
-  width:56px; height:56px; border-radius:50%; border:2px solid var(--surface-2);
-  display:flex; align-items:center; justify-content:center; overflow:hidden;
-  font-weight:800; font-size:20px; color:var(--text-secondary); flex-shrink:0;
-  box-shadow:0 4px 12px rgba(0,0,0,0.08); transition:transform 0.3s ease;
-}
-.top3-card:hover .top3-avatar { transform: scale(1.1); border-color:var(--brand); }
-.top3-name { font-size:16px; font-weight:800; color:var(--text-primary); margin-bottom:2px; transition:color 0.2s ease; }
-.top3-card:hover .top3-name { color:var(--brand); }
-.top3-dept { font-size:12px; color:var(--text-muted); font-weight:600; }
-
-.top3-metrics { display:flex; gap:16px; margin-top:8px; padding-top:16px; border-top:1px solid var(--border-subtle); transition:border-color 0.3s ease; }
-.top3-card:hover .top3-metrics { border-color: rgba(var(--brand-rgb), 0.2); }
-.top3-metric { flex:1; }
-.top3-metric-val { font-size:24px; font-weight:900; color:var(--text-primary); letter-spacing:-0.02em; transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.top3-card:hover .top3-metric-val { transform: translateY(-2px); }
-.top3-metric-lbl { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; }
-
-/* ── Table Container ───────────────────────────────────────── */
-.table-card {
-  background:var(--surface-1); border-radius:20px; border:1px solid var(--border-subtle);
-  overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.03);
-  animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.2s;
-}
-.table-header { padding:20px 24px; border-bottom:1px solid var(--border-subtle); background:linear-gradient(to bottom, var(--surface-1), var(--surface-2)); }
-.table-title { font-size:18px; font-weight:800; color:var(--text-primary); margin:0; }
-
-.agents-table { width:100%; border-collapse:collapse; text-align:left; }
-.agents-table th {
-  padding:16px 24px; font-size:12px; font-weight:800; color:var(--text-muted);
-  text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid var(--border-subtle);
-  background:var(--surface-2); white-space:nowrap; position:sticky; top:0; z-index:10;
-}
-.agents-table td { 
-  padding:16px 24px; border-bottom:1px solid var(--border-subtle); vertical-align:middle; 
-  transition:all 0.25s ease;
-}
-.agents-table tr:last-child td { border-bottom:none; }
-
-/* Interactive Row styling */
-.agents-table tr.main-row { cursor:pointer; transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1); position:relative; }
-.agents-table tr.main-row::after {
-  content: '→';
-  position: absolute; right: 24px; top: 50%; transform: translateY(-50%) translateX(-10px);
-  color: var(--brand); font-weight: 900; font-size: 18px;
-  opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events:none;
-}
-.agents-table tr.main-row:hover { 
-  background:var(--surface-hover); 
-  transform: scale(1.01) translateX(4px); 
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05); z-index:2; position:relative;
-  border-radius:12px;
-}
-.agents-table tr.main-row:hover td { border-bottom-color:transparent; background:transparent; }
-.agents-table tr.main-row:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
-.agents-table tr.main-row:hover .agent-name { color:var(--brand); }
-.agents-table tr.main-row:hover .agent-avatar { transform:scale(1.1); box-shadow:0 4px 12px rgba(0,0,0,0.1); }
-
-/* Agent Info */
-.agent-cell { display:flex; align-items:center; gap:16px; }
-.agent-avatar {
-  width:44px; height:44px; border-radius:50%; background:var(--surface-2); border:2px solid transparent;
-  display:flex; align-items:center; justify-content:center; overflow:hidden;
-  font-weight:800; font-size:15px; color:var(--text-secondary); flex-shrink:0;
-  transition:all 0.3s ease;
-}
-.agent-name { font-size:15px; font-weight:800; color:var(--text-primary); margin-bottom:2px; transition:color 0.2s ease; }
-.agent-dept { font-size:12px; color:var(--text-muted); font-weight:600; }
-
-/* Metrics */
-.metric-val { font-size:16px; font-weight:800; color:var(--text-primary); transition:transform 0.2s ease; display:inline-block; }
-.agents-table tr.main-row:hover .metric-val { transform:scale(1.05); }
-.metric-pill { 
-  display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:8px; 
-  font-size:12px; font-weight:800; transition:all 0.2s ease;
-}
-.agents-table tr.main-row:hover .metric-pill { transform:scale(1.05); box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-
-/* Animations */
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Search input focus effect */
-#agentSearch { transition:all 0.3s ease; }
-#agentSearch:focus { box-shadow:0 0 0 3px rgba(var(--brand-rgb), 0.2); border-color:var(--brand); transform:scale(1.02); }
-
-</style>
-{% endblock %}
+{% block extra_head %}{% include 'rapports/_perf_styles.html' %}{% endblock %}
 
 {% block content %}
-<div class="reports-page">
+{% from '_macros.html' import info_tip, SLA_TIPS %}
+{% set sit = {'ok': ('good', 'Au point'), 'surveiller': ('warn', 'À surveiller'), 'attention': ('bad', 'Attention'), 'inactif': ('muted', 'Aucune activité')} %}
+{% set labels = {'7j': '7 derniers jours', '30j': '30 derniers jours', '90j': '90 derniers jours', '1a': '12 derniers mois'} %}
+{% macro fmt1(v) -%}{{ ('%.1f'|format(v))|replace('.', ',') }}{%- endmacro %}
+{% macro sla_pill(v) -%}
+  {%- if v is none -%}<span class="pill muted">—</span>
+  {%- else -%}<span class="pill {{ 'good' if v >= 90 else 'warn' if v >= 70 else 'bad' }}">{{ fmt1(v) }} %</span>{%- endif -%}
+{%- endmacro %}
 
-  <!-- Hero -->
-  <div class="reports-hero">
-    <div class="reports-hero-left">
-      <h1 class="reports-hero-title">
-        <div class="reports-hero-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        Performance des Agents
-      </h1>
-      <p class="reports-hero-sub">
-        Période analysée : 
-        {% if periode == '7j' %}7 derniers jours
-        {% elif periode == '90j' %}90 derniers jours
-        {% elif periode == '1a' %}12 derniers mois
-        {% else %}30 derniers jours{% endif %}
-      </p>
+<div class="perf-page">
+
+  <div class="perf-hero">
+    <div>
+      <h1 class="perf-title">Performance des agents</h1>
+      <p class="perf-sub">Qui traite les tickets, et à quelle vitesse ? · {{ labels.get(f.periode, '30 derniers jours') }}</p>
     </div>
-    
-    <!-- Period selector -->
-    <div class="reports-period-ctrl">
-      {% for p, label in [('7j','7j'), ('30j','30j'), ('90j','90j'), ('1a','1an')] %}
-      <a href="{{ url_for('rapports.performance_agents', periode=p) }}"
-         class="reports-period-btn {% if (periode == p) or (not periode and p == '30j') %}active{% endif %}">
-         {{ label }}
-      </a>
-      {% endfor %}
+    <div class="perf-seg">
+      {% for code, label in periodes %}<a href="{{ url_for('rapports.performance_agents', periode=code) }}" class="{{ 'active' if f.periode == code }}">{{ label }}</a>{% endfor %}
     </div>
   </div>
 
-  <!-- Top 3 Showcase -->
-  {% if top_3_agents %}
-  <div style="margin-bottom:16px; font-size:16px; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:10px; animation: fade-in-up 0.5s ease-out 0.1s both;">
-    <div style="width:32px; height:32px; border-radius:8px; background:rgba(245,158,11,0.1); display:flex; align-items:center; justify-content:center;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-    </div>
-    Le Podium (Top 3)
-  </div>
-  <div class="top3-grid">
-    {% for stat in top_3_agents %}
-    <div class="top3-card" data-rank="{{ loop.index }}" onclick="window.location.href='{{ url_for('rapports.agent_tickets', agent_id=stat.agent.id, periode=periode) }}'">
-      <div class="top3-rank">#{{ loop.index }}</div>
-      <div class="top3-header">
-        <div class="top3-avatar">
-          {% if stat.agent.photo_profil %}
-          <img src="{{ url_for('static', filename='uploads/' + stat.agent.photo_profil) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
-          {% else %}
-          {{ (stat.agent.prenom[0]|upper) ~ (stat.agent.nom[0]|upper) }}
-          {% endif %}
-        </div>
-        <div>
-          <div class="top3-name">{{ stat.agent.prenom }} {{ stat.agent.nom }}</div>
-          <div class="top3-dept">{{ stat.agent.departement.nom if stat.agent.departement else 'Aucun département' }}</div>
-        </div>
+  <!-- Podium : les 3 agents ayant résolu le plus de tickets -->
+  {% set podium = rows|selectattr('resolved')|list %}
+  {% if podium %}
+  <div class="podium-title"><span class="podium-ico">★</span> Le podium <span class="podium-sub">· les 3 agents qui ont résolu le plus de tickets</span></div>
+  <div class="podium">
+    {% for r in podium[:3] %}
+    <a class="podium-card" data-rank="{{ loop.index }}" href="{{ url_for('rapports.agent_tickets', agent_id=r.agent.id, periode=f.periode) }}">
+      <div class="podium-rank">#{{ loop.index }}</div>
+      <div class="who" style="gap:14px;">
+        <div class="av podium-av">{% if r.agent.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + r.agent.photo_profil) }}" alt="">{% else %}{{ (r.agent.prenom[:1] ~ r.agent.nom[:1])|upper }}{% endif %}</div>
+        <div style="min-width:0;"><div class="podium-name">{{ r.agent.nom_complet }}</div><div class="who-sub">{{ r.agent.departement.nom if r.agent.departement else (r.agent.poste or '—') }}</div></div>
       </div>
-      <div class="top3-metrics">
-        <div class="top3-metric">
-          <div class="top3-metric-val" style="color:#10b981;">{{ stat.tickets_resolus }}</div>
-          <div class="top3-metric-lbl">Résolus</div>
-        </div>
-        <div class="top3-metric">
-          <div class="top3-metric-val">
-            {% if stat.temps_moyen_resolution %}{% if stat.temps_moyen_resolution < 1 %}{{ (stat.temps_moyen_resolution * 60)|round(0)|int }}m{% else %}{{ stat.temps_moyen_resolution|round(1) }}h{% endif %}{% else %}—{% endif %}
-          </div>
-          <div class="top3-metric-lbl">Temps Moy.</div>
-        </div>
+      <div class="podium-stats">
+        <div><div class="podium-val" style="color:#10b981;">{{ r.resolved }}</div><div class="podium-lbl">Résolus</div></div>
+        <div><div class="podium-val">{{ r.res_avg }}</div><div class="podium-lbl">Délai moyen</div></div>
+        <div><div class="podium-val">{% if r.sla is not none %}{{ fmt1(r.sla) }} %{% else %}—{% endif %}</div><div class="podium-lbl">Respect SLA</div></div>
       </div>
-    </div>
+    </a>
     {% endfor %}
   </div>
   {% endif %}
-  
-  <!-- Full List -->
-  <div class="table-card">
-    <div class="table-header" style="display:flex; flex-wrap:wrap; gap:16px; align-items:center;">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <div style="width:36px; height:36px; border-radius:10px; background:rgba(59,130,246,0.1); color:#3b82f6; display:flex; align-items:center; justify-content:center;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <div>
-          <h2 class="table-title">Détails de toute l'équipe</h2>
-          <span style="font-size:12px; color:var(--text-muted); font-weight:600;">Cliquez sur un agent pour ouvrir son profil</span>
-        </div>
-      </div>
-      <div style="flex:1; min-width:200px; display:flex; justify-content:flex-end;">
-        <div style="position:relative; width:100%; max-width:320px;">
-          <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="agentSearch" onkeyup="filterAgents()" placeholder="Rechercher un agent..." style="padding:12px 16px 12px 36px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-base); font-size:14px; font-weight:600; color:var(--text-primary); width:100%; box-shadow:inset 0 2px 4px rgba(0,0,0,0.02);">
-        </div>
-      </div>
-    </div>
-    <div style="overflow-x:auto;">
-      <table class="agents-table">
-        <thead>
-          <tr>
-            <th onclick="sortAgentsTable(this, 0, 'number')" style="width:50px; text-align:center; cursor:pointer; transition:color 0.2s;"># ↕</th>
-            <th onclick="sortAgentsTable(this, 1, 'string')" style="cursor:pointer; transition:color 0.2s;">Agent ↕</th>
-            <th onclick="sortAgentsTable(this, 2, 'number')" style="text-align:center; cursor:pointer; transition:color 0.2s;">Total Tickets ↕</th>
-            <th onclick="sortAgentsTable(this, 3, 'number')" style="text-align:center; cursor:pointer; transition:color 0.2s;">Résolus ↕</th>
-            <th onclick="sortAgentsTable(this, 4, 'number')" style="text-align:center; cursor:pointer; transition:color 0.2s;">En cours ↕</th>
-            <th onclick="sortAgentsTable(this, 5, 'number')" style="text-align:right; padding-right:40px; cursor:pointer; transition:color 0.2s;">Taux de résolution ↕</th>
-            <th onclick="sortAgentsTable(this, 6, 'time')" style="text-align:right; cursor:pointer; transition:color 0.2s;">Temps Moy. Rés. ↕</th>
-            <th onclick="sortAgentsTable(this, 7, 'number')" style="text-align:right; padding-right:40px; cursor:pointer; transition:color 0.2s;">CSAT Moy. ↕</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for stat in stats_agents %}
-          <!-- Main Row -->
-          <tr class="main-row" onclick="window.location.href='{{ url_for('rapports.agent_tickets', agent_id=stat.agent.id, periode=periode) }}'">
-            <td style="text-align:center;">
-              <span style="font-size:15px; font-weight:900; color:var(--text-muted);">{{ stat.rank }}</span>
-            </td>
-            <td>
-              <div class="agent-cell">
-                <div class="agent-avatar">
-                  {% if stat.agent.photo_profil %}
-                  <img src="{{ url_for('static', filename='uploads/' + stat.agent.photo_profil) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
-                  {% else %}
-                  {{ (stat.agent.prenom[0]|upper) ~ (stat.agent.nom[0]|upper) }}
-                  {% endif %}
-                </div>
-                <div>
-                  <div class="agent-name">{{ stat.agent.prenom }} {{ stat.agent.nom }}</div>
-                  <div class="agent-dept">{{ stat.agent.departement.nom if stat.agent.departement else 'Aucun département' }}</div>
-                </div>
-              </div>
-            </td>
-            <td style="text-align:center;">
-              <span class="metric-val">{{ stat.total_tickets }}</span>
-            </td>
-            <td style="text-align:center;">
-              <span class="metric-val" style="color:#10b981;">{{ stat.tickets_resolus }}</span>
-            </td>
-            <td style="text-align:center;">
-              <span class="metric-val" style="color:#f59e0b;">{{ stat.tickets_en_cours }}</span>
-            </td>
-            <td style="text-align:right; padding-right:40px;">
-              {% if stat.taux_resolution is none %}
-              <div class="metric-pill" style="color:var(--text-muted);background:rgba(148,163,184,0.1);" title="Aucun ticket assigné sur la période">—</div>
-              {% else %}
-              <div class="metric-pill" style="{% if stat.taux_resolution >= 80 %}color:#10b981;background:rgba(16,185,129,0.1);{% elif stat.taux_resolution >= 50 %}color:#f59e0b;background:rgba(245,158,11,0.1);{% else %}color:#ef4444;background:rgba(239,68,68,0.1);{% endif %}">
-                {{ stat.taux_resolution|round(1) }}%
-              </div>
-              {% endif %}
-            </td>
-            <td style="text-align:right;">
-              <span class="metric-val">
-                {% if stat.temps_moyen_resolution %}
-                  {% if stat.temps_moyen_resolution < 1 %}
-                    {{ (stat.temps_moyen_resolution * 60)|round(0)|int }}m
-                  {% else %}
-                    {{ stat.temps_moyen_resolution|round(1) }}h
-                  {% endif %}
-                {% else %}
-                  <span style="color:var(--text-muted);">—</span>
-                {% endif %}
-              </span>
-            </td>
-            <td style="text-align:right; padding-right:40px;">
-              <span class="metric-val" style="color:#8b5cf6;">
-                {% if stat.satisfaction_moyenne %}
-                  {{ stat.satisfaction_moyenne|round(1) }}
-                {% else %}
-                  <span style="color:var(--text-muted);">—</span>
-                {% endif %}
-              </span>
-            </td>
-          </tr>
-          {% endfor %}
-          {% if not stats_agents %}
-          <tr>
-            <td colspan="7" style="text-align:center; padding:60px 40px; color:var(--text-muted); font-size:15px; font-weight:600;">
-              <div style="font-size:32px; margin-bottom:16px; opacity:0.5;">📭</div>
-              Aucune donnée d'agent disponible pour cette période.
-            </td>
-          </tr>
-          {% endif %}
-        </tbody>
-      </table>
-    </div>
+  <!-- Chiffres de l'équipe -->
+  <div class="tiles six">
+    <div class="tile"><div class="tile-label">Agents actifs</div><div class="tile-value">{{ team.active_agents }}</div><div class="tile-note">sur {{ rows|length }} agent(s)</div></div>
+    <div class="tile"><div class="tile-label">Tickets résolus</div><div class="tile-value">{{ team.resolved }}</div><div class="tile-note">sur la période</div></div>
+    <div class="tile"><div class="tile-label">Délai moyen</div><div class="tile-value">{{ team.res_avg }}</div><div class="tile-note">de création à résolution</div></div>
+    <div class="tile"><div class="tile-label">Respect du SLA{{ info_tip(SLA_TIPS.conformite) }}</div><div class="tile-value">{% if team.sla is not none %}{{ fmt1(team.sla) }} %{% else %}—{% endif %}</div><div class="tile-note">objectif : 90 %</div></div>
+    <div class="tile {{ 'is-hot' if team.overdue }}"><div class="tile-label">En retard maintenant</div><div class="tile-value">{{ team.overdue }}</div><div class="tile-note">sur {{ team.open }} ticket(s) en cours</div></div>
+    <div class="tile {{ 'is-hot' if team.unassigned }}"><div class="tile-label">Sans agent</div><div class="tile-value">{{ team.unassigned }}</div><div class="tile-note">ticket(s) ouvert(s) à assigner</div></div>
   </div>
 
+  <!-- Classement -->
+  <div class="pcard">
+    <div class="card-head"><h2>Classement</h2><p>Du plus grand nombre de tickets résolus au plus petit.</p></div>
+    <div class="scroll">
+    {% if rows %}
+    <table class="ptable">
+      <thead><tr>
+        <th style="width:44px;">#</th><th>Agent</th>
+        <th class="num">Résolus{{ info_tip("Tickets terminés par l'agent sur la période choisie.") }}</th>
+        <th class="num">En cours{{ info_tip("Tickets que l'agent a à traiter aujourd'hui, quelle que soit la période choisie.") }}</th>
+        <th class="num">En retard{{ info_tip("Tickets en cours dont l'échéance (SLA) est déjà dépassée.") }}</th>
+        <th class="num">Délai moyen{{ info_tip("Temps moyen entre la création d'un ticket et sa résolution.") }}</th>
+        <th class="num">Respect SLA{{ info_tip("Part des tickets résolus avant leur échéance. Objectif : 90 %.") }}</th>
+        <th class="num">Satisfaction{{ info_tip("Note moyenne sur 5 donnée par les demandeurs une fois le ticket résolu.") }}</th>
+        <th>Situation{{ info_tip("Au point : aucun retard. À surveiller : 1 ou 2 retards, ou SLA sous 80 %. Attention : 3 retards ou plus, ou SLA sous 60 %.") }}</th><th style="width:30px;"></th>
+      </tr></thead>
+      <tbody>
+      {% for r in rows %}
+      <tr class="click" onclick="window.location.href='{{ url_for('rapports.agent_tickets', agent_id=r.agent.id, periode=f.periode) }}'">
+        <td class="rank">{% if r.rank == 1 %}🥇{% elif r.rank == 2 %}🥈{% elif r.rank == 3 %}🥉{% else %}{{ r.rank or '–' }}{% endif %}</td>
+        <td>
+          <div class="who">
+            <div class="av">{% if r.agent.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + r.agent.photo_profil) }}" alt="">{% else %}{{ (r.agent.prenom[:1] ~ r.agent.nom[:1])|upper }}{% endif %}</div>
+            <div style="min-width:0;"><div class="who-name">{{ r.agent.nom_complet }}</div><div class="who-sub">{{ r.agent.departement.nom if r.agent.departement else (r.agent.poste or '—') }}</div></div>
+          </div>
+        </td>
+        <td class="num strong">{{ r.resolved }}</td>
+        <td class="num">{{ r.open }}</td>
+        <td class="num">{% if r.overdue %}<span class="pill bad">{{ r.overdue }}</span>{% else %}0{% endif %}</td>
+        <td class="num">{{ r.res_avg }}</td>
+        <td class="num">{{ sla_pill(r.sla) }}</td>
+        <td class="num">{% if r.csat is not none %}{{ fmt1(r.csat) }} / 5{% else %}—{% endif %}</td>
+        <td><span class="pill {{ sit[r.situation][0] }}">{{ sit[r.situation][1] }}</span></td>
+        <td class="go">›</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<div class="empty">Aucun agent à afficher.</div>{% endif %}
+    </div>
+  </div>
 </div>
-
-<script>
-let sortDirAgents = {};
-function sortAgentsTable(th, colIndex, type) {
-  const table = th.closest('table');
-  const tbody = table.querySelector('tbody');
-  // Only sort data rows, ignore the "no data" row if it exists
-  let rows = Array.from(tbody.querySelectorAll('tr.main-row'));
-  if(rows.length === 0) return;
-
-  // Toggle direction
-  sortDirAgents[colIndex] = !sortDirAgents[colIndex];
-  const isAsc = sortDirAgents[colIndex];
-
-  // Update headers visually
-  table.querySelectorAll('th').forEach(h => h.style.color = 'var(--text-muted)');
-  th.style.color = 'var(--brand)';
-
-  rows.sort((a, b) => {
-    let valA = a.cells[colIndex].textContent.trim();
-    let valB = b.cells[colIndex].textContent.trim();
-
-    if (type === 'number') {
-      valA = parseFloat(valA.replace(/[^0-9.-]+/g,"")) || 0;
-      valB = parseFloat(valB.replace(/[^0-9.-]+/g,"")) || 0;
-      return isAsc ? valA - valB : valB - valA;
-    } else if (type === 'time') {
-      const parseTime = (str) => {
-        if(str.includes('m')) return parseFloat(str) / 60;
-        if(str.includes('h')) return parseFloat(str);
-        return 0;
-      };
-      valA = parseTime(valA);
-      valB = parseTime(valB);
-      return isAsc ? valA - valB : valB - valA;
-    } else {
-      return isAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-    }
-  });
-
-  rows.forEach(row => tbody.appendChild(row));
-}
-
-function filterAgents() {
-  const input = document.getElementById('agentSearch');
-  const filter = input.value.toLowerCase();
-  const tbody = document.querySelector('.agents-table tbody');
-  const rows = tbody.querySelectorAll('tr.main-row');
-
-  rows.forEach(row => {
-    const nameEl = row.querySelector('.agent-name');
-    const deptEl = row.querySelector('.agent-dept');
-    
-    if (nameEl || deptEl) {
-      const nameText = nameEl ? nameEl.textContent || nameEl.innerText : "";
-      const deptText = deptEl ? deptEl.textContent || deptEl.innerText : "";
-      
-      if (nameText.toLowerCase().indexOf(filter) > -1 || deptText.toLowerCase().indexOf(filter) > -1) {
-        row.style.display = "";
-      } else {
-        row.style.display = "none";
-      }
-    }
-  });
-}
-</script>
 {% endblock %}

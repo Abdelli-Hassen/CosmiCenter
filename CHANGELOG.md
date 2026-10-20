@@ -2,6 +2,48 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.6.2] - 2026-10-20
+
+### 📦 Projet portable (aucun chemin en dur)
+- Les lanceurs `start.bat`, `run_dev.bat`, `run_prod.bat`, `Activate_venv.bat` démarrent toujours depuis leur propre dossier (`cd /d "%~dp0"`), même lancés depuis un raccourci ou « en tant qu'administrateur ».
+- Nouveau `scripts/ensure_venv.bat` : détecte un environnement Python (`venv`) copié d'un autre emplacement ou d'un autre PC (il mémorise son chemin) et le recrée automatiquement ; accepte les chemins avec espaces et parenthèses.
+- `start.sh` réécrit (l'ancien parlait de CosmittoDesk, SQLite et d'un mot de passe par défaut) : mêmes garanties sous Linux/macOS.
+- `.env` chargé depuis le dossier du projet par `app.py`, `seed_db.py` et `scripts/check_db.py`, quel que soit le dossier de lancement.
+- Nouveau dossier **`tests/`** : les suites d'intégration (navigation, messagerie, PDV, catégories, rapports, agents, production, ProxyFix) + `dbq.py` + `seed_sample_tickets.py`, qui retrouvent la racine seuls. L'assertion obsolète de `nav_test` est corrigée (28/28).
+- **`tests/portability_test.py`** : échoue au moindre chemin absolu (lecteur Windows, dossier utilisateur Windows/Mac/Linux, partage réseau) dans le code, les gabarits, les scripts, les docs, le `.env` ou les données de la base, et vérifie que les fichiers référencés en base existent dans le dossier du projet.
+- Installateur Ubuntu : `APP_DIR` / `BACKUP_DIR` modifiables, chemins de fichiers acceptés en `~/fichier` ou relatifs au dossier de lancement.
+- Documentation : chemins absolus retirés de `DEPLOYMENT_GUIDE.md` ; `.gitattributes` (`.bat` en CRLF, `.sh` en LF) ; `tests/` exclu de l'installation Ubuntu.
+
+## [2.6.1] - 2026-10-20
+
+### 👥 Performance des agents : refonte simple et lisible
+- **Page Performance des agents** : encadré « Comment lire cette page » (20 secondes), 6 chiffres d'équipe (agents actifs, résolus, délai moyen, respect du SLA, en retard, tickets sans agent) et un classement clair : Résolus · En cours · En retard · Délai moyen · Respect SLA · Satisfaction · **Situation** (Au point / À surveiller / Attention, règle expliquée sur la page). Clic sur une ligne = fiche de l'agent.
+- **Fiche d'un agent** : résumé en une phrase, 6 chiffres comparés à la moyenne de l'équipe (plus rapide / plus lent), liste « À traiter maintenant » (retards en premier) et liste des tickets résolus (délai, dans les temps / hors délai, note).
+- Mêmes définitions et mêmes chiffres que les Rapports globaux (`services/reporting.py`) ; « résolus » selon la date de résolution, « en cours / en retard » = situation du jour.
+- **Podium** conservé : les 3 agents ayant résolu le plus de tickets, en grandes cartes cliquables (résolus, délai moyen, respect du SLA).
+- Pas d'encadré d'explication : chaque colonne a une info-bulle (survol du « i »), y compris la règle de la colonne Situation.
+- Animations rétablies : entrées en cascade (podium, tuiles, tableau), survol du podium (élévation, anneau dégradé, avatar, rang) et des lignes (décalage, flèche animée, accent de couleur). Mêmes entrées et survols sur les Rapports globaux (cartes d'indicateurs, barres qui se remplissent, cartes de chaleur). Respecte « réduire les animations » du système.
+- Suppression des taux ambigus et des tris/recherches complexes ; période : 7 j, 30 j, 90 j, 12 mois.
+
+## [2.6.0] - 2026-10-20
+
+### 📊 Rapports globaux entièrement repensés
+- **10 indicateurs** avec évolution par rapport à la période précédente de même durée : tickets créés, résolus, en attente, en retard (SLA), taux de résolution, conformité SLA, 1ère réponse, résolution (moyenne + médiane), satisfaction, réouvertures.
+- **Filtres** combinables : période (7 j, 30 j, 90 j, 12 mois ou dates personnalisées), département, point de vente, type, priorité, agent. Tous les chiffres, l'export et les liens suivent les filtres.
+- **Nouveaux graphiques et tableaux** : courbe créés/résolus (par jour ou par semaine), statut, type, priorité (créés vs en attente), ancienneté des tickets en attente, carte de chaleur jour × heure (planification des équipes), performance par département (volumes, retards, délai, SLA, satisfaction), catégories les plus fréquentes (délai prévu vs réel), points de vente les plus actifs, agents, tickets en retard à traiter en priorité (liens directs), satisfaction (répartition + commentaires).
+- **Export CSV** enrichi (point de vente, échéance SLA, 1ère réponse, durée de résolution, SLA respecté) et filtré comme le rapport ; séparateur `;` (ouverture directe dans Excel en français). Bouton **Imprimer / PDF** (mise en page d'impression dédiée).
+- Correction : les boutons de période de l'ancienne page ne changeaient rien (paramètre mal nommé).
+- `/rapports/satisfaction-client` (page vide) redirige vers la section Satisfaction du rapport global.
+- Nouveau module `services/reporting.py` ; aucune nouvelle table.
+
+## [2.5.1] - 2026-10-20
+
+### 🗂️ Gestion complète des catégories de tickets
+- Page *Catégories de tickets* : colonnes Type, Département (vis-à-vis), Priorité, Délai de résolution, Nombre de tickets, Statut ; recherche et filtres (type, département, statut) ; tri.
+- Actions : **Créer, Modifier, Activer/Désactiver, Archiver/Restaurer, Supprimer** (suppression refusée si des tickets utilisent la catégorie : l'archivage conserve l'historique). Nom unique par département.
+- Nouvelle colonne `categories_tickets.archivee` (créée automatiquement). Une catégorie archivée ou désactivée disparaît du formulaire de ticket mais reste visible sur les tickets existants.
+- **Permission `admin.categories`** (« Gérer les catégories de tickets », créée automatiquement) attribuable à n'importe quel rôle depuis *Rôles & permissions* : les rôles qui l'ont voient un bouton **Gérer les catégories** sur la page *Nouveau ticket*.
+
 ## [2.5.0] - 2026-10-19
 
 ### 🚀 Déploiement sur serveur Ubuntu

@@ -20,7 +20,29 @@ STATEMENTS = [
     "ALTER TABLE messages ADD COLUMN IF NOT EXISTS fichier_chemin VARCHAR(100)",
     "ALTER TABLE messages ADD COLUMN IF NOT EXISTS fichier_type VARCHAR(150)",
     "ALTER TABLE messages ADD COLUMN IF NOT EXISTS fichier_taille INTEGER",
+    # Catégories de tickets : archivage
+    "ALTER TABLE categories_tickets ADD COLUMN IF NOT EXISTS archivee BOOLEAN NOT NULL DEFAULT FALSE",
 ]
+
+# Permissions créées au démarrage si elles manquent : (code, nom, description, catégorie)
+DEFAULT_PERMISSIONS = [
+    ('admin.categories', 'Gérer les catégories de tickets',
+     'Créer, modifier, activer, archiver et supprimer les catégories (incidents, demandes...). '
+     'Ajoute un bouton « Gérer les catégories » sur la page Nouveau ticket.', 'Espace de travail'),
+]
+
+
+def ensure_permissions(db):
+    """Crée les permissions manquantes (sans toucher aux rôles existants)."""
+    from models import Permission
+    try:
+        for code, nom, description, categorie in DEFAULT_PERMISSIONS:
+            if not Permission.query.filter_by(code=code).first():
+                db.session.add(Permission(code=code, nom=nom, description=description, categorie=categorie))
+        db.session.commit()
+    except Exception as exc:  # pragma: no cover
+        db.session.rollback()
+        logger.warning('ensure_permissions: %s', exc)
 
 # Les mots de passe distants sont désormais chiffrés (jeton plus long que VARCHAR(100)).
 WIDEN_COLUMNS = ['anydesk_password', 'teamviewer_password']

@@ -605,70 +605,163 @@ def toggle_role_actif(role_id):
     return redirect(url_for('admin.roles'))
 
 
+# ─── Catégories de tickets ─────────────────────────────────────────────────
+# Accès : permission « admin.categories » (attribuable à n'importe quel rôle depuis Rôles & permissions),
+# le Super Administrateur l'a implicitement.
+def categories_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('auth.connexion'))
+        if not (current_user.has_permission('admin.categories') or role_level(current_user) >= 90):
+            flash("Vous n'avez pas la permission de gérer les catégories.", 'danger')
+            return redirect(url_for('tickets.tableau_bord'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def _categorie_fields():
+    """Lit et valide le formulaire de catégorie. Retourne (valeurs, erreur)."""
+    nom = request.form.get('nom', '').strip()
+    if not nom:
+        return None, 'Le nom de la catégorie est requis.'
+    if len(nom) > 100:
+        return None, 'Le nom de la catégorie est trop long (100 caractères maximum).'
+    departement_id = request.form.get('departement_id') or None
+    if not departement_id or not db.session.get(Departement, departement_id):
+        return None, 'Veuillez choisir un département valide.'
+    type_ticket = request.form.get('type_ticket', 'demande')
+    priorite = request.form.get('priorite_defaut', 'moyenne')
+    delai = parse_int(request.form.get('delai_resolution_jours') or 1, None, 1, 3650)
+    if type_ticket not in TICKET_TYPES or priorite not in CATEGORY_PRIORITIES or delai is None:
+        return None, 'Type, priorité ou délai de résolution invalide.'
+    return {
+        'nom': nom,
+        'description': request.form.get('description', '').strip() or None,
+        'type_ticket': type_ticket,
+        'departement_id': departement_id,
+        'priorite_defaut': priorite,
+        'delai_resolution_jours': delai,
+        'couleur': safe_color(request.form.get('couleur', ''), '#3B82F6'),
+    }, None
+
+
+def _nom_deja_pris(nom, departement_id, sauf_id=None):
+    q = CategorieTicket.query.filter(db.func.lower(CategorieTicket.nom) == nom.lower(),
+                                     CategorieTicket.departement_id == departement_id)
+    if sauf_id:
+        q = q.filter(CategorieTicket.id != sauf_id)
+    return q.first() is not None
+
+
 @admin_bp.route('/categories')
 @login_required
-@admin_required
+@categories_required
 def categories():
     """Gestion des catégories de tickets"""
     categories = CategorieTicket.query.order_by(CategorieTicket.nom).all()
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
-    return render_template('admin/categories.html', categories=categories, departements=departements)
+    nb_tickets = dict(db.session.query(Ticket.categorie_id, db.func.count(Ticket.id))
+                      .filter(Ticket.categorie_id.isnot(None)).group_by(Ticket.categorie_id).all())
+    return render_template('admin/categories.html', categories=categories, departements=departements,
+                           nb_tickets=nb_tickets, ticket_types=TICKET_TYPES, priorites=CATEGORY_PRIORITIES)
 
 
 @admin_bp.route('/categories/creer', methods=['POST'])
 @login_required
-@admin_required
+@categories_required
 def creer_categorie():
     """Créer une nouvelle catégorie de ticket"""
-    nom = request.form.get('nom', '').strip()
-    if not nom:
-        flash('Le nom de la catégorie est requis.', 'danger')
-        return redirect(url_for('admin.categories'))
-    if len(nom) > 100:
-        flash('Le nom de la catégorie est trop long (100 caractères maximum).', 'danger')
-        return redirect(url_for('admin.categories'))
+    valeurs, erreur = _categorie_fields()
+    if erreur:
+        flash(erreur, 'danger')
+    elif _nom_deja_pris(valeurs['nom'], valeurs['departement_id']):
+        flash('Une catégorie portant ce nom existe déjà dans ce département.', 'danger')
+    else:
+        try:
+            db.session.add(CategorieTicket(**valeurs))
+            db.session.commit()
+            flash(f"Catégorie « {valeurs['nom']} » créée avec succès.", 'success')
+            logger.info(f"Catégorie créée: {valeurs['nom']} par {current_user.email}")
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f'Erreur création catégorie: {e}', exc_info=True)
+            flash('Erreur lors de la création de la catégorie.', 'danger')
+    return redirect(url_for('admin.categories'))
 
-    departement_id = request.form.get('departement_id') or None
-    if not departement_id or not db.session.get(Departement, departement_id):
-        flash('Veuillez choisir un département valide.', 'danger')
-        return redirect(url_for('admin.categories'))
 
-    type_ticket = request.form.get('type_ticket', 'demande')
-    priorite = request.form.get('priorite_defaut', 'moyenne')
-    delai = parse_int(request.form.get('delai_resolution_jours') or 7, None, 1, 3650)
-    if type_ticket not in TICKET_TYPES or priorite not in CATEGORY_PRIORITIES or delai is None:
-        flash('Type, priorité ou délai de résolution invalide.', 'danger')
-        return redirect(url_for('admin.categories'))
-
-    try:
-        cat = CategorieTicket(
-            nom=nom,
-            description=request.form.get('description', '').strip() or None,
-            type_ticket=type_ticket,
-            departement_id=departement_id,
-            priorite_defaut=priorite,
-            delai_resolution_jours=delai,
-            couleur=safe_color(request.form.get('couleur', ''), '#3B82F6'),
-        )
-        db.session.add(cat)
-        db.session.commit()
-        flash(f'Catégorie « {nom} » créée avec succès.', 'success')
-        logger.info(f'Catégorie créée: {nom} par {current_user.email}')
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f'Erreur création catégorie: {e}', exc_info=True)
-        flash('Erreur lors de la création de la catégorie.', 'danger')
+@admin_bp.route('/categories/<cat_id>/modifier', methods=['POST'])
+@login_required
+@categories_required
+def modifier_categorie(cat_id):
+    """Modifier une catégorie (nom, département, type, priorité, délai, couleur)"""
+    cat = CategorieTicket.query.get_or_404(cat_id)
+    valeurs, erreur = _categorie_fields()
+    if erreur:
+        flash(erreur, 'danger')
+    elif _nom_deja_pris(valeurs['nom'], valeurs['departement_id'], sauf_id=cat.id):
+        flash('Une autre catégorie porte déjà ce nom dans ce département.', 'danger')
+    else:
+        try:
+            for champ, valeur in valeurs.items():
+                setattr(cat, champ, valeur)
+            db.session.commit()
+            flash(f"Catégorie « {cat.nom} » modifiée. Les tickets existants ne sont pas modifiés.", 'success')
+            logger.info(f'Catégorie modifiée: {cat.nom} par {current_user.email}')
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f'Erreur modification catégorie: {e}', exc_info=True)
+            flash('Erreur lors de la modification de la catégorie.', 'danger')
     return redirect(url_for('admin.categories'))
 
 
 @admin_bp.route('/categories/<cat_id>/toggle', methods=['POST'])
 @login_required
-@admin_required
+@categories_required
 def toggle_categorie(cat_id):
-    """Activer/désactiver une catégorie"""
+    """Activer/désactiver une catégorie (désactivée = masquée du formulaire de ticket)"""
     cat = CategorieTicket.query.get_or_404(cat_id)
     cat.actif = not cat.actif
     db.session.commit()
+    flash(f"Catégorie « {cat.nom} » {'activée' if cat.actif else 'désactivée'}.", 'success')
+    return redirect(url_for('admin.categories'))
+
+
+@admin_bp.route('/categories/<cat_id>/archiver', methods=['POST'])
+@login_required
+@categories_required
+def archiver_categorie(cat_id):
+    """Archiver / restaurer une catégorie (conserve l'historique des tickets)"""
+    cat = CategorieTicket.query.get_or_404(cat_id)
+    cat.archivee = not cat.archivee
+    if cat.archivee:
+        cat.actif = False
+    db.session.commit()
+    flash(f"Catégorie « {cat.nom} » {'archivée' if cat.archivee else 'restaurée (inactive : activez-la pour la proposer)'}.", 'success')
+    logger.info(f"Catégorie {'archivée' if cat.archivee else 'restaurée'}: {cat.nom} par {current_user.email}")
+    return redirect(url_for('admin.categories'))
+
+
+@admin_bp.route('/categories/<cat_id>/supprimer', methods=['POST'])
+@login_required
+@categories_required
+def supprimer_categorie(cat_id):
+    """Supprimer définitivement une catégorie (uniquement si aucun ticket ne l'utilise)"""
+    cat = CategorieTicket.query.get_or_404(cat_id)
+    nb = Ticket.query.filter_by(categorie_id=cat.id).count()
+    if nb:
+        flash(f"« {cat.nom} » est utilisée par {nb} ticket(s) : elle ne peut pas être supprimée. Archivez-la à la place.", 'warning')
+        return redirect(url_for('admin.categories'))
+    try:
+        nom = cat.nom
+        db.session.delete(cat)
+        db.session.commit()
+        flash(f'Catégorie « {nom} » supprimée.', 'success')
+        logger.info(f'Catégorie supprimée: {nom} par {current_user.email}')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Erreur suppression catégorie: {e}', exc_info=True)
+        flash('Erreur lors de la suppression de la catégorie.', 'danger')
     return redirect(url_for('admin.categories'))
 
 

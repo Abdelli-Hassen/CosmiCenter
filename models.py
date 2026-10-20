@@ -292,6 +292,8 @@ class CategorieTicket(db.Model):
     formulaire_personnalise = db.Column(db.JSON)  # JSON du formulaire
     
     actif = db.Column(db.Boolean, default=True)
+    # Archivée : retirée des formulaires et de la liste par défaut, mais conservée avec son historique de tickets
+    archivee = db.Column(db.Boolean, nullable=False, default=False, server_default=db.false())
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relations

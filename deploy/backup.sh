@@ -4,8 +4,8 @@
 # Lancement manuel :  sudo cosmicenter-backup
 set -Eeuo pipefail
 
-APP_DIR="/opt/cosmicenter"
-BACKUP_DIR="/var/backups/cosmicenter"
+APP_DIR="${APP_DIR:-/opt/cosmicenter}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/cosmicenter}"
 KEEP_DAYS=14
 STAMP="$(date +%Y%m%d-%H%M)"
 

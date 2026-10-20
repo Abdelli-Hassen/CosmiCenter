@@ -2,80 +2,137 @@
 {% block title %}Catégories de tickets{% endblock %}
 
 {% block content %}
+<style>
+  .cat-ico { width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; padding:0; border-radius:8px;
+             border:1px solid transparent; background:transparent; color:var(--text-secondary); cursor:pointer; transition:background .15s, color .15s, border-color .15s; }
+  .cat-ico:hover { background:var(--surface-3, rgba(255,255,255,.08)); color:var(--text-primary); border-color:var(--border-subtle); }
+  .cat-ico:focus-visible { outline:2px solid var(--brand); outline-offset:1px; }
+  .cat-ico-danger { color:#EF4444; }
+  .cat-ico-danger:hover { background:rgba(239,68,68,.12); color:#EF4444; border-color:rgba(239,68,68,.35); }
+</style>
+{% set est_admin = current_user.role and current_user.role.niveau >= 90 %}
+{% set prio_couleurs = {'basse': '#64748B', 'moyenne': '#3B82F6', 'haute': '#F59E0B', 'urgente': '#EF4444', 'critique': '#B91C1C'} %}
 <div class="page">
 
   <div class="page-header" style="align-items: center;">
     <div class="page-header-left" style="display:flex; flex-direction:row; align-items:center; gap:16px;">
-      <a href="{{ url_for('admin.tableau_bord') }}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px; font-weight: 600; border-radius: 12px; display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); background: var(--surface-2); border: 1px solid var(--border-subtle); box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s;">
+      <a href="{{ url_for('admin.tableau_bord') if est_admin else url_for('tickets.nouveau') }}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px; font-weight: 600; border-radius: 12px; display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); background: var(--surface-2); border: 1px solid var(--border-subtle); box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         Retour
       </a>
-      <h1 class="page-title" style="margin:0;">Catégories de tickets</h1>
+      <div>
+        <h1 class="page-title" style="margin:0;">Catégories de tickets</h1>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;"><span id="catCount">{{ categories|length }}</span> catégories · définissent le délai de résolution, la priorité et le département de chaque incident ou demande</div>
+      </div>
     </div>
-    <div class="page-header-actions" style="display:flex; gap:10px; align-items:center; flex-wrap:nowrap; justify-content:flex-end;">
-      <select id="filterType" class="select" style="max-width:140px; font-size:13px; padding:8px 12px; border-radius:8px;">
+    <div class="page-header-actions" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+      <input type="search" id="filterSearch" class="input" placeholder="Rechercher…" style="max-width:180px; font-size:13px; padding:8px 12px; border-radius:8px;">
+      <select id="filterType" class="select" style="max-width:150px; font-size:13px; padding:8px 12px; border-radius:8px;">
         <option value="">Tous les types</option>
-        <option value="incident">Incident</option>
-        <option value="demande">Demande</option>
-        <option value="besoin">Besoin</option>
-        <option value="plainte">Plainte</option>
-        <option value="tache">Tâche</option>
+        {% for t in ticket_types %}<option value="{{ t }}">{{ t|capitalize }}</option>{% endfor %}
       </select>
-      <select id="filterStatut" class="select" style="max-width:140px; font-size:13px; padding:8px 12px; border-radius:8px;">
-        <option value="">Tous statuts</option>
-        <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
+      <select id="filterDept" class="select" style="max-width:190px; font-size:13px; padding:8px 12px; border-radius:8px;">
+        <option value="">Tous les départements</option>
+        {% for dept in departements %}<option value="{{ dept.nom }}">{{ dept.nom }}</option>{% endfor %}
       </select>
-      
-      <button class="btn btn-primary" onclick="openModal('createCatModal')" title="Nouvelle catégorie" style="width:36px; height:36px; padding:0; display:flex; align-items:center; justify-content:center; border-radius:8px; flex-shrink:0;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <select id="filterStatut" class="select" style="max-width:160px; font-size:13px; padding:8px 12px; border-radius:8px;">
+        <option value="">Actives et inactives</option>
+        <option value="active">Actives</option>
+        <option value="inactive">Inactives</option>
+        <option value="archivee">Archivées</option>
+      </select>
+      <button class="btn btn-primary" onclick="openCatModal()" title="Nouvelle catégorie" style="height:36px; padding:0 14px; display:inline-flex; align-items:center; gap:6px; border-radius:8px; flex-shrink:0; font-weight:600; font-size:13px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouvelle
       </button>
     </div>
   </div>
 
-  <div class="card card-raised" style="display:flex; flex-direction:column; max-height:calc(100vh - 85px);">
-    <div class="card-body" style="padding:0; overflow-y:auto; flex:1;">
+  <div class="card card-raised" style="display:flex; flex-direction:column; max-height:calc(100vh - 150px);">
+    <div class="card-body" style="padding:0; overflow:auto; flex:1;">
       <table class="data-table" id="categoriesTable" style="width:100%; border-collapse:collapse;">
         <thead style="position:sticky; top:0; z-index:10; background:var(--surface-raised); box-shadow: 0 1px 0 var(--border-subtle);">
           <tr>
-            <th class="sortable" data-sort="0" style="padding:12px 20px; cursor:pointer; user-select:none;">Nom <span class="sort-icon"></span></th>
-            <th class="sortable" data-sort="1" style="cursor:pointer; user-select:none;">Département <span class="sort-icon"></span></th>
-            <th class="sortable" data-sort="2" style="cursor:pointer; user-select:none;">Statut <span class="sort-icon"></span></th>
-            <th style="width:80px;"></th>
+            <th class="sortable" data-sort="0" style="padding:12px 20px; cursor:pointer; user-select:none; text-align:left;">Nom <span class="sort-icon"></span></th>
+            <th class="sortable" data-sort="1" style="cursor:pointer; user-select:none; text-align:left;">Type <span class="sort-icon"></span></th>
+            <th class="sortable" data-sort="2" style="cursor:pointer; user-select:none; text-align:left;">Département <span class="sort-icon"></span></th>
+            <th class="sortable" data-sort="3" style="cursor:pointer; user-select:none; text-align:left;">Priorité <span class="sort-icon"></span></th>
+            <th class="sortable" data-sort="4" style="cursor:pointer; user-select:none; text-align:left;">Délai <span class="sort-icon"></span></th>
+            <th class="sortable" data-sort="5" style="cursor:pointer; user-select:none; text-align:left;">Tickets <span class="sort-icon"></span></th>
+            <th class="sortable" data-sort="6" style="cursor:pointer; user-select:none; text-align:left;">Statut <span class="sort-icon"></span></th>
+            <th style="width:150px;"></th>
           </tr>
         </thead>
         <tbody>
           {% for cat in categories %}
-          <tr>
+          {% set statut = 'archivee' if cat.archivee else ('active' if cat.actif else 'inactive') %}
+          {% set nb = nb_tickets.get(cat.id, 0) %}
+          <tr data-type="{{ cat.type_ticket }}" data-dept="{{ cat.departement.nom if cat.departement else '' }}" data-statut="{{ statut }}"
+              data-search="{{ (cat.nom ~ ' ' ~ (cat.description or ''))|lower }}"{% if cat.archivee %} style="opacity:.6;"{% endif %}>
             <td style="padding:12px 20px;">
               <div style="display:flex;align-items:center;gap:8px;">
                 <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:{{ cat.couleur or '#3B82F6' }};flex-shrink:0;"></span>
                 <span style="font-weight:600;font-size:13px;color:var(--text-primary);">{{ cat.nom }}</span>
               </div>
             </td>
-            <td style="font-size:13px;color:var(--text-secondary);">
-              {{ cat.departement.nom if cat.departement else '—' }}
-            </td>
+            <td style="font-size:13px;color:var(--text-secondary);">{{ (cat.type_ticket or '')|capitalize }}</td>
+            <td style="font-size:13px;color:var(--text-secondary);">{{ cat.departement.nom if cat.departement else '—' }}</td>
             <td>
-              <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;{% if cat.actif %}background:rgba(16,185,129,.12);color:#10B981;{% else %}background:var(--surface-4);color:var(--text-muted);{% endif %}">
-                {% if cat.actif %}Active{% else %}Inactive{% endif %}
+              {% set pc = prio_couleurs.get(cat.priorite_defaut, '#64748B') %}
+              <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:{{ pc }}22;color:{{ pc }};">{{ (cat.priorite_defaut or '')|capitalize }}</span>
+            </td>
+            <td style="font-size:13px;color:var(--text-secondary);" data-val="{{ cat.delai_resolution_jours or 0 }}">{{ cat.delai_resolution_jours or '—' }} {% if cat.delai_resolution_jours %}jour{{ 's' if cat.delai_resolution_jours > 1 }}{% endif %}</td>
+            <td style="font-size:13px;color:var(--text-secondary);">{{ nb }}</td>
+            <td>
+              <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;{% if cat.archivee %}background:rgba(245,158,11,.14);color:#F59E0B;{% elif cat.actif %}background:rgba(16,185,129,.12);color:#10B981;{% else %}background:var(--surface-4);color:var(--text-muted);{% endif %}">
+                {% if cat.archivee %}Archivée{% elif cat.actif %}Active{% else %}Inactive{% endif %}
               </span>
             </td>
-            <td style="text-align:right;padding-right:16px;">
+            <td style="text-align:right;padding-right:16px;white-space:nowrap;">
+              <div style="display:inline-flex;gap:4px;align-items:center;">
+              <button type="button" class="cat-ico" title="Modifier" aria-label="Modifier"
+                data-id="{{ cat.id }}" data-nom="{{ cat.nom }}" data-description="{{ cat.description or '' }}"
+                data-type-ticket="{{ cat.type_ticket }}" data-departement="{{ cat.departement_id }}"
+                data-priorite="{{ cat.priorite_defaut }}" data-delai="{{ cat.delai_resolution_jours or 1 }}"
+                data-couleur="{{ cat.couleur or '#3B82F6' }}" onclick="openCatModal(this)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
+              {% if not cat.archivee %}
               <form method="POST" action="{{ url_for('admin.toggle_categorie', cat_id=cat.id) }}" style="display:inline;">
-                <button type="submit" class="btn btn-ghost btn-sm" style="font-size:11px;">
-                  {% if cat.actif %}Désactiver{% else %}Activer{% endif %}
+                <button type="submit" class="cat-ico" title="{% if cat.actif %}Désactiver{% else %}Activer{% endif %}" aria-label="{% if cat.actif %}Désactiver{% else %}Activer{% endif %}">
+                  {% if cat.actif %}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.4 6.6a9 9 0 1 1-12.8 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                  {% else %}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
+                  {% endif %}
                 </button>
               </form>
+              {% endif %}
+              <form method="POST" action="{{ url_for('admin.archiver_categorie', cat_id=cat.id) }}" style="display:inline;">
+                <button type="submit" class="cat-ico" title="{% if cat.archivee %}Restaurer{% else %}Archiver{% endif %}" aria-label="{% if cat.archivee %}Restaurer{% else %}Archiver{% endif %}">
+                  {% if cat.archivee %}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/></svg>
+                  {% else %}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                  {% endif %}
+                </button>
+              </form>
+              <button type="button" class="cat-ico cat-ico-danger" title="Supprimer" aria-label="Supprimer"
+                data-nom="{{ cat.nom }}" data-nb="{{ nb }}" data-action="{{ url_for('admin.supprimer_categorie', cat_id=cat.id) }}"
+                onclick="openDeleteModal(this)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+              </div>
             </td>
           </tr>
           {% else %}
-          <tr>
-            <td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">
-              Aucune catégorie. Créez-en une avec le bouton ci-dessus.
+          <tr class="empty-row">
+            <td colspan="8" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">
+              Aucune catégorie. Créez-en une avec le bouton « Nouvelle ».
             </td>
           </tr>
           {% endfor %}
+          <tr id="noMatchRow" style="display:none;"><td colspan="8" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">Aucune catégorie ne correspond à ces filtres.</td></tr>
         </tbody>
       </table>
     </div>
@@ -83,37 +140,88 @@
 
 </div><!-- /page -->
 
-<!-- Modal: Nouvelle catégorie -->
-<div id="createCatModal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
-  <div class="card card-raised" style="width:100%;max-width:480px;margin:24px;">
+<!-- Modal: Créer / modifier une catégorie -->
+<div id="catModal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div class="card card-raised" style="width:100%;max-width:520px;margin:24px;max-height:calc(100vh - 48px);overflow:auto;">
     <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
-      <div class="card-title">Nouvelle catégorie</div>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('createCatModal')">✕</button>
+      <div class="card-title" id="catModalTitle">Nouvelle catégorie</div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('catModal')">✕</button>
     </div>
-    <form method="POST" action="{{ url_for('admin.creer_categorie') }}">
+    <form method="POST" id="catForm" action="{{ url_for('admin.creer_categorie') }}">
       <div class="card-body" style="display:flex;flex-direction:column;gap:14px;padding:20px 24px;">
 
         <div class="form-group">
           <label class="form-label">Nom <span style="color:var(--brand)">*</span></label>
-          <input type="text" name="nom" class="input" required placeholder="ex. Panne matérielle">
+          <input type="text" name="nom" id="catNom" class="input" required maxlength="100" placeholder="ex. Coupure électricité">
         </div>
 
         <div class="form-group">
-          <label class="form-label">Département <span style="color:var(--brand)">*</span></label>
-          <div class="select-wrap">
-            <select name="departement_id" class="select" required>
-              <option value="">Choisir…</option>
-              {% for dept in departements %}
-              <option value="{{ dept.id }}">{{ dept.nom }}</option>
-              {% endfor %}
-            </select>
+          <label class="form-label">Description</label>
+          <input type="text" name="description" id="catDescription" class="input" placeholder="Facultatif">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="form-group">
+            <label class="form-label">Département (vis-à-vis) <span style="color:var(--brand)">*</span></label>
+            <div class="select-wrap">
+              <select name="departement_id" id="catDept" class="select" required>
+                <option value="">Choisir…</option>
+                {% for dept in departements %}<option value="{{ dept.id }}">{{ dept.nom }}</option>{% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <div class="select-wrap">
+              <select name="type_ticket" id="catType" class="select">
+                {% for t in ticket_types %}<option value="{{ t }}">{{ t|capitalize }}</option>{% endfor %}
+              </select>
+            </div>
           </div>
         </div>
 
+        <div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:14px;">
+          <div class="form-group">
+            <label class="form-label">Priorité par défaut</label>
+            <div class="select-wrap">
+              <select name="priorite_defaut" id="catPriorite" class="select">
+                {% for p in priorites %}<option value="{{ p }}">{{ p|capitalize }}</option>{% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Délai de résolution (jours)</label>
+            <input type="number" name="delai_resolution_jours" id="catDelai" class="input" min="1" max="3650" value="1" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Couleur</label>
+            <input type="color" name="couleur" id="catCouleur" class="input" value="#3B82F6" style="padding:2px;height:38px;">
+          </div>
+        </div>
+
+        <div id="catEditNote" style="display:none;font-size:12px;color:var(--text-muted);">
+          La modification n'affecte pas les tickets déjà créés ; elle s'applique aux prochains tickets.
+        </div>
       </div>
       <div class="card-body" style="border-top:1px solid var(--border-subtle);display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;">
-        <button type="button" class="btn btn-ghost" onclick="closeModal('createCatModal')">Annuler</button>
-        <button type="submit" class="btn btn-primary">Créer la catégorie</button>
+        <button type="button" class="btn btn-ghost" onclick="closeModal('catModal')">Annuler</button>
+        <button type="submit" class="btn btn-primary" id="catSubmit">Créer la catégorie</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Supprimer -->
+<div id="delModal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div class="card card-raised" style="width:100%;max-width:440px;margin:24px;">
+    <div class="card-header"><div class="card-title">Supprimer la catégorie</div></div>
+    <form method="POST" id="delForm">
+      <div class="card-body" style="padding:20px 24px;font-size:14px;color:var(--text-secondary);line-height:1.5;">
+        <div id="delText"></div>
+      </div>
+      <div class="card-body" style="border-top:1px solid var(--border-subtle);display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('delModal')">Annuler</button>
+        <button type="submit" class="btn btn-danger" id="delSubmit" style="background:#EF4444;color:#fff;">Supprimer définitivement</button>
       </div>
     </form>
   </div>
@@ -123,90 +231,97 @@
 
 {% block extra_scripts %}
 <script>
-function openModal(id) {
-  var m = document.getElementById(id);
-  m.style.display = 'flex';
-}
-function closeModal(id) {
-  var m = document.getElementById(id);
-  m.style.display = 'none';
-}
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    document.querySelectorAll('[id$="Modal"]').forEach(function(m) { m.style.display = 'none'; });
-  }
+  if (e.key === 'Escape') ['catModal', 'delModal'].forEach(closeModal);
 });
 
-// Sorting and Filtering Logic
-document.addEventListener('DOMContentLoaded', function() {
-  const table = document.getElementById('categoriesTable');
-  if (!table) return;
-  const tbody = table.querySelector('tbody');
-  const headers = table.querySelectorAll('th.sortable');
-  let currentSortCol = -1;
-  let currentSortAsc = true;
+var CREATE_URL = {{ url_for('admin.creer_categorie')|tojson }};
+var EDIT_URL = {{ url_for('admin.modifier_categorie', cat_id='__ID__')|tojson }};
 
-  const filterType = document.getElementById('filterType');
-  const filterStatut = document.getElementById('filterStatut');
+function openCatModal(btn) {
+  var edit = !!(btn && btn.dataset && btn.dataset.id);
+  var f = document.getElementById('catForm');
+  f.action = edit ? EDIT_URL.replace('__ID__', btn.dataset.id) : CREATE_URL;
+  document.getElementById('catModalTitle').textContent = edit ? 'Modifier la catégorie' : 'Nouvelle catégorie';
+  document.getElementById('catSubmit').textContent = edit ? 'Enregistrer' : 'Créer la catégorie';
+  document.getElementById('catEditNote').style.display = edit ? 'block' : 'none';
+  document.getElementById('catNom').value = edit ? btn.dataset.nom : '';
+  document.getElementById('catDescription').value = edit ? btn.dataset.description : '';
+  document.getElementById('catDept').value = edit ? btn.dataset.departement : '';
+  document.getElementById('catType').value = edit ? btn.dataset.typeTicket : 'incident';
+  document.getElementById('catPriorite').value = edit ? btn.dataset.priorite : 'moyenne';
+  document.getElementById('catDelai').value = edit ? btn.dataset.delai : 1;
+  document.getElementById('catCouleur').value = edit ? btn.dataset.couleur : '#3B82F6';
+  openModal('catModal');
+  document.getElementById('catNom').focus();
+}
+
+function openDeleteModal(btn) {
+  var nb = parseInt(btn.dataset.nb, 10) || 0;
+  var txt = document.getElementById('delText');
+  var submit = document.getElementById('delSubmit');
+  txt.textContent = '';
+  var strong = document.createElement('strong');
+  strong.textContent = btn.dataset.nom;
+  if (nb > 0) {
+    txt.append(strong, ' est utilisée par ' + nb + ' ticket(s) : elle ne peut pas être supprimée. Utilisez « Archiver » pour la retirer des formulaires tout en gardant l\'historique.');
+    submit.style.display = 'none';
+  } else {
+    txt.append('Supprimer définitivement ', strong, ' ? Cette action est irréversible. (Pour la retirer simplement des formulaires, préférez « Archiver ».)');
+    submit.style.display = '';
+  }
+  document.getElementById('delForm').action = btn.dataset.action;
+  openModal('delModal');
+}
+
+// Filtres + tri
+document.addEventListener('DOMContentLoaded', function() {
+  var table = document.getElementById('categoriesTable');
+  var tbody = table.querySelector('tbody');
+  var headers = table.querySelectorAll('th.sortable');
+  var fType = document.getElementById('filterType'), fDept = document.getElementById('filterDept'),
+      fStatut = document.getElementById('filterStatut'), fSearch = document.getElementById('filterSearch');
+  var rows = function() { return Array.from(tbody.querySelectorAll('tr[data-statut]')); };
 
   function applyFilters() {
-    const typeVal = filterType ? filterType.value.toLowerCase() : '';
-    const statutVal = filterStatut ? filterStatut.value.toLowerCase() : '';
-
-    const rows = tbody.querySelectorAll('tr');
-    rows.forEach(row => {
-      if (row.children.length === 1) return; // skip empty state row
-      
-      // Type is column 1
-      const typeText = row.children[1].textContent.toLowerCase().trim();
-      const matchType = typeVal === '' || typeText === typeVal;
-      
-      // Statut is column 5
-      const statutText = row.children[5].textContent.toLowerCase().trim();
-      const matchStatut = statutVal === '' || statutText === statutVal;
-
-      row.style.display = (matchType && matchStatut) ? '' : 'none';
+    var t = fType.value, d = fDept.value, s = fStatut.value, q = fSearch.value.trim().toLowerCase();
+    var shown = 0;
+    rows().forEach(function(r) {
+      var ok = (!t || r.dataset.type === t) && (!d || r.dataset.dept === d) &&
+               (s ? r.dataset.statut === s : r.dataset.statut !== 'archivee') &&
+               (!q || r.dataset.search.indexOf(q) !== -1);
+      r.style.display = ok ? '' : 'none';
+      if (ok) shown++;
     });
+    document.getElementById('catCount').textContent = shown;
+    document.getElementById('noMatchRow').style.display = (shown === 0 && rows().length) ? '' : 'none';
   }
+  [fType, fDept, fStatut].forEach(function(el) { el.addEventListener('change', applyFilters); });
+  fSearch.addEventListener('input', applyFilters);
+  applyFilters();
 
-  if (filterType) filterType.addEventListener('change', applyFilters);
-  if (filterStatut) filterStatut.addEventListener('change', applyFilters);
-
-  headers.forEach(th => {
+  var sortCol = -1, asc = true;
+  headers.forEach(function(th) {
     th.addEventListener('click', function() {
-      const colIndex = parseInt(th.dataset.sort);
-      if (currentSortCol === colIndex) {
-        currentSortAsc = !currentSortAsc;
-      } else {
-        currentSortCol = colIndex;
-        currentSortAsc = true;
-      }
-      
-      headers.forEach(h => {
-        const icon = h.querySelector('.sort-icon');
-        if(icon) icon.innerHTML = '';
+      var c = parseInt(th.dataset.sort, 10);
+      asc = (sortCol === c) ? !asc : true;
+      sortCol = c;
+      headers.forEach(function(h) { h.querySelector('.sort-icon').textContent = ''; });
+      th.querySelector('.sort-icon').textContent = asc ? ' ↑' : ' ↓';
+      var val = function(r) {
+        var cell = r.children[c];
+        return cell.dataset.val !== undefined ? parseFloat(cell.dataset.val) : cell.textContent.trim().toLowerCase();
+      };
+      var sorted = rows().sort(function(a, b) {
+        var x = val(a), y = val(b);
+        if (typeof x === 'number' && typeof y === 'number') return asc ? x - y : y - x;
+        if (c === 5) return asc ? parseInt(x, 10) - parseInt(y, 10) : parseInt(y, 10) - parseInt(x, 10);
+        return asc ? String(x).localeCompare(String(y), 'fr') : String(y).localeCompare(String(x), 'fr');
       });
-      const currentIcon = th.querySelector('.sort-icon');
-      if(currentIcon) currentIcon.innerHTML = currentSortAsc ? ' &uarr;' : ' &darr;';
-
-      const rowsArray = Array.from(tbody.querySelectorAll('tr')).filter(r => r.children.length > 1);
-      
-      rowsArray.sort((a, b) => {
-        const aVal = a.children[colIndex].textContent.trim().toLowerCase();
-        const bVal = b.children[colIndex].textContent.trim().toLowerCase();
-        
-        const aNum = parseFloat(aVal);
-        const bNum = parseFloat(bVal);
-        if(!isNaN(aNum) && !isNaN(bNum) && aVal.match(/^[0-9.-]+$/) && bVal.match(/^[0-9.-]+$/)) {
-          return currentSortAsc ? aNum - bNum : bNum - aNum;
-        }
-        
-        if (aVal < bVal) return currentSortAsc ? -1 : 1;
-        if (aVal > bVal) return currentSortAsc ? 1 : -1;
-        return 0;
-      });
-
-      tbody.append(...rowsArray);
+      var anchor = document.getElementById('noMatchRow');
+      sorted.forEach(function(r) { tbody.insertBefore(r, anchor); });
     });
   });
 });

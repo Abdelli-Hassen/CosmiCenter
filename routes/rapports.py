@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, send_file, flash, redirect, url_for
 from flask_login import login_required, current_user
-from models import db, Ticket, Utilisateur, Departement
+from models import db, Ticket, Utilisateur, Departement, PointDeVente
+from services import reporting
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from functools import wraps
@@ -51,309 +52,90 @@ def _parse_iso(value):
 @login_required
 @permission_required('rapports_globaux.voir')
 def tableau_bord():
-    """Tableau de bord principal des rapports"""
-    periode, date_fin, date_debut = _periode()
-
-    stats_globales = {
-        'total_tickets': Ticket.query.filter(Ticket.date_creation >= date_debut).count(),
-        'tickets_ouverts': Ticket.query.filter(Ticket.statut.in_(STATUTS_OUVERTS)).count(),
-        'tickets_resolus': Ticket.query.filter(
-            Ticket.statut == 'resolu',
-            Ticket.date_resolution >= date_debut
-        ).count(),
-        'tickets_fermes': Ticket.query.filter(
-            Ticket.statut == 'ferme',
-            Ticket.date_fermeture >= date_debut
-        ).count(),
-        'utilisateurs_actifs': Utilisateur.query.filter_by(actif=True).count(),
-        'departements_actifs': Departement.query.filter_by(actif=True).count(),
-    }
-
-    def grouped(column):
-        return db.session.query(column, func.count(Ticket.id)).filter(
-            Ticket.date_creation >= date_debut).group_by(column).all()
-
-    tickets_par_statut = grouped(Ticket.statut)
-    tickets_par_priorite = grouped(Ticket.priorite)
-    tickets_par_type = grouped(Ticket.type_ticket)
-
-    tickets_par_departement = db.session.query(
-        Departement.nom, func.count(Ticket.id)
-    ).join(
-        Departement, Ticket.departement_id == Departement.id
-    ).filter(
-        Ticket.date_creation >= date_debut
-    ).group_by(Departement.nom).all()
-
-    evolution_tickets = db.session.query(
-        db.cast(Ticket.date_creation, db.Date).label('date'),
-        func.count(Ticket.id).label('count')
-    ).filter(
-        Ticket.date_creation >= date_debut
-    ).group_by(db.cast(Ticket.date_creation, db.Date)).order_by(db.cast(Ticket.date_creation, db.Date)).all()
-
-    # Durées stockées en minutes, affichées en heures ; None (« — ») lorsqu'il n'y a aucune donnée
-    avg_resolution = db.session.query(
-        func.avg(Ticket.temps_resolution_minutes)
-    ).filter(
-        Ticket.date_resolution >= date_debut,
-        Ticket.temps_resolution_minutes.isnot(None)
-    ).scalar()
-    temps_moyen_resolution = float(avg_resolution) / 60 if avg_resolution is not None else None
-
-    avg_reponse = db.session.query(
-        func.avg(Ticket.temps_premiere_reponse_minutes)
-    ).filter(
-        Ticket.date_premiere_reponse >= date_debut,
-        Ticket.temps_premiere_reponse_minutes.isnot(None)
-    ).scalar()
-    temps_moyen_premiere_reponse = float(avg_reponse) / 60 if avg_reponse is not None else None
-
-    avg_satisfaction = db.session.query(
-        func.avg(Ticket.satisfaction)
-    ).filter(
-        Ticket.satisfaction.isnot(None),
-        Ticket.date_fermeture >= date_debut
-    ).scalar()
-    satisfaction_moyenne = float(avg_satisfaction) if avg_satisfaction is not None else None
-
-    # Top 10 des agents par tickets résolus
-    top_agents = db.session.query(
-        Utilisateur.nom,
-        Utilisateur.prenom,
-        func.count(Ticket.id).label('count')
-    ).join(
-        Ticket, Ticket.assigne_a_id == Utilisateur.id
-    ).filter(
-        Ticket.date_resolution >= date_debut,
-        Ticket.statut == 'resolu'
-    ).group_by(
-        Utilisateur.id, Utilisateur.nom, Utilisateur.prenom
-    ).order_by(
-        func.count(Ticket.id).desc()
-    ).limit(10).all()
-
-    # SLA - taux de respect
-    tickets_avec_sla = Ticket.query.filter(
-        Ticket.date_creation >= date_debut,
-        Ticket.sla_respecte.isnot(None)
-    ).count()
-    tickets_sla_respecte = Ticket.query.filter(
-        Ticket.date_creation >= date_debut,
-        Ticket.sla_respecte == True  # noqa: E712
-    ).count()
-    taux_sla = (tickets_sla_respecte / tickets_avec_sla * 100) if tickets_avec_sla > 0 else None
-
+    """Rapport global : indicateurs, évolution, répartitions, SLA, backlog, agents, PDV, satisfaction"""
+    f = reporting.parse_filters(request.args)
+    rapport = reporting.build_report(f)
     return render_template('rapports/tableau_bord.html',
-                           periode=periode,
-                           date_debut=date_debut,
-                           date_fin=date_fin,
-                           stats_globales=stats_globales,
-                           tickets_par_statut=dict(tickets_par_statut),
-                           tickets_par_priorite=dict(tickets_par_priorite),
-                           tickets_par_type=dict(tickets_par_type),
-                           tickets_par_departement=dict(tickets_par_departement),
-                           evolution_tickets=evolution_tickets,
-                           temps_moyen_resolution=temps_moyen_resolution,
-                           temps_moyen_premiere_reponse=temps_moyen_premiere_reponse,
-                           satisfaction_moyenne=satisfaction_moyenne,
-                           top_agents=top_agents,
-                           taux_sla=taux_sla)
+                           f=f,
+                           r=rapport,
+                           periodes=[('7j', '7 jours'), ('30j', '30 jours'), ('90j', '90 jours'), ('1a', '12 mois')],
+                           departements=Departement.query.filter_by(actif=True).order_by(Departement.nom).all(),
+                           pdvs=PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all(),
+                           agents=sorted([u for u in Utilisateur.query.filter_by(actif=True).all()
+                                          if u.has_permission('tickets.modifier') or u.has_permission('tickets.cloturer')],
+                                         key=lambda u: (u.nom_complet or '').upper()),
+                           types=reporting.TYPES, priorites=reporting.PRIORITES,
+                           export_args=reporting.query_args(f),
+                           date_debut_iso=f['debut'].strftime('%Y-%m-%d'),
+                           date_fin_iso=(f['fin'] - timedelta(days=1)).strftime('%Y-%m-%d'))
 
 
-def _agent_stats(tickets):
-    resolus = [t for t in tickets if t.statut == 'resolu']
-    en_cours = [t for t in tickets if t.statut in STATUTS_OUVERTS]
-    temps = [t.temps_resolution_minutes for t in resolus if t.temps_resolution_minutes is not None]
-    notes = [t.satisfaction for t in resolus if t.satisfaction is not None]
-    # temps en minutes -> heures (les gabarits affichent des heures)
-    return resolus, en_cours, (sum(temps) / len(temps) / 60 if temps else 0), (sum(notes) / len(notes) if notes else 0)
+def _agents_list():
+    """Agents = utilisateurs actifs autorisés à traiter des tickets, ou à qui des tickets ont été assignés."""
+    assigned = {row[0] for row in db.session.query(Ticket.assigne_a_id).filter(Ticket.assigne_a_id.isnot(None)).distinct()}
+    return [u for u in Utilisateur.query.filter_by(actif=True).all()
+            if u.id in assigned or u.has_permission('tickets.modifier') or u.has_permission('tickets.cloturer')]
+
+
+PERIODES_AGENTS = [('7j', '7 jours'), ('30j', '30 jours'), ('90j', '90 jours'), ('1a', '12 mois')]
 
 
 @rapports_bp.route('/performance-agents')
 @login_required
 @permission_required('rapports_performance.voir')
 def performance_agents():
-    """Rapport de performance des agents"""
-    periode, date_fin, date_debut = _periode()
-
-    # Un seul chargement des tickets de la période, regroupés par agent
-    tickets_by_agent = {}
-    for t in Ticket.query.filter(Ticket.assigne_a_id.isnot(None), Ticket.date_creation >= date_debut).all():
-        tickets_by_agent.setdefault(t.assigne_a_id, []).append(t)
-
-    # « Agents » = utilisateurs qui traitent des tickets : rôle autorisé à modifier/clôturer les tickets,
-    # ou ayant des tickets assignés sur la période (le personnel de point de vente n'est pas classé)
-    agents = [u for u in Utilisateur.query.filter_by(actif=True).all()
-              if u.id in tickets_by_agent or u.has_permission('tickets.modifier') or u.has_permission('tickets.cloturer')]
-    stats_agents = []
-    for agent in agents:
-        tickets_assignes = tickets_by_agent.get(agent.id, [])
-        tickets_resolus, tickets_en_cours, temps_moyen, satisfaction_moyenne = _agent_stats(tickets_assignes)
-
-        tickets_details = []
-        for t in sorted(tickets_resolus, key=lambda x: x.date_resolution or datetime.min, reverse=True)[:5]:
-            tickets_details.append({
-                'id': t.id,
-                'titre': t.titre,
-                'date_creation': t.date_creation.strftime('%d/%m/%Y %H:%M'),
-                'date_resolution': t.date_resolution.strftime('%d/%m/%Y %H:%M') if t.date_resolution else 'N/A',
-                'heures': round(t.temps_resolution_minutes / 60, 1) if t.temps_resolution_minutes else 0
-            })
-
-        stats_agents.append({
-            'agent': agent,
-            'total_tickets': len(tickets_assignes),
-            'tickets_resolus': len(tickets_resolus),
-            'tickets_en_cours': len(tickets_en_cours),
-            'temps_moyen_resolution': temps_moyen,
-            'satisfaction_moyenne': satisfaction_moyenne,
-            # None (affiché « — ») quand l'agent n'a aucun ticket : 0 % serait trompeur
-            'taux_resolution': (len(tickets_resolus) / len(tickets_assignes) * 100) if tickets_assignes else None,
-            'tickets_details': tickets_details
-        })
-
-    # Classement : résolus d'abord, puis tickets assignés, puis nom (ordre stable et lisible)
-    stats_agents.sort(key=lambda x: (-x['tickets_resolus'], -x['total_tickets'], (x['agent'].nom_complet or '').upper()))
-    for i, stat in enumerate(stats_agents):
-        stat['rank'] = i + 1
-
-    # Le podium n'a de sens que pour les agents ayant réellement résolu des tickets
-    podium = [s for s in stats_agents if s['tickets_resolus'] > 0][:3]
-
-    return render_template('rapports/performance_agents.html',
-                           stats_agents=stats_agents,
-                           top_3_agents=podium,
-                           periode=periode,
-                           date_debut=date_debut,
-                           date_fin=date_fin)
+    """Classement simple des agents : qui résout combien de tickets, à quelle vitesse"""
+    f = reporting.parse_filters({'periode': request.args.get('periode', '30j')})
+    rows, team = reporting.agents_overview(f, _agents_list())
+    return render_template('rapports/performance_agents.html', f=f, rows=rows, team=team, periodes=PERIODES_AGENTS)
 
 
 @rapports_bp.route('/performance-agents/<string:agent_id>/tickets')
 @login_required
 @permission_required('rapports_performance.voir')
 def agent_tickets(agent_id):
-    """Vue détaillée de tous les tickets d'un agent"""
+    """Fiche d'un agent : ses chiffres, ses tickets à traiter, ses tickets résolus"""
     agent = Utilisateur.query.get_or_404(agent_id)
-    periode, date_fin, date_debut = _periode()
-
-    tickets = Ticket.query.filter(
-        Ticket.assigne_a_id == agent_id,
-        Ticket.date_creation >= date_debut
-    ).order_by(Ticket.date_creation.desc()).all()
-
-    tickets_resolus, tickets_en_cours, temps_moyen, satisfaction_moyenne = _agent_stats(tickets)
-
-    # Classement par nombre de tickets résolus (une seule requête groupée)
-    counts = dict(db.session.query(Ticket.assigne_a_id, func.count(Ticket.id)).filter(
-        Ticket.statut == 'resolu', Ticket.date_creation >= date_debut,
-        Ticket.assigne_a_id.isnot(None)).group_by(Ticket.assigne_a_id).all())
-    actifs = [u.id for u in Utilisateur.query.filter_by(actif=True).all()]
-    ordre = sorted(actifs, key=lambda uid: counts.get(uid, 0), reverse=True)
-    rank = ordre.index(agent_id) + 1 if agent_id in ordre else 0
-
-    stats = {
-        'total': len(tickets),
-        'resolus': len(tickets_resolus),
-        'en_cours': len(tickets_en_cours),
-        'temps_moyen': temps_moyen,
-        'satisfaction': satisfaction_moyenne,
-        'taux_resolution': (len(tickets_resolus) / len(tickets) * 100) if tickets else 0,
-        'rank': rank
-    }
-
-    return render_template('rapports/agent_tickets.html',
-                           agent=agent,
-                           tickets=tickets,
-                           periode=periode,
-                           stats=stats)
+    f = reporting.parse_filters({'periode': request.args.get('periode', '30j')})
+    numbers, team, to_handle, done = reporting.agent_detail(f, agent)
+    return render_template('rapports/agent_tickets.html', f=f, agent=agent, n=numbers, team=team,
+                           to_handle=to_handle, done=done, periodes=PERIODES_AGENTS)
 
 
 @rapports_bp.route('/satisfaction-client')
 @login_required
 @permission_required('rapports_globaux.voir')
 def satisfaction_client():
-    """Rapport de satisfaction client"""
-    periode, date_fin, date_debut = _periode()
-
-    tickets_evalues = Ticket.query.filter(
-        Ticket.satisfaction.isnot(None),
-        Ticket.date_fermeture >= date_debut
-    ).all()
-
-    distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
-    for ticket in tickets_evalues:
-        distribution[ticket.satisfaction] = distribution.get(ticket.satisfaction, 0) + 1
-
-    satisfactions = [t.satisfaction for t in tickets_evalues]
-    satisfaction_moyenne = sum(satisfactions) / len(satisfactions) if satisfactions else 0
-
-    satisfaction_par_dept = {}
-    for dept in Departement.query.filter_by(actif=True).all():
-        tickets_dept = [t for t in tickets_evalues if t.departement and t.departement.id == dept.id]
-        if tickets_dept:
-            satisfaction_par_dept[dept.nom] = sum(t.satisfaction for t in tickets_dept) / len(tickets_dept)
-
-    commentaires_positifs = [t for t in tickets_evalues
-                             if t.satisfaction >= 4 and t.commentaire_satisfaction][:10]
-    commentaires_negatifs = [t for t in tickets_evalues
-                             if t.satisfaction <= 2 and t.commentaire_satisfaction][:10]
-
-    return render_template('rapports/satisfaction_client.html',
-                           tickets_evalues=tickets_evalues,
-                           distribution=distribution,
-                           satisfaction_moyenne=satisfaction_moyenne,
-                           satisfaction_par_dept=satisfaction_par_dept,
-                           commentaires_positifs=commentaires_positifs,
-                           commentaires_negatifs=commentaires_negatifs,
-                           periode=periode,
-                           date_debut=date_debut,
-                           date_fin=date_fin)
+    """La satisfaction est désormais intégrée au rapport global."""
+    return redirect(url_for('rapports.tableau_bord', **request.args) + '#satisfaction')
 
 
 @rapports_bp.route('/export/csv')
 @login_required
 @permission_required('rapports_globaux.voir')
 def export_csv():
-    """Exporter les tickets en CSV"""
-    date_debut = _parse_iso(request.args.get('date_debut'))
-    date_fin = _parse_iso(request.args.get('date_fin'))
-    if (request.args.get('date_debut') and not date_debut) or (request.args.get('date_fin') and not date_fin):
-        flash('Date invalide : utilisez le format AAAA-MM-JJ.', 'danger')
-        return redirect(url_for('rapports.tableau_bord'))
+    """Exporte en CSV les tickets créés sur la période, avec les mêmes filtres que le rapport"""
+    for key in ('date_debut', 'date_fin'):
+        if request.args.get(key) and not _parse_iso(request.args.get(key)):
+            flash('Date invalide : utilisez le format AAAA-MM-JJ.', 'danger')
+            return redirect(url_for('rapports.tableau_bord'))
+    f = reporting.parse_filters(request.args)
+    rows = reporting.export_rows(f)
 
-    query = Ticket.query
-    if date_debut:
-        query = query.filter(Ticket.date_creation >= date_debut)
-    if date_fin:
-        query = query.filter(Ticket.date_creation <= date_fin)
-
-    tickets = query.order_by(Ticket.date_creation.desc()).all()
+    def d(value):
+        return value.strftime('%d/%m/%Y %H:%M') if value else ''
 
     output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow([
-        'Numéro', 'Titre', 'Type', 'Priorité', 'Statut',
-        'Créateur', 'Assigné à', 'Département', 'Catégorie',
-        'Date création', 'Date résolution', 'Satisfaction'
-    ])
-
-    for ticket in tickets:
-        dept = ticket.departement
+    writer = csv.writer(output, delimiter=';')
+    writer.writerow(['Numéro', 'Titre', 'Type', 'Priorité', 'Statut', 'Créateur', 'Assigné à', 'Département',
+                     'Catégorie', 'Point de vente', 'Date création', 'Échéance SLA', 'Date résolution',
+                     '1ère réponse (min)', 'Résolution (min)', 'SLA respecté', 'Satisfaction'])
+    for t in rows:
         writer.writerow([csv_safe(v) for v in [
-            ticket.numero,
-            ticket.titre,
-            ticket.type_ticket,
-            ticket.priorite,
-            ticket.statut,
-            ticket.createur.nom_complet if ticket.createur else '',
-            ticket.assigne_a.nom_complet if ticket.assigne_a else '',
-            dept.nom if dept else '',
-            ticket.categorie.nom if ticket.categorie else '',
-            ticket.date_creation.strftime('%d/%m/%Y %H:%M'),
-            ticket.date_resolution.strftime('%d/%m/%Y %H:%M') if ticket.date_resolution else '',
-            ticket.satisfaction or ''
-        ]])
+            t['numero'], t['titre'], t['type'], t['priorite'], t['statut'], t['createur'], t['assigne'],
+            t['departement'], t['categorie'], t['pdv'], d(t['creation']), d(t['echeance']), d(t['resolution']),
+            t['t_reponse'] if t['t_reponse'] is not None else '', t['t_resolution'] if t['t_resolution'] is not None else '',
+            '' if t['sla'] is None else ('oui' if t['sla'] else 'non'), t['satisfaction'] or '']])
 
     return send_file(
         io.BytesIO(output.getvalue().encode('utf-8-sig')),

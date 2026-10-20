@@ -210,7 +210,7 @@ def _form_context():
         Utilisateur.query.filter_by(actif=True).all(),
         key=lambda u: (u.nom_complet or '').strip().upper()
     )
-    categories = CategorieTicket.query.filter_by(actif=True).order_by(CategorieTicket.nom).all()
+    categories = CategorieTicket.query.filter_by(actif=True, archivee=False).order_by(CategorieTicket.nom).all()
     return departements, utilisateurs, categories
 
 
@@ -626,6 +626,9 @@ def modifier(ticket_id):
 
 def _render_modifier(ticket):
     departements, utilisateurs, categories = _form_context()
+    # Une catégorie désactivée/archivée reste sélectionnable sur les tickets qui l'utilisent déjà
+    if ticket.categorie and ticket.categorie not in categories:
+        categories = sorted(categories + [ticket.categorie], key=lambda c: c.nom)
     return render_template('tickets/modifier.html',
                            ticket=ticket,
                            departements=departements,

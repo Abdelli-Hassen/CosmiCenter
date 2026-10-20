@@ -11,18 +11,21 @@
 #
 #  Variables facultatives (pour une exécution sans question) :
 #       DOMAIN=support.exemple.com EMAIL=moi@exemple.com \
-#       DUMP_FILE=/chemin/cosmicenter.sql UPLOADS_ARCHIVE=/chemin/uploads.tar.gz \
+#       DUMP_FILE=~/cosmicenter.sql UPLOADS_ARCHIVE=~/uploads.tar.gz \
 #       OLD_SECRET_KEY=... sudo -E bash deploy/install.sh
+#
+#  Les chemins de fichiers peuvent s'écrire « ~/fichier » (dossier personnel) ou relativement au dossier
+#  d'où vous lancez le script. Dossier d'installation modifiable : APP_DIR=/autre/dossier sudo -E bash deploy/install.sh
 # ============================================================================
 set -Eeuo pipefail
 
 APP_NAME="cosmicenter"
-APP_DIR="/opt/cosmicenter"
+APP_DIR="${APP_DIR:-/opt/cosmicenter}"
 APP_USER="cosmicenter"
 APP_PORT="8080"
 DB_NAME="cosmicenter"
 DB_USER="cosmicenter"
-BACKUP_DIR="/var/backups/cosmicenter"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/cosmicenter}"
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # ── petits utilitaires d'affichage ──────────────────────────────────────────
@@ -38,6 +41,7 @@ if [[ $EUID -ne 0 ]]; then
   echo "Ce script a besoin des droits administrateur : relance avec sudo..."
   exec sudo -E bash "$0" "$@"
 fi
+START_DIR="$PWD"   # dossier d'où le script a été lancé (les chemins relatifs s'y rapportent)
 cd /tmp
 
 if [[ -r /etc/os-release ]]; then
@@ -66,12 +70,29 @@ if [[ $UPDATE -eq 0 && $INTERACTIVE -eq 1 ]]; then
   if [[ -n "$DOMAIN" && -z "$EMAIL" ]]; then
     read -rp "2) Votre e-mail (pour le certificat HTTPS gratuit) : " EMAIL
   fi
-  [[ -z "$DUMP_FILE" ]] && read -rp "3) Chemin du fichier de sauvegarde de la base (.sql) venant de votre PC. Vide = base neuve : " DUMP_FILE
+  [[ -z "$DUMP_FILE" ]] && read -rp "3) Fichier de sauvegarde de la base (.sql) venant de votre PC, ex: ~/cosmicenter.sql. Vide = base neuve : " DUMP_FILE
   if [[ -n "$DUMP_FILE" && -z "$OLD_SECRET_KEY" ]]; then
     read -rp "4) SECRET_KEY de l'ancien fichier .env (nécessaire pour relire les mots de passe AnyDesk/TeamViewer déjà enregistrés). Vide = nouvelle clé : " OLD_SECRET_KEY
   fi
-  [[ -z "$UPLOADS_ARCHIVE" ]] && read -rp "5) Chemin de l'archive des fichiers envoyés (.tar.gz) venant de votre PC. Vide = aucun : " UPLOADS_ARCHIVE
+  [[ -z "$UPLOADS_ARCHIVE" ]] && read -rp "5) Archive des fichiers envoyés (.tar.gz) venant de votre PC, ex: ~/uploads.tar.gz. Vide = aucune : " UPLOADS_ARCHIVE
 fi
+
+# « ~/fichier » = dossier personnel de l'utilisateur ; « fichier » = relatif au dossier de lancement
+resolve_path() {
+  local p="$1" home_dir
+  [[ -z "$p" ]] && return 0
+  home_dir="$(getent passwd "${SUDO_USER:-root}" | cut -d: -f6)"
+  case "$p" in
+    "~")   p="$home_dir" ;;
+    "~/"*) p="$home_dir/${p#\~/}" ;;
+    /*)    ;;
+    *)     p="$START_DIR/$p" ;;
+  esac
+  echo "$p"
+}
+DUMP_FILE="$(resolve_path "$DUMP_FILE")"
+UPLOADS_ARCHIVE="$(resolve_path "$UPLOADS_ARCHIVE")"
+
 [[ -n "$DUMP_FILE" && ! -f "$DUMP_FILE" ]] && die "Fichier de base introuvable : $DUMP_FILE"
 [[ -n "$UPLOADS_ARCHIVE" && ! -f "$UPLOADS_ARCHIVE" ]] && die "Archive introuvable : $UPLOADS_ARCHIVE"
 [[ -n "$DOMAIN" && -z "$EMAIL" ]] && warn "Pas d'e-mail fourni : le HTTPS ne sera pas configuré automatiquement."
@@ -100,7 +121,7 @@ if [[ "$SRC_DIR" != "$APP_DIR" ]]; then
   rsync -a --delete \
     --exclude 'venv/' --exclude '.git/' --exclude '__pycache__/' --exclude '*.pyc' \
     --exclude '.env' --exclude 'logs/' --exclude 'instance/' --exclude 'static/uploads/' \
-    --exclude 'scratch/' --exclude '*.xlsx' --exclude '*.csv' --exclude 'seed_db.py' \
+    --exclude 'scratch/' --exclude 'tests/' --exclude '*.xlsx' --exclude '*.csv' --exclude 'seed_db.py' \
     "$SRC_DIR"/ "$APP_DIR"/
 fi
 mkdir -p "$APP_DIR/logs" "$APP_DIR/instance" "$APP_DIR/static/uploads/tickets" "$APP_DIR/static/uploads/profiles"
@@ -294,7 +315,7 @@ fi
 step "9/9  Sauvegardes automatiques quotidiennes"
 install -m 755 "$APP_DIR/deploy/backup.sh" /usr/local/bin/cosmicenter-backup
 mkdir -p "$BACKUP_DIR"; chmod 700 "$BACKUP_DIR"
-echo "30 2 * * * root /usr/local/bin/cosmicenter-backup >> /var/log/cosmicenter-backup.log 2>&1" > /etc/cron.d/cosmicenter-backup
+echo "30 2 * * * root APP_DIR=$APP_DIR BACKUP_DIR=$BACKUP_DIR /usr/local/bin/cosmicenter-backup >> /var/log/cosmicenter-backup.log 2>&1" > /etc/cron.d/cosmicenter-backup
 chmod 644 /etc/cron.d/cosmicenter-backup
 ok "Sauvegarde chaque nuit à 02:30 dans $BACKUP_DIR (14 jours conservés)"
 

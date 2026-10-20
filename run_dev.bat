@@ -1,6 +1,7 @@
 @echo off
 chcp 65001 >nul
 title CosmiCenter
+cd /d "%~dp0"
 
 set PYTHONIOENCODING=utf-8
 set PYTHONUNBUFFERED=1
@@ -15,7 +16,12 @@ echo  Debogueur + auto-reload actifs UNIQUEMENT si FLASK_HOST=127.0.0.1 (fichier
 echo  Si le serveur est expose au reseau (0.0.0.0), le debogueur est desactive automatiquement.
 echo.
 
-call venv\Scripts\activate.bat
-python app.py
+call scripts\ensure_venv.bat
+if errorlevel 1 (
+    pause
+    exit /b 1
+)
+
+"venv\Scripts\python.exe" app.py
 
 pause
