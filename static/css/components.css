@@ -1655,3 +1655,11 @@
 }
 .btn-action.primary:hover { background: linear-gradient(135deg, var(--brand), #ff5e7e); box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35); }
 .btn-action.danger:hover { background: rgba(239,68,68,0.18) !important; }
+
+/* ── Bouton « retour » rond (flèche seule, à gauche) ───────── */
+.back-btn {
+  display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
+  border-radius: 12px; border: 1px solid var(--border-default); background: var(--surface-2);
+  color: var(--text-secondary); cursor: pointer; margin: 0 auto 16px 0; padding: 0; transition: all 0.15s;
+}
+.back-btn:hover { background: var(--brand-light); color: var(--brand); border-color: var(--brand); transform: translateX(-2px); }
