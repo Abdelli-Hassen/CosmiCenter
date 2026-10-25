@@ -615,3 +615,24 @@
   .comp-table.no-cards .cu-role .badge { text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
 }
 :root[data-theme="dark"] .comp-table .cu-dept .badge { filter: brightness(1.9) saturate(1.1); }
+
+/* Fiche utilisateur : activité récente = une carte par ticket */
+@media (max-width: 768px) {
+  .tickets-table.no-cards, .tickets-table.no-cards tbody { display: block; width: 100%; }
+  .tickets-table.no-cards thead { display: none; }
+  .tickets-table.no-cards .ut-row {
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "num prio status" "title title title" "role role date";
+    gap: 8px 10px; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle);
+  }
+  .tickets-table.no-cards .ut-row:last-child { border-bottom: 0; }
+  .tickets-table.no-cards .ut-row > td { display: block; padding: 0 !important; border: 0 !important; width: auto !important; min-width: 0; background: transparent !important; text-align: left !important; }
+  .tickets-table.no-cards .ut-num { grid-area: num; }
+  .tickets-table.no-cards .ut-prio { grid-area: prio; }
+  .tickets-table.no-cards .ut-status { grid-area: status; justify-self: end; }
+  .tickets-table.no-cards .ut-title { grid-area: title; }
+  .tickets-table.no-cards .ut-title a { font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+  .tickets-table.no-cards .ut-role { grid-area: role; justify-self: start; }
+  .tickets-table.no-cards .ut-date { grid-area: date; justify-self: end; font-size: 12px; }
+  .tickets-table.no-cards .ut-go { display: none !important; }
+}

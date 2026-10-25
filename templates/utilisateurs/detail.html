@@ -1482,7 +1482,7 @@
 
     {% if tickets_recents and tickets_recents|length > 0 %}
     <div class="tickets-table-wrap">
-      <table class="tickets-table">
+      <table class="tickets-table no-cards">
         <thead>
           <tr>
             <th style="width:130px;">Numéro</th>
@@ -1499,19 +1499,19 @@
             {% set is_assigned = (ticket.assigne_a_id == utilisateur.id) %}
             {% set is_creator = (ticket.createur_id == utilisateur.id) %}
             
-            <tr class="ticket-row-item" 
+            <tr class="ticket-row-item ut-row" 
                 data-is-assigned="{{ 'true' if is_assigned else 'false' }}"
                 data-is-creator="{{ 'true' if is_creator else 'false' }}">
               
               <!-- Numéro -->
-              <td>
+              <td class="ut-num">
                 <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="ticket-num-badge">
                   #{{ ticket.numero }}
                 </a>
               </td>
 
               <!-- Titre -->
-              <td>
+              <td class="ut-title">
                 <div style="display:flex; flex-direction:column; gap:2px;">
                   <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="ticket-title-link">
                     {{ ticket.titre }}
@@ -1525,7 +1525,7 @@
               </td>
 
               <!-- Relation Badge -->
-              <td>
+              <td class="ut-role">
                 {% if is_assigned and is_creator %}
                   <span class="ticket-role-indicator both" title="Créateur et assigné à la fois">Assigné & Créé</span>
                 {% elif is_assigned %}
@@ -1538,7 +1538,7 @@
               </td>
 
               <!-- Statut -->
-              <td>
+              <td class="ut-status">
                 {% set statut_map = {
                   'nouveau':     ('rgba(47,107,255,.12)',  '#2f6bff', 'Nouveau'),
                   'en_cours':    ('rgba(255,201,60,.18)',  '#b47e00', 'En cours'),
@@ -1555,7 +1555,7 @@
               </td>
 
               <!-- Priorité -->
-              <td>
+              <td class="ut-prio">
                 {% set prio_map = {
                   'critique': ('#ef4444', 'Critique'),
                   'urgente':  ('#f97316', 'Urgente'),
@@ -1571,12 +1571,12 @@
               </td>
 
               <!-- Date -->
-              <td style="font-size:12px; color:var(--text-muted); font-weight:600; white-space:nowrap;">
+              <td class="ut-date" style="font-size:12px; color:var(--text-muted); font-weight:600; white-space:nowrap;">
                 {{ ticket.date_creation.strftime('%d/%m/%Y') if ticket.date_creation else '—' }}
               </td>
 
               <!-- Action Link -->
-              <td style="text-align:right;">
+              <td class="ut-go" style="text-align:right;">
                 <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:7px; background:var(--surface-2); color:var(--text-muted); transition:all .15s;" onmouseover="this.style.background='var(--brand)'; this.style.color='#fff';" onmouseout="this.style.background='var(--surface-2)'; this.style.color='var(--text-muted)';" title="Ouvrir le ticket">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                 </a>

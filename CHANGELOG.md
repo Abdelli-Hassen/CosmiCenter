@@ -27,6 +27,7 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Fiche entreprise : chaque collaborateur est une carte compacte (avatar + nom + e-mail, poste, département, rôle, bouton « Détacher » en haut à droite) au lieu de 5 lignes « libellé : valeur ».
 - Fiches et formulaire entreprise : le lien « Retour aux entreprises » est remplacé par un bouton rond « ← » à gauche (classe `.back-btn`, components.css) qui revient à la page précédente (repli sur la liste si l'historique est vide).
 - Tous les liens « Retour … » (administration, utilisateurs, départements, base de connaissance, idées, nouveau ticket) deviennent le même bouton rond « ← » à gauche, qui revient à la page précédente ; correction du lien cassé `boite_idees.index` sur la fiche d'une idée.
+- Fiche utilisateur : « Activité récente des tickets » = une carte par ticket (n° + priorité + statut, titre et catégorie, rôle et date) au lieu de lignes « libellé : valeur » ; les filtres Tous / Assignés / Créés continuent de fonctionner.
 - Messagerie : liste des conversations puis conversation plein écran avec bouton retour.
 - `run_prod.bat` / `serve.py` : la console affiche, à chaque démarrage, les adresses à ouvrir depuis un téléphone sur le Wi-Fi / réseau actuel du poste (la première = connexion active) ; si le serveur est en local uniquement (`FLASK_HOST=127.0.0.1`), elle le signale et indique quoi changer.
 
