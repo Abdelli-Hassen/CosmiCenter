@@ -152,6 +152,6 @@ When updating a new page (e.g., `inbox.html` or the admin dashboard):
 - `static/css/mobile.css` est chargé **en dernier** (après `{% block extra_head %}`) : il corrige les pages qui n'ont pas de version mobile, avec `!important` quand une règle de page l'emporterait.
 - Seuils : 1024 px (menu latéral en tiroir, bouton `#mobile-nav-toggle`), 768 px (téléphone), 480 px (petit téléphone).
 - Le tiroir cible `#sidebar` (et non `.sidebar` : la page Ticket réutilise cette classe pour son panneau de droite).
-- Tableaux : défilement horizontal automatique ; ajouter la classe `no-scroll` à un `<table>` pour l'en exclure.
+- Tableaux : sur téléphone, chaque ligne devient une carte « libellé : valeur » (`static/js/mobile.js` pose `data-label` depuis le `<thead>`). Classe `no-cards` pour exclure un tableau ; les tableaux sans `<thead>` défilent horizontalement (`no-scroll` pour l'en exclure).
 - Champs de formulaire à 16 px sur téléphone (évite le zoom automatique d'iOS).
 - Nouvelle page : prévoir un `@media (max-width: 768px)` pour ses grilles propres, ou réutiliser une classe déjà listée dans `mobile.css`.

@@ -83,7 +83,8 @@
   }
 
   /* Tableaux : défilement horizontal au lieu de déborder de l'écran */
-  .content-canvas table:not(.no-scroll) {
+  /* Tableaux sans en-têtes (pas de cartes possibles) : défilement horizontal */
+  .content-canvas table:not(.cards-on):not(.no-scroll) {
     display: block;
     max-width: 100%;
     overflow-x: auto;
@@ -267,7 +268,6 @@
 
 @media (max-width: 768px) {
   /* Tableaux larges : largeur minimale confortable → défilement horizontal plutôt que colonnes écrasées */
-  .ptable, .rtable, .data-table, .ref-table, .comp-table, .tickets-table, .pdv-equip-compact-table { min-width: 560px; }
   td, th { overflow-wrap: normal; word-break: normal; }
   .badge, [class*="badge"], [class*="pill"], [class*="status"] { white-space: nowrap; }
 }
@@ -284,4 +284,44 @@
   label:has(> input[type="checkbox"]), label:has(> input[type="radio"]) { justify-content: flex-start; text-align: left; }
   .settings-page, .card, .card-body, .card-header { max-width: 100%; box-sizing: border-box; }
   .settings-page { padding-left: 0; padding-right: 0; }
+}
+
+/* ─── Tableaux → cartes « libellé : valeur » (téléphone) ─────
+   data-label est posé par static/js/mobile.js ; exclure un tableau : class="no-cards" */
+@media (max-width: 768px) {
+  table.cards-on:not(.premium-table), table.cards-on:not(.premium-table) tbody { display: block !important; width: 100% !important; min-width: 0 !important; overflow: visible !important; }
+  table.cards-on:not(.premium-table) thead { display: none !important; }
+  table.cards-on:not(.premium-table) tbody tr {
+    display: block !important; margin: 0 0 12px; padding: 4px 14px;
+    background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+  table.cards-on:not(.premium-table) td {
+    display: flex !important; align-items: center; justify-content: space-between; gap: 14px;
+    width: 100% !important; min-width: 0 !important; padding: 9px 0 !important;
+    border: 0 !important; border-bottom: 1px solid var(--border-subtle) !important;
+    text-align: right !important; white-space: normal !important; overflow-wrap: anywhere;
+  }
+  table.cards-on:not(.premium-table) td:last-child { border-bottom: 0 !important; }
+  table.cards-on:not(.premium-table) td::before {
+    content: attr(data-label); flex: 0 0 38%; max-width: 38%; text-align: left;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted);
+  }
+  table.cards-on:not(.premium-table) td:not([data-label])::before, table.cards-on:not(.premium-table) td[data-label=""]::before { content: none; }
+  table.cards-on:not(.premium-table) td:not([data-label]), table.cards-on:not(.premium-table) td[data-label=""] { justify-content: flex-end; }
+  /* Cellules vides : inutile de les montrer */
+  table.cards-on:not(.premium-table) td:empty { display: none !important; }
+  /* Le contenu d'une cellule (avatar + nom, étiquettes…) reste groupé et aligné à droite */
+  table.cards-on:not(.premium-table) td > * { min-width: 0; }
+  table.cards-on:not(.premium-table) td[colspan] { justify-content: center; text-align: center !important; }
+  table.cards-on:not(.premium-table) td[colspan]::before { content: none; }
+}
+
+@media (max-width: 768px) {
+  /* Dans une carte de tableau, une étiquette longue passe à la ligne au lieu d'être coupée */
+  table.cards-on:not(.premium-table) td [class*="badge"], table.cards-on:not(.premium-table) td [class*="pill"],
+  table.cards-on:not(.premium-table) td [class*="role"], table.cards-on:not(.premium-table) td [class*="status"] {
+    white-space: normal !important; max-width: 100%; text-align: right; overflow-wrap: anywhere;
+  }
+  table.cards-on:not(.premium-table) td:last-child:not(:has(a, button, input, select, span, div)) { display: none !important; }
 }

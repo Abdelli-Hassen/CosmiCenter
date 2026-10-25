@@ -46,7 +46,7 @@
 
   {% block extra_head %}{% endblock %}
   <!-- Affichage téléphone / tablette : chargé en dernier pour passer après les styles de page -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}?v=11">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}?v=13">
 
   <!-- User Accent Color -->
   {% if current_user.is_authenticated and current_user.couleur %}
@@ -405,6 +405,7 @@
   <script src="{{ url_for('static', filename='js/a11y.js') }}?v=1"></script>
   <script src="{{ url_for('static', filename='js/tooltip.js') }}?v=2"></script>
   <script src="{{ url_for('static', filename='js/app.js') }}?v=103"></script>
+  <script src="{{ url_for('static', filename='js/mobile.js') }}?v=1"></script>
   <script src="{{ url_for('static', filename='js/theme.js') }}?v=103"></script>
   <script src="{{ url_for('static', filename='js/notifications.js') }}?v=102"></script>
   <script src="{{ url_for('static', filename='js/command-palette.js') }}?v=102"></script>
