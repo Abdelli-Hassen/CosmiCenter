@@ -439,7 +439,7 @@ dialog::backdrop {
           Tickets
         </h2>
         <!-- Filter pills -->
-        <div id="ticketFilters" style="display:flex; gap:4px; flex-wrap:wrap; background:var(--surface-2); padding:3px; border-radius:10px; border:1px solid var(--border-default);">
+        <div id="ticketFilters" class="dt-filters" style="display:flex; gap:4px; flex-wrap:wrap; background:var(--surface-2); padding:3px; border-radius:10px; border:1px solid var(--border-default);">
           <button class="tfilter active" data-filter="all" onclick="filterTickets('all', this)" style="padding:4px 12px; border-radius:7px; font-size:12px; font-weight:700; border:none; cursor:pointer; background:var(--brand); color:#fff; transition:all .15s;">Tous</button>
           <button class="tfilter" data-filter="nouveau" onclick="filterTickets('nouveau', this)" style="padding:4px 12px; border-radius:7px; font-size:12px; font-weight:700; border:none; cursor:pointer; background:transparent; color:var(--text-muted); transition:all .15s;">Nouveau</button>
           <button class="tfilter" data-filter="en_cours" onclick="filterTickets('en_cours', this)" style="padding:4px 12px; border-radius:7px; font-size:12px; font-weight:700; border:none; cursor:pointer; background:transparent; color:var(--text-muted); transition:all .15s;">En cours</button>
