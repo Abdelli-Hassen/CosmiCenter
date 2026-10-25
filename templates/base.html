@@ -39,14 +39,14 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}?v=104">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}?v=102">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v=103">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v=102">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v=103">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tickets.css') }}?v=102">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=102">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tooltip.css') }}?v=2">
 
   {% block extra_head %}{% endblock %}
   <!-- Affichage téléphone / tablette : chargé en dernier pour passer après les styles de page -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}?v=31">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}?v=32">
 
   <!-- User Accent Color -->
   {% if current_user.is_authenticated and current_user.couleur %}
