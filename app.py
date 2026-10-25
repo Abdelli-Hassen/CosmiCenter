@@ -296,6 +296,11 @@ if __name__ == '__main__':
     # Pour le partage réseau / la production, utiliser run_prod.bat (serve.py, Waitress).
     host = '127.0.0.1'
     os.environ['FLASK_HOST'] = host
+    # Touche R dans la console = redémarrage complet (le rechargeur de Werkzeug relance le serveur)
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        from utils.console_keys import start_restart_listener
+        if start_restart_listener():
+            logger.info("Appuyez sur R pour redémarrer le serveur")
     app = create_app('development')
     app.debug = True
     is_dev = True

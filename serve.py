@@ -3,6 +3,7 @@ import socket
 import logging
 from waitress import serve
 from app import create_app
+from utils.console_keys import start_restart_listener
 
 # Configurer le logging de production
 logging.basicConfig(
@@ -55,6 +56,9 @@ if __name__ == '__main__':
         print(f" A ouvrir depuis un autre appareil (meme Wi-Fi / reseau) :")
         for i, ip in enumerate(ips):
             print(f"   http://{ip}:{port}" + ("   <-- principale (celle du reseau actif)" if i == 0 else ""))
+    can_restart = start_restart_listener()
+    if can_restart:
+        print(f" Appuyez sur R pour redemarrer le serveur")
     print(f" Appuyez sur CTRL+C pour arreter le serveur")
     print(f"=================================================")
     

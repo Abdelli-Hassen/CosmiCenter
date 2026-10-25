@@ -13,7 +13,8 @@ echo  =========================================
 echo   CosmiCenter - Mode DEVELOPPEMENT
 echo  =========================================
 echo  Local uniquement : http://127.0.0.1:8080 (le .env n'est pas pris en compte pour l'hote).
-echo  Debogueur + auto-reload actifs. Pour partager sur le reseau : run_prod.bat
+echo  Debogueur + auto-reload actifs. Touche R = redemarrage complet.
+echo  Pour partager sur le reseau : run_prod.bat
 echo.
 
 call scripts\ensure_venv.bat

@@ -24,7 +24,10 @@ set FLASK_ENV=production
 set PYTHONIOENCODING=utf-8
 
 REM Lancer l'application via Waitress (hote et port : FLASK_HOST / FLASK_PORT du fichier .env)
+:run
 echo [INFO] Demarrage du serveur WSGI...
 "venv\Scripts\python.exe" serve.py
+REM Code 3 = touche R pressee dans la console : on relance le serveur
+if errorlevel 3 if not errorlevel 4 goto run
 
 pause

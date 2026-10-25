@@ -127,6 +127,8 @@ python app.py            # développement
 python serve.py          # serveur Waitress (partage réseau / production)
 ```
 
+Dans la console du serveur (Windows) : **R** = redémarrage complet, **Ctrl+C** = arrêt.
+
 Accès : `http://127.0.0.1:8080` (port défini par `FLASK_PORT`). L’interface s’adapte aux téléphones et tablettes (menu en tiroir) ; pour tester sur un téléphone, lancer `run_prod.bat` avec `FLASK_HOST=0.0.0.0` et ouvrir `http://<ip-du-poste>:8080`.
 
 > **Projet portable** : le dossier peut être copié ou déplacé (autre PC, disque externe…). Il suffit de lancer `start.bat` (ou `run_dev.bat` / `run_prod.bat`) :

@@ -4,6 +4,9 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 
 ## [2.7.0] - 2026-10-25
 
+### ⌨️ Redémarrage par la touche R
+- Dans la console de `run_dev.bat` et `run_prod.bat` (Windows), la touche **R** redémarre complètement le serveur (nouveau processus : recharge le code Python et le `.env`) ; **Ctrl+C** l'arrête toujours. Nouveau `utils/console_keys.py` ; `run_prod.bat` relance `serve.py` quand il se termine avec le code 3.
+
 ### 📱 Compatible téléphones et tablettes
 - Nouveau bouton « ☰ » (≤ 1024 px) : le menu latéral s'ouvre en tiroir avec fond assombri (il n'avait aucun bouton d'ouverture sur mobile).
 - Nouveau `static/css/mobile.css` (chargé en dernier) : barre du haut allégée, marges réduites, en-têtes empilés, tableaux défilants, grilles en 1–2 colonnes, formulaires à 16 px (pas de zoom iOS), fenêtres et notifications plein écran, `100dvh`.
