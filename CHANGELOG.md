@@ -9,6 +9,7 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Nouveau `static/css/mobile.css` (chargé en dernier) : barre du haut allégée, marges réduites, en-têtes empilés, tableaux défilants, grilles en 1–2 colonnes, formulaires à 16 px (pas de zoom iOS), fenêtres et notifications plein écran, `100dvh`.
 - Page Ticket : le panneau de droite passe sous le fil de discussion ; correction d'une collision de la classe `.sidebar` qui cachait ce panneau sur petit écran.
 - Messagerie : liste des conversations puis conversation plein écran avec bouton retour.
+- `run_prod.bat` / `serve.py` : quand le serveur écoute sur le réseau (`0.0.0.0`), la console affiche les adresses à ouvrir depuis un téléphone (la première = celle de la connexion active).
 
 ## [2.6.3] - 2026-10-25
 
