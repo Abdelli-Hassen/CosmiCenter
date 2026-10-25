@@ -84,7 +84,7 @@
 
   /* Tableaux : défilement horizontal au lieu de déborder de l'écran */
   /* Tableaux sans en-têtes (pas de cartes possibles) : défilement horizontal */
-  .content-canvas table:not(.cards-on):not(.no-scroll) {
+  .content-canvas table:not(.cards-on):not(.no-scroll):not([class*="fc-"]):not(.fc table) {
     display: block;
     max-width: 100%;
     overflow-x: auto;
@@ -179,7 +179,7 @@
 
 @media (max-width: 768px) {
   /* Éléments de grille / de mise en page : autorisés à rétrécir (sinon un tableau ou un long texte élargit la colonne) */
-  [class*="grid"] > *, [class*="layout"] > *, [class*="-row"] > *, [class*="-cols"] > *,
+  [class*="grid"]:not([class*="fc-"]) > *, [class*="layout"] > *, [class*="-row"]:not([class*="fc-"]) > *, [class*="-cols"] > *,
   .settings-page > *, .admin-page > *, .perms-panel-wrap, .card, .settings-panel, .save-bar { min-width: 0; max-width: 100%; }
 
   /* Lignes « flex » écrites en dur (en-têtes, barres de filtres) : retour à la ligne */
@@ -654,4 +654,54 @@
   .tickets-table.no-cards .ut-row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brand); opacity: .75; }
   .tickets-table.no-cards .ut-row:active { transform: scale(.99); }
   .tickets-table.no-cards .ut-role { margin-top: 2px; }
+}
+
+/* ---- Plan d'action ---- */
+@media (max-width: 768px) {
+  .admin-page { padding: 14px 12px 40px !important; }
+  .pa-hero { flex-direction: column !important; align-items: stretch !important; gap: 14px !important; margin-bottom: 18px !important; }
+  .pa-hero .at-title { font-size: 22px !important; }
+  .pa-hero .quick-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px !important; width: 100%; }
+  .pa-hero .quick-actions .btn-action { justify-content: center; padding: 11px 10px; min-height: 44px; white-space: nowrap; }
+  .admin-page .dashboard-grid { gap: 14px !important; padding: 0 !important; }
+  .form-card { border-radius: 18px !important; }
+  .form-header { padding: 14px 16px !important; flex-wrap: wrap; gap: 10px !important; }
+  .form-title { font-size: 15px !important; }
+  .form-body { padding: 14px !important; }
+  .pa-tasks-card .search-container { width: 100%; }
+  .pa-tasks-card .search-input { width: 100% !important; box-sizing: border-box; font-size: 16px; padding-top: 10px; padding-bottom: 10px; }
+
+  /* Calendrier : barre d'outils sur deux lignes, cases compactes */
+  .pa-cal-card .fc-header-toolbar { flex-wrap: wrap; row-gap: 8px; margin-bottom: 10px !important; }
+  .pa-cal-card .fc-toolbar-chunk:nth-child(2) { order: -1; width: 100%; text-align: center; }
+  .pa-cal-card .fc-toolbar-title { font-size: 17px !important; }
+  .pa-cal-card .fc-toolbar-chunk:nth-child(1) { margin-right: auto; display: flex; gap: 6px; align-items: center; }
+  .pa-cal-card .fc-button { padding: 6px 10px !important; font-size: 12px !important; }
+  #calendar { min-height: 440px !important; }
+  .pa-cal-card .fc-col-header-cell { font-size: 9.5px !important; letter-spacing: 0 !important; padding: 6px 0 !important; }
+  .pa-cal-card .fc-daygrid-day-number { font-size: 12px !important; padding: 4px !important; }
+  .pa-cal-card .fc-day-today .fc-daygrid-day-number { width: 22px !important; height: 22px !important; margin: 2px !important; padding: 0 !important; font-size: 11px !important; }
+  .pa-cal-card .fc-daygrid-day-frame { min-height: 52px; }
+  .pa-cal-card .fc-timegrid-slot-label, .pa-cal-card .fc-timegrid-axis { font-size: 10px; }
+
+  /* Tâches : une carte par tâche, actions en bas */
+  .data-table.no-cards, .data-table.no-cards tbody { display: block; width: 100%; }
+  .data-table.no-cards thead { display: none; }
+  .data-table.no-cards tr.main-row { display: block; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); transform: none !important; border-radius: 0 !important; }
+  .data-table.no-cards tr.main-row:hover, .data-table.no-cards tr.main-row.active-task { transform: none !important; }
+  .data-table.no-cards tr.main-row > td { display: block; padding: 0 !important; border: 0 !important; text-align: left !important; }
+  .data-table.no-cards tr.main-row > td + td { margin-top: 12px; padding-top: 10px !important; border-top: 1px dashed var(--border-subtle) !important; }
+  .data-table.no-cards .pa-meta { flex-wrap: wrap; gap: 4px 12px !important; }
+  .data-table.no-cards .pa-actions { justify-content: flex-start !important; gap: 10px !important; }
+  .data-table.no-cards .pa-actions .btn-action { min-height: 38px; min-width: 44px; justify-content: center; }
+  .data-table.no-cards tr:not(.main-row) td { display: block; }
+  .pa-tasks-card .form-body { max-height: none !important; }
+
+  /* Fenêtres : feuille du bas plein écran */
+  .modal-overlay { align-items: flex-end !important; }
+  .modal-overlay .modal-card { max-width: none !important; width: 100% !important; border-radius: 20px 20px 0 0 !important; max-height: 92dvh !important; }
+  .modal-header, .modal-body, .modal-footer { padding-left: 16px !important; padding-right: 16px !important; }
+  .modal-footer { flex-direction: column-reverse; }
+  .modal-footer .btn-action { width: 100%; justify-content: center; min-height: 46px; }
+  .input-row { grid-template-columns: minmax(0, 1fr) !important; }
 }
