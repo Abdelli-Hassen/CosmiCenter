@@ -557,3 +557,8 @@
   .comp-box form select { font-size: 16px !important; padding: 12px !important; }
   .comp-box form .btn-action { min-height: 46px; height: auto; }
 }
+@media (max-width: 768px) {
+  .comp-box form { padding: 14px !important; }
+  .comp-box form .up-list { max-height: 260px; }
+  .comp-box form .up-item { overflow: hidden; }
+}

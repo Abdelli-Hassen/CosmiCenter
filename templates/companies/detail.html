@@ -108,6 +108,9 @@
 .btn-action.danger:hover { background: rgba(239,68,68,0.18) !important; }
 
 /* ── Sélecteur de collaborateur avec recherche ─────────────── */
+.comp-box form, .up-wrap, .up-list, .up-item { min-width:0; max-width:100%; box-sizing:border-box; }
+.up-wrap { width:100%; }
+#upSubmit { flex:none; height:auto; min-height:44px; align-self:stretch; }
 .up-label { display:block; font-size:12px; font-weight:700; color:var(--text-secondary); margin-bottom:6px; }
 .up-search { width:100%; box-sizing:border-box; padding:10px 12px; border-radius:10px; border:1px solid var(--border-default); background:var(--surface-base); color:var(--text-primary); font-size:14px; }
 .up-search:focus { outline:none; border-color:var(--brand); box-shadow:0 0 0 3px rgba(220,38,38,0.12); }
@@ -119,7 +122,10 @@
 .up-name { font-size:13px; font-weight:700; color:var(--text-primary); }
 .up-sub { font-size:11px; color:var(--text-muted); max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .up-empty { padding:14px; text-align:center; font-size:12px; color:var(--text-muted); }
-.up-selected { margin-top:8px; padding:8px 12px; border-radius:10px; background:var(--brand-light); color:var(--brand); font-size:13px; font-weight:700; }
+.up-selected[hidden] { display:none; }
+.up-clear { flex-shrink:0; border:0; background:rgba(220,38,38,0.15); color:var(--brand); width:24px; height:24px; border-radius:50%; cursor:pointer; font-size:14px; line-height:1; font-weight:800; }
+.up-clear:hover { background:var(--brand); color:#fff; }
+.up-selected { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; padding:8px 12px; border-radius:10px; background:var(--brand-light); color:var(--brand); font-size:13px; font-weight:700; }
 .btn-action:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 
 @media (max-width: 960px) {
@@ -370,11 +376,19 @@
     empty.hidden = n > 0;
   }
   search.addEventListener('input', filter);
+  function clear() {
+    items.forEach(function (o) { o.classList.remove('on'); });
+    value.value = ''; sel.hidden = true; sel.innerHTML = ''; submit.disabled = true;
+  }
   items.forEach(function (it) {
     it.addEventListener('click', function () {
+      if (it.classList.contains('on')) { clear(); return; }   // second click = unselect
       items.forEach(function (o) { o.classList.remove('on'); });
       it.classList.add('on'); value.value = it.dataset.id;
-      sel.textContent = '✓ ' + it.dataset.name; sel.hidden = false; submit.disabled = false;
+      sel.innerHTML = '<span></span><button type="button" class="up-clear" title="Désélectionner" aria-label="Désélectionner">×</button>';
+      sel.firstChild.textContent = '✓ ' + it.dataset.name;
+      sel.querySelector('.up-clear').addEventListener('click', clear);
+      sel.hidden = false; submit.disabled = false;
     });
   });
 })();
