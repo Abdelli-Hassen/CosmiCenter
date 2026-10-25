@@ -463,8 +463,10 @@
   .pdv-lead-card a, .pdv-lead-card span { overflow-wrap: anywhere; }
   .pdv-stats-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
   .pdv-two-col-grid { grid-template-columns: minmax(0, 1fr) !important; }
-  .pdv-card-header { flex-wrap: wrap; padding: 14px 16px !important; }
-  .tickets-section .pdv-card-header > .btn { margin-left: auto; }
+  /* Titre à gauche, bouton à droite sur la même ligne (le titre peut passer sur 2 lignes) */
+  .pdv-card-header { flex-wrap: nowrap !important; align-items: center !important; padding: 14px 16px !important; gap: 10px !important; }
+  .pdv-card-header > .pdv-card-title, .pdv-card-header > h2 { flex: 1 1 auto; min-width: 0; flex-wrap: wrap; row-gap: 4px; font-size: 15px !important; }
+  .pdv-card-header > .btn, .pdv-card-header > button, .pdv-card-header > a { flex: 0 0 auto; margin-left: auto; white-space: nowrap; padding: 8px 12px !important; font-size: 12px !important; }
   .tickets-toolbar { padding: 12px 14px !important; }
   .tickets-filter-row { flex-direction: column; align-items: stretch !important; }
   .status-tabs { display: grid !important; grid-template-columns: repeat(3, 1fr); width: 100%; box-sizing: border-box; }
