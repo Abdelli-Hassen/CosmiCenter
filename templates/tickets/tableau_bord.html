@@ -214,12 +214,12 @@
           <tbody>
             {% for ticket in tickets %}
             <tr onclick="window.location.href='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'">
-              <td>
+              <td class="tk-id">
                 <span style="font-family: var(--font-mono, monospace); font-size: 12px; color: var(--text-muted); font-weight: 500;">
                   {{ ticket.numero }}
                 </span>
               </td>
-              <td>
+              <td class="tk-prio">
                 <div style="display: flex; align-items: center; gap: 6px;">
                   <span class="priority-dot dot-{{ ticket.priorite }}"></span>
                   <span style="font-size: 13px; font-weight: 500; color: var(--text-primary); text-transform: capitalize;">{{ ticket.priorite }}</span>
@@ -241,7 +241,7 @@
                   </div>
                 </div>
               </td>
-              <td>
+              <td class="tk-status">
                 {% if ticket.statut in ['nouveau', 'ouvert'] %}
                   <span class="badge-premium badge-premium-new">{{ 'Ouvert' if ticket.statut == 'ouvert' else 'Nouveau' }}</span>
                 {% elif ticket.statut == 'en_cours' %}
@@ -258,7 +258,7 @@
                   <span class="badge-premium">{{ ticket.statut }}</span>
                 {% endif %}
               </td>
-              <td style="font-size: 12px; font-weight: 500; color: var(--text-secondary);">
+              <td class="tk-date" style="font-size: 12px; font-weight: 500; color: var(--text-secondary);">
                 {{ ticket.date_creation.strftime('%d %b %Y') }}
               </td>
             </tr>

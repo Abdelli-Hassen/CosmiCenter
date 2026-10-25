@@ -207,7 +207,6 @@
   .premium-table td:first-child:has(input[type="checkbox"]) { order: -2; flex: 0 0 auto; }
   .premium-table td:has(.ticket-title), .premium-table td.tk-main { order: -1; flex: 1 1 calc(100% - 40px); }
   .premium-table:not(:has(input[type="checkbox"])) td:has(.ticket-title), .premium-table:not(:has(input[type="checkbox"])) td.tk-main { flex-basis: 100%; }
-  .premium-table td:last-child:not(:has(a, button, input, select)):not(:first-child) { display: none !important; }
   .segmented-control { flex-wrap: nowrap !important; }
   .segmented-control a, .segmented-control button { white-space: nowrap; flex-shrink: 0; }
 }
@@ -324,4 +323,36 @@
     white-space: normal !important; max-width: 100%; text-align: right; overflow-wrap: anywhere;
   }
   table.cards-on:not(.premium-table) td:last-child:not(:has(a, button, input, select, span, div)) { display: none !important; }
+}
+
+/* ─── Carte « ticket » lisible (listes de tickets, dashboard, fiche PDV) ───────────
+   Ligne 1 : n° · priorité ............ statut
+   Ligne 2 : TITRE (gras)  + catégorie
+   Ligne 3 : assigné à ............ date   |   Ligne 4 : département
+   Les cellules portent les classes tk-* (voir les gabarits) */
+@media (max-width: 768px) {
+  .premium-table tbody tr {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "id    prio   status"
+      "main  main   main"
+      "who   who    date"
+      "dept  dept   dept";
+    align-items: center; gap: 8px 12px; position: relative;
+    padding: 14px 16px !important;
+  }
+  .premium-table tbody tr:has(.tk-sel) { padding-left: 46px !important; }
+  .premium-table .tk-sel { position: absolute; left: 14px; top: 14px; }
+  .premium-table .tk-id     { grid-area: id; }
+  .premium-table .tk-prio   { grid-area: prio; }
+  .premium-table .tk-status { grid-area: status; justify-self: end; text-align: right !important; }
+  .premium-table .tk-main   { grid-area: main; order: 0 !important; flex: none !important; }
+  .premium-table .tk-who    { grid-area: who; }
+  .premium-table .tk-date   { grid-area: date; justify-self: end; font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+  .premium-table .tk-dept   { grid-area: dept; font-size: 12px; color: var(--text-muted); }
+  .premium-table .tk-chev   { display: none !important; }
+  .premium-table .tk-main .ticket-title, .premium-table .tk-main > div > span:first-child { font-size: 15px !important; font-weight: 700 !important; line-height: 1.35; }
+  /* Ligne vide (pas d'assigné, pas de département) : on ne réserve pas d'espace */
+  .premium-table .tk-who:empty, .premium-table .tk-dept:empty { display: none !important; }
 }

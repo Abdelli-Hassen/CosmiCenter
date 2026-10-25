@@ -1524,14 +1524,14 @@ dialog::backdrop {
                 onclick="if(!event.target.closest('button') && !event.target.closest('a')) window.location='{{ url_for('tickets.detail', ticket_id=t.id) }}'">
               
               <!-- ID -->
-              <td>
+              <td class="tk-id">
                 <a href="{{ url_for('tickets.detail', ticket_id=t.id) }}" style="font-family: var(--font-mono, monospace); font-size: 12px; color: var(--text-muted); text-decoration: none; font-weight: 600; white-space: nowrap;">
                   {{ t.numero }}
                 </a>
               </td>
 
               <!-- Priorité -->
-              <td>
+              <td class="tk-prio">
                 <div style="display: flex; align-items: center; gap: 7px;" title="Priorité: {{ t.priorite|capitalize }}">
                   <span class="priority-dot dot-{{ t.priorite }}"></span>
                   <span style="font-size: 13px; font-weight: 500; text-transform: capitalize;">{{ t.priorite }}</span>
@@ -1539,7 +1539,7 @@ dialog::backdrop {
               </td>
 
               <!-- Titre & Catégorie -->
-              <td>
+              <td class="tk-main">
                 <div style="display: flex; flex-direction: column; gap: 4px;">
                   <a href="{{ url_for('tickets.detail', ticket_id=t.id) }}" style="color: var(--text-primary); text-decoration: none; font-size: 14px; font-weight: 600; line-height: 1.4;">
                     {{ t.titre }}
@@ -1556,7 +1556,7 @@ dialog::backdrop {
               </td>
 
               <!-- Statut -->
-              <td>
+              <td class="tk-status">
                 {% if t.statut in ['nouveau', 'ouvert'] %}
                   <span class="badge-premium badge-premium-new">{{ 'Ouvert' if t.statut == 'ouvert' else 'Nouveau' }}</span>
                 {% elif t.statut == 'en_cours' %}
@@ -1575,7 +1575,7 @@ dialog::backdrop {
               </td>
 
               <!-- Assigné à -->
-              <td>
+              <td class="tk-who">
                 {% if t.assigne_a %}
                 <div style="display: flex; align-items: center; gap: 8px;">
                   {% set dept_c = t.assigne_a.departement.couleur if t.assigne_a.departement and t.assigne_a.departement.couleur else '#dc2626' %}
@@ -1597,7 +1597,7 @@ dialog::backdrop {
               </td>
 
               <!-- Département -->
-              <td>
+              <td class="tk-dept">
                 {% if t.departement %}
                 <span style="font-size: 13px; color: var(--text-secondary); display:inline-flex; align-items:center; gap:5px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
@@ -1609,14 +1609,14 @@ dialog::backdrop {
               </td>
 
               <!-- Créé le -->
-              <td>
+              <td class="tk-date">
                 <span style="font-size: 12px; font-weight: 500; color: var(--text-secondary); white-space: nowrap;">
                   {{ t.date_creation.strftime('%d %b %Y') if t.date_creation else '—' }}
                 </span>
               </td>
 
               <!-- Actions -->
-              <td style="text-align: center;">
+              <td class="tk-chev" style="text-align: center;">
                 <button onclick="window.location='{{ url_for('tickets.detail', ticket_id=t.id) }}'" class="btn btn-ghost btn-sm" style="padding: 6px; color: var(--text-muted); background: transparent; border: none; cursor: pointer; transition: color 0.15s;" title="Voir les détails">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 18l6-6-6-6"/>
