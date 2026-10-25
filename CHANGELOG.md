@@ -19,6 +19,7 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Fiche département : filtres de tickets en grille 3 × 2 et tickets en cartes (n° + statut, titre complet, créateur et date).
 - Modifier un ticket : plus de contenu coupé à droite (cases à cocher des collaborateurs, compteur « sélectionné(s) »), grille des collaborateurs sur une colonne.
 - Points de vente (liste) : en-tête empilé avec bouton pleine largeur, filtres sur une ligne défilante, bandeaux de cartes plus compacts (nom non répété).
+- Fiche point de vente : en-tête et boutons réorganisés, carte « Responsable / Canal officiel » sur une colonne (e-mails qui passent à la ligne), filtres de statut en grille 3 × 2, recherche et priorité pleine largeur.
 - Messagerie : liste des conversations puis conversation plein écran avec bouton retour.
 - `run_prod.bat` / `serve.py` : la console affiche, à chaque démarrage, les adresses à ouvrir depuis un téléphone sur le Wi-Fi / réseau actuel du poste (la première = connexion active) ; si le serveur est en local uniquement (`FLASK_HOST=127.0.0.1`), elle le signale et indique quoi changer.
 

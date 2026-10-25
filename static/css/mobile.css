@@ -446,3 +446,34 @@
   .pdv-card-avatar { width: 44px !important; height: 44px !important; }
   .pdv-card-banner-title { display: none !important; }
 }
+
+/* ---- Fiche point de vente ---- */
+@media (max-width: 768px) {
+  .pdv-header { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
+  .pdv-header-left { min-width: 0; }
+  .pdv-title-wrap { flex-wrap: wrap; min-width: 0; gap: 8px 10px !important; }
+  .pdv-title { font-size: 24px !important; overflow-wrap: anywhere; }
+  .pdv-header-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px !important; width: 100%; }
+  .pdv-header-actions .btn { justify-content: center; }
+  .pdv-header-actions .btn-primary { grid-column: 1 / -1; }
+  .pdv-lead-card { padding: 16px !important; gap: 16px !important; flex-direction: column !important; align-items: stretch !important; }
+  .pdv-lead-card > div { min-width: 0 !important; width: 100%; flex: none !important; }
+  .pdv-lead-card > div + div { border-left: 0 !important; padding-left: 0 !important; border-top: 1px solid var(--border-subtle); padding-top: 16px; }
+  .pdv-lead-card > div > div:last-child { min-width: 0; }
+  .pdv-lead-card a, .pdv-lead-card span { overflow-wrap: anywhere; }
+  .pdv-stats-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+  .pdv-two-col-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .pdv-card-header { flex-wrap: wrap; padding: 14px 16px !important; }
+  .tickets-section .pdv-card-header > .btn { margin-left: auto; }
+  .tickets-toolbar { padding: 12px 14px !important; }
+  .tickets-filter-row { flex-direction: column; align-items: stretch !important; }
+  .status-tabs { display: grid !important; grid-template-columns: repeat(3, 1fr); width: 100%; box-sizing: border-box; }
+  .status-tab-btn { justify-content: center; padding: 8px 4px !important; white-space: nowrap; }
+  .tickets-filter-row > div:last-child { justify-content: space-between; }
+  .tickets-controls-bar { flex-direction: column; align-items: stretch !important; gap: 10px !important; }
+  .tickets-search-wrap { width: 100%; max-width: none !important; min-width: 0; }
+  .tickets-search-input { width: 100%; font-size: 16px !important; box-sizing: border-box; }
+  .tickets-secondary-filters { width: 100%; }
+  .tickets-secondary-filters .tickets-select { width: 100%; }
+  .tickets-pagination-bar { flex-wrap: wrap; gap: 10px; justify-content: center; }
+}
