@@ -376,3 +376,13 @@
   .sg-modal form > div:last-child { flex-direction: column-reverse; }
   .sg-modal form > div:last-child button { width: 100%; justify-content: center; }
 }
+
+/* ---- Fiche département : agents ---- */
+@media (max-width: 768px) {
+  .dm-head { flex-wrap: wrap !important; gap: 10px !important; }
+  .dm-head-actions { width: 100%; justify-content: space-between; }
+  .dm-name { flex-direction: column !important; align-items: flex-start !important; gap: 4px !important; }
+  .dm-fullname { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; line-height: 1.25; }
+  .dm-role { white-space: normal !important; line-height: 1.3; }
+  .member-row .btn-ghost { flex-shrink: 0; }
+}
