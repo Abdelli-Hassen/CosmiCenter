@@ -1,0 +1,147 @@
+/* ════════════════════════════════════════════════════════════
+   CosmiCenter — affichage téléphone / tablette
+   Chargé APRÈS les styles de page (base.html) : les règles de page
+   qui n'ont pas de version mobile sont corrigées ici avec !important.
+   Seuils : 1024px (tablette : menu en tiroir), 768px (téléphone), 480px (petit téléphone).
+   ════════════════════════════════════════════════════════════ */
+
+/* Bouton « menu » : caché sur ordinateur */
+.mobile-nav-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mobile-nav-btn:hover { background: var(--shell-2); }
+.mobile-nav-btn:focus-visible { outline: 2px solid var(--border-focus); }
+
+/* ─── Tablette et moins : menu en tiroir ──────────────────── */
+@media (max-width: 1024px) {
+  .mobile-nav-btn { display: inline-flex; }
+
+  /* 100dvh : suit la barre d'adresse mobile (100vh la déborde) */
+  .app-shell { height: 100vh; height: 100dvh; }
+  #sidebar {
+    height: calc(100vh - var(--chrome-height));
+    height: calc(100dvh - var(--chrome-height));
+    width: 280px !important;
+    min-width: 0 !important;
+    max-width: 86vw;
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.25);
+  }
+  /* Le mode « réduit » du bureau n'a pas de sens sur mobile : le tiroir reste complet */
+  #sidebar.collapsed .nav-item-label,
+  #sidebar.collapsed .nav-group-label { display: revert; opacity: 1; }
+  #sidebar.collapsed .nav-filter-wrap { display: revert; }
+  #sidebar.collapsed .sidebar-user,
+  #sidebar.collapsed .sidebar-action-btn { display: revert; }
+  #sidebar:not(.mobile-open) { visibility: hidden; transition: transform var(--duration-moderate) var(--ease-default), visibility 0s linear var(--duration-moderate); }
+  #sidebar.mobile-open { visibility: visible; transition: transform var(--duration-moderate) var(--ease-default); }
+
+  .content-canvas { -webkit-overflow-scrolling: touch; }
+}
+
+/* ─── Téléphone ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Pas de défilement horizontal de la page */
+  html, body { max-width: 100%; overflow-x: hidden; }
+  img, video, canvas, svg { max-width: 100%; }
+
+  /* Barre du haut : on garde logo, cloche, thème, avatar, déconnexion */
+  .chrome-bar { padding: 0 var(--space-2); gap: var(--space-1); }
+  .chrome-user-text { display: none !important; }
+  .chrome-user { margin-left: 4px !important; padding-left: 8px !important; gap: 6px !important; }
+  .chrome-right { gap: 0; }
+  .workspace-trigger { padding: var(--space-1); }
+  .chrome-btn { min-width: 38px; min-height: 38px; justify-content: center; }
+
+  /* Marges de page réduites */
+  .page-body, .page-header { padding: var(--space-4) !important; }
+  .page[style*="padding"] { padding: var(--space-4) !important; }
+  .page-header { flex-direction: column; align-items: stretch; }
+  .page-header-actions { flex-wrap: wrap; width: 100%; }
+  .page-header-actions > * { flex: 1 1 auto; justify-content: center; }
+  .page-title { font-size: var(--text-2xl); }
+
+  /* Les en-têtes de page écrits « en dur » (flex + justify-between) passent en colonne */
+  .page > div[style*="justify-content: space-between"][style*="align-items: flex-end"] {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 12px;
+  }
+
+  /* Tableaux : défilement horizontal au lieu de déborder de l'écran */
+  .content-canvas table:not(.no-scroll) {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-wrap, .table-card, .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Grilles de cartes / statistiques → 1 ou 2 colonnes */
+  .dashboard-grid-4, .stats-grid, .stats-grid-4, .pdv-stats-grid, .user-kpi-grid, .comp-stats-grid, .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+  .dashboard-grid-3, .dashboard-grid-2-1, .dashboard-grid-1-2, .dashboard-grid,
+  .content-grid, .pdv-two-col-grid, .user-main-grid, .comp-layout, .split-tables,
+  .grid-2, .grid-3, .podium, .form-row, .form-row-2, .form-row-3, .input-row, .row-2,
+  .form-grid-2, .ticket-form-layout, .edit-shell, .ticket-category-grid, .remote-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .depts-grid, .pdv-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .type-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+  /* Formulaires : champs lisibles, sans zoom automatique sur iPhone (police ≥ 16px) */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
+    font-size: 16px !important;
+    max-width: 100%;
+  }
+  input[type="search"][style*="min-width"] { min-width: 0 !important; width: 100%; }
+
+  /* Fenêtres, panneaux, notifications, toasts */
+  .modal { max-width: calc(100vw - 24px) !important; max-height: 90vh; }
+  .modal-overlay, .modal-backdrop { padding: 12px; }
+  .notif-panel { width: 100%; max-width: 100vw; }
+  .toast-container { left: var(--space-3); right: var(--space-3); bottom: var(--space-3); }
+
+  /* Page Ticket : le panneau de droite passe sous le fil de discussion */
+  .detail-layout { flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .detail-layout .main-content { overflow: visible; padding: 16px !important; flex: none; }
+  .detail-layout .sidebar {
+    width: 100% !important;
+    border-left: none !important;
+    border-top: 1px solid var(--border-subtle);
+    overflow: visible;
+    flex: none;
+  }
+  .ticket-header-modern { padding: 14px 16px !important; flex-wrap: wrap; gap: 10px; }
+
+  /* Liste des tickets : barre de filtres sur plusieurs lignes */
+  .segmented-control { max-width: 100%; overflow-x: auto; }
+
+  /* Boutons plus faciles à toucher */
+  .btn, button.btn, a.btn { min-height: 40px; }
+}
+
+/* ─── Petit téléphone ─────────────────────────────────────── */
+@media (max-width: 480px) {
+  .dashboard-grid-4, .stats-grid, .stats-grid-4, .pdv-stats-grid, .user-kpi-grid, .comp-stats-grid, .kpi-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .page-title { font-size: var(--text-xl); }
+}
+
+/* Respecte « réduire les animations » */
+@media (prefers-reduced-motion: reduce) {
+  #sidebar { transition: none !important; }
+}

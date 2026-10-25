@@ -45,6 +45,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tooltip.css') }}?v=2">
 
   {% block extra_head %}{% endblock %}
+  <!-- Affichage téléphone / tablette : chargé en dernier pour passer après les styles de page -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}?v=1">
 
   <!-- User Accent Color -->
   {% if current_user.is_authenticated and current_user.couleur %}
@@ -72,6 +74,9 @@
     <!-- Chrome Bar -->
     <header class="chrome-bar" role="banner">
       <div class="chrome-left">
+        <button class="mobile-nav-btn" id="mobile-nav-toggle" type="button" aria-label="Ouvrir le menu" aria-controls="sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
         <button class="workspace-trigger" id="workspaceTrigger" aria-label="Espace de travail">
           <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="CosmiCenter" style="height:36px;width:auto;object-fit:contain;">
         </button>
@@ -94,8 +99,8 @@
           <svg id="themeIconLight" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
 
-        <div style="display: flex; align-items: center; margin-left: 12px; border-left: 1px solid var(--border-color); padding-left: 12px; gap: 10px;">
-          <div style="display: flex; flex-direction: column; align-items: flex-end; line-height: 1.3;">
+        <div class="chrome-user" style="display: flex; align-items: center; margin-left: 12px; border-left: 1px solid var(--border-color); padding-left: 12px; gap: 10px;">
+          <div class="chrome-user-text" style="display: flex; flex-direction: column; align-items: flex-end; line-height: 1.3;">
             <span style="font-size: 13px; font-weight: 600; color: var(--text-color);">{{ current_user.prenom }} {{ current_user.nom }}</span>
             <span style="font-size: 11px; font-weight: 500; color: var(--color-brand, var(--text-muted)); display: flex; align-items: center; gap: 4px;">
               {% if 'Administrateur' in current_user.role.nom %}
@@ -399,7 +404,7 @@
 
   <script src="{{ url_for('static', filename='js/a11y.js') }}?v=1"></script>
   <script src="{{ url_for('static', filename='js/tooltip.js') }}?v=2"></script>
-  <script src="{{ url_for('static', filename='js/app.js') }}?v=102"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}?v=103"></script>
   <script src="{{ url_for('static', filename='js/theme.js') }}?v=103"></script>
   <script src="{{ url_for('static', filename='js/notifications.js') }}?v=102"></script>
   <script src="{{ url_for('static', filename='js/command-palette.js') }}?v=102"></script>

@@ -158,6 +158,11 @@
 
     backdrop.addEventListener('click', closeMobileSidebar);
 
+    // Repasse en affichage bureau (rotation, redimensionnement) : on ferme le tiroir
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 1024 && sidebar.classList.contains('mobile-open')) closeMobileSidebar();
+    });
+
     // Close on Esc
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {

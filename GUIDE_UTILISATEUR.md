@@ -307,3 +307,6 @@ Pour toute question ou signalement d'anomalie sur la plateforme elle-même, cont
 ---
 
 *Cosmicenter — Gestion des opérations Cosmitto Coffee · Documentation interne*
+
+## Utiliser CosmiCenter sur téléphone
+Ouvrez l'adresse du serveur (par exemple `http://<ip-du-poste>:8080`) dans le navigateur du téléphone, connecté au même réseau. Appuyez sur **☰** (en haut à gauche) pour ouvrir le menu, touchez en dehors pour le fermer. Les tableaux se font défiler de gauche à droite ; dans la messagerie, la flèche **‹** ramène à la liste des conversations.

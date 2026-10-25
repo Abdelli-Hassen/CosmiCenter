@@ -558,3 +558,6 @@ Cosmicenter/
 ---
 
 *Cosmicenter — Pour moi © 2026 — Documentation*
+
+## Affichage mobile (2.7.0)
+Toutes les pages s'adaptent aux téléphones et tablettes : menu latéral en tiroir (bouton « ☰ » en haut à gauche), barre du haut allégée, tableaux défilants, grilles sur 1–2 colonnes, formulaires en une colonne. Messagerie : liste des conversations puis conversation plein écran avec bouton retour.

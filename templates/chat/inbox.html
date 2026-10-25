@@ -26,6 +26,19 @@
     box-shadow: -10px -10px 30px -5px rgba(0,0,0,0.03);
   }
 
+  /* ── Téléphone : liste OU conversation (bouton retour) ── */
+  .chat-back-btn { display: none; background: none; border: none; color: var(--text-primary); cursor: pointer; padding: 6px; margin-right: 4px; border-radius: 8px; }
+  @media (max-width: 768px) {
+    .chat-layout { border-radius: 0; border-left: none; }
+    .chat-sidebar { width: 100%; flex: 1; }
+    .chat-main { display: none; }
+    .chat-layout:has(#chatInterface[style*="display: flex"]) .chat-sidebar { display: none; }
+    .chat-layout:has(#chatInterface[style*="display: flex"]) .chat-main { display: flex; width: 100%; }
+    .chat-back-btn { display: inline-flex; }
+    .chat-active-header { padding-left: 8px; padding-right: 8px; }
+    .msg-img { max-width: 100%; }
+  }
+
   /* ── SIDEBAR ── */
   .chat-sidebar {
     width: 340px;
@@ -458,6 +471,9 @@
     <div id="chatInterface" style="display: none; flex-direction: column; flex: 1; height: 100%;">
       <div class="chat-active-header">
       <div class="chat-header-user">
+        <button type="button" class="chat-back-btn" aria-label="Retour aux conversations" onclick="closeChatMobile()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
         <div class="chat-item-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb);"></div>
         <div>
           <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px;"></div>
@@ -599,6 +615,12 @@
           renderConversations(allConversations);
         }
       });
+  }
+
+  // Téléphone : retour de la conversation vers la liste
+  function closeChatMobile() {
+    document.getElementById('chatInterface').style.display = 'none';
+    document.getElementById('chatEmptyState').style.display = 'flex';
   }
 
   function loadMessages(contactId) {
