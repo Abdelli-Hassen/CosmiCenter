@@ -719,3 +719,13 @@
   .kb-card .kb-desc { white-space: normal !important; min-width: 0 !important; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .kb-card .kb-meta { grid-area: meta; justify-self: start; margin-top: 4px; }
 }
+
+/* ---- Article de la base de connaissances + toasts ---- */
+@media (max-width: 768px) {
+  .article-card { padding: 20px 18px !important; border-radius: 16px !important; margin-top: 14px !important; }
+  .article-title { font-size: 1.5rem !important; line-height: 1.2; }
+  .article-meta { gap: 8px 16px !important; padding-bottom: 14px !important; margin-bottom: 16px !important; margin-top: 12px !important; }
+  .article-content { font-size: 1rem !important; line-height: 1.65 !important; }
+  .toast { min-width: 0 !important; max-width: 100% !important; width: 100%; box-sizing: border-box; }
+  .toast-container { width: auto; }
+}

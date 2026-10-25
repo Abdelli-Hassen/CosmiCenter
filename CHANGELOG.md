@@ -30,6 +30,7 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Fiche utilisateur : « Activité récente des tickets » = une carte par ticket (n° + priorité + statut, titre et catégorie, rôle et date) au lieu de lignes « libellé : valeur » ; les filtres Tous / Assignés / Créés continuent de fonctionner.
 - Plan d'action : le calendrier s'affichait vide sur téléphone (une règle mobile transformait ses tableaux en blocs) ; barre d'outils sur deux lignes, cases compactes, tâches en cartes avec boutons d'action en bas, boutons d'en-tête côte à côte, fenêtres en feuille plein écran.
 - Base de connaissances : boutons pleine largeur, catégories en cartes (titre et description complets, compteur d'articles en dessous) au lieu de textes coupés.
+- Article de la base de connaissances : les très longs mots (ou suites de caractères) passent à la ligne au lieu de déborder, titre et marges adaptés au téléphone ; les notifications (toasts) ne dépassent plus l'écran.
 - Messagerie : liste des conversations puis conversation plein écran avec bouton retour.
 - `run_prod.bat` / `serve.py` : la console affiche, à chaque démarrage, les adresses à ouvrir depuis un téléphone sur le Wi-Fi / réseau actuel du poste (la première = connexion active) ; si le serveur est en local uniquement (`FLASK_HOST=127.0.0.1`), elle le signale et indique quoi changer.
 

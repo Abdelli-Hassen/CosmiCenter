@@ -22,7 +22,7 @@
     color: var(--text-primary); box-shadow: var(--shadow-sm, 0 4px 14px rgba(0,0,0,0.04)); margin-top: 20px;
 }
 .article-content {
-    font-size: 1.05rem; line-height: 1.8; color: var(--text-secondary); white-space: pre-wrap;
+    font-size: 1.05rem; line-height: 1.8; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;
 }
 .article-meta {
     display: flex; align-items: center; gap: 24px; margin-top: 16px; padding-bottom: 24px;
@@ -58,7 +58,7 @@
     </div>
 
     <div class="article-card">
-        <h1 style="font-weight: 900; font-size: 2.2rem; color: var(--text-primary); margin: 0; letter-spacing: -0.02em;">{{ article.titre }}</h1>
+        <h1 class="article-title" style="font-weight: 900; font-size: 2.2rem; overflow-wrap: anywhere; color: var(--text-primary); margin: 0; letter-spacing: -0.02em;">{{ article.titre }}</h1>
 
         <div class="article-meta">
             <div class="meta-item">
