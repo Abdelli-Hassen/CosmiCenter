@@ -479,3 +479,16 @@
   .tickets-secondary-filters .tickets-select { width: 100%; }
   .tickets-pagination-bar { flex-wrap: wrap; gap: 10px; justify-content: center; }
 }
+
+/* Fiche PDV : carte responsable / canal en deux blocs épurés, e-mails sur une ligne */
+@media (max-width: 768px) {
+  .pdv-lead-card { padding: 12px !important; gap: 10px !important; }
+  .pdv-lead-card > div { padding: 14px !important; border: 1px solid var(--border-subtle) !important; border-radius: 14px; background: var(--surface-2); }
+  .pdv-lead-card > div + div { border-top: 1px solid var(--border-subtle) !important; padding-top: 14px !important; }
+  .pdv-lead-card > div > div:first-child { display: none !important; }   /* pastilles / icônes */
+  .pdv-lead-card svg { display: none !important; }
+  .pdv-lead-card > div > div:last-child { width: 100%; }
+  .pdv-lead-card > div > div:last-child > div:first-child { font-size: 10.5px !important; }
+  .pdv-lead-card a, .pdv-lead-card span { overflow-wrap: normal !important; }
+  .pdv-lead-card a[href^="mailto"] { display: block !important; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: clamp(11.5px, 3.6vw, 14px) !important; margin-top: 2px; }
+}
