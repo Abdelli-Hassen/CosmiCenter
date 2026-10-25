@@ -416,3 +416,14 @@
   .collab-agent-card { min-width: 0; }
   .collab-agent-card .collab-check-box { flex-shrink: 0; }
 }
+@media (max-width: 768px) {
+  .collab-wrapper-card { min-width: 0; max-width: 100%; box-sizing: border-box; }
+  .collab-wrapper-card > * { min-width: 0; max-width: 100%; }
+  .collab-header-row { gap: 8px; }
+  .collab-title { min-width: 0; flex: 1; }
+  .collab-count-badge { flex-shrink: 0; white-space: nowrap; }
+  #collabUserSearch, #collabUserFilterWrap { width: 100%; max-width: 100%; box-sizing: border-box; }
+  #collabUserSearch { font-size: 16px !important; padding: 10px 12px !important; }
+  #collabUsersContainer > div, #selectedCollabSummary { min-width: 0; max-width: 100%; box-sizing: border-box; }
+  #collabUsersContainer > div > div { min-width: 0; }
+}
