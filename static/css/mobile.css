@@ -553,3 +553,7 @@
   .comp-box-header { padding: 14px 16px !important; gap: 8px; flex-wrap: wrap; }
   .comp-table-wrap { max-height: none !important; overflow: visible !important; }
 }
+@media (max-width: 768px) {
+  .comp-box form select { font-size: 16px !important; padding: 12px !important; }
+  .comp-box form .btn-action { min-height: 46px; height: auto; }
+}
