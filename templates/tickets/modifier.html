@@ -1099,7 +1099,7 @@ textarea.fi { resize: vertical; min-height: 140px; }
         '<span style="font-size:10.5px; font-weight:600; color:var(--text-muted);">' + deptUsers.length + ' membre(s)</span>';
 
       var usersGrid = document.createElement('div');
-      usersGrid.style.cssText = 'display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px;';
+      usersGrid.style.cssText = 'display:grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: 6px;';
 
       deptUsers.forEach(function (user) {
         var opt = collabUsersSelect.querySelector('option[value="' + user.id + '"]');

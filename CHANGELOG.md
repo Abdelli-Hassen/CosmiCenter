@@ -17,6 +17,7 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - **Boîte à idées** : en-tête empilé avec bouton pleine largeur, cartes en une colonne, fenêtre « Proposer une idée » en feuille basse ; le titre et le statut de chaque carte n'apparaissent plus en double.
 - Fiche département : en-tête « Agents » sur deux lignes, noms complets (retour à la ligne) avec l'entreprise en dessous, poste lisible.
 - Fiche département : filtres de tickets en grille 3 × 2 et tickets en cartes (n° + statut, titre complet, créateur et date).
+- Modifier un ticket : plus de contenu coupé à droite (cases à cocher des collaborateurs, compteur « sélectionné(s) »), grille des collaborateurs sur une colonne.
 - Messagerie : liste des conversations puis conversation plein écran avec bouton retour.
 - `run_prod.bat` / `serve.py` : la console affiche, à chaque démarrage, les adresses à ouvrir depuis un téléphone sur le Wi-Fi / réseau actuel du poste (la première = connexion active) ; si le serveur est en local uniquement (`FLASK_HOST=127.0.0.1`), elle le signale et indique quoi changer.
 
