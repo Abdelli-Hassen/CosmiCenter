@@ -427,3 +427,22 @@
   #collabUsersContainer > div, #selectedCollabSummary { min-width: 0; max-width: 100%; box-sizing: border-box; }
   #collabUsersContainer > div > div { min-width: 0; }
 }
+
+/* ---- Points de vente : liste ---- */
+@media (max-width: 768px) {
+  .pdv-page { padding: 16px 14px 40px !important; }
+  .pdv-hero { flex-direction: column !important; align-items: stretch !important; gap: 14px !important; margin-bottom: 18px !important; }
+  .pdv-hero-title { font-size: 26px !important; gap: 10px !important; }
+  .pdv-hero-icon { width: 38px !important; height: 38px !important; flex-shrink: 0; }
+  .pdv-hero-sub { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+  .pdv-hero > .btn { width: 100%; justify-content: center; }
+  /* Filtres : une seule ligne défilante au lieu d'un empilement irrégulier */
+  .pdv-filter-bar { flex-wrap: nowrap !important; overflow-x: auto; margin: 0 -14px 16px !important; padding: 2px 14px 6px; scrollbar-width: none; }
+  .pdv-filter-bar::-webkit-scrollbar { display: none; }
+  .pdv-filter-chip { flex-shrink: 0; white-space: nowrap; margin-left: 0 !important; }
+  .pdv-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 14px !important; }
+  /* Bandeau compact ; le nom est déjà dans le corps de la carte */
+  .pdv-card-banner { height: 72px !important; }
+  .pdv-card-avatar { width: 44px !important; height: 44px !important; }
+  .pdv-card-banner-title { display: none !important; }
+}
