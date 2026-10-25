@@ -29,6 +29,7 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Tous les liens « Retour … » (administration, utilisateurs, départements, base de connaissance, idées, nouveau ticket) deviennent le même bouton rond « ← » à gauche, qui revient à la page précédente ; correction du lien cassé `boite_idees.index` sur la fiche d'une idée.
 - Fiche utilisateur : « Activité récente des tickets » = une carte par ticket (n° + priorité + statut, titre et catégorie, rôle et date) au lieu de lignes « libellé : valeur » ; les filtres Tous / Assignés / Créés continuent de fonctionner.
 - Plan d'action : le calendrier s'affichait vide sur téléphone (une règle mobile transformait ses tableaux en blocs) ; barre d'outils sur deux lignes, cases compactes, tâches en cartes avec boutons d'action en bas, boutons d'en-tête côte à côte, fenêtres en feuille plein écran.
+- Base de connaissances : boutons pleine largeur, catégories en cartes (titre et description complets, compteur d'articles en dessous) au lieu de textes coupés.
 - Messagerie : liste des conversations puis conversation plein écran avec bouton retour.
 - `run_prod.bat` / `serve.py` : la console affiche, à chaque démarrage, les adresses à ouvrir depuis un téléphone sur le Wi-Fi / réseau actuel du poste (la première = connexion active) ; si le serveur est en local uniquement (`FLASK_HOST=127.0.0.1`), elle le signale et indique quoi changer.
 

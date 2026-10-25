@@ -705,3 +705,17 @@
   .modal-footer .btn-action { width: 100%; justify-content: center; min-height: 46px; }
   .input-row { grid-template-columns: minmax(0, 1fr) !important; }
 }
+
+/* ---- Base de connaissances ---- */
+@media (max-width: 768px) {
+  .kb-head { flex-direction: column; align-items: stretch !important; gap: 14px !important; margin-bottom: 16px !important; }
+  .kb-head h1 { font-size: 1.4rem !important; }
+  .kb-actions { display: grid !important; grid-template-columns: 1fr; gap: 8px !important; width: 100%; }
+  .kb-actions .kb-btn { font-family: inherit; justify-content: center; padding: 12px 14px; min-height: 44px; }
+  .kb-card { display: grid !important; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "icon text" "icon meta"; gap: 4px 12px !important; align-items: start !important; padding: 14px !important; transform: none !important; }
+  .kb-card .kb-icon-wrap { grid-area: icon; }
+  .kb-card .kb-text { grid-area: text; display: flex; flex-direction: column; align-items: flex-start !important; gap: 3px !important; }
+  .kb-card .kb-title { white-space: normal !important; line-height: 1.25; }
+  .kb-card .kb-desc { white-space: normal !important; min-width: 0 !important; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .kb-card .kb-meta { grid-area: meta; justify-self: start; margin-top: 4px; }
+}
