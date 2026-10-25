@@ -601,3 +601,17 @@
   .comp-filter-select { font-size: 13px !important; padding-left: 10px !important; padding-right: 28px !important; text-overflow: ellipsis; }
   .comp-card-header { gap: 12px; }
 }
+
+/* Fiche entreprise : finitions */
+@media (max-width: 768px) {
+  .comp-meta-pills { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; }
+  .comp-meta-item, .comp-meta-item:first-child, .comp-meta-item:last-child { grid-column: 1 / -1 !important; flex-direction: row; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: 1px dashed var(--border-subtle); padding-bottom: 8px; }
+  .comp-meta-item:last-child { border-bottom: 0; padding-bottom: 0; }
+  .comp-meta-lbl { flex-shrink: 0; font-size: 10.5px; letter-spacing: .05em; }
+  .comp-meta-val { text-align: right; min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+  .comp-header-card > div[style*="gap:10px"] > form:last-child > button { grid-column: 1 / -1; }
+  .comp-table.no-cards .cu-act .btn-action { padding: 6px 10px !important; font-size: 11px !important; border-radius: 10px !important; min-height: 0 !important; }
+  .comp-table.no-cards .cu-user { padding-right: 78px !important; }
+  .comp-table.no-cards .cu-role .badge { text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
+}
+:root[data-theme="dark"] .comp-table .cu-dept .badge { filter: brightness(1.9) saturate(1.1); }
