@@ -58,7 +58,7 @@
 <div class="page-bg-glow-2"></div>
 
 <div class="page">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom: 48px; background: linear-gradient(135deg, rgba(220,38,38,0.08) 0%, rgba(220,38,38,0.02) 100%); padding: 32px 40px; border-radius: 24px; border: 1px solid var(--border-subtle); position: relative; overflow: hidden;">
+    <div class="sg-hero" style="display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom: 48px; background: linear-gradient(135deg, rgba(220,38,38,0.08) 0%, rgba(220,38,38,0.02) 100%); padding: 32px 40px; border-radius: 24px; border: 1px solid var(--border-subtle); position: relative; overflow: hidden;">
         <div style="position: absolute; top: -40px; right: -40px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(220,38,38,0.15) 0%, transparent 70%); pointer-events: none;"></div>
 
         <div style="display:flex; flex-direction:column; gap:8px; z-index: 1;">
@@ -66,7 +66,7 @@
             <p style="font-size:16px; color:var(--text-muted); font-weight:500; margin:0; max-width: 600px;">Partagez vos suggestions pour améliorer CosmiCenter. Chaque idée compte pour bâtir l'avenir de la plateforme.</p>
         </div>
 
-        <div style="z-index: 1;">
+        <div class="sg-hero-cta" style="z-index: 1;">
             <button onclick="let m = document.getElementById('modal-suggestion'); m.style.display='flex'; setTimeout(()=>m.style.opacity='1', 10);" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:10px; padding: 14px 28px; border-radius: 14px; font-weight: 700; background: linear-gradient(135deg, var(--brand), #ff5e7e); box-shadow: 0 8px 20px rgba(255, 51, 102, 0.3); border: none; transition: all 0.2s; cursor: pointer;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Nouvelle Suggestion
@@ -74,22 +74,10 @@
         </div>
     </div>
 
-    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:24px;">
+    <div class="sg-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:24px;">
         {% for sugg in suggestions %}
         <div style="background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 20px; display:flex; flex-direction:column; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: var(--shadow-md);" onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='var(--brand)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-subtle)'; this.style.boxShadow='var(--shadow-md)';">
             <div style="padding:24px; flex-grow:1;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
-                    <h3 style="margin:0; font-size:18px; font-weight:800; color:var(--text-primary); line-height: 1.4;">{{ sugg.titre }}</h3>
-                    <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 8px; letter-spacing: 0.5px; white-space: nowrap; margin-left: 12px;
-                        {% if sugg.statut == 'nouveau' %}background:rgba(59,130,246,0.15); color:#60a5fa;
-                        {% elif sugg.statut == 'lu' %}background:rgba(168,85,247,0.15); color:#c084fc;
-                        {% elif sugg.statut == 'accepte' %}background:rgba(16,185,129,0.15); color:#34d399;
-                        {% elif sugg.statut == 'refuse' %}background:rgba(239,68,68,0.15); color:#f87171;
-                        {% else %}background:rgba(255,255,255,0.05); color:var(--text-muted);{% endif %}
-                    ">
-                        {{ sugg.statut }}
-                    </span>
-                </div>
                 <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 8px; background: var(--surface-2); color: var(--text-muted); margin-bottom: 20px;">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         {% if sugg.type_suggestion == 'bug' %}<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline>
@@ -162,7 +150,7 @@
             {% endif %}
         </div>
         {% else %}
-        <div style="grid-column: 1 / -1; text-align:center; padding: 70px 40px; background: var(--surface-raised); border-radius:24px; border: 1.5px dashed var(--border-default); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center; animation: slideUp 0.5s ease-out forwards;">
+        <div class="sg-empty" style="grid-column: 1 / -1; text-align:center; padding: 70px 40px; background: var(--surface-raised); border-radius:24px; border: 1.5px dashed var(--border-default); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center; animation: slideUp 0.5s ease-out forwards;">
             <div style="width: 76px; height: 76px; background: var(--surface-2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); position: relative; border: 1px solid var(--border-subtle);">
                 <div style="position: absolute; inset: -8px; border-radius: 50%; border: 1px dashed var(--border-default); opacity: 0.6;"></div>
                 <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1.8"><path d="M9 21h6"></path><path d="M12 17v4"></path><path d="M12 3a7 7 0 0 1 7 7c0 2-1 4-2 5-1 2-2 3-2 6H9c0-3-1-4-2-6-1-1-2-3-2-5a7 7 0 0 1 7-7z"></path></svg>
@@ -178,7 +166,7 @@
     </div>
 </div>
 
-<div id="modal-suggestion" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:24px; opacity: 0; transition: opacity 0.3s ease;" onclick="if(event.target===this) { this.style.opacity='0'; setTimeout(()=>this.style.display='none', 300); }">
+<div id="modal-suggestion" class="sg-modal" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:24px; opacity: 0; transition: opacity 0.3s ease;" onclick="if(event.target===this) { this.style.opacity='0'; setTimeout(()=>this.style.display='none', 300); }">
     <div style="width:100%; max-width:550px; background: var(--surface-raised); border: 1px solid var(--border-default); border-radius:24px; overflow:hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.25); animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
         <div style="display:flex; justify-content:space-between; align-items:center; padding:24px 32px; border-bottom:1px solid var(--border-subtle); background: linear-gradient(135deg, rgba(220,38,38,0.05), transparent);">
             <h2 style="margin:0; font-size:20px; font-weight:800; color: var(--text-primary);">Proposer une Idée</h2>

@@ -356,3 +356,23 @@
   /* Ligne vide (pas d'assigné, pas de département) : on ne réserve pas d'espace */
   .premium-table .tk-who:empty, .premium-table .tk-dept:empty { display: none !important; }
 }
+
+/* ---- Boîte à idées (suggestions) ---- */
+@media (max-width: 768px) {
+  .page { padding: 16px !important; min-height: 0 !important; }
+  .sg-hero { flex-direction: column !important; align-items: stretch !important; padding: 20px !important; margin-bottom: 20px !important; border-radius: 18px !important; }
+  .sg-hero h1 { font-size: 24px !important; }
+  .sg-hero p { font-size: 14px !important; }
+  .sg-hero-cta, .sg-hero-cta .btn { width: 100%; }
+  .sg-hero-cta .btn { justify-content: center; }
+  .sg-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 14px !important; }
+  .sg-grid > div { min-width: 0; }
+  .sg-grid h3 { overflow-wrap: break-word; }
+  .sg-empty { padding: 36px 20px !important; }
+  .sg-empty .btn { width: 100%; justify-content: center; }
+  .sg-modal { padding: 12px !important; align-items: flex-end !important; }
+  .sg-modal > div { max-height: 92dvh; overflow-y: auto; border-radius: 20px !important; }
+  .sg-modal > div > div { padding-left: 18px !important; padding-right: 18px !important; }
+  .sg-modal form > div:last-child { flex-direction: column-reverse; }
+  .sg-modal form > div:last-child button { width: 100%; justify-content: center; }
+}
