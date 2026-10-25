@@ -57,15 +57,14 @@
    */
   function toggle() {
     const nextTheme = currentTheme() === DARK ? LIGHT : DARK;
-    if (document.startViewTransition) {
-      document.startViewTransition(() => setTheme(nextTheme));
-    } else {
-      document.documentElement.classList.add('theme-transitioning');
-      setTheme(nextTheme);
-      setTimeout(() => {
-        document.documentElement.classList.remove('theme-transitioning');
-      }, 400);
-    }
+    // Pas de startViewTransition : son instantané laisse la barre du haut et le menu latéral
+    // (fond translucide + backdrop-filter) à moitié dans l'ancien thème. Fondu CSS à la place.
+    document.documentElement.classList.add('theme-transitioning');
+    setTheme(nextTheme);
+    clearTimeout(toggle._t);
+    toggle._t = setTimeout(() => {
+      document.documentElement.classList.remove('theme-transitioning');
+    }, 450);
   }
 
   /**

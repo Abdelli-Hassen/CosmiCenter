@@ -34,6 +34,11 @@ body {
 .theme-transitioning, .theme-transitioning *, .theme-transitioning ::before, .theme-transitioning ::after {
   transition: background 0.4s ease, background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, fill 0.4s ease, stroke 0.4s ease !important;
 }
+/* Le flou d'arrière-plan est recalculé après coup pendant le fondu : on le coupe le temps du changement */
+.theme-transitioning .chrome-bar, .theme-transitioning .sidebar {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
 
 
 /* ─── Scrollbar ───────────────────────────────────────────── */

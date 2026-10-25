@@ -12,8 +12,8 @@ echo.
 echo  =========================================
 echo   CosmiCenter - Mode DEVELOPPEMENT
 echo  =========================================
-echo  Debogueur + auto-reload actifs UNIQUEMENT si FLASK_HOST=127.0.0.1 (fichier .env).
-echo  Si le serveur est expose au reseau (0.0.0.0), le debogueur est desactive automatiquement.
+echo  Local uniquement : http://127.0.0.1:8080 (le .env n'est pas pris en compte pour l'hote).
+echo  Debogueur + auto-reload actifs. Pour partager sur le reseau : run_prod.bat
 echo.
 
 call scripts\ensure_venv.bat

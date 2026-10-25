@@ -144,7 +144,7 @@ Pas à pas : **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)**.
 ### Partager la plateforme sur le réseau (tests par d'autres personnes)
 
 1. Dans `.env` : `FLASK_HOST=0.0.0.0` (et éventuellement `PUBLIC_BASE_URL=http://<ip-du-poste>:8080` pour les liens des emails).
-2. Lancer `run_prod.bat` (Waitress) ou `python app.py`.
+2. Lancer `run_prod.bat` (Waitress, production / partage réseau) ou `run_dev.bat` (`python app.py`, développement : local uniquement, débogueur actif).
 3. Les autres utilisateurs ouvrent `http://<ip-du-poste>:8080`.
 
 Dès que `FLASK_HOST` n'est pas une adresse locale, le **débogueur Werkzeug est désactivé automatiquement** (il permet d'exécuter du code à distance).

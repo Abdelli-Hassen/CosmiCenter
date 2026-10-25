@@ -2,6 +2,18 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.6.3] - 2026-10-25
+
+### 🎨 Changement de thème
+- La barre du haut et le menu latéral changent maintenant complètement de thème dès le clic (avant, ils restaient à moitié dans l'ancien thème jusqu'au changement de page). Cause : un `<style>` `!important` posé au chargement figeait le fond de `html`/`body` derrière ces zones translucides ; le fond est maintenant posé en inline sur `<html>` et mis à jour par `theme.js`. Fondu CSS à la place de `startViewTransition`, flou d'arrière-plan coupé pendant le fondu.
+
+### 🧭 Menu latéral
+- La position de défilement du menu est conservée d'une page à l'autre (avant, il revenait en haut puis redescendait en animation à chaque navigation). Le menu ne bouge plus que si l'élément actif est hors de la zone visible, et sans animation.
+
+### 🚀 Lanceurs dev / prod clarifiés
+- `run_dev.bat` (`python app.py`) est désormais **toujours** en développement : écoute sur `127.0.0.1` uniquement, débogueur et auto-reload actifs, quel que soit `FLASK_HOST` / `FLASK_ENV` du `.env` (chargé avec `override=True`, il annulait les réglages du `.bat`).
+- `run_prod.bat` (`serve.py`, Waitress) reste le seul lanceur pour la production et le partage réseau (`FLASK_HOST=0.0.0.0`), sans débogueur.
+
 ## [2.6.2] - 2026-10-20
 
 ### 📦 Projet portable (aucun chemin en dur)

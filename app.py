@@ -291,14 +291,14 @@ def create_app(config_name='default'):
 
 
 if __name__ == '__main__':
-    env = os.getenv('FLASK_ENV', 'development')
-    host = os.getenv('FLASK_HOST', '127.0.0.1')
-    app = create_app(env)
-    # app.debug a déjà été forcé à False si l'hôte n'est pas une adresse locale (voir create_app)
-    is_dev = app.debug
-    if not is_loopback(host):
-        logger.info("Serveur partagé sur le réseau : http://<ip-de-ce-poste>:%s (débogueur désactivé)",
-                    os.getenv('FLASK_PORT', 8080))
+    # `python app.py` = point d'entrée DÉVELOPPEMENT (run_dev.bat) : local uniquement, débogueur + auto-reload.
+    # Le .env est chargé avec override=True : il ne doit donc pas décider du mode ici.
+    # Pour le partage réseau / la production, utiliser run_prod.bat (serve.py, Waitress).
+    host = '127.0.0.1'
+    os.environ['FLASK_HOST'] = host
+    app = create_app('development')
+    app.debug = True
+    is_dev = True
     app.run(
         debug=is_dev,
         host=host,

@@ -23,7 +23,9 @@
         document.documentElement.style.colorScheme = theme;
         
         var bg = theme === 'dark' ? '#14122B' : '#FAF6F1';
-        document.write('<style>html, body { background-color: ' + bg + ' !important; }</style>');
+        // Fond posé en inline sur <html> seulement (theme.js le met à jour au changement de thème) :
+        // un <style> !important figeait le fond derrière la barre du haut et le menu (translucides).
+        document.documentElement.style.backgroundColor = bg;
       } catch (e) {}
     })();
   </script>
@@ -36,7 +38,7 @@
   <!-- Design System CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}?v=104">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}?v=102">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v=102">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v=103">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v=102">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tickets.css') }}?v=102">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=102">
@@ -299,6 +301,17 @@
           {% endif %}
 
         </div><!-- /nav-scroll -->
+        <script>
+          // Garde la position du menu d'une page à l'autre (restaurée avant le premier affichage)
+          (function () {
+            var el = document.querySelector('.nav-scroll');
+            if (!el) return;
+            try { el.scrollTop = parseInt(sessionStorage.getItem('chub-nav-scroll'), 10) || 0; } catch (e) {}
+            el.addEventListener('scroll', function () {
+              try { sessionStorage.setItem('chub-nav-scroll', el.scrollTop); } catch (e) {}
+            }, { passive: true });
+          })();
+        </script>
 
       </nav>
 
@@ -387,7 +400,7 @@
   <script src="{{ url_for('static', filename='js/a11y.js') }}?v=1"></script>
   <script src="{{ url_for('static', filename='js/tooltip.js') }}?v=2"></script>
   <script src="{{ url_for('static', filename='js/app.js') }}?v=102"></script>
-  <script src="{{ url_for('static', filename='js/theme.js') }}?v=102"></script>
+  <script src="{{ url_for('static', filename='js/theme.js') }}?v=103"></script>
   <script src="{{ url_for('static', filename='js/notifications.js') }}?v=102"></script>
   <script src="{{ url_for('static', filename='js/command-palette.js') }}?v=102"></script>
   <script src="{{ url_for('static', filename='js/keyboard.js') }}?v=102"></script>
@@ -396,22 +409,16 @@
   {% block extra_scripts %}{% endblock %}
 
   <script>
-    // Auto-scroll sidebar to the active navigation item
+    // Ne bouge le menu que si l'élément actif est hors de la zone visible (sans animation)
     document.addEventListener('DOMContentLoaded', () => {
       const activeNav = document.querySelector('.nav-item.active');
       const navScroll = document.querySelector('.nav-scroll');
-      
-      if (activeNav && navScroll) {
-        // Calculate position to center the active item in the scrollable area
-        const scrollPos = activeNav.offsetTop - navScroll.offsetTop - (navScroll.clientHeight / 2) + (activeNav.clientHeight / 2);
-        
-        // Only scroll if it's actually outside or near the edge of the visible area
-        if (activeNav.offsetTop > navScroll.clientHeight / 1.5 || activeNav.offsetTop < navScroll.scrollTop) {
-          navScroll.scrollTo({
-            top: scrollPos,
-            behavior: 'smooth'
-          });
-        }
+      if (!activeNav || !navScroll) return;
+
+      const box = navScroll.getBoundingClientRect();
+      const item = activeNav.getBoundingClientRect();
+      if (item.top < box.top || item.bottom > box.bottom) {
+        navScroll.scrollTop += (item.top - box.top) - (box.height - item.height) / 2;
       }
     });
   </script>
