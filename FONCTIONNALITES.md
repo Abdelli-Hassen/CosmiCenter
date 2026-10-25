@@ -472,6 +472,7 @@ Toutes les routes API requièrent `@login_required`.
 | `Statistique` | Données agrégées pour les rapports |
 | `ModeleReponse` | Modèles de réponses pré-rédigés pour les agents |
 | `BaseConnaissance` | Articles FAQ et base de connaissances |
+| `ArticleVue` | Lectures d'un article par personne (nombre de lectures, dernière lecture) ; affichées au survol de l'œil pour les gestionnaires |
 
 ---
 

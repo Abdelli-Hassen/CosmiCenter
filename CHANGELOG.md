@@ -2,6 +2,15 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.7.1] - 2026-10-26
+
+### 👁️ Base de connaissances : « qui a lu l'article »
+- Le compteur de vues compte désormais les **personnes distinctes** : ouvrir plusieurs fois le même article ne l'augmente plus.
+- Chaque personne a son propre compteur (nouvelle table `articles_connaissance_vues`, créée automatiquement au démarrage) : nombre de lectures, première et dernière lecture.
+- Au survol (ou au toucher) de l'œil, une liste déroulante affiche chaque lecteur avec son nombre de lectures (« Lu par 3 personnes · HASSEN ABDELLI : 4 fois… »), sur la page de l'article et dans la liste d'une catégorie. Visible seulement par les personnes qui peuvent créer des articles (`base_connaissance.creer`) ; les autres voient uniquement le nombre.
+- Les anciennes vues (avant cette version) restent comptées dans le total mais n'ont pas de détail par personne.
+- Test : `tests/kb_views_test.py` (11 contrôles).
+
 ## [2.7.0] - 2026-10-25
 
 ### ⌨️ Redémarrage par la touche R

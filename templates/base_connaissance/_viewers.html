@@ -1,0 +1,18 @@
+{# Liste déroulante « qui a lu l'article » : {{ viewers_pop(lecteurs) }} (lecteurs = [{nom, nb, derniere}]). #}
+{% macro viewers_pop(lecteurs) -%}
+<div class="viewers-pop" role="tooltip">
+  <div class="viewers-pop-title">Lu par {{ lecteurs|length }} personne{{ 's' if lecteurs|length != 1 else '' }}</div>
+  {% if lecteurs %}
+  <ul class="viewers-pop-list">
+    {% for l in lecteurs %}
+    <li>
+      <span class="viewers-pop-name">{{ l.nom }}</span>
+      <span class="viewers-pop-nb" title="Dernière lecture : {{ l.derniere.strftime('%d/%m/%Y %H:%M') if l.derniere else '' }}">{{ l.nb }} fois</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="viewers-pop-empty">Personne pour le moment.</div>
+  {% endif %}
+</div>
+{%- endmacro %}

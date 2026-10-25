@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "base_connaissance/_viewers.html" import viewers_pop %}
 {% block title %}{{ categorie.nom }} — Base de connaissances{% endblock %}
 
 {% block extra_head %}
@@ -90,9 +91,10 @@
                 </div>
             </div>
             <div style="text-align: right; color: var(--text-muted); font-size: .88rem; font-weight: 700;">
-                <div style="display:flex; align-items:center; gap:6px; padding: 6px 12px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 99px;">
+                <div class="{{ 'viewers' if can_see_viewers else '' }}" style="display:flex; align-items:center; gap:6px; padding: 6px 12px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 99px;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     {{ art.vues }}
+                    {% if can_see_viewers %}{{ viewers_pop(lecteurs.get(art.id, [])) }}{% endif %}
                 </div>
             </div>
         </a>

@@ -672,6 +672,21 @@ class ArticleConnaissance(db.Model):
     statut = db.Column(db.String(20), default='publie')
     categorie = db.relationship('CategorieConnaissance', back_populates='articles')
     auteur = db.relationship('Utilisateur', foreign_keys=[auteur_id])
+    lectures = db.relationship('ArticleVue', backref='article', cascade='all, delete-orphan', passive_deletes=True)
+
+
+class ArticleVue(db.Model):
+    """Lectures d'un article par utilisateur : une ligne par personne, avec son nombre de lectures."""
+    __tablename__ = 'articles_connaissance_vues'
+    __table_args__ = (db.UniqueConstraint('article_id', 'utilisateur_id', name='uq_article_vue_user'),)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    article_id = db.Column(db.String(36), db.ForeignKey('articles_connaissance.id', ondelete='CASCADE'),
+                           nullable=False, index=True)
+    utilisateur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), nullable=False)
+    nb_vues = db.Column(db.Integer, nullable=False, default=1)
+    premiere_vue = db.Column(db.DateTime, default=datetime.utcnow)
+    derniere_vue = db.Column(db.DateTime, default=datetime.utcnow)
+    utilisateur = db.relationship('Utilisateur', foreign_keys=[utilisateur_id])
 
 
 class ConfigurationSysteme(db.Model):

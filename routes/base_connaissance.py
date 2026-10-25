@@ -1,11 +1,53 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
-from models import db, ArticleConnaissance, CategorieConnaissance
+from datetime import datetime
+from sqlalchemy.exc import IntegrityError
+from models import db, ArticleConnaissance, CategorieConnaissance, ArticleVue
 
 # Note : l'URL /article/nouveau est déclarée après /article/<id> ; Flask privilégie les routes statiques,
 # « nouveau » n'est donc jamais interprété comme un identifiant d'article.
 
 base_connaissance_bp = Blueprint('base_connaissance', __name__)
+
+
+def peut_voir_lecteurs():
+    """Seuls les gestionnaires de la base (création d'articles) voient qui a lu quoi."""
+    return current_user.has_permission('base_connaissance.creer')
+
+
+def enregistrer_lecture(article_id):
+    """Compte la lecture : « vues » = nombre de personnes distinctes ; chaque personne a son propre compteur."""
+    now = datetime.utcnow()
+    updated = ArticleVue.query.filter_by(article_id=article_id, utilisateur_id=current_user.id).update(
+        {'nb_vues': ArticleVue.nb_vues + 1, 'derniere_vue': now})
+    if not updated:
+        try:
+            db.session.add(ArticleVue(article_id=article_id, utilisateur_id=current_user.id, nb_vues=1,
+                                      premiere_vue=now, derniere_vue=now))
+            ArticleConnaissance.query.filter_by(id=article_id).update({'vues': ArticleConnaissance.vues + 1})
+            db.session.flush()
+        except IntegrityError:  # deux onglets simultanés : l'autre a créé la ligne entre-temps
+            db.session.rollback()
+            ArticleVue.query.filter_by(article_id=article_id, utilisateur_id=current_user.id).update(
+                {'nb_vues': ArticleVue.nb_vues + 1, 'derniere_vue': now})
+    db.session.commit()
+
+
+def lecteurs_par_article(article_ids):
+    """{article_id: [{'nom', 'nb', 'derniere'}, …]} trié par nombre de lectures décroissant."""
+    if not article_ids:
+        return {}
+    rows = (ArticleVue.query.filter(ArticleVue.article_id.in_(list(article_ids)))
+            .order_by(ArticleVue.nb_vues.desc(), ArticleVue.derniere_vue.desc()).all())
+    out = {}
+    for r in rows:
+        u = r.utilisateur
+        out.setdefault(r.article_id, []).append({
+            'nom': u.nom_complet if u else 'Utilisateur supprimé',
+            'nb': r.nb_vues,
+            'derniere': r.derniere_vue,
+        })
+    return out
 
 @base_connaissance_bp.route('/')
 @login_required
@@ -25,7 +67,9 @@ def categorie(id):
         return redirect(url_for('tickets.mes_tickets'))
 
     cat = CategorieConnaissance.query.get_or_404(id)
-    return render_template('base_connaissance/categorie.html', categorie=cat)
+    lecteurs = lecteurs_par_article([a.id for a in cat.articles]) if peut_voir_lecteurs() else {}
+    return render_template('base_connaissance/categorie.html', categorie=cat, lecteurs=lecteurs,
+                           can_see_viewers=peut_voir_lecteurs())
 
 @base_connaissance_bp.route('/article/<string:id>')
 @login_required
@@ -35,11 +79,11 @@ def article(id):
         return redirect(url_for('tickets.mes_tickets'))
 
     art = ArticleConnaissance.query.get_or_404(id)
-    # Incrément atomique côté base (pas de perte de comptage en cas de lectures simultanées)
-    ArticleConnaissance.query.filter_by(id=id).update({'vues': ArticleConnaissance.vues + 1})
-    db.session.commit()
+    enregistrer_lecture(id)
     db.session.refresh(art)
-    return render_template('base_connaissance/article.html', article=art)
+    lecteurs = lecteurs_par_article([id]).get(id, []) if peut_voir_lecteurs() else []
+    return render_template('base_connaissance/article.html', article=art, lecteurs=lecteurs,
+                           can_see_viewers=peut_voir_lecteurs())
 
 @base_connaissance_bp.route('/article/nouveau', methods=['GET', 'POST'])
 @login_required
