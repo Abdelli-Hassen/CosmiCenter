@@ -21,6 +21,7 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Points de vente (liste) : en-tête empilé avec bouton pleine largeur, filtres sur une ligne défilante, bandeaux de cartes plus compacts (nom non répété).
 - Fiche point de vente : en-tête et boutons réorganisés, carte « Responsable / Canal officiel » sur une colonne (e-mails qui passent à la ligne), filtres de statut en grille 3 × 2, recherche et priorité pleine largeur.
 - Entreprises & partenaires (liste) : en-tête empilé, 4 tuiles de statistiques 2 × 2 sans texte coupé, filtres et recherche pleine largeur, cartes sur une colonne.
+- Fiche entreprise : logo + nom sur une ligne, coordonnées en grille (e-mail pleine largeur), boutons Modifier / Archiver / Supprimer en grille, liste des collaborateurs en cartes.
 - Messagerie : liste des conversations puis conversation plein écran avec bouton retour.
 - `run_prod.bat` / `serve.py` : la console affiche, à chaque démarrage, les adresses à ouvrir depuis un téléphone sur le Wi-Fi / réseau actuel du poste (la première = connexion active) ; si le serveur est en local uniquement (`FLASK_HOST=127.0.0.1`), elle le signale et indique quoi changer.
 
