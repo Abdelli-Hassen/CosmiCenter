@@ -16,10 +16,7 @@
 
   <div class="page-header" style="align-items: center;">
     <div class="page-header-left" style="display:flex; flex-direction:row; align-items:center; gap:16px;">
-      <a href="{{ url_for('admin.tableau_bord') if est_admin else url_for('tickets.nouveau') }}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px; font-weight: 600; border-radius: 12px; display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); background: var(--surface-2); border: 1px solid var(--border-subtle); box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        Retour
-      </a>
+      <button type="button" class="back-btn" style="margin:0;" title="Retour" aria-label="Retour" onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href='{{ url_for('admin.tableau_bord') if est_admin else url_for('tickets.nouveau') }}'; }"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
         <h1 class="page-title" style="margin:0;">Catégories de tickets</h1>
         <div style="font-size:12px;color:var(--text-muted);margin-top:2px;"><span id="catCount">{{ categories|length }}</span> catégories · définissent le délai de résolution, la priorité et le département de chaque incident ou demande</div>
