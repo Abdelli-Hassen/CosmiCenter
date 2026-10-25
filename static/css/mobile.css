@@ -392,10 +392,10 @@
   .dt-filters { width: 100%; display: grid !important; grid-template-columns: repeat(3, 1fr); }
   .dt-filters .tfilter { padding: 8px 4px !important; font-size: 12px !important; text-align: center; }
   #ticketCount { margin-left: 0 !important; }
-  .ticket-list { max-height: none !important; }
+  .ticket-list { display: block !important; max-height: none !important; overflow: visible !important; }
   .ticket-row {
     display: grid !important; grid-template-columns: auto 1fr; grid-template-areas: "id status" "info info";
-    gap: 8px 10px; align-items: center; padding: 14px 16px !important;
+    gap: 8px 10px; align-items: center; padding: 14px 16px !important; height: auto !important; min-height: 0; overflow: visible;
   }
   .ticket-row .ticket-id { grid-area: id; margin-right: 0 !important; justify-self: start; }
   .ticket-row .ticket-status { grid-area: status; margin-left: 0 !important; justify-self: end; }
