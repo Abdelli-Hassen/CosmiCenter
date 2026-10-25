@@ -503,3 +503,28 @@
   .pdv-lead-card > div > div:last-child > div:nth-child(n+3) { margin-top: 4px !important; font-size: 12.5px !important; line-height: 1.3; }
   .pdv-lead-card > div > div:last-child > div:nth-child(2) > a[href^="mailto"] { font-size: clamp(12px, 3.7vw, 14px) !important; font-weight: 700; }
 }
+
+/* ---- Entreprises & partenaires : liste ---- */
+@media (max-width: 768px) {
+  .companies-page { padding: 16px 14px 40px !important; }
+  .comp-hero { flex-direction: column !important; align-items: stretch !important; gap: 14px !important; }
+  .comp-hero-title { font-size: 24px !important; }
+  .comp-hero > * { min-width: 0; }
+  .comp-hero .btn-primary-comp { width: 100%; justify-content: center; }
+  /* Statistiques : 4 petites tuiles 2 x 2, chiffre + libellé complet, sans phrase d'aide */
+  .comp-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .comp-stat-card { flex-direction: column; align-items: flex-start !important; gap: 8px !important; padding: 14px !important; min-width: 0; }
+  .comp-stat-icon-wrap { width: 36px !important; height: 36px !important; }
+  .comp-stat-body { min-width: 0; width: 100%; }
+  .comp-stat-num { font-size: 26px !important; line-height: 1; }
+  .comp-stat-lbl { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; font-size: 11px !important; line-height: 1.25; margin-top: 4px; }
+  .comp-stat-hint { display: none !important; }
+  /* Filtres */
+  .comp-controls-bar { flex-direction: column !important; align-items: stretch !important; padding: 12px !important; gap: 10px !important; }
+  .comp-controls-bar > div { width: 100%; min-width: 0; flex-direction: column; align-items: stretch !important; }
+  .comp-filter-select-wrap, .comp-filter-select { width: 100%; box-sizing: border-box; }
+  .comp-search-wrap { width: 100% !important; max-width: none !important; min-width: 0; box-sizing: border-box; }
+  .comp-search-input { width: 100%; font-size: 16px !important; }
+  .comp-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 14px !important; }
+  .comp-card { min-width: 0; }
+}
