@@ -205,8 +205,8 @@
   .premium-table td { display: block !important; padding: 0 !important; border: 0 !important; width: auto !important; min-width: 0 !important; }
   /* Ligne 1 : case à cocher + titre ; ligne 2 : le reste (n°, priorité, statut, assigné, date…) */
   .premium-table td:first-child:has(input[type="checkbox"]) { order: -2; flex: 0 0 auto; }
-  .premium-table td:has(.ticket-title) { order: -1; flex: 1 1 calc(100% - 40px); }
-  .premium-table:not(:has(input[type="checkbox"])) td:has(.ticket-title) { flex-basis: 100%; }
+  .premium-table td:has(.ticket-title), .premium-table td.tk-main { order: -1; flex: 1 1 calc(100% - 40px); }
+  .premium-table:not(:has(input[type="checkbox"])) td:has(.ticket-title), .premium-table:not(:has(input[type="checkbox"])) td.tk-main { flex-basis: 100%; }
   .premium-table td:last-child:not(:has(a, button, input, select)):not(:first-child) { display: none !important; }
   .segmented-control { flex-wrap: nowrap !important; }
   .segmented-control a, .segmented-control button { white-space: nowrap; flex-shrink: 0; }
