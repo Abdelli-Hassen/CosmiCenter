@@ -636,3 +636,22 @@
   .tickets-table.no-cards .ut-date { grid-area: date; justify-self: end; font-size: 12px; }
   .tickets-table.no-cards .ut-go { display: none !important; }
 }
+
+/* Fiche utilisateur : tickets, finitions (cartes séparées, onglets sur une ligne) */
+@media (max-width: 768px) {
+  .user-tickets-title-wrap { gap: 10px; flex-wrap: nowrap; }
+  .user-tickets-title { font-size: 15px !important; min-width: 0; }
+  .ut-count { flex-shrink: 0; }
+  .ticket-filter-tabs { display: grid !important; grid-template-columns: repeat(3, 1fr); width: 100%; box-sizing: border-box; }
+  .ticket-tab-btn { white-space: nowrap; padding: 8px 4px !important; font-size: 12px !important; text-align: center; }
+  .tickets-table-wrap { padding: 12px !important; overflow: visible !important; }
+  .tickets-table.no-cards { display: flex; flex-direction: column; gap: 10px; }
+  .tickets-table.no-cards tbody { display: flex; flex-direction: column; gap: 10px; }
+  .tickets-table.no-cards .ut-row {
+    background: var(--surface-2); border: 1px solid var(--border-subtle) !important; border-radius: 14px;
+    padding: 12px 14px; cursor: pointer; box-shadow: var(--shadow-xs); position: relative; overflow: hidden;
+  }
+  .tickets-table.no-cards .ut-row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brand); opacity: .75; }
+  .tickets-table.no-cards .ut-row:active { transform: scale(.99); }
+  .tickets-table.no-cards .ut-role { margin-top: 2px; }
+}
