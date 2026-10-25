@@ -44,9 +44,16 @@ if __name__ == '__main__':
     print(f"=================================================")
     print(f" CosmiCenter - Mode PRODUCTION (Waitress)")
     print(f" Serveur en ecoute sur : http://{host}:{port}")
-    if host in ('0.0.0.0', '::'):
-        print(f" A ouvrir depuis un autre appareil (meme reseau) :")
-        for i, ip in enumerate(local_ips()):
+    ips = local_ips()
+    if host.startswith('127.') or host == 'localhost':
+        print(f" Local uniquement : les autres appareils (telephone...) ne pourront PAS se connecter.")
+        print(f" Pour le partage reseau : FLASK_HOST=0.0.0.0 dans .env, puis relancer.")
+    elif not ips:
+        print(f" Aucune adresse reseau detectee : connectez ce poste a un Wi-Fi / reseau, puis relancez.")
+    else:
+        # Calculé à chaque démarrage : suit le Wi-Fi / le réseau sur lequel ce poste est connecté
+        print(f" A ouvrir depuis un autre appareil (meme Wi-Fi / reseau) :")
+        for i, ip in enumerate(ips):
             print(f"   http://{ip}:{port}" + ("   <-- principale (celle du reseau actif)" if i == 0 else ""))
     print(f" Appuyez sur CTRL+C pour arreter le serveur")
     print(f"=================================================")
