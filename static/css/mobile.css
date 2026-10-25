@@ -571,3 +571,20 @@
   form[style*="flex-direction:column"] > div[style*="justify-content:flex-end"] { flex-direction: column-reverse; gap: 10px !important; }
   form[style*="flex-direction:column"] > div[style*="justify-content:flex-end"] > * { width: 100%; justify-content: center; text-align: center; box-sizing: border-box; min-height: 46px; }
 }
+
+/* Fiche entreprise : une carte compacte par collaborateur */
+@media (max-width: 768px) {
+  .comp-table.no-cards, .comp-table.no-cards tbody { display: block; width: 100%; }
+  .comp-table.no-cards thead { display: none; }
+  .comp-table.no-cards tr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 8px; align-items: center; position: relative; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); }
+  .comp-table.no-cards tr:last-child { border-bottom: 0; }
+  .comp-table.no-cards td { display: block; padding: 0 !important; border: 0 !important; min-width: 0; background: transparent !important; }
+  .comp-table.no-cards .cu-user { grid-column: 1 / -1; padding-right: 84px !important; }
+  .comp-table.no-cards .cu-user .user-email-txt { overflow-wrap: anywhere; }
+  .comp-table.no-cards .cu-poste { grid-column: 1 / -1; font-size: 12.5px; color: var(--text-secondary); }
+  .comp-table.no-cards .cu-dept { grid-column: auto; }
+  .comp-table.no-cards .cu-role { grid-column: auto; justify-self: start; min-width: 0; }
+  .comp-table.no-cards .cu-role .badge { white-space: normal; text-align: left; padding-left: 0; background: none; color: var(--text-muted); }
+  .comp-table.no-cards .cu-dept:empty, .comp-table.no-cards .cu-dept span[style*="text-muted"] { display: none; }
+  .comp-table.no-cards .cu-act { position: absolute; top: 12px; right: 14px; }
+}

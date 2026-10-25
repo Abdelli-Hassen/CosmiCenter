@@ -24,6 +24,7 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Fiche entreprise : logo + nom sur une ligne, coordonnées en grille (e-mail pleine largeur), boutons Modifier / Archiver / Supprimer en grille, liste des collaborateurs en cartes.
 - Fiche entreprise : « Rattacher un collaborateur » devient une recherche en direct (nom ou e-mail) avec une courte liste défilante, au lieu d'une liste déroulante géante ; le bouton reste désactivé tant qu'aucune personne n'est choisie. Boutons d'action (Modifier, Archiver, Supprimer, Rattacher) enfin stylés.
 - Formulaire entreprise (ajout / modification) refait avec des classes `cf-*` : une colonne, champs 16 px, boutons « Enregistrer » puis « Annuler » pleine largeur sur téléphone ; le bouton `.btn-action` est défini globalement (components.css).
+- Fiche entreprise : chaque collaborateur est une carte compacte (avatar + nom + e-mail, poste, département, rôle, bouton « Détacher » en haut à droite) au lieu de 5 lignes « libellé : valeur ».
 - Messagerie : liste des conversations puis conversation plein écran avec bouton retour.
 - `run_prod.bat` / `serve.py` : la console affiche, à chaque démarrage, les adresses à ouvrir depuis un téléphone sur le Wi-Fi / réseau actuel du poste (la première = connexion active) ; si le serveur est en local uniquement (`FLASK_HOST=127.0.0.1`), elle le signale et indique quoi changer.
 
