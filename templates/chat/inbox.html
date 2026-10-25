@@ -28,16 +28,6 @@
 
   /* ── Téléphone : liste OU conversation (bouton retour) ── */
   .chat-back-btn { display: none; background: none; border: none; color: var(--text-primary); cursor: pointer; padding: 6px; margin-right: 4px; border-radius: 8px; }
-  @media (max-width: 768px) {
-    .chat-layout { border-radius: 0; border-left: none; }
-    .chat-sidebar { width: 100%; flex: 1; }
-    .chat-main { display: none; }
-    .chat-layout:has(#chatInterface[style*="display: flex"]) .chat-sidebar { display: none; }
-    .chat-layout:has(#chatInterface[style*="display: flex"]) .chat-main { display: flex; width: 100%; }
-    .chat-back-btn { display: inline-flex; }
-    .chat-active-header { padding-left: 8px; padding-right: 8px; }
-    .msg-img { max-width: 100%; }
-  }
 
   /* ── SIDEBAR ── */
   .chat-sidebar {

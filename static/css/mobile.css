@@ -47,6 +47,10 @@
   #sidebar.mobile-open { visibility: visible; transition: transform var(--duration-moderate) var(--ease-default); }
 
   .content-canvas { -webkit-overflow-scrolling: touch; }
+
+  /* Racine de chaque page : jamais plus large que l'écran (un tableau large ou une marge auto
+     « margin: 0 auto » la faisait grandir jusqu'à la largeur du contenu → page coupée à droite) */
+  .content-canvas > * { width: 100%; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box; }
 }
 
 /* ─── Téléphone ───────────────────────────────────────────── */
@@ -135,13 +139,149 @@
 
 /* ─── Petit téléphone ─────────────────────────────────────── */
 @media (max-width: 480px) {
-  .dashboard-grid-4, .stats-grid, .stats-grid-4, .pdv-stats-grid, .user-kpi-grid, .comp-stats-grid, .kpi-grid {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
   .page-title { font-size: var(--text-xl); }
 }
 
 /* Respecte « réduire les animations » */
 @media (prefers-reduced-motion: reduce) {
   #sidebar { transition: none !important; }
+}
+
+/* ─── Correctifs par type de composant (téléphone) ────────── */
+@media (max-width: 768px) {
+  /* Bandeaux, barres d'actions, onglets, pastilles : retour à la ligne au lieu de déborder */
+  [class*="hero-stats"], [class*="hero-actions"], [class*="-actions"], [class*="toolbar"], .fc-toolbar,
+  .quick-actions, .filter-bar, .tab-nav, .perf-seg, .save-bar {
+    flex-wrap: wrap !important;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .hero-stats { padding: 12px 16px !important; gap: 12px !important; }
+  .tab-nav { display: flex !important; overflow-x: auto; flex-wrap: nowrap !important; }
+  .tab-nav-item { padding: 10px 14px !important; white-space: nowrap; }
+  .save-bar { position: static !important; padding: 12px 16px !important; gap: 10px; }
+  .settings-hero, .reports-hero, .perf-hero, .user-hero { flex-wrap: wrap; padding: 18px 16px !important; }
+
+  /* Grilles « autant de colonnes que possible » avec une largeur minimale trop grande pour un téléphone */
+  .comp-grid, .idea-grid, .acces-grid, [class*="-grid"][style*="minmax"] {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)) !important;
+  }
+
+  /* Choix du type de ticket : les cartes se répartissent sur plusieurs lignes */
+  :has(> .type-card) { flex-wrap: wrap; }
+  .type-card { min-width: 0 !important; flex: 1 1 30% !important; padding: 12px 6px !important; }
+
+  /* Éléments flex : autorisés à rétrécir (sinon un long texte pousse la page) */
+  .page-header-left, .user-hero-info, .ticket-title-block, .chat-item-info { min-width: 0; }
+  h1, h2, h3, .page-title { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 768px) {
+  /* Éléments de grille / de mise en page : autorisés à rétrécir (sinon un tableau ou un long texte élargit la colonne) */
+  [class*="grid"] > *, [class*="layout"] > *, [class*="-row"] > *, [class*="-cols"] > *,
+  .settings-page > *, .admin-page > *, .perms-panel-wrap, .card, .settings-panel, .save-bar { min-width: 0; max-width: 100%; }
+
+  /* Lignes « flex » écrites en dur (en-têtes, barres de filtres) : retour à la ligne */
+  [style*="space-between"], form[style*="display:flex"], form[style*="display: flex"] { flex-wrap: wrap !important; }
+  form[style*="display:flex"] > *, form[style*="display: flex"] > * { flex: 1 1 150px; min-width: 0; }
+  form[style*="display:flex"] > input[type="search"], form[style*="display: flex"] > input[type="search"] { flex-basis: 100%; }
+
+  /* Pastilles de statistiques des bandeaux (profil, sécurité, notifications) */
+  .hero-stats { width: 100%; justify-content: space-between; }
+  .hero-stat { flex: 1 1 0; min-width: 0 !important; padding: 0 6px !important; }
+}
+
+/* ─── Tableaux de tickets : une carte par ticket sur téléphone ─ */
+@media (max-width: 768px) {
+  .premium-table-wrapper { overflow: visible !important; }
+  .premium-table, .premium-table tbody { display: block !important; min-width: 0 !important; width: 100%; overflow: visible !important; }
+  .premium-table thead { display: none !important; }
+  .premium-table tbody tr {
+    display: flex !important; flex-wrap: wrap; align-items: center; gap: 8px 14px;
+    padding: 12px 14px !important; border-bottom: 1px solid var(--border-subtle);
+  }
+  .premium-table tbody tr:last-child { border-bottom: none; }
+  .premium-table td { display: block !important; padding: 0 !important; border: 0 !important; width: auto !important; min-width: 0 !important; }
+  /* Ligne 1 : case à cocher + titre ; ligne 2 : le reste (n°, priorité, statut, assigné, date…) */
+  .premium-table td:first-child:has(input[type="checkbox"]) { order: -2; flex: 0 0 auto; }
+  .premium-table td:has(.ticket-title) { order: -1; flex: 1 1 calc(100% - 40px); }
+  .premium-table:not(:has(input[type="checkbox"])) td:has(.ticket-title) { flex-basis: 100%; }
+  .premium-table td:last-child:not(:has(a, button, input, select)):not(:first-child) { display: none !important; }
+  .segmented-control { flex-wrap: nowrap !important; }
+  .segmented-control a, .segmented-control button { white-space: nowrap; flex-shrink: 0; }
+}
+
+@media (max-width: 768px) {
+  /* Grilles écrites en dur dans les pages (« 2.5fr 1fr », « 1fr 1fr »…) : une seule colonne */
+  [style*="grid-template-columns"][style*="fr "]:not([style*="repeat"]) { grid-template-columns: minmax(0, 1fr) !important; }
+  /* Cartes de statistiques plus compactes (2 par ligne) */
+  .dashboard-grid-4 > *, .stats-grid > *, .kpi-grid > * { padding: 14px !important; }
+}
+
+@media (max-width: 768px) {
+  /* Listes : filtres en pleine largeur, pastille de compteur sans retour à la ligne */
+  .users-select, .depts-filter-pills, [class$="-select"] { width: 100%; max-width: 100%; }
+  .depts-count-pill, [class*="count-pill"], [class*="pdv-count"] { white-space: nowrap; flex-shrink: 0; }
+}
+
+/* ─── Fiches (utilisateur, département, point de vente) ──── */
+@media (max-width: 768px) {
+  h1, h2, h3, .page-title { overflow-wrap: break-word; word-break: normal; }
+  p, a, dd { overflow-wrap: anywhere; }
+
+  /* Fiche utilisateur : avatar + nom empilés, centrés ; cartes de chiffres compactes */
+  .user-hero-body { padding: 0 16px 20px !important; justify-content: center; }
+  .user-hero-left { flex-direction: column; align-items: center !important; text-align: center; min-width: 0 !important; width: 100%; }
+  .user-hero-actions { justify-content: center; width: 100%; }
+  .user-hero-left > div:last-child { min-width: 0; max-width: 100%; }
+  .user-hero-left [class*="tags"], .user-hero-left [class*="badges"], .user-hero-left [class*="meta"] { justify-content: center; }
+  .user-kpi-grid > * { padding: 14px 10px !important; min-width: 0; overflow: hidden; }
+  .user-prop-row { flex-wrap: wrap; gap: 6px 12px; }
+  .user-prop-row > * { min-width: 0; max-width: 100%; }
+
+  /* Fiche département : fil d'Ariane + actions sur plusieurs lignes, titre lisible */
+  .dept-header { flex-wrap: wrap; gap: 12px; }
+  .dept-title-group { min-width: 0; flex: 1 1 100%; }
+  .dept-title { font-size: 22px !important; flex-wrap: wrap; }
+}
+
+@media (max-width: 768px) {
+  .kpi-card { flex-direction: column; align-items: flex-start !important; gap: 10px !important; padding: 14px !important; width: 100%; min-width: 0; }
+  .kpi-card .kpi-info { width: 100%; }
+  .user-prop-row { flex-direction: column; align-items: flex-start !important; gap: 6px !important; }
+  .user-prop-lead { width: auto !important; }
+  .user-prop-val { width: 100%; text-align: left !important; justify-content: flex-start !important; flex-wrap: wrap; overflow-wrap: anywhere; }
+}
+
+/* ─── Messagerie : liste OU conversation (bouton retour dans la page) ─ */
+@media (max-width: 768px) {
+  .chat-layout { height: calc(100vh - var(--chrome-height)) !important; height: calc(100dvh - var(--chrome-height)) !important; border-radius: 0 !important; border-left: none !important; }
+  .chat-sidebar { width: 100% !important; flex: 1 1 auto; min-width: 0; }
+  .chat-main { display: none !important; width: 100%; min-width: 0; }
+  .chat-layout:has(#chatInterface[style*="display: flex"]) .chat-sidebar { display: none !important; }
+  .chat-layout:has(#chatInterface[style*="display: flex"]) .chat-main { display: flex !important; }
+  .chat-back-btn { display: inline-flex !important; }
+  .chat-active-header { padding-left: 8px !important; padding-right: 8px !important; }
+  .msg-img { max-width: 100%; }
+}
+
+@media (max-width: 768px) {
+  /* Tableaux larges : largeur minimale confortable → défilement horizontal plutôt que colonnes écrasées */
+  .ptable, .rtable, .data-table, .ref-table, .comp-table, .tickets-table, .pdv-equip-compact-table { min-width: 560px; }
+  td, th { overflow-wrap: normal; word-break: normal; }
+  .badge, [class*="badge"], [class*="pill"], [class*="status"] { white-space: nowrap; }
+}
+
+@media (max-width: 768px) {
+  /* Bandeau de profil : avatar, nom puis statistiques les uns sous les autres */
+  .profile-hero { flex-direction: column !important; align-items: center !important; text-align: center; padding: 24px 16px !important; gap: 14px !important; }
+  .profile-hero-info { width: 100%; }
+  .profile-hero-name { font-size: 24px !important; }
+  .profile-hero-role { justify-content: center; flex-wrap: wrap; }
+  .profile-avatar-large { width: 84px; height: 84px; font-size: 28px; }
+
+  /* Formulaires : cases à cocher alignées à gauche, pas de débordement des cartes */
+  label:has(> input[type="checkbox"]), label:has(> input[type="radio"]) { justify-content: flex-start; text-align: left; }
+  .settings-page, .card, .card-body, .card-header { max-width: 100%; box-sizing: border-box; }
+  .settings-page { padding-left: 0; padding-right: 0; }
 }
