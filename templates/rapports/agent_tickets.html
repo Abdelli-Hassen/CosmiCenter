@@ -13,9 +13,9 @@
 
 <div class="perf-page">
 
-  <a class="back-link" href="{{ url_for('rapports.performance_agents', periode=f.periode) }}">
+  <a class="back-link" href="{{ url_for('rapports.performance_agents', periode=f.periode) }}" aria-label="Tous les agents">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-    Tous les agents
+    <span>Tous les agents</span>
   </a>
 
   <div class="perf-hero">
@@ -63,16 +63,16 @@
     <div class="card-head"><h2>À traiter maintenant ({{ to_handle|length }})</h2><p>Les tickets en retard sont en haut de la liste.</p></div>
     <div class="scroll">
     {% if to_handle %}
-    <table class="ptable">
+    <table class="ptable no-cards at-table">
       <thead><tr><th>N°</th><th>Ticket</th><th>Priorité</th><th>Statut</th><th>Échéance</th></tr></thead>
       <tbody>
       {% for t in to_handle %}
       <tr class="click" onclick="window.location.href='{{ url_for('tickets.detail', ticket_id=t.id) }}'">
-        <td class="strong">#{{ t.numero }}</td>
-        <td class="strong">{{ t.titre }}<div class="who-sub">{{ t.departement }}</div></td>
-        <td>{{ prio(t.priorite) }}</td>
-        <td>{{ statut_labels.get(t.statut, t.statut) }}</td>
-        <td>{% if t.late %}<span class="pill bad">En retard de {{ t.late_by }}</span>{% elif t.due %}{{ t.due.strftime('%d/%m/%Y %H:%M') }}{% else %}—{% endif %}</td>
+        <td class="strong at-num">#{{ t.numero }}</td>
+        <td class="strong at-title">{{ t.titre }}<div class="who-sub">{{ t.departement }}</div></td>
+        <td class="at-prio">{{ prio(t.priorite) }}</td>
+        <td class="at-stat">{{ statut_labels.get(t.statut, t.statut) }}</td>
+        <td class="at-due" data-l="Échéance">{% if t.late %}<span class="pill bad">En retard de {{ t.late_by }}</span>{% elif t.due %}{{ t.due.strftime('%d/%m/%Y %H:%M') }}{% else %}—{% endif %}</td>
       </tr>
       {% endfor %}
       </tbody>
@@ -86,17 +86,17 @@
     <div class="card-head"><h2>Tickets résolus sur la période ({{ done|length }})</h2><p>« Dans les temps » = résolu avant l'échéance SLA.</p></div>
     <div class="scroll">
     {% if done %}
-    <table class="ptable">
+    <table class="ptable no-cards at-table at-done">
       <thead><tr><th>N°</th><th>Ticket</th><th>Résolu le</th><th class="num">Délai</th><th>SLA</th><th class="num">Note</th></tr></thead>
       <tbody>
       {% for t in done %}
       <tr class="click" onclick="window.location.href='{{ url_for('tickets.detail', ticket_id=t.id) }}'">
-        <td class="strong">#{{ t.numero }}</td>
-        <td class="strong">{{ t.titre }}<div class="who-sub">{{ t.departement }}</div></td>
-        <td>{{ t.resolved_at.strftime('%d/%m/%Y %H:%M') if t.resolved_at else '—' }}</td>
-        <td class="num">{{ t.duree }}</td>
-        <td>{% if t.sla is none %}<span class="pill muted">—</span>{% elif t.sla %}<span class="pill good">Dans les temps</span>{% else %}<span class="pill bad">Hors délai</span>{% endif %}</td>
-        <td class="num">{{ (t.note ~ ' ★') if t.note else '—' }}</td>
+        <td class="strong at-num">#{{ t.numero }}</td>
+        <td class="strong at-title">{{ t.titre }}<div class="who-sub">{{ t.departement }}</div></td>
+        <td class="at-date" data-l="Résolu le">{{ t.resolved_at.strftime('%d/%m/%Y %H:%M') if t.resolved_at else '—' }}</td>
+        <td class="num at-dur" data-l="Délai">{{ t.duree }}</td>
+        <td class="at-sla">{% if t.sla is none %}<span class="pill muted">—</span>{% elif t.sla %}<span class="pill good">Dans les temps</span>{% else %}<span class="pill bad">Hors délai</span>{% endif %}</td>
+        <td class="num at-note" data-l="Note">{{ (t.note ~ ' ★') if t.note else '—' }}</td>
       </tr>
       {% endfor %}
       </tbody>

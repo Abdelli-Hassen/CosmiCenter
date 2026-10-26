@@ -20,7 +20,7 @@
       <h1 class="perf-title">Performance des agents</h1>
       <p class="perf-sub">Qui traite les tickets, et à quelle vitesse ? · {{ labels.get(f.periode, '30 derniers jours') }}</p>
     </div>
-    <div class="perf-seg">
+    <div class="perf-seg" role="tablist">
       {% for code, label in periodes %}<a href="{{ url_for('rapports.performance_agents', periode=code) }}" class="{{ 'active' if f.periode == code }}">{{ label }}</a>{% endfor %}
     </div>
   </div>
@@ -61,7 +61,7 @@
     <div class="card-head"><h2>Classement</h2><p>Du plus grand nombre de tickets résolus au plus petit.</p></div>
     <div class="scroll">
     {% if rows %}
-    <table class="ptable">
+    <table class="ptable no-cards pr-table">
       <thead><tr>
         <th style="width:44px;">#</th><th>Agent</th>
         <th class="num">Résolus{{ info_tip("Tickets terminés par l'agent sur la période choisie.") }}</th>
@@ -74,22 +74,23 @@
       </tr></thead>
       <tbody>
       {% for r in rows %}
-      <tr class="click" onclick="window.location.href='{{ url_for('rapports.agent_tickets', agent_id=r.agent.id, periode=f.periode) }}'">
-        <td class="rank">{% if r.rank == 1 %}🥇{% elif r.rank == 2 %}🥈{% elif r.rank == 3 %}🥉{% else %}{{ r.rank or '–' }}{% endif %}</td>
-        <td>
+      <tr class="click{{ ' is-idle' if r.situation == 'inactif' }}" onclick="window.location.href='{{ url_for('rapports.agent_tickets', agent_id=r.agent.id, periode=f.periode) }}'">
+        <td class="rank pr-rank">{% if r.rank == 1 %}🥇{% elif r.rank == 2 %}🥈{% elif r.rank == 3 %}🥉{% else %}{{ r.rank or '–' }}{% endif %}</td>
+        <td class="pr-agent">
           <div class="who">
+            <span class="rank-inline">{% if r.rank == 1 %}🥇{% elif r.rank == 2 %}🥈{% elif r.rank == 3 %}🥉{% elif r.rank %}#{{ r.rank }}{% endif %}</span>
             <div class="av">{% if r.agent.photo_profil %}<img src="{{ url_for('static', filename='uploads/' + r.agent.photo_profil) }}" alt="">{% else %}{{ (r.agent.prenom[:1] ~ r.agent.nom[:1])|upper }}{% endif %}</div>
             <div style="min-width:0;"><div class="who-name">{{ r.agent.nom_complet }}</div><div class="who-sub">{{ r.agent.departement.nom if r.agent.departement else (r.agent.poste or '—') }}</div></div>
           </div>
         </td>
-        <td class="num strong">{{ r.resolved }}</td>
-        <td class="num">{{ r.open }}</td>
-        <td class="num">{% if r.overdue %}<span class="pill bad">{{ r.overdue }}</span>{% else %}0{% endif %}</td>
-        <td class="num">{{ r.res_avg }}</td>
-        <td class="num">{{ sla_pill(r.sla) }}</td>
-        <td class="num">{% if r.csat is not none %}{{ fmt1(r.csat) }} / 5{% else %}—{% endif %}</td>
-        <td><span class="pill {{ sit[r.situation][0] }}">{{ sit[r.situation][1] }}</span></td>
-        <td class="go">›</td>
+        <td class="num strong pr-res" data-l="Résolus">{{ r.resolved }}</td>
+        <td class="num pr-open" data-l="En cours">{{ r.open }}</td>
+        <td class="num pr-late" data-l="En retard">{% if r.overdue %}<span class="pill bad">{{ r.overdue }}</span>{% else %}0{% endif %}</td>
+        <td class="num pr-avg" data-l="Délai moyen">{{ r.res_avg }}</td>
+        <td class="num pr-sla" data-l="Respect SLA">{{ sla_pill(r.sla) }}</td>
+        <td class="num pr-csat" data-l="Satisfaction">{% if r.csat is not none %}{{ fmt1(r.csat) }} / 5{% else %}—{% endif %}</td>
+        <td class="pr-sit"><span class="pill {{ sit[r.situation][0] }}">{{ sit[r.situation][1] }}</span></td>
+        <td class="go pr-go">›</td>
       </tr>
       {% endfor %}
       </tbody>
