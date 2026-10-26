@@ -848,3 +848,39 @@
   .panel-footer .btn-action { justify-content: center; min-height: 44px; }
   .panel-footer > .btn-action { width: 100%; }
 }
+
+/* ---- Accès à distance ---- */
+@media (max-width: 768px) {
+  .reports-page { padding: 14px 12px 40px !important; }
+  .reports-page .at-hero { text-align: left !important; align-items: flex-start !important; margin-bottom: 14px !important; }
+  .reports-page .at-title { font-size: 22px !important; }
+  .reports-page .at-subtitle { font-size: 13px !important; }
+  /* Recherche pleine largeur, puis filtre ; l'affichage grille / liste n'a pas d'intérêt sur téléphone */
+  .controls-container { display: grid !important; grid-template-columns: 1fr; gap: 10px !important; margin-bottom: 14px !important; }
+  .controls-container .search-container { width: 100%; }
+  .controls-container .search-input { padding: 13px 16px 13px 46px !important; font-size: 16px !important; box-sizing: border-box; }
+  .controls-container .search-icon { left: 16px !important; width: 18px; height: 18px; }
+  .controls-container #filter-toggle { width: 100%; }
+  .controls-container #filter-toggle .layout-btn { flex: 1; min-height: 42px; }
+  .controls-container .layout-toggle:not(#filter-toggle) { display: none !important; }
+  .view-container, .view-container.grid-view, .view-container.list-view { display: flex !important; flex-direction: column; gap: 12px !important; padding-top: 0 !important; }
+  .access-card { padding: 14px !important; border-radius: 16px !important; transform: none !important; }
+  .access-card-header { gap: 12px !important; }
+  .access-name { font-size: 16px !important; overflow-wrap: anywhere; }
+  .access-company { font-size: 12px !important; }
+  .access-details-wrap { gap: 8px !important; }
+  .access-detail { gap: 10px; min-width: 0; }
+  .access-value { overflow-wrap: anywhere; text-align: right; font-size: 13px !important; }
+  .access-actions { padding-top: 12px !important; gap: 8px !important; flex-wrap: nowrap; }
+  .access-actions .btn-action { min-height: 44px; padding: 10px 12px !important; }
+  .access-actions .btn-action.primary { flex: 1 1 auto; min-width: 0; white-space: nowrap; }
+  .access-actions .btn-copy { flex: 0 0 48px; }
+  .no-results-hint, .empty-state { text-align: center; }
+  /* Fenêtre profil : feuille du bas */
+  .user-modal-overlay { align-items: flex-end !important; padding: 0 !important; }
+  .user-modal-overlay .modal-content { width: 100% !important; max-width: none !important; border-radius: 20px 20px 0 0 !important; max-height: 90dvh; overflow-y: auto; }
+}
+@media (max-width: 768px) {
+  .controls-container #filter-toggle .layout-btn { gap: 6px; font-size: 13px; font-weight: 700; font-family: inherit; }
+  .controls-container #filter-toggle .layout-lbl { display: inline; }
+}
