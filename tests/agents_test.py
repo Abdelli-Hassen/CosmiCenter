@@ -63,7 +63,7 @@ try:
         check(f"period {p} ok", c.get(f"/rapports/performance-agents?periode={p}").status_code == 200)
     # la ligne de l'agent 0 doit afficher ses chiffres de la base
     row = re.search(re.escape(ag_names[0]) + r".*?</tr>", html[html.index("<table"):], re.S).group(0)
-    nums = re.findall(r'class="num[^"]*">(?:<span[^>]*>)?(\d+)', row)
+    nums = re.findall(r'class="num[^"]*"[^>]*>(?:<span[^>]*>)?(\d+)', row)
     check("row numbers match DB (resolved, in progress)", nums[:2] == [str(exp_resolved), str(exp_open)], (nums[:2], exp_resolved, exp_open))
     # sous-page
     d = c.get(f"/rapports/performance-agents/{ag_ids[0]}/tickets"); dh = d.get_data(as_text=True)
