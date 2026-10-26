@@ -8,6 +8,10 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Liste : périodes en 4 boutons égaux, podium et tuiles compacts (2 colonnes), classement en **cartes agent** (rang, photo, nom, situation, puis résolus / en cours / en retard / délai moyen, SLA et satisfaction) ; les agents sans activité tiennent sur une seule ligne.
 - Fiche agent : bouton « ← » rond, résumé et tuiles en 2 colonnes, tickets « à traiter » et « résolus » en cartes (n° · priorité · statut, titre, échéance ou résolu le / délai / note).
 
+### 🔐 Page Rôles sur téléphone
+- Liste des rôles en cartes pleine largeur (nom, badge Système, description, utilisateurs / pages / actions, boutons modifier / désactiver / supprimer) et boutons d'en-tête en grille.
+- Un appui sur un rôle ouvre l'**éditeur des autorisations en plein écran** (bouton « ← » pour revenir à la liste, en-tête et barre « Tout décocher / Enregistrer » collés en haut et en bas, cases à cocher plus grandes).
+
 ### 👁️ Base de connaissances : « qui a lu l'article »
 - Le compteur de vues compte désormais les **personnes distinctes** : ouvrir plusieurs fois le même article ne l'augmente plus.
 - Chaque personne a son propre compteur (nouvelle table `articles_connaissance_vues`, créée automatiquement au démarrage) : nombre de lectures, première et dernière lecture.
