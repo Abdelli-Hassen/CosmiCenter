@@ -13,7 +13,7 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Un appui sur un rôle ouvre l'**éditeur des autorisations en plein écran** (bouton « ← » pour revenir à la liste, en-tête et barre « Tout décocher / Enregistrer » collés en haut et en bas, cases à cocher plus grandes).
 
 ### 🌗 Changement de thème synchronisé
-- Clair/sombre : toutes les couleurs changent dans la même image (plus de décalage entre les éléments qui se fondaient et ceux qui sautaient : dégradés, ombres, icônes).
+- Clair/sombre : fondu enchaîné lent (0,7 s) de toute la page d'un seul bloc (API View Transitions), donc toutes les couleurs changent ensemble, sans décalage entre dégradés, ombres et icônes. Navigateur sans cette API ou « réduire les animations » : bascule immédiate.
 
 ### 🖼️ Logo net sur écrans haute densité
 - Le logo (2246 px) était réduit par le navigateur à 36 px : rendu flou/crénelé sur téléphone. Versions pré-réduites `logo-header.png` et `logo-login.png` (réduction Lanczos) utilisées dans l'en-tête et la page de connexion.

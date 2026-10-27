@@ -57,13 +57,20 @@
    */
   function toggle() {
     const nextTheme = currentTheme() === DARK ? LIGHT : DARK;
-    // Transitions coupées pendant le basculement : tout change dans la même image (voir base.css)
-    document.documentElement.classList.add('theme-transitioning');
-    setTheme(nextTheme);
-    void document.documentElement.offsetWidth; // applique les nouveaux styles avant de rétablir les transitions
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      document.documentElement.classList.remove('theme-transitioning');
-    }));
+    const root = document.documentElement;
+    const done = () => root.classList.remove('theme-transitioning');
+    root.classList.add('theme-transitioning');
+    const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (document.startViewTransition && !calm) {
+      // Fondu enchaîné lent de toute la page : une capture « avant », une capture « après », tout change ensemble
+      const vt = document.startViewTransition(() => setTheme(nextTheme));
+      vt.finished.then(done, done);
+    } else {
+      // Sans View Transitions : bascule immédiate, mais cohérente (voir base.css)
+      setTheme(nextTheme);
+      void root.offsetWidth;
+      requestAnimationFrame(() => requestAnimationFrame(done));
+    }
   }
 
   /**
