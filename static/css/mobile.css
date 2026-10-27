@@ -970,3 +970,9 @@
   .sp-save .btn-save { width: 100%; justify-content: center; min-height: 48px; }
 }
 
+@media (max-width: 768px) {
+  .access-actions { flex-wrap: wrap !important; }
+  .access-actions .access-tool { flex: 1 1 100%; }
+  .access-actions .access-tool .btn-action.primary { flex: 1 1 auto; }
+}
+@media (max-width: 768px) { .access-actions > a.btn-copy { margin-left: auto; } }

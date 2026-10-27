@@ -12,6 +12,9 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Liste des rôles en cartes pleine largeur (nom, badge Système, description, utilisateurs / pages / actions, boutons modifier / désactiver / supprimer) et boutons d'en-tête en grille.
 - Un appui sur un rôle ouvre l'**éditeur des autorisations en plein écran** (bouton « ← » pour revenir à la liste, en-tête et barre « Tout décocher / Enregistrer » collés en haut et en bas, cases à cocher plus grandes).
 
+### 🖥️ Accès à distance : un bouton par outil, « Poste » masqué si vide
+- Un collaborateur qui a un ID AnyDesk **et** un ID TeamViewer a maintenant les deux boutons « Connecter » (chacun avec son bouton copier) ; avant, seul AnyDesk était proposé. Le champ « Poste » n'apparaît plus quand il n'est pas renseigné (« Non spécifié » supprimé).
+
 ### 🔴 Tickets pas encore ouverts bien visibles
 - Dans tous les tableaux de tickets (liste, tableau de bord, département, point de vente, fiche utilisateur) : un ticket que vous n'avez jamais ouvert a une pastille rouge pulsée, un fond teinté, un liseré rouge et son numéro/titre en gras ; une fois ouvert, la ligne redevient normale. Même règle que le badge de la barre latérale (hors vos propres tickets, fermés ou annulés) — fonction Jinja `ticket_is_unread`.
 

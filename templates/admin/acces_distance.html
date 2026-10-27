@@ -214,6 +214,9 @@
   }
   .btn-action:hover { background: var(--surface-hover); color: var(--brand); transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,0.05); }
   
+  .access-tool { display: flex; gap: 8px; align-items: center; }
+  .access-detail.is-unset { display: none; }
+  .access-details-wrap:not(:has(.access-detail:not(.is-unset))) { display: none; }
   .btn-action.primary { flex: 1; }
   
   .btn-action.anydesk { background: rgba(239,68,68,0.05); color: #ef4444; border-color: rgba(239,68,68,0.2); }
@@ -375,21 +378,26 @@
       
       <div class="access-actions">
         {% if user.anydesk_id %}
-        <a href="anydesk:{{ user.anydesk_id }}" class="btn-action primary anydesk" title="Lancer AnyDesk">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          Connecter AnyDesk
-        </a>
-        <button class="btn-action btn-copy" title="Copier l'adresse AnyDesk" onclick="copyToClipboard(this, {{ user.anydesk_id|tojson|forceescape }})">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        </button>
-        {% elif user.teamviewer_id %}
-        <a href="teamviewer8://control?device={{ user.teamviewer_id }}" class="btn-action primary teamviewer" title="Lancer TeamViewer">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          Connecter TeamViewer
-        </a>
-        <button class="btn-action btn-copy" title="Copier l'ID TeamViewer" onclick="copyToClipboard(this, {{ user.teamviewer_id|tojson|forceescape }})">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        </button>
+        <div class="access-tool">
+          <a href="anydesk:{{ user.anydesk_id }}" class="btn-action primary anydesk" title="Lancer AnyDesk">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Connecter AnyDesk
+          </a>
+          <button class="btn-action btn-copy" title="Copier l'adresse AnyDesk" onclick="copyToClipboard(this, {{ user.anydesk_id|tojson|forceescape }})">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        {% endif %}
+        {% if user.teamviewer_id %}
+        <div class="access-tool">
+          <a href="teamviewer8://control?device={{ user.teamviewer_id }}" class="btn-action primary teamviewer" title="Lancer TeamViewer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Connecter TeamViewer
+          </a>
+          <button class="btn-action btn-copy" title="Copier l'ID TeamViewer" onclick="copyToClipboard(this, {{ user.teamviewer_id|tojson|forceescape }})">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
         {% endif %}
         {% if current_user.role and current_user.role.niveau >= 90 %}
         <a href="{{ url_for('admin.modifier_utilisateur', user_id=user.id) }}" class="btn-action btn-copy" title="Modifier l'utilisateur">
