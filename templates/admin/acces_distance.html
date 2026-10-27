@@ -214,6 +214,7 @@
   }
   .btn-action:hover { background: var(--surface-hover); color: var(--brand); transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,0.05); }
   
+  .access-m { display: none; }
   .access-tool { display: flex; gap: 8px; align-items: center; }
   .access-detail.is-unset { display: none; }
   .access-details-wrap:not(:has(.access-detail:not(.is-unset))) { display: none; }
@@ -355,6 +356,31 @@
         </div>
       </div>
       
+      <!-- Téléphone : une tuile par outil (ID + copier + connecter) -->
+      <div class="access-m">
+        {% if user.poste_machine %}<div class="am-poste">Poste : <b>{{ user.poste_machine }}</b></div>{% endif %}
+        {% if user.anydesk_id %}
+        <div class="am-tile am-anydesk">
+          <div class="am-top">
+            <span class="am-name">AnyDesk</span>
+            <button type="button" class="am-copy" title="Copier l'ID" aria-label="Copier l'ID AnyDesk" onclick="copyToClipboard(this, {{ user.anydesk_id|tojson|forceescape }})"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          </div>
+          <div class="am-id">{{ user.anydesk_id }}</div>
+          <a href="anydesk:{{ user.anydesk_id }}" class="am-go" title="Lancer AnyDesk"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Connecter</a>
+        </div>
+        {% endif %}
+        {% if user.teamviewer_id %}
+        <div class="am-tile am-tv">
+          <div class="am-top">
+            <span class="am-name">TeamViewer</span>
+            <button type="button" class="am-copy" title="Copier l'ID" aria-label="Copier l'ID TeamViewer" onclick="copyToClipboard(this, {{ user.teamviewer_id|tojson|forceescape }})"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          </div>
+          <div class="am-id">{{ user.teamviewer_id }}</div>
+          <a href="teamviewer8://control?device={{ user.teamviewer_id }}" class="am-go" title="Lancer TeamViewer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Connecter</a>
+        </div>
+        {% endif %}
+      </div>
+
       <div class="access-details-wrap">
         {% if user.anydesk_id %}
         <div class="access-detail">
