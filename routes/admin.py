@@ -631,17 +631,13 @@ def _categorie_fields():
     if not departement_id or not db.session.get(Departement, departement_id):
         return None, 'Veuillez choisir un département valide.'
     type_ticket = request.form.get('type_ticket', 'demande')
-    priorite = request.form.get('priorite_defaut', 'moyenne')
-    delai = parse_int(request.form.get('delai_resolution_jours') or 1, None, 1, 3650)
-    if type_ticket not in TICKET_TYPES or priorite not in CATEGORY_PRIORITIES or delai is None:
-        return None, 'Type, priorité ou délai de résolution invalide.'
+    if type_ticket not in TICKET_TYPES:
+        return None, 'Type de ticket invalide.'
     return {
         'nom': nom,
         'description': request.form.get('description', '').strip() or None,
         'type_ticket': type_ticket,
         'departement_id': departement_id,
-        'priorite_defaut': priorite,
-        'delai_resolution_jours': delai,
         'couleur': safe_color(request.form.get('couleur', ''), '#3B82F6'),
     }, None
 

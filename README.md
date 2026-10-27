@@ -64,7 +64,7 @@ Cosmitto Coffee opère plusieurs points de vente (POS). CosmiCenter permet à ch
 
 ### Départements
 - Création avec code unique, couleur, icône, responsable
-- SLA configurables par département (réponse : défaut 4h, résolution : défaut 24h) ; l'échéance d'un ticket utilise le délai de sa catégorie, sinon le SLA de résolution du département
+- SLA configurables par département (réponse : défaut 4h, résolution : défaut 24h) ; l'échéance d'un ticket est fixée par le SLA de résolution de son département.
 - Horaires de travail personnalisés
 - Statistiques : membres, tickets par statut, catégories
 
@@ -89,7 +89,7 @@ Cosmitto Coffee opère plusieurs points de vente (POS). CosmiCenter permet à ch
 - Gestion des utilisateurs avec filtres avancés et stat chips (total / actifs / inactifs)
 - Gestion des rôles et permissions par cases à cocher hiérarchisées (interface en accordéon avec logique de désactivation en cascade)
 - Création, modification, désactivation et suppression des rôles personnalisés
-- Gestion des catégories de tickets : créer, modifier, activer/désactiver, archiver, supprimer (type, département, priorité par défaut, délai de résolution, couleur). Réservée à la permission `admin.categories`, attribuable à n'importe quel rôle ; le bouton « Gérer les catégories » apparaît alors sur la page Nouveau ticket.
+- Gestion des catégories de tickets : créer, modifier, activer/désactiver, archiver, supprimer (type, département, couleur). Réservée à la permission `admin.categories`, attribuable à n'importe quel rôle ; le bouton « Gérer les catégories » apparaît alors sur la page Nouveau ticket.
 - Logs système et paramètres (en cours)
 
 ### Paramètres du compte

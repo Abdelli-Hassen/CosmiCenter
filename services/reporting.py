@@ -393,7 +393,6 @@ def build_report(f):
             'nom': cats[cid].nom if cid in cats else 'Sans catégorie',
             'couleur': getattr(cats.get(cid), 'couleur', None) or '#64748b',
             'count': len(c), 'res_avg': fmt_minutes(_avg([t.t_resolution for t in r])),
-            'delai': cats[cid].delai_resolution_jours if cid in cats else None,
         })
     cat_rows.sort(key=lambda x: -x['count'])
 

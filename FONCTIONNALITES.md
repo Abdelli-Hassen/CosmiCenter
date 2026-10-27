@@ -79,7 +79,7 @@ Route : `GET/POST /tickets/nouveau`
 **Champs disponibles**
 - Titre, description
 - Type, département puis catégorie : la liste des catégories s'affiche sous le département et ne montre que celles du département choisi
-- Le type de ticket (Incident, Demande, etc.) reste choisi manuellement par l'utilisateur ; choisir une catégorie pré-remplit la priorité et calcule l'échéance (date de création + délai de résolution de la catégorie)
+- Le type de ticket (Incident, Demande, etc.) reste choisi manuellement par l'utilisateur ; choisir une catégorie ne change ni la priorité (toujours choisie à la main) ni l'échéance (SLA du département).
 - Tout ce qui touche à la technologie (SI, informatique, caisse, TPE, WiFi, messagerie) est rattaché au département IT
 - Priorité (basse / moyenne / haute / urgente / critique) — pré-remplie par la catégorie, modifiable
 - Impact et urgence → calcul automatique de priorité via matrice Impact × Urgence
@@ -308,7 +308,7 @@ Route : `GET /admin/roles`
 
 Route : `GET /admin/categories`
 
-Affichage en tableau : nom + couleur, description, type, département, priorité par défaut, délai SLA, statut.
+Affichage en tableau : nom + couleur, description, type, département, nombre de tickets, statut.
 
 **Créer** : `POST /admin/categories/creer`
 
@@ -462,7 +462,7 @@ Toutes les routes API requièrent `@login_required`.
 | `Role` | Rôles hiérarchiques avec niveau et permissions associées |
 | `Permission` | Permissions granulaires par code (ex. `tickets.modifier`) |
 | `Departement` | Unités organisationnelles avec SLA et responsable |
-| `CategorieTicket` | Catégories de tickets par type, département et priorité par défaut |
+| `CategorieTicket` | Catégories de tickets par type et département |
 | `Ticket` | Tickets avec statut, priorité, SLA, satisfaction, historique |
 | `Tache` | Sous-tâches rattachées à un ticket |
 | `Commentaire` | Commentaires publics et notes internes sur les tickets |

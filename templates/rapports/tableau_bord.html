@@ -398,14 +398,14 @@
   <!-- Catégories + PDV -->
   <div class="grid-2">
     <div class="dash-card">
-      <div class="dash-card-header"><div><h2 class="dash-card-title">Catégories les plus fréquentes</h2><div class="dash-card-subtitle">Top {{ r.categories|length }} sur {{ r.categories_total }} · délai prévu et résolution réelle</div></div></div>
+      <div class="dash-card-header"><div><h2 class="dash-card-title">Catégories les plus fréquentes</h2><div class="dash-card-subtitle">Top {{ r.categories|length }} sur {{ r.categories_total }} · résolution moyenne</div></div></div>
       <div class="table-scroll">
       {% if r.categories %}
       <table class="rtable">
-        <thead><tr><th>Catégorie</th><th class="num">Tickets</th><th class="num">Délai prévu</th><th class="num">Résolution moy.</th></tr></thead>
+        <thead><tr><th>Catégorie</th><th class="num">Tickets</th><th class="num">Résolution moy.</th></tr></thead>
         <tbody>{% for c in r.categories %}
           <tr><td class="strong"><span class="bar-dot" style="display:inline-block;background:{{ c.couleur }};margin-right:8px;"></span>{{ c.nom }}</td>
-            <td class="num">{{ c.count }}</td><td class="num">{{ (c.delai ~ ' j') if c.delai else '—' }}</td><td class="num">{{ c.res_avg }}</td></tr>
+            <td class="num">{{ c.count }}</td><td class="num">{{ c.res_avg }}</td></tr>
         {% endfor %}</tbody>
       </table>
       {% else %}<div class="empty">Aucune donnée</div>{% endif %}

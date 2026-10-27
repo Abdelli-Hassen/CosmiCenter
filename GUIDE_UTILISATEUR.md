@@ -101,7 +101,7 @@ Pour créer un ticket, cliquez sur **Nouveau ticket** dans la barre latérale ou
 
 4. Cliquez sur **Créer le ticket** pour soumettre.
 
-> **Bon à savoir :** La priorité par défaut est automatiquement suggérée selon la catégorie choisie. Vous pouvez la modifier avant de soumettre.
+> **Bon à savoir :** La priorité n'est jamais choisie automatiquement : sélectionnez-la vous-même (Moyenne par défaut).
 
 ---
 

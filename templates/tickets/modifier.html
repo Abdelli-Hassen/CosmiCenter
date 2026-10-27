@@ -477,7 +477,7 @@
                 <select name="categorie_id" id="categorieSelect" class="premium-input">
                   <option value="">Aucune catégorie</option>
                   {% for c in categories %}
-                  <option value="{{ c.id }}" data-type="{{ c.type_ticket }}" data-dept="{{ c.departement_id }}" data-prio="{{ c.priorite_defaut }}" data-delai="{{ c.delai_resolution_jours or '' }}" {% if ticket.categorie_id == c.id %}selected{% endif %}>{{ c.nom }}</option>
+                  <option value="{{ c.id }}" data-type="{{ c.type_ticket }}" data-dept="{{ c.departement_id }}" {% if ticket.categorie_id == c.id %}selected{% endif %}>{{ c.nom }}</option>
                   {% endfor %}
                 </select>
                 <span id="categorieHint" style="font-size:12px; color:var(--text-muted); display:none; margin-top:6px;"></span>
@@ -1245,15 +1245,6 @@
     if (catSelect) filterCategories(true);
     filterAgents(true);
 
-    if (catSelect) {
-      catSelect.addEventListener('change', function () {
-        var opt = catSelect.options[catSelect.selectedIndex];
-        if (!opt || !opt.value) { catHint.style.display = 'none'; return; }
-        var d = opt.dataset.delai;
-        catHint.textContent = d ? 'Délai de résolution : ' + d + ' jour(s). L\'échéance sera calculée automatiquement.' : '';
-        catHint.style.display = d ? 'inline-block' : 'none';
-      });
-    }
   }
 
   /* ── 3. Priority Buttons Logic ── */

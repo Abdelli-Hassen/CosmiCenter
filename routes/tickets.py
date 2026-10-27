@@ -288,10 +288,8 @@ def nouveau():
                 cat = db.session.get(CategorieTicket, categorie_id)
                 if cat:
                     ticket.categorie_id = cat.id
-                    if cat.delai_resolution_jours:
-                        ticket.date_echeance = datetime.utcnow() + timedelta(days=cat.delai_resolution_jours)
 
-            # Sans délai de catégorie, le SLA de résolution du département fixe l'échéance
+            # Le SLA de résolution du département fixe l'échéance
             if not ticket.date_echeance and departement_id:
                 dept_sla = db.session.get(Departement, departement_id)
                 if dept_sla and dept_sla.sla_resolution_heures:
@@ -516,8 +514,6 @@ def modifier(ticket_id):
             if str(ticket.categorie_id or '') != str(new_cat_id or ''):
                 old_cat = ticket.categorie.nom if ticket.categorie else 'Aucune'
                 changes.append(('Catégorie', old_cat, new_cat.nom if new_cat else 'Aucune'))
-                if new_cat and new_cat.delai_resolution_jours and not ticket.date_echeance:
-                    ticket.date_echeance = datetime.utcnow() + timedelta(days=new_cat.delai_resolution_jours)
             ticket.categorie_id = new_cat_id
 
             if str(ticket.departement_id or '') != str(new_dept_id or ''):

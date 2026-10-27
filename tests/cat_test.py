@@ -60,24 +60,24 @@ try:
     page = c.get("/admin/categories")
     check("with permission: page opens (200)", page.status_code == 200)
     body = page.get_data(as_text=True)
-    check("page lists columns Type/Priorité/Délai/Tickets and 42+ rows", all(x in body for x in ("Priorité", "Délai", "Tickets")) and body.count("<tr data-type") >= 42, body.count("<tr data-type"))
+    check("page lists columns Type/Département/Tickets (no delay, no default priority) and 42+ rows", "Tickets" in body and "Délai <span" not in body and "Priorité par défaut" not in body and body.count("<tr data-type") >= 42, body.count("<tr data-type"))
     check("Retour goes back to new ticket for non-admin", "window.location.href='/tickets/nouveau'" in body)
 
     t = tok("/admin/categories")
     # --- créer
-    c.post("/admin/categories/creer", data={"nom": "ZZ-Test", "departement_id": dept_id, "type_ticket": "incident", "priorite_defaut": "haute", "delai_resolution_jours": "3", "couleur": "#112233", "csrf_token": t})
+    c.post("/admin/categories/creer", data={"nom": "ZZ-Test", "departement_id": dept_id, "type_ticket": "incident", "couleur": "#112233", "csrf_token": t})
     row = cat("ZZ-Test")
-    check("create works (type/priority/delay saved)", row and row[3] == 3 and row[4] == "incident" and row[5] == "haute", row)
+    check("create works (type saved)", row and row[4] == "incident", row)
     c.post("/admin/categories/creer", data={"nom": "zz-test", "departement_id": dept_id, "csrf_token": t})
     with app.app_context():
         check("duplicate name in same department refused", CategorieTicket.query.filter(db.func.lower(CategorieTicket.nom) == "zz-test").count() == 1)
-    c.post("/admin/categories/creer", data={"nom": "ZZ-Bad", "departement_id": dept_id, "delai_resolution_jours": "0", "csrf_token": t})
-    check("invalid delay refused", cat("ZZ-Bad") is None)
+    c.post("/admin/categories/creer", data={"nom": "ZZ-Bad", "departement_id": dept_id, "type_ticket": "inconnu", "csrf_token": t})
+    check("invalid type refused", cat("ZZ-Bad") is None)
     cid = row[0]
     # --- modifier
-    c.post(f"/admin/categories/{cid}/modifier", data={"nom": "ZZ-Test2", "departement_id": dept_id, "type_ticket": "demande", "priorite_defaut": "basse", "delai_resolution_jours": "5", "couleur": "#ABCDEF", "csrf_token": t})
+    c.post(f"/admin/categories/{cid}/modifier", data={"nom": "ZZ-Test2", "departement_id": dept_id, "type_ticket": "demande", "couleur": "#ABCDEF", "csrf_token": t})
     row = cat("ZZ-Test2")
-    check("edit works", row and row[3] == 5 and row[4] == "demande" and row[5] == "basse", row)
+    check("edit works", row and row[4] == "demande", row)
     check("old name gone after edit", cat("ZZ-Test") is None)
     # --- visible dans le formulaire
     check("active category shown in new-ticket form", ">ZZ-Test2<" in c.get("/tickets/nouveau").get_data(as_text=True))
