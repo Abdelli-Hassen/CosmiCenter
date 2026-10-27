@@ -55,22 +55,6 @@
     background-color: var(--surface-hover, #f3f4f6);
   }
 
-  .premium-table tbody tr.ticket-row-unread {
-    background-color: var(--surface-2, #f8fafc);
-  }
-  
-  .premium-table tbody tr.ticket-row-unread:hover {
-    background-color: var(--surface-3, #e2e8f0);
-    filter: brightness(1.1);
-  }
-  
-  .premium-table tbody tr.ticket-row-unread td:first-child {
-    box-shadow: inset 4px 0 0 var(--brand, #2563eb);
-  }
-  
-  .premium-table tbody tr.ticket-row-unread .ticket-title {
-    font-weight: 700 !important;
-  }
 
   /* Badge Styles */
   .badge-premium {
@@ -265,12 +249,13 @@
       </thead>
       <tbody>
         {% for ticket in tickets.items %}
-        <tr class="{% if ticket.statut == 'nouveau' and ticket.id not in viewed_ticket_ids %}ticket-row-unread{% endif %}" data-ticket-id="{{ ticket.id }}" style="cursor: pointer;" onclick="if(!event.target.closest('input') && !event.target.closest('button')) window.location='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'">
+        <tr class="{% if ticket_is_unread(ticket) %}ticket-row-unread{% endif %}" data-ticket-id="{{ ticket.id }}" style="cursor: pointer;" onclick="if(!event.target.closest('input') && !event.target.closest('button')) window.location='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'">
           <td class="tk-sel" style="text-align: center;" onclick="event.stopPropagation();">
             <input type="checkbox" class="ticket-select" data-id="{{ ticket.id }}" aria-label="Sélectionner le ticket {{ ticket.numero }}">
           </td>
           
           <td class="tk-id">
+            {% if ticket_is_unread(ticket) %}<span class="unread-dot" title="Pas encore ouvert" aria-label="Pas encore ouvert"></span>{% endif %}
             <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" style="font-family: var(--font-mono, monospace); font-size: 12px; color: var(--text-muted); text-decoration: none; font-weight: 500; white-space: nowrap;">
               {{ ticket.numero }}
             </a>

@@ -1515,7 +1515,7 @@ dialog::backdrop {
           </thead>
           <tbody id="ticketsTbody">
             {% for t in pdv.tickets_associes|sort(attribute='date_creation', reverse=True) %}
-            <tr class="ticket-row"
+            <tr class="ticket-row{% if ticket_is_unread(t) %} ticket-row-unread{% endif %}"
                 data-id="{{ t.id }}"
                 data-numero="{{ (t.numero or '')|lower }}"
                 data-titre="{{ (t.titre or '')|lower }}"
@@ -1528,6 +1528,7 @@ dialog::backdrop {
               
               <!-- ID -->
               <td class="tk-id">
+                {% if ticket_is_unread(t) %}<span class="unread-dot" title="Pas encore ouvert" aria-label="Pas encore ouvert"></span>{% endif %}
                 <a href="{{ url_for('tickets.detail', ticket_id=t.id) }}" style="font-family: var(--font-mono, monospace); font-size: 12px; color: var(--text-muted); text-decoration: none; font-weight: 600; white-space: nowrap;">
                   {{ t.numero }}
                 </a>

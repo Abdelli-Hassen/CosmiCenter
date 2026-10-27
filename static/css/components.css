@@ -1783,3 +1783,13 @@
 .lightbox-close { position: absolute; top: -44px; right: 0; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s ease; }
 .lightbox-close:hover { background: rgba(239,68,68,.85); border-color: transparent; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---- Tickets pas encore ouverts (ticket_is_unread) : pastille + titre en gras + liseré ---- */
+.unread-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 3px var(--brand-light); margin-right: 7px; vertical-align: middle; flex: 0 0 auto; animation: unread-pulse 2.2s ease-in-out infinite; }
+@keyframes unread-pulse { 0%, 100% { box-shadow: 0 0 0 3px var(--brand-light); } 50% { box-shadow: 0 0 0 5px transparent; } }
+tr.ticket-row-unread, a.ticket-row-unread { background: var(--brand-light); box-shadow: inset 4px 0 0 var(--brand); }
+tr.ticket-row-unread:hover, a.ticket-row-unread:hover { background: var(--brand-light); filter: brightness(1.05); }
+.ticket-row-unread .ticket-title, .ticket-row-unread .tk-main > div > span:first-child, .ticket-row-unread .ticket-title-link { font-weight: 800 !important; color: var(--text-primary) !important; }
+.ticket-row-unread .tk-id a, .ticket-row-unread .tk-id span:not(.unread-dot) { color: var(--text-primary) !important; font-weight: 800 !important; }
+@media (prefers-reduced-motion: reduce) { .unread-dot { animation: none; } }
+td.tk-id, .ut-num { white-space: nowrap; }

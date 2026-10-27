@@ -187,6 +187,9 @@ def create_app(config_name='default'):
             'notifications': user_notifications
         }
 
+    from utils.permissions import ticket_is_unread
+    app.jinja_env.globals['ticket_is_unread'] = ticket_is_unread
+
     # Filtres Jinja personnalisés
     @app.template_filter('datetime_format')
     def datetime_format(value, format='%d/%m/%Y %H:%M'):

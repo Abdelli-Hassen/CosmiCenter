@@ -452,8 +452,8 @@ dialog::backdrop {
         {% if tickets_recents %}
         <div class="ticket-list" id="ticketList">
           {% for t in tickets_recents %}
-          <a href="{{ url_for('tickets.detail', ticket_id=t.id) }}" class="ticket-row" data-statut="{{ t.statut }}">
-            <span class="ticket-id">{{ t.numero }}</span>
+          <a href="{{ url_for('tickets.detail', ticket_id=t.id) }}" class="ticket-row{% if ticket_is_unread(t) %} ticket-row-unread{% endif %}" data-statut="{{ t.statut }}">
+            <span class="ticket-id">{% if ticket_is_unread(t) %}<span class="unread-dot" title="Pas encore ouvert" aria-label="Pas encore ouvert"></span>{% endif %}{{ t.numero }}</span>
             <div class="ticket-info">
               <div class="ticket-title">{{ t.titre }}</div>
               <div class="ticket-meta">

@@ -37,6 +37,23 @@ def visible_tickets_query(user):
     return Ticket.query.filter(ticket_visibility_filter(user))
 
 
+def ticket_is_unread(ticket):
+    """Ticket jamais ouvert par l'utilisateur connecté (même règle que le compteur de la barre latérale :
+    hors tickets créés par lui, fermés ou annulés). Les tickets ouverts sont chargés une seule fois par requête."""
+    from flask import g
+    from flask_login import current_user
+    if not current_user.is_authenticated:
+        return False
+    if ticket.createur_id == current_user.id or ticket.statut in ('ferme', 'annule'):
+        return False
+    seen = getattr(g, '_seen_ticket_ids', None)
+    if seen is None:
+        rows = db.session.query(HistoriqueTicket.ticket_id).filter(
+            HistoriqueTicket.utilisateur_id == current_user.id, HistoriqueTicket.action == 'Consultation').all()
+        seen = g._seen_ticket_ids = {r[0] for r in rows}
+    return ticket.id not in seen
+
+
 def unopened_tickets_count(user):
     """Tickets visibles par `user` qu'il n'a jamais ouverts (hors tickets qu'il a créés, fermés ou annulés)."""
     seen = db.session.query(HistoriqueTicket.ticket_id).filter(

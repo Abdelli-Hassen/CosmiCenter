@@ -1499,13 +1499,14 @@
             {% set is_assigned = (ticket.assigne_a_id == utilisateur.id) %}
             {% set is_creator = (ticket.createur_id == utilisateur.id) %}
             
-            <tr class="ticket-row-item ut-row" onclick="if (!event.target.closest('a')) window.location='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'"
+            <tr class="ticket-row-item ut-row{% if ticket_is_unread(ticket) %} ticket-row-unread{% endif %}" onclick="if (!event.target.closest('a')) window.location='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'"
                 
                 data-is-assigned="{{ 'true' if is_assigned else 'false' }}"
                 data-is-creator="{{ 'true' if is_creator else 'false' }}">
               
               <!-- Numéro -->
               <td class="ut-num">
+                {% if ticket_is_unread(ticket) %}<span class="unread-dot" title="Pas encore ouvert" aria-label="Pas encore ouvert"></span>{% endif %}
                 <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="ticket-num-badge">
                   #{{ ticket.numero }}
                 </a>

@@ -12,6 +12,9 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Liste des rôles en cartes pleine largeur (nom, badge Système, description, utilisateurs / pages / actions, boutons modifier / désactiver / supprimer) et boutons d'en-tête en grille.
 - Un appui sur un rôle ouvre l'**éditeur des autorisations en plein écran** (bouton « ← » pour revenir à la liste, en-tête et barre « Tout décocher / Enregistrer » collés en haut et en bas, cases à cocher plus grandes).
 
+### 🔴 Tickets pas encore ouverts bien visibles
+- Dans tous les tableaux de tickets (liste, tableau de bord, département, point de vente, fiche utilisateur) : un ticket que vous n'avez jamais ouvert a une pastille rouge pulsée, un fond teinté, un liseré rouge et son numéro/titre en gras ; une fois ouvert, la ligne redevient normale. Même règle que le badge de la barre latérale (hors vos propres tickets, fermés ou annulés) — fonction Jinja `ticket_is_unread`.
+
 ### 🔊 Sons « ticket envoyé » / « ticket reçu » complets
 - Les deux sons étaient coupés au début et à la fin : le fichier n'était pas encore chargé quand le toast s'affichait et l'objet audio pouvait être libéré en plein son. Ils sont maintenant préchargés et décodés dès l'ouverture de la page (Web Audio), jouent après un court silence d'amorce (carte son / Bluetooth), gardent leur référence jusqu'à la fin, et un son bloqué par le navigateur est joué au premier clic au lieu d'être perdu (`static/js/sounds.js`).
 

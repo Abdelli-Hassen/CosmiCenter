@@ -213,8 +213,9 @@
           </thead>
           <tbody>
             {% for ticket in tickets %}
-            <tr onclick="window.location.href='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'">
+            <tr class="{% if ticket_is_unread(ticket) %}ticket-row-unread{% endif %}" onclick="window.location.href='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'">
               <td class="tk-id">
+                {% if ticket_is_unread(ticket) %}<span class="unread-dot" title="Pas encore ouvert" aria-label="Pas encore ouvert"></span>{% endif %}
                 <span style="font-family: var(--font-mono, monospace); font-size: 12px; color: var(--text-muted); font-weight: 500;">
                   {{ ticket.numero }}
                 </span>
