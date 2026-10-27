@@ -881,6 +881,14 @@
   .access-card .access-details-wrap:not(:has(.access-detail:not(.is-unset))) { display: none !important; }
   .access-card .access-value { background: transparent !important; padding: 0 !important; font-size: 14px !important; font-weight: 700; letter-spacing: .3px; }
   .access-card .access-actions { margin-top: 12px; padding-top: 0 !important; border-top: none !important; }
+  /* Cadre des identifiants : coins arrondis, marges internes, couleurs douces */
+  #viewContainer .access-card .access-details-wrap { background: rgba(200,60,60,.06) !important; border: 1px solid rgba(200,60,60,.12); border-radius: 14px !important; padding: 2px 16px !important; overflow: hidden; }
+  #viewContainer .access-card .access-detail { padding: 12px 0 !important; border-bottom: 1px solid rgba(200,60,60,.12) !important; }
+  #viewContainer .access-card .access-detail:last-child { border-bottom: none !important; }
+  #viewContainer .access-card .access-label { color: var(--text-muted); font-size: 11px; letter-spacing: .6px; }
+  #viewContainer .access-card .access-value { color: var(--text-primary); font-size: 15px !important; font-variant-numeric: tabular-nums; }
+  #viewContainer .access-card .access-actions { padding: 0 !important; }
+  #viewContainer .access-card .btn-action { border-radius: 14px !important; }
   .access-card-header { gap: 12px !important; }
   .access-name { font-size: 16px !important; overflow-wrap: anywhere; }
   .access-company { font-size: 12px !important; }
