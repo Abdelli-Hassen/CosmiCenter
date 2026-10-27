@@ -12,6 +12,10 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Liste des rôles en cartes pleine largeur (nom, badge Système, description, utilisateurs / pages / actions, boutons modifier / désactiver / supprimer) et boutons d'en-tête en grille.
 - Un appui sur un rôle ouvre l'**éditeur des autorisations en plein écran** (bouton « ← » pour revenir à la liste, en-tête et barre « Tout décocher / Enregistrer » collés en haut et en bas, cases à cocher plus grandes).
 
+### ✏️ Modification d'un ticket = même design que « Nouveau ticket »
+- La page de modification reprend exactement la mise en page, les composants et les comportements de la création (types, département/catégorie, routage personne ou collaboration, checklist, priorité, pièces jointes), pré-remplis avec le ticket. Éléments propres à la modification : **Statut**, checklist existante (cases à cocher, progression, suppression), pièces jointes déjà envoyées, bloc d'informations (créé le / par / modifié le / échéance) et pastille « non enregistré ».
+- Le changement de catégorie ne modifie plus la priorité d'un ticket existant.
+
 ### 🔎 Filtres de la liste des tickets
 - Recherche avec loupe, plus large, texte du champ lisible (le placeholder n'est plus coupé) ; listes déroulantes alignées (même hauteur, flèche soignée) ; focus rouge ; sur téléphone : recherche pleine largeur puis deux listes côte à côte.
 

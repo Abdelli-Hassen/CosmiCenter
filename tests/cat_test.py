@@ -61,7 +61,7 @@ try:
     check("with permission: page opens (200)", page.status_code == 200)
     body = page.get_data(as_text=True)
     check("page lists columns Type/Priorité/Délai/Tickets and 42+ rows", all(x in body for x in ("Priorité", "Délai", "Tickets")) and body.count("<tr data-type") >= 42, body.count("<tr data-type"))
-    check("Retour goes back to new ticket for non-admin", 'href="/tickets/nouveau"' in body)
+    check("Retour goes back to new ticket for non-admin", "window.location.href='/tickets/nouveau'" in body)
 
     t = tok("/admin/categories")
     # --- créer

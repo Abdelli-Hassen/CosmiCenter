@@ -1,876 +1,836 @@
 {% extends "base.html" %}
 
 {% block title %}Modifier {{ ticket.numero }}{% endblock %}
-{% block body_class %}page-ticket-edit{% endblock %}
+
+{% block body_class %}page-ticket-new{% endblock %}
 
 {% block extra_head %}
 <style>
-/* ── Layout ─────────────────────────────────── */
-.edit-shell {
-  display: grid;
-  grid-template-columns: 1fr 308px;
-  gap: 18px;
-  padding: 0 28px 80px;
-  align-items: start;
-}
-.edit-section {
-  background: var(--surface-raised);
-  border: 1px solid var(--border-default);
-  border-radius: var(--r-lg);
-  margin-bottom: 12px;
-  overflow: hidden;
-}
-.edit-section-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-1);
-}
-.edit-section-icon {
-  width: 26px; height: 26px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: var(--r-sm);
-  background: var(--surface-2);
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-.edit-section-title {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--text-primary);
-}
-.edit-section-body { padding: 18px; }
+  /* Page Specific Overrides */
+  .page-header { margin-bottom: 24px; }
+  .page-title { font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+  
+  .ticket-form-layout {
+    display: grid;
+    grid-template-columns: 2.5fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  
+  @media (max-width: 992px) {
+    .ticket-form-layout { grid-template-columns: 1fr; }
+  }
 
-/* ── Field label ─────────────────────────────── */
-.fl {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-.fl .req { color: var(--brand); }
+  /* Input Styling */
+  .premium-input, .premium-textarea {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--surface-raised, #f9fafb);
+    border: 1px solid var(--border-subtle, #e5e7eb);
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-primary, #111827);
+    transition: all 0.2s ease;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.01);
+  }
+  .premium-input:focus, .premium-textarea:focus {
+    outline: none;
+    border-color: var(--color-brand, #dc2626);
+    background: var(--surface-base, #ffffff);
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+  }
 
-/* ── Inputs ──────────────────────────────────── */
-.fi {
-  width: 100%;
-  padding: 9px 12px;
-  border: 1.5px solid var(--border-default);
-  border-radius: var(--r-md);
-  background: var(--surface-1);
-  color: var(--text-primary);
-  font-size: var(--text-base);
-  font-family: var(--font-sans);
-  transition: border-color var(--fast), box-shadow var(--fast);
-  box-sizing: border-box;
-  line-height: 1.5;
-}
-.fi:focus {
-  outline: none;
-  border-color: var(--brand);
-  box-shadow: var(--shadow-brand);
-}
-.fi::placeholder { color: var(--text-faint); }
-select.fi { cursor: pointer; }
-textarea.fi { resize: vertical; min-height: 140px; }
+  /* Label Styling */
+  .premium-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary, #4b5563);
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
+  }
 
-/* ── Type grid ───────────────────────────────── */
-.type-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
-}
-.type-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  padding: 11px 6px 9px;
-  border: 1.5px solid var(--border-default);
-  border-radius: var(--r-md);
-  cursor: pointer;
-  transition: border-color var(--fast), background var(--fast), box-shadow var(--fast);
-  background: var(--surface-1);
-  text-align: center;
-  user-select: none;
-}
-.type-card:hover { border-color: var(--brand); background: var(--brand-subtle); }
-.type-card.active {
-  border-color: var(--brand);
-  background: var(--brand-subtle);
-  box-shadow: 0 0 0 3px var(--brand-light);
-}
-.type-card svg { color: var(--text-secondary); transition: color var(--fast); }
-.type-card:hover svg, .type-card.active svg { color: var(--brand); }
-.tc-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-muted);
-  transition: color var(--fast);
-  line-height: 1;
-}
-.type-card:hover .tc-label, .type-card.active .tc-label { color: var(--brand); }
+  /* Type Cards */
+  .type-card {
+    display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 12px;
+    border: 2px solid var(--border-subtle); border-radius: 12px; cursor: pointer;
+    background: var(--surface-base); transition: all 0.2s ease; flex: 1; text-align: center;
+  }
+  .type-card:hover { border-color: var(--border-accent, #d1d5db); background: var(--surface-raised); }
+  .type-card input:checked + svg + span { color: var(--color-brand, #dc2626); }
 
-/* ── Routing radios ──────────────────────────── */
-.routing-options { display: flex; gap: 8px; flex-wrap: wrap; }
-.routing-radio {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 12px;
-  border: 1.5px solid var(--border-default);
-  border-radius: var(--r-md);
-  background: var(--surface-1);
-  cursor: pointer;
-  transition: all var(--fast);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-.routing-radio:has(input:checked) {
-  border-color: var(--brand);
-  background: var(--brand-subtle);
-  color: var(--text-primary);
-}
-.routing-radio input { accent-color: var(--brand); transform: scale(1.1); }
+  /* Priority Toggle Buttons */
+  .priority-toggles {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .priority-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border: 1px solid var(--border-subtle); border-radius: 10px;
+    cursor: pointer; background: var(--surface-base); transition: all 0.2s;
+  }
+  .priority-toggle:hover { background: var(--surface-hover); }
+  .priority-toggle.active {
+    border-color: currentColor; background: var(--surface-base); box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .priority-toggle.active svg { opacity: 1 !important; }
+  
+  .p-critique { color: #ef4444; }
+  .p-urgente { color: #f97316; }
+  .p-haute { color: #eab308; }
+  .p-moyenne { color: #3b82f6; }
+  .p-basse { color: #9ca3af; }
 
-/* ── Priority list ───────────────────────────── */
-.priority-list { display: flex; flex-direction: column; gap: 6px; }
-.priority-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 9px 12px;
-  border: 1.5px solid var(--border-default);
-  border-radius: var(--r-md);
-  cursor: pointer;
-  transition: all var(--fast);
-  background: var(--surface-1);
-}
-.priority-row:hover { background: var(--surface-2); }
-.priority-row.active { border-color: var(--p-color); background: var(--p-bg); }
-.priority-row .p-left { display: flex; align-items: center; gap: 10px; }
-.p-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--p-color); flex-shrink: 0; }
-.priority-row.active .p-dot { box-shadow: 0 0 0 2px var(--p-bg), 0 0 7px var(--p-color); }
-.p-label { font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
-.p-check { opacity: 0; transition: opacity var(--fast); color: var(--p-color); }
-.priority-row.active .p-check { opacity: 1; }
+  /* ============================================================
+     PREMIUM COLLABORATION SECTION (Adaptive Light & Dark)
+     ============================================================ */
+  .collab-wrapper-card {
+    display: none;
+    padding: 22px;
+    background: var(--surface-1, #ffffff);
+    border-radius: 14px;
+    border: 1px solid var(--border-default, #e5e7eb);
+    box-shadow: 0 4px 16px -2px rgba(11, 11, 15, 0.04);
+    flex-direction: column;
+    gap: 20px;
+    transition: all 0.25s ease;
+  }
+  [data-theme="dark"] .collab-wrapper-card {
+    background: var(--surface-1, #1c1a36);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.4);
+  }
 
-/* ── Checklist ───────────────────────────────── */
-.checklist-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.drag-handle {
-  color: var(--text-faint);
-  cursor: grab;
-  flex-shrink: 0;
-  padding: 2px;
-}
-.checklist-row.done-row .fi {
-  text-decoration: line-through;
-  color: var(--text-muted);
-}
+  .collab-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .collab-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .collab-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--brand-light, rgba(232, 33, 63, 0.1));
+    color: var(--brand, #dc2626);
+  }
+  .collab-count-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 12px;
+    background: var(--surface-2, #f4f0eb);
+    color: var(--text-secondary, #4b5563);
+    border: 1px solid var(--border-subtle, #e5e7eb);
+    transition: all 0.2s ease;
+  }
+  .collab-count-badge.has-selected {
+    background: var(--brand-light, rgba(232, 33, 63, 0.12));
+    color: var(--brand, #dc2626);
+    border-color: var(--brand-light);
+  }
 
-/* ── File chip ───────────────────────────────── */
-.file-chip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-sm);
-  background: var(--surface-2);
-}
+  /* Department Chips */
+  .collab-dept-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+  .collab-dept-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 13px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid var(--border-default, #e5e7eb);
+    background: var(--surface-2, #f4f0eb);
+    color: var(--text-secondary, #4b5563);
+    user-select: none;
+  }
+  [data-theme="dark"] .collab-dept-chip {
+    background: var(--surface-2, #25233f);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary, #cbd5e1);
+  }
+  .collab-dept-chip:hover {
+    border-color: var(--border-strong, #ccc9c4);
+    background: var(--surface-3, #ede8e1);
+    transform: translateY(-1px);
+    color: var(--text-primary);
+  }
+  [data-theme="dark"] .collab-dept-chip:hover {
+    background: var(--surface-3, #302e4e);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+  }
+  .collab-dept-chip.active {
+    background: var(--brand-light, rgba(232, 33, 63, 0.12)) !important;
+    border-color: var(--brand, #dc2626) !important;
+    color: var(--brand, #dc2626) !important;
+    font-weight: 600;
+    box-shadow: 0 0 0 1px var(--brand, #dc2626);
+  }
+  .collab-dept-chip .chip-check {
+    display: none;
+    width: 14px;
+    height: 14px;
+    align-items: center;
+    justify-content: center;
+    background: var(--brand, #dc2626);
+    color: #ffffff;
+    border-radius: 50%;
+    font-size: 9px;
+    font-weight: 700;
+  }
+  .collab-dept-chip.active .chip-check {
+    display: inline-flex;
+  }
 
-/* ── Drop zone ───────────────────────────────── */
-.drop-zone {
-  border: 1.5px dashed var(--border-strong);
-  border-radius: var(--r-md);
-  padding: 18px 14px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color var(--fast), background var(--fast);
-  background: var(--surface-1);
-}
-.drop-zone:hover, .drop-zone.drag-over {
-  border-color: var(--brand);
-  background: var(--brand-subtle);
-}
+  /* Agent Search Input */
+  .collab-search-wrap {
+    position: relative;
+    margin-bottom: 12px;
+  }
+  .collab-search-input {
+    width: 100%;
+    padding: 9px 12px 9px 34px;
+    border-radius: 8px;
+    font-size: 12px;
+    border: 1px solid var(--border-default, #e5e7eb);
+    background: var(--surface-2, #f4f0eb);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+  }
+  [data-theme="dark"] .collab-search-input {
+    background: var(--surface-2, #25233f);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .collab-search-input:focus {
+    outline: none;
+    border-color: var(--brand, #dc2626);
+    background: var(--surface-base);
+    box-shadow: 0 0 0 3px var(--brand-light);
+  }
 
-/* ── Unsaved dot ─────────────────────────────── */
-#unsavedDot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--warning);
-  display: none;
-  flex-shrink: 0;
-}
-#unsavedDot.on { display: inline-block; }
+  /* Agent Responsive Grid */
+  .collab-agents-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 480px;
+    overflow-y: auto;
+    padding: 2px;
+  }
+  .collab-agent-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.16s ease;
+    background: var(--surface-2, #f4f0eb);
+    border: 1px solid var(--border-subtle, #e5e7eb);
+    user-select: none;
+  }
+  [data-theme="dark"] .collab-agent-card {
+    background: var(--surface-2, #25233f);
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+  .collab-agent-card:hover {
+    background: var(--surface-3, #ede8e1);
+    border-color: var(--border-strong, #ccc9c4);
+    transform: translateY(-1px);
+  }
+  [data-theme="dark"] .collab-agent-card:hover {
+    background: var(--surface-3, #302e4e);
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+  .collab-agent-card.selected {
+    background: var(--brand-light, rgba(232, 33, 63, 0.1)) !important;
+    border-color: var(--brand, #dc2626) !important;
+    box-shadow: 0 0 0 1px var(--brand, #dc2626);
+  }
+  
+  /* Avatar Initials */
+  .collab-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .collab-agent-card.selected .collab-avatar {
+    background: var(--brand, #dc2626);
+  }
 
-/* ── Responsive ──────────────────────────────── */
-@media (max-width: 960px) {
-  .edit-shell { grid-template-columns: 1fr; padding: 0 16px 80px; }
-  .right-col { position: static !important; }
-  .type-grid { grid-template-columns: repeat(3, 1fr); }
-}
-@media (max-width: 520px) {
-  .type-grid { grid-template-columns: repeat(2, 1fr); }
-  .routing-options { flex-direction: column; }
-}
+  /* Custom Checkmark Badge */
+  .collab-check-box {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1.5px solid var(--border-strong, #ccc9c4);
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+  [data-theme="dark"] .collab-check-box {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  .collab-agent-card.selected .collab-check-box {
+    background: var(--brand, #dc2626);
+    border-color: var(--brand, #dc2626);
+    color: #ffffff;
+  }
 
-/* ── Collaboration Premium Component ─────── */
-.collab-wrapper-card {
-  padding: 18px;
-  background: var(--surface-1);
-  border-radius: var(--r-md);
-  border: 1px solid var(--border-subtle);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  transition: all var(--fast);
-}
-.collab-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-.collab-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-.collab-title-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: var(--brand-light);
-  color: var(--brand);
-}
-.collab-count-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 12px;
-  background: var(--surface-2);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
-}
-.collab-count-badge.has-selected {
-  background: var(--brand-light);
-  color: var(--brand);
-  border-color: var(--brand-light);
-}
-.collab-dept-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.collab-dept-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: var(--r-sm);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-2);
-  color: var(--text-secondary);
-  user-select: none;
-}
-.collab-dept-chip:hover {
-  border-color: var(--border-strong);
-  background: var(--surface-3);
-  transform: translateY(-1px);
-}
-.collab-dept-chip.active {
-  background: var(--brand-light) !important;
-  border-color: var(--brand) !important;
-  color: var(--brand) !important;
-  font-weight: 600;
-}
-.collab-dept-chip .chip-check {
-  display: none;
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--brand);
-}
-.collab-dept-chip.active .chip-check {
-  display: inline-flex;
-}
-.collab-agents-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-height: 480px;
-  overflow-y: auto;
-  padding: 2px;
-}
-.collab-agent-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 7px 10px;
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  background: var(--surface-2);
-  border: 1px solid var(--border-subtle);
-  user-select: none;
-}
-.collab-agent-card:hover {
-  background: var(--surface-3);
-  border-color: var(--border-strong);
-}
-.collab-agent-card.selected {
-  background: var(--brand-light) !important;
-  border-color: var(--brand) !important;
-}
-.collab-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.collab-check-box {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1px solid var(--border-strong);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.collab-agent-card.selected .collab-check-box {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #ffffff;
-}
-.collab-shelf-container {
-  margin-top: 4px;
-  padding: 10px 12px;
-  background: var(--surface-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-sm);
-}
-.collab-selected-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 8px 3px 4px;
-  background: var(--surface-1);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-sm);
-  font-size: 11px;
-  color: var(--text-primary);
-}
-.collab-selected-chip .mini-avatar {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--brand-light);
-  color: var(--brand);
-  font-size: 8px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.collab-selected-chip .remove-btn {
-  background: none;
-  border: none;
-  color: var(--text-faint);
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-}
-.collab-selected-chip .remove-btn:hover {
-  color: var(--danger);
-}
+  /* Selected Collaborators Shelf */
+  .collab-shelf-container {
+    margin-top: 6px;
+    padding: 12px 14px;
+    background: var(--surface-2, #f4f0eb);
+    border: 1px solid var(--border-default, #e5e7eb);
+    border-radius: 10px;
+  }
+  [data-theme="dark"] .collab-shelf-container {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .collab-shelf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .collab-shelf-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+  }
+  .collab-selected-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px 3px 4px;
+    background: var(--surface-1, #ffffff);
+    border: 1px solid var(--border-strong, #ccc9c4);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    transition: all 0.15s ease;
+  }
+  [data-theme="dark"] .collab-selected-chip {
+    background: var(--surface-2, #25233f);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .collab-selected-chip .mini-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--brand-light, rgba(232, 33, 63, 0.15));
+    color: var(--brand, #dc2626);
+    font-size: 9px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .collab-selected-chip .remove-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px;
+    margin-left: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.15s;
+  }
+  .collab-selected-chip .remove-btn:hover {
+    background: rgba(232, 33, 63, 0.15);
+    color: var(--brand, #dc2626);
+  }
+
+  /* ── Éléments propres à la modification ── */
+  #unsavedDot { width: 8px; height: 8px; border-radius: 50%; background: var(--warning, #f59e0b); display: none; vertical-align: middle; margin-left: 6px; }
+  #unsavedDot.on { display: inline-block; }
+  .edit-count { font-size: 11px; font-weight: 700; color: var(--text-muted); background: var(--surface-2); border-radius: 99px; padding: 1px 8px; margin-left: 6px; }
+  .edit-progress { height: 4px; background: var(--surface-3); border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
+  .edit-progress > div { height: 100%; background: var(--success, #10b981); border-radius: 99px; }
+  .edit-task { display: flex; gap: 8px; align-items: center; }
+  .edit-task input[type=checkbox] { width: 18px; height: 18px; flex: 0 0 auto; accent-color: var(--success, #10b981); cursor: pointer; }
+  .edit-task.is-done input[type=text] { text-decoration: line-through; color: var(--text-muted); }
+  .edit-files { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .edit-file { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border-subtle); border-radius: 10px; background: var(--surface-raised); color: var(--text-muted); }
+  .edit-file-name { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .edit-file-size { font-size: 11px; white-space: nowrap; }
+  .edit-meta { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border: 1px solid var(--border-subtle); border-radius: 14px; background: var(--surface-raised); font-size: 12px; }
+  .edit-meta div { display: flex; justify-content: space-between; gap: 10px; }
+  .edit-meta span { color: var(--text-muted); }
+  .edit-meta b { color: var(--text-primary); font-weight: 600; text-align: right; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page" style="padding-bottom: 80px;">
+<div class="page" style="padding: 24px 32px; max-width: 1400px; margin: 0 auto;">
 
-  <!-- Page header -->
-  <div style="padding: 18px 28px 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--border-subtle);">
-    <div style="display: flex; align-items: center; gap: 16px;">
-      <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-secondary" title="Retour" style="padding: 7px 12px; font-weight: 600; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--surface-1); display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-      </a>
-      <div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <h1 style="font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -.02em; margin: 0; line-height: 1.2;">
-            Modifier le ticket
-          </h1>
-          <span id="unsavedDot" title="Modifications non enregistrees"></span>
-        </div>
-        <p style="margin: 3px 0 0; font-size: var(--text-sm); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 520px;">{{ ticket.titre }}</p>
-      </div>
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div style="margin-bottom: 24px;">
+    <button type="button" class="back-btn" title="Retour" aria-label="Retour" onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href='{{ url_for('tickets.detail', ticket_id=ticket.id) }}'; }"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+  </div>
+    <h1 class="page-title">Modifier le ticket <span style="color:var(--text-muted); font-weight:600;">{{ ticket.numero }}</span> <span id="unsavedDot" title="Modifications non enregistrées"></span></h1>
     </div>
+    {% if current_user.has_permission('admin.categories') or (current_user.role and current_user.role.niveau >= 90) %}
+    <div class="page-header-actions">
+      <a href="{{ url_for('admin.categories') }}" class="btn btn-secondary" style="padding: 10px 18px; font-size: 14px; font-weight: 600; border-radius: 12px; display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); background: var(--surface-2); border: 1px solid var(--border-subtle);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Gérer les catégories
+      </a>
+    </div>
+    {% endif %}
   </div>
 
   <form method="POST" action="{{ url_for('tickets.modifier', ticket_id=ticket.id) }}" enctype="multipart/form-data" id="editForm">
-    <div class="edit-shell" style="padding-top: 20px;">
+    <div class="ticket-form-layout">
+      
+      <!-- LEFT COLUMN: Main Form -->
+      <div style="display: flex; flex-direction: column; gap: 24px; min-width: 0;">
 
-      <!-- ═══ LEFT COLUMN ═══ -->
-      <div>
+        <div class="card" style="background: var(--surface-base); border: 1px solid var(--border-subtle); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); padding: 32px;">
+          
+          <!-- 1. Title -->
+          <div style="margin-bottom: 28px;">
+            <label class="premium-label" for="titre">Résumé du problème <span style="color:#dc2626;">*</span></label>
+            <input type="text" id="titre" name="titre" class="premium-input" style="font-size: 16px; font-weight: 500;" value="{{ ticket.titre }}" placeholder="Ex: Impossible de se connecter à la base de données de paie..." required maxlength="200" autocomplete="off">
+          </div>
 
-        <!-- Type -->
-        <div class="edit-section">
-          <div class="edit-section-header">
-            <div class="edit-section-icon">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <!-- 2. Type de ticket -->
+          <div style="margin-bottom: 28px;">
+            <label class="premium-label">Type de ticket <span style="color:#dc2626;">*</span></label>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;" id="typeCards">
+              {% set tc = ticket.type_ticket %}
+              {% set known_types = ['incident','demande','besoin','plainte','tache'] %}
+              {% set types = [
+                ('incident',  'Incident',  'Panne/Erreur',           '#EF4444', 'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01'),
+                ('demande',   'Demande',   'Demande d\'accès',  '#3B82F6', 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'),
+                ('besoin',    'Besoin',    'Matériel/Logiciel',           '#F59E0B', 'M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM16 13a1 1 0 1 1 0-2 1 1 0 0 1 0 2z'),
+                ('plainte',   'Plainte',   'Réclamation',        '#8B5CF6', 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'),
+                ('tache',     'Tâche',     'Maintenance/Projet', '#10B981', 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'),
+                ('autre',     'Autre',     'Personnalisé',       '#6B7280', 'M12 5v14M5 12h14')
+              ] %}
+              {% for val, label, desc, color, path in types %}
+              <label class="type-card" data-type="{{ val }}">
+                <input type="radio" name="type_ticket" value="{{ val }}" class="type-radio" style="display:none;" {% if val == tc or (val == 'autre' and tc not in known_types) %}checked{% endif %}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{ color }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 4px;"><path d="{{ path }}"/></svg>
+                <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">{{ label }}</span>
+                <span style="font-size: 11px; color: var(--text-muted); line-height: 1.2;">{{ desc }}</span>
+              </label>
+              {% endfor %}
             </div>
-            <span class="edit-section-title">Type de ticket</span>
-          </div>
-          <div class="edit-section-body">
-            {% set tc = ticket.type_ticket %}
-            <div class="type-grid">
-              <label class="type-card {% if tc == 'incident' %}active{% endif %}" data-type="incident">
-                <input type="radio" name="type_ticket" value="incident" class="type-radio" style="display:none;" {% if tc == 'incident' %}checked{% endif %}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span class="tc-label">Incident</span>
-              </label>
-              <label class="type-card {% if tc == 'demande' %}active{% endif %}" data-type="demande">
-                <input type="radio" name="type_ticket" value="demande" class="type-radio" style="display:none;" {% if tc == 'demande' %}checked{% endif %}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                <span class="tc-label">Demande</span>
-              </label>
-              <label class="type-card {% if tc == 'besoin' %}active{% endif %}" data-type="besoin">
-                <input type="radio" name="type_ticket" value="besoin" class="type-radio" style="display:none;" {% if tc == 'besoin' %}checked{% endif %}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                <span class="tc-label">Besoin</span>
-              </label>
-              <label class="type-card {% if tc == 'tache' %}active{% endif %}" data-type="tache">
-                <input type="radio" name="type_ticket" value="tache" class="type-radio" style="display:none;" {% if tc == 'tache' %}checked{% endif %}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                <span class="tc-label">Tache</span>
-              </label>
-              <label class="type-card {% if tc == 'plainte' %}active{% endif %}" data-type="plainte">
-                <input type="radio" name="type_ticket" value="plainte" class="type-radio" style="display:none;" {% if tc == 'plainte' %}checked{% endif %}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                <span class="tc-label">Plainte</span>
-              </label>
-              <label class="type-card {% if tc not in ['incident','demande','besoin','tache','plainte'] %}active{% endif %}" data-type="autre">
-                <input type="radio" name="type_ticket" value="autre" class="type-radio" style="display:none;" {% if tc not in ['incident','demande','besoin','tache','plainte'] %}checked{% endif %}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-                <span class="tc-label">Autre</span>
-              </label>
-            </div>
-            <div id="customTypeContainer" style="display:{% if tc not in ['incident','demande','besoin','tache','plainte'] %}block{% else %}none{% endif %}; margin-top: 12px;">
-              <input type="text" id="custom_type_input" name="custom_type" class="fi" maxlength="20" placeholder="Precisez le type..."
-                value="{{ tc if tc not in ['incident','demande','besoin','tache','plainte'] else '' }}">
+            
+            <div id="customTypeContainer" style="display: {% if tc not in known_types %}block{% else %}none{% endif %}; margin-top: 16px;">
+              <input type="text" id="custom_type_input" name="custom_type" class="premium-input" maxlength="20" placeholder="Précisez le type personnalisé..." value="{{ tc if tc not in known_types else '' }}">
             </div>
           </div>
-        </div>
 
-        <!-- Contenu -->
-        <div class="edit-section">
-          <div class="edit-section-header">
-            <div class="edit-section-icon">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="10" x2="3" y2="10"/><line x1="16" y1="14" x2="3" y2="14"/><line x1="13" y1="18" x2="3" y2="18"/></svg>
-            </div>
-            <span class="edit-section-title">Contenu</span>
-          </div>
-          <div class="edit-section-body">
-            <div style="margin-bottom: 16px;">
-              <label class="fl" for="titre">Titre <span class="req">*</span></label>
-              <input type="text" id="titre" name="titre" class="fi" value="{{ ticket.titre }}" required maxlength="200"
-                style="font-size: var(--text-base); font-weight: 500;" placeholder="Decrivez le sujet en une phrase claire...">
-            </div>
-            <div>
-              <label class="fl" for="description">Description</label>
-              <textarea id="description" name="description" class="fi" rows="8" required maxlength="20000"
-                placeholder="Contexte, impact, etapes de reproduction...">{{ ticket.description or '' }}</textarea>
-            </div>
-          </div>
-        </div>
-
-        <!-- Assignation -->
-        <div class="edit-section">
-          <div class="edit-section-header">
-            <div class="edit-section-icon">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-            <span class="edit-section-title">Departement &amp; Assignation</span>
-          </div>
-          <div class="edit-section-body">
-            <div style="margin-bottom: 18px;">
-              <label class="fl">Departement</label>
-              <select name="departement_id" id="departementSelect" class="fi">
-                <option value="">-- Aucun departement --</option>
+          <!-- 3. Département & Catégorie & Routage -->
+          <div style="margin-bottom: 28px;">
+            <label class="premium-label" style="margin-bottom: 8px;">Département concerné</label>
+            <div style="background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
+              <select name="departement_id" id="departementSelect" class="premium-input" {% if ticket.departement_id %}required{% endif %} style="margin-bottom: 16px;">
+                <option value="">Sélectionner un département...</option>
                 {% for dept in departements %}
                 <option value="{{ dept.id }}" {% if ticket.departement_id == dept.id %}selected{% endif %}>{{ dept.nom }}</option>
                 {% endfor %}
               </select>
-            </div>
 
-            <div id="categorieWrapper" style="margin-bottom: 18px;">
-              <label class="fl">Categorie</label>
-              <select name="categorie_id" id="categorieSelect" class="fi">
-                <option value="">-- Aucune categorie --</option>
-                {% for c in categories %}
-                <option value="{{ c.id }}" data-dept="{{ c.departement_id }}" {% if ticket.categorie_id == c.id %}selected{% endif %}>{{ c.nom }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <script>
-              (function () {
-                var dept = document.getElementById('departementSelect');
-                var cat = document.getElementById('categorieSelect');
-                var wrap = document.getElementById('categorieWrapper');
-                function filter(reset) {
-                  var visible = 0;
-                  if (reset) cat.value = '';
-                  Array.prototype.forEach.call(cat.options, function (o) {
-                    if (!o.value) return;
-                    var show = o.dataset.dept === dept.value;
-                    o.hidden = !show; o.disabled = !show;
-                    if (show) visible++;
-                  });
-                  wrap.style.display = (dept.value && visible) ? 'block' : 'none';
-                }
-                dept.addEventListener('change', function () { filter(true); });
-                filter(false);
-              })();
-            </script>
-
-            <div style="padding-top: 16px; border-top: 1px solid var(--border-subtle);">
-              <label class="fl" style="margin-bottom: 10px;">Routage</label>
-              {% set routing_type = 'collab' if ticket.collaborateurs or ticket.departements_collab else ('specific' if ticket.assigne_a else 'all') %}
-              <div class="routing-options" style="margin-bottom: 14px;">
-                <label class="routing-radio">
-                  <input type="radio" name="routing_type" value="all" onchange="toggleRoutingUI()" {% if routing_type == 'all' %}checked{% endif %}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  Tout le departement
-                </label>
-                <label class="routing-radio">
-                  <input type="radio" name="routing_type" value="specific" onchange="toggleRoutingUI()" {% if routing_type == 'specific' %}checked{% endif %}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  Personne specifique
-                </label>
-                <label class="routing-radio">
-                  <input type="radio" name="routing_type" value="collab" onchange="toggleRoutingUI()" {% if routing_type == 'collab' %}checked{% endif %}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-                  Collaboration
-                </label>
-              </div>
-
-              <div id="routingSpecificUI" style="display:{% if routing_type == 'specific' %}block{% else %}none{% endif %};">
-                <label class="fl">Assigner a</label>
-                <select name="assigne_a_id" id="agentSelect" class="fi">
-                  <option value="">-- Selectionner --</option>
-                  {% for u in utilisateurs %}
-                  <option value="{{ u.id }}" data-dept="{{ u.departement_id if u.departement_id else '' }}" {% if ticket.assigne_a and ticket.assigne_a.id == u.id %}selected{% endif %}>{{ u.prenom }} {{ u.nom }}{% if u.departement %} &mdash; {{ u.departement.nom }}{% endif %}</option>
+              <!-- Catégorie : n'affiche que celles du département choisi -->
+              <div id="categorieWrapper" style="display:none; margin-bottom: 24px;">
+                <label class="premium-label" for="categorieSelect">Catégorie (optionnel)</label>
+                <select name="categorie_id" id="categorieSelect" class="premium-input">
+                  <option value="">Aucune catégorie</option>
+                  {% for c in categories %}
+                  <option value="{{ c.id }}" data-type="{{ c.type_ticket }}" data-dept="{{ c.departement_id }}" data-prio="{{ c.priorite_defaut }}" data-delai="{{ c.delai_resolution_jours or '' }}" {% if ticket.categorie_id == c.id %}selected{% endif %}>{{ c.nom }}</option>
                   {% endfor %}
                 </select>
+                <span id="categorieHint" style="font-size:12px; color:var(--text-muted); display:none; margin-top:6px;"></span>
               </div>
 
-              <div id="routingCollabUI" class="collab-wrapper-card" style="display:{% if routing_type == 'collab' %}flex{% else %}none{% endif %};">
-                <!-- 1. Départements collaborateurs -->
-                <div>
-                  <div class="collab-header-row">
-                    <div class="collab-title">
-                      <span class="collab-title-icon">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                      </span>
-                      <span>Departements impliqués</span>
-                    </div>
-                    <span id="collabDeptCount" class="collab-count-badge {% if ticket.departements_collab %}has-selected{% endif %}">{{ ticket.departements_collab | length }} sélectionné(s)</span>
-                  </div>
+              <div style="padding-top: 20px; border-top: 1px solid var(--border-subtle);">
+                {% set routing_type = 'collab' if ticket.collaborateurs or ticket.departements_collab else ('specific' if ticket.assigne_a else 'all') %}
+                <label class="premium-label" style="margin-bottom: 12px;">Type d'assignation</label>
+                
+                <style>
+                  .routing-radio {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 10px 16px;
+                    border: 1px solid var(--border-subtle);
+                    border-radius: 8px;
+                    background: var(--surface-base);
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: var(--text-secondary);
+                  }
+                  .routing-radio:has(input:checked) {
+                    border-color: var(--color-brand, #dc2626);
+                    background: rgba(220, 38, 38, 0.05);
+                    color: var(--text-primary);
+                  }
+                  .routing-radio input {
+                    accent-color: var(--color-brand, #dc2626);
+                    transform: scale(1.1);
+                  }
+                </style>
 
-                  <!-- Native multi-select for form submission -->
-                  <select name="collab_departements[]" id="collabDeptSelect" multiple style="display:none;">
-                    {% for dept in departements %}
-                    <option value="{{ dept.id }}" {% if dept in ticket.departements_collab %}selected{% endif %}>{{ dept.nom }}</option>
-                    {% endfor %}
-                  </select>
-
-                  <!-- Interactive Department Chips -->
-                  <div id="collabDeptChips" class="collab-dept-grid">
-                    {% for dept in departements %}
-                    {% set is_dept_selected = (dept in ticket.departements_collab) %}
-                    <button type="button" class="collab-dept-chip {% if is_dept_selected %}active{% endif %}" data-id="{{ dept.id }}" onclick="toggleCollabDept('{{ dept.id }}')">
-                      <span class="chip-check" style="display:{% if is_dept_selected %}inline-flex{% else %}none{% endif %};">✓</span>
-                      <span>{{ dept.nom }}</span>
-                    </button>
-                    {% endfor %}
-                  </div>
+                <div style="display:flex; gap:12px; margin-bottom: 20px; flex-wrap: wrap;">
+                  <label class="routing-radio">
+                    <input type="radio" name="routing_type" value="all" {% if routing_type == 'all' %}checked{% endif %} onchange="toggleRoutingUI()"> 
+                    <span>À tout le département</span>
+                  </label>
+                  <label class="routing-radio">
+                    <input type="radio" name="routing_type" value="specific" {% if routing_type == 'specific' %}checked{% endif %} onchange="toggleRoutingUI()"> 
+                    <span>À une personne spécifique</span>
+                  </label>
+                  <label class="routing-radio">
+                    <input type="radio" name="routing_type" value="collab" {% if routing_type == 'collab' %}checked{% endif %} onchange="toggleRoutingUI()"> 
+                    <span>Collaboration (multiples)</span>
+                  </label>
                 </div>
 
-                <!-- 2. Agents collaborateurs -->
-                <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px;">
-                  <div class="collab-header-row">
-                    <div class="collab-title">
-                      <span class="collab-title-icon">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                      </span>
-                      <span>Membres & Collaborateurs</span>
-                    </div>
-                    <span id="collabUserCount" class="collab-count-badge {% if ticket.collaborateurs %}has-selected{% endif %}">{{ ticket.collaborateurs | length }} sélectionné(s)</span>
-                  </div>
-
-                  <!-- Native multi-select for form submission -->
-                  <select name="collab_users[]" id="collabUsersSelect" multiple style="display:none;">
+                <div id="routingSpecificUI" style="display:{% if routing_type == 'specific' %}block{% else %}none{% endif %}; padding: 16px; background: var(--surface-base); border-radius: 8px; border: 1px solid var(--border-subtle);">
+                  <label class="premium-label">Sélectionner l'agent (Optionnel)</label>
+                  <select name="assigne_a_id" id="agentSelect" class="premium-input">
+                    <option value="">Sélectionner une personne...</option>
                     {% for u in utilisateurs %}
-                    <option value="{{ u.id }}" data-dept="{{ u.departement_id if u.departement_id else '' }}" data-name="{{ u.prenom }} {{ u.nom }}" data-dept-name="{{ u.departement.nom if u.departement else 'Sans Dpt' }}" {% if u in ticket.collaborateurs %}selected{% endif %}>{{ u.prenom }} {{ u.nom }}</option>
+                    <option value="{{ u.id }}" data-dept="{{ u.departement_id if u.departement_id else '' }}" {% if ticket.assigne_a_id == u.id %}selected{% endif %}>{{ u.prenom }} {{ u.nom }} ({{ u.departement.nom if u.departement else 'Sans Dpt' }})</option>
                     {% endfor %}
                   </select>
+                </div>
 
-                  <!-- Filter input -->
-                  <div id="collabUserFilterWrap" style="margin-bottom: 8px;">
-                    <input type="text" id="collabUserSearch" placeholder="Rechercher un collaborateur par nom..." 
-                           class="fi" style="padding: 6px 10px; font-size: 12px; border-radius: var(--r-sm);" oninput="filterCollabUserList()">
-                  </div>
-
-                  <!-- Prompt when no departments chosen -->
-                  <div id="collabNoDeptPrompt" style="display:none; padding: 14px; border: 1.5px dashed var(--border-subtle); border-radius: var(--r-sm); text-align: center; color: var(--text-muted); font-size: 12px; background: var(--surface-2);">
-                    Activez un ou plusieurs départements pour afficher les collaborateurs.
-                  </div>
-
-                  <!-- Interactive list of filtered agents -->
-                  <div id="collabUsersContainer" class="collab-agents-grid">
-                    <!-- Rendered by JS -->
-                  </div>
-
-                  <!-- Summary of Selected Collaborators -->
-                  <div id="selectedCollabSummary" class="collab-shelf-container" style="display: none;">
-                    <div class="collab-shelf-header">
-                      <span class="collab-shelf-title">Collaborateurs sélectionnés</span>
-                      <button type="button" onclick="clearAllCollabUsers()" style="background:none; border:none; color:var(--text-faint); font-size:11px; cursor:pointer; text-decoration:underline;">Tout désélectionner</button>
+                <div id="routingCollabUI" class="collab-wrapper-card" {% if routing_type == 'collab' %}style="display:flex;"{% endif %}>
+                  <!-- 1. Départements collaborateurs -->
+                  <div>
+                    <div class="collab-header-row">
+                      <div class="collab-title">
+                        <span class="collab-title-icon">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </span>
+                        <span>Départements impliqués</span>
+                      </div>
+                      <span id="collabDeptCount" class="collab-count-badge">0 sélectionné</span>
                     </div>
-                    <div id="selectedCollabChips" style="display: flex; flex-wrap: wrap; gap: 5px;"></div>
+                    <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 10px 0; line-height: 1.4;">
+                      Activez un ou plusieurs départements pour charger leurs collaborateurs respectifs.
+                    </p>
+
+                    <!-- Native multi-select preserved for form submission -->
+                    <select name="collab_departements[]" id="collabDeptSelect" multiple style="display:none;">
+                      {% for dept in departements %}
+                      <option value="{{ dept.id }}" {% if dept in ticket.departements_collab %}selected{% endif %}>{{ dept.nom }}</option>
+                      {% endfor %}
+                    </select>
+
+                    <!-- Interactive Department Chips -->
+                    <div id="collabDeptChips" class="collab-dept-grid">
+                      {% for dept in departements %}
+                      <button type="button" class="collab-dept-chip{% if dept in ticket.departements_collab %} active{% endif %}" data-id="{{ dept.id }}" onclick="toggleCollabDept('{{ dept.id }}')">
+                        <span class="chip-check">✓</span>
+                        <span>{{ dept.nom }}</span>
+                      </button>
+                      {% endfor %}
+                    </div>
+                  </div>
+
+                  <!-- 2. Agents collaborateurs -->
+                  <div style="border-top: 1px solid var(--border-subtle); padding-top: 16px;">
+                    <div class="collab-header-row">
+                      <div class="collab-title">
+                        <span class="collab-title-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </span>
+                        <span>Membres & Collaborateurs</span>
+                      </div>
+                      <span id="collabUserCount" class="collab-count-badge">0 sélectionné</span>
+                    </div>
+
+                    <!-- Native multi-select preserved for form submission -->
+                    <select name="collab_users[]" id="collabUsersSelect" multiple style="display:none;">
+                      {% for u in utilisateurs %}
+                      <option value="{{ u.id }}" data-dept="{{ u.departement_id if u.departement_id else '' }}" data-name="{{ u.prenom }} {{ u.nom }}" data-dept-name="{{ u.departement.nom if u.departement else 'Sans Dpt' }}" {% if u in ticket.collaborateurs %}selected{% endif %}>{{ u.prenom }} {{ u.nom }}</option>
+                      {% endfor %}
+                    </select>
+
+                    <!-- Search filter within selected department agents -->
+                    <div id="collabUserFilterWrap" class="collab-search-wrap" style="display: none;">
+                      <input type="text" id="collabUserSearch" placeholder="Rechercher par nom de collaborateur..." 
+                             class="collab-search-input" oninput="filterCollabUserList()">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 11px; top: 12px; color: var(--text-muted); pointer-events: none;">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                      </svg>
+                    </div>
+
+                    <!-- Prompt when no departments chosen -->
+                    <div id="collabNoDeptPrompt" style="padding: 20px; border: 1.5px dashed var(--border-subtle); border-radius: 10px; text-align: center; color: var(--text-muted); font-size: 13px; background: var(--surface-2);">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:block; margin: 0 auto 8px; opacity: 0.5;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                      Activez un ou plusieurs départements ci-dessus pour afficher leurs collaborateurs.
+                    </div>
+
+                    <!-- Interactive grid showing ONLY agents of selected departments -->
+                    <div id="collabUsersContainer" class="collab-agents-grid" style="display: none;">
+                      <!-- Dynamically rendered agent cards -->
+                    </div>
+
+                    <!-- Selected Collaborators Shelf (Cards & Chips) -->
+                    <div id="selectedCollabSummary" class="collab-shelf-container" style="display: none;">
+                      <div class="collab-shelf-header">
+                        <span class="collab-shelf-title">Collaborateurs sélectionnés</span>
+                        <button type="button" onclick="clearAllCollabUsers()" style="background:none; border:none; color:var(--text-muted); font-size:11px; cursor:pointer; text-decoration:underline;">Tout désélectionner</button>
+                      </div>
+                      <div id="selectedCollabChips" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        <!-- Selected agent badges -->
+                      </div>
+                    </div>
                   </div>
                 </div>
+
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Checklist -->
-        <div class="edit-section">
-          <div class="edit-section-header">
-            <div class="edit-section-icon">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-            </div>
-            <span class="edit-section-title">Checklist de traitement</span>
-            {% if ticket.taches %}
-            {% set done_count = ticket.taches | selectattr('terminee') | list | length %}
-            <span style="margin-left: auto; font-size: 11px; font-weight: 700; color: var(--text-muted);">{{ done_count }}/{{ ticket.taches | length }}</span>
-            {% endif %}
+          <!-- 4. Description -->
+          <div style="margin-bottom: 28px;">
+            <label class="premium-label" for="description">Description détaillée</label>
+            <textarea id="description" name="description" class="premium-textarea" rows="8" required maxlength="20000" placeholder="Décrivez le problème. N'hésitez pas à inclure des messages d'erreur, des étapes pour reproduire le bug, ou le comportement attendu..." style="resize:vertical; min-height:150px;">{{ ticket.description or '' }}</textarea>
           </div>
-          <div class="edit-section-body">
-            {% if ticket.taches %}
-            {% set pct = (ticket.taches | selectattr('terminee') | list | length / ticket.taches | length * 100) | int %}
-            <div style="background: var(--surface-3); border-radius: 99px; height: 3px; margin-bottom: 14px; overflow: hidden;">
-              <div style="background: var(--success); height: 100%; width: {{ pct }}%; border-radius: 99px;"></div>
-            </div>
-            {% endif %}
 
-            <div id="checklistContainer" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
+          <!-- 5. Checklist / Sous-tâches -->
+          <div>
+            {% set nb_taches = ticket.taches | length %}
+            {% set nb_faites = ticket.taches | selectattr('terminee') | list | length %}
+            <label class="premium-label">Checklist de traitement (Processus){% if nb_taches %} <span class="edit-count">{{ nb_faites }}/{{ nb_taches }}</span>{% endif %}</label>
+            {% if nb_taches %}
+            <div class="edit-progress"><div style="width: {{ (nb_faites / nb_taches * 100) | int }}%;"></div></div>
+            {% endif %}
+            <div id="checklistContainer" style="display:flex; flex-direction:column; gap:12px; margin-bottom:12px;">
               {% for tache in ticket.taches | sort(attribute='ordre') %}
-              <div class="checklist-row {% if tache.terminee %}done-row{% endif %}">
-                <svg class="drag-handle" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/>
-                  <circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/>
-                </svg>
-                <input type="checkbox" name="taches_terminees[]" value="{{ tache.id }}"
-                  {% if tache.terminee %}checked{% endif %}
-                  style="width:15px;height:15px;border-radius:4px;accent-color:var(--success);cursor:pointer;flex-shrink:0;"
-                  onchange="this.closest('.checklist-row').classList.toggle('done-row',this.checked); this.closest('.checklist-row').querySelector('input.fi').style.textDecoration=this.checked?'line-through':'none';">
-                <input type="text" name="taches_existantes[{{ tache.id }}]" class="fi"
-                  value="{{ tache.titre }}" style="flex:1; padding: 7px 10px; {% if tache.terminee %}text-decoration:line-through;{% endif %}">
-                <button type="button"
-                  style="background:none;border:none;cursor:pointer;padding:4px 5px;color:var(--text-faint);border-radius:var(--r-sm);transition:color var(--fast),background var(--fast);"
-                  onmouseover="this.style.color='#ef4444';this.style.background='rgba(239,68,68,.08)'"
-                  onmouseout="this.style.color='var(--text-faint)';this.style.background='none'"
-                  onclick="this.closest('.checklist-row').remove()" title="Supprimer">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <div class="edit-task{% if tache.terminee %} is-done{% endif %}">
+                <input type="checkbox" name="taches_terminees[]" value="{{ tache.id }}" {% if tache.terminee %}checked{% endif %} aria-label="Étape terminée" onchange="this.closest('.edit-task').classList.toggle('is-done', this.checked)">
+                <input type="text" name="taches_existantes[{{ tache.id }}]" class="premium-input" value="{{ tache.titre }}" style="flex:1;">
+                <button type="button" class="btn btn-ghost btn-sm" style="padding:0 10px; color:#ef4444;" onclick="this.closest('.edit-task').remove()" title="Supprimer">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
               {% endfor %}
             </div>
-
-            <div id="newChecklistItems"></div>
-
-            <button type="button" id="addStepBtn" onclick="addChecklistItem()"
-              style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px;font-size:var(--text-sm);font-weight:600;color:var(--text-muted);background:none;border:1.5px dashed var(--border-default);border-radius:var(--r-md);cursor:pointer;transition:all var(--fast);"
-              onmouseover="this.style.borderColor='var(--brand)';this.style.color='var(--brand)';this.style.background='var(--brand-subtle)'"
-              onmouseout="this.style.borderColor='var(--border-default)';this.style.color='var(--text-muted)';this.style.background='none'">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Ajouter une etape
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addChecklistItem()" style="font-weight:600;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Ajouter une étape
             </button>
+            <script>
+              function addChecklistItem() {
+                var container = document.getElementById('checklistContainer');
+                var wrapper = document.createElement('div');
+                wrapper.style.display = 'flex';
+                wrapper.style.gap = '8px';
+                wrapper.innerHTML = `
+                  <input type="text" name="taches[]" class="premium-input" placeholder="Ex: Accès RDP au serveur applicatif" style="flex:1;">
+                  <button type="button" class="btn btn-ghost btn-sm" style="padding:0 10px; color:#ef4444;" onclick="this.parentElement.remove()" title="Supprimer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                `;
+                container.appendChild(wrapper);
+                wrapper.querySelector('input').focus();
+              }
+            </script>
           </div>
+
         </div>
+      </div>
 
-      </div><!-- /left -->
-
-      <!-- ═══ RIGHT COLUMN ═══ -->
-      <div class="right-col" style="position: sticky; top: 20px; display: flex; flex-direction: column; gap: 12px;">
-
-        <!-- Statut -->
-        <div class="edit-section">
-          <div class="edit-section-header">
-            <div class="edit-section-icon">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <span class="edit-section-title">Statut</span>
-          </div>
-          <div class="edit-section-body">
-            <select id="statut" name="statut" class="fi">
-              <option value="nouveau"    {% if ticket.statut == 'nouveau' %}selected{% endif %}>&#9679; Nouveau</option>
-              <option value="ouvert"     {% if ticket.statut == 'ouvert' %}selected{% endif %}>&#9679; Ouvert</option>
-              <option value="en_cours"   {% if ticket.statut == 'en_cours' %}selected{% endif %}>&#9679; En cours</option>
-              <option value="en_attente" {% if ticket.statut == 'en_attente' %}selected{% endif %}>&#9679; En attente</option>
-              <option value="resolu"     {% if ticket.statut == 'resolu' %}selected{% endif %}>&#9679; Resolu</option>
-              <option value="ferme"      {% if ticket.statut == 'ferme' %}selected{% endif %}>&#9679; Ferme</option>
-              <option value="annule"     {% if ticket.statut == 'annule' %}selected{% endif %}>&#9679; Annule</option>
+      <!-- RIGHT COLUMN: Sidebar (Metadata & Actions) -->
+      <div style="display: flex; flex-direction: column; gap: 24px; position: sticky; top: 24px; min-width: 0;">
+        
+        <div class="card" style="background: var(--surface-base); border: 1px solid var(--border-subtle); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); padding: 24px; min-width: 0; overflow-x: hidden;">
+          
+          <!-- Statut (propre à la modification) -->
+          <div style="margin-bottom: 24px;">
+            <label class="premium-label" for="statut">Statut</label>
+            <select id="statut" name="statut" class="premium-input">
+              {% for code, label in [('nouveau','Nouveau'),('ouvert','Ouvert'),('en_cours','En cours'),('en_attente','En attente'),('resolu','Résolu'),('ferme','Fermé'),('annule','Annulé')] %}
+              <option value="{{ code }}" {% if ticket.statut == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
             </select>
           </div>
-        </div>
 
-        <!-- Priorite -->
-        <div class="edit-section">
-          <div class="edit-section-header">
-            <div class="edit-section-icon">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-            </div>
-            <span class="edit-section-title">Priorite</span>
-          </div>
-          <div class="edit-section-body">
+          <!-- Priority Buttons -->
+          <div style="margin-bottom: 24px;">
+            <label class="premium-label">Priorité</label>
             <input type="hidden" name="priorite" id="hiddenPriorite" value="{{ ticket.priorite or 'moyenne' }}">
-            <div class="priority-list">
-              <div class="priority-row {% if ticket.priorite == 'critique' %}active{% endif %}" data-value="critique" style="--p-color:#9B1030;--p-bg:rgba(155,16,48,.08);">
-                <div class="p-left"><span class="p-dot"></span><span class="p-label">Critique</span></div>
-                <svg class="p-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            
+            <div class="priority-toggles">
+              <div class="priority-toggle p-critique{% if (ticket.priorite or 'moyenne') == 'critique' %} active{% endif %}" data-value="critique">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="priority-dot dot-critique"></span><span style="font-size:13px; font-weight:600;">Critique</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="opacity:0;"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
-              <div class="priority-row {% if ticket.priorite == 'urgente' %}active{% endif %}" data-value="urgente" style="--p-color:#E8213F;--p-bg:rgba(232,33,63,.08);">
-                <div class="p-left"><span class="p-dot"></span><span class="p-label">Urgente</span></div>
-                <svg class="p-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <div class="priority-toggle p-urgente{% if (ticket.priorite or 'moyenne') == 'urgente' %} active{% endif %}" data-value="urgente">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="priority-dot dot-urgente"></span><span style="font-size:13px; font-weight:600;">Urgente</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="opacity:0;"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
-              <div class="priority-row {% if ticket.priorite == 'haute' %}active{% endif %}" data-value="haute" style="--p-color:#F97316;--p-bg:rgba(249,115,22,.08);">
-                <div class="p-left"><span class="p-dot"></span><span class="p-label">Haute</span></div>
-                <svg class="p-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <div class="priority-toggle p-haute{% if (ticket.priorite or 'moyenne') == 'haute' %} active{% endif %}" data-value="haute">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="priority-dot dot-haute"></span><span style="font-size:13px; font-weight:600;">Haute</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="opacity:0;"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
-              <div class="priority-row {% if ticket.priorite == 'moyenne' %}active{% endif %}" data-value="moyenne" style="--p-color:#2F6BFF;--p-bg:rgba(47,107,255,.08);">
-                <div class="p-left"><span class="p-dot"></span><span class="p-label">Moyenne</span></div>
-                <svg class="p-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <div class="priority-toggle p-moyenne{% if (ticket.priorite or 'moyenne') == 'moyenne' %} active{% endif %}" data-value="moyenne">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="priority-dot dot-moyenne"></span><span style="font-size:13px; font-weight:600;">Moyenne</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="opacity:0;"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
-              <div class="priority-row {% if ticket.priorite == 'basse' %}active{% endif %}" data-value="basse" style="--p-color:#9A9AA5;--p-bg:rgba(154,154,165,.08);">
-                <div class="p-left"><span class="p-dot"></span><span class="p-label">Basse</span></div>
-                <svg class="p-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <div class="priority-toggle p-basse{% if (ticket.priorite or 'moyenne') == 'basse' %} active{% endif %}" data-value="basse">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="priority-dot dot-basse"></span><span style="font-size:13px; font-weight:600;">Basse</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="opacity:0;"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Fichiers -->
-        <div class="edit-section">
-          <div class="edit-section-header">
-            <div class="edit-section-icon">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            </div>
-            <span class="edit-section-title">Pieces jointes</span>
+          <!-- Attachments -->
+          <div>
+            <label class="premium-label">Pièces jointes{% if ticket.pieces_jointes %} <span class="edit-count">{{ ticket.pieces_jointes|length }}</span>{% endif %}</label>
             {% if ticket.pieces_jointes %}
-            <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--text-muted);">{{ ticket.pieces_jointes|length }}</span>
-            {% endif %}
-          </div>
-          <div class="edit-section-body">
-            {% if ticket.pieces_jointes %}
-            <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
+            <div class="edit-files">
               {% for pj in ticket.pieces_jointes %}
-              <div class="file-chip">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-                <span style="flex:1;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ pj.nom_original }}</span>
-                <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">{{ (pj.taille/1024)|round(0)|int }}Ko</span>
+              <div class="edit-file">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                <span class="edit-file-name">{{ pj.nom_original }}</span>
+                <span class="edit-file-size">{{ (pj.taille/1024)|round(0)|int }} Ko</span>
               </div>
               {% endfor %}
             </div>
             {% endif %}
-
-            <div class="drop-zone" id="dropZone"
-              onclick="document.getElementById('fileInput').click()"
-              ondragover="event.preventDefault();this.classList.add('drag-over')"
-              ondragleave="this.classList.remove('drag-over')"
-              ondrop="event.preventDefault();this.classList.remove('drag-over');handleDrop(event);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted);margin-bottom:5px;">
+            <div id="dropZone" style="border: 2px dashed var(--border-subtle); border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface-raised);" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.style.borderColor='var(--color-brand,#dc2626)';this.style.background='var(--surface-hover)';" ondragleave="this.style.borderColor='var(--border-subtle)';this.style.background='var(--surface-raised)';" ondrop="event.preventDefault();this.style.borderColor='var(--border-subtle)';this.style.background='var(--surface-raised)';handleDrop(event);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted); margin-bottom:12px;">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
-              <p style="margin:0 0 2px;font-size:var(--text-sm);font-weight:600;color:var(--text-secondary);">Ajouter des fichiers</p>
-              <p style="margin:0;font-size:11px;color:var(--text-faint);">ou glisser-deposer ici</p>
-              <div id="fileList" style="margin-top:8px;display:flex;flex-direction:column;gap:5px;"></div>
+              <p style="font-size: 13px; font-weight: 500; color: var(--text-primary); margin: 0 0 4px;">Ajouter des fichiers</p>
+              <p style="font-size: 11px; color: var(--text-muted); margin: 0;">Images, PDF, Office, TXT, ZIP (10 Mo max par fichier)</p>
+              <div id="fileList" style="margin-top:12px; display:flex; flex-direction:column; gap:6px;"></div>
             </div>
             <input type="file" id="fileInput" name="attachments" multiple accept="{% for e in config.ALLOWED_EXTENSIONS|sort %}.{{ e }}{% if not loop.last %},{% endif %}{% endfor %}" style="display:none;">
           </div>
+
+        </div>
+        
+        <!-- Informations (propres à la modification) -->
+        <div class="edit-meta">
+          <div><span>Créé le</span><b>{{ ticket.date_creation.strftime('%d/%m/%Y %H:%M') if ticket.date_creation }}</b></div>
+          {% if ticket.createur %}<div><span>Par</span><b>{{ ticket.createur.prenom }} {{ ticket.createur.nom }}</b></div>{% endif %}
+          {% if ticket.date_modification %}<div><span>Modifié le</span><b>{{ ticket.date_modification.strftime('%d/%m/%Y %H:%M') }}</b></div>{% endif %}
+          {% if ticket.date_echeance %}<div><span>Échéance</span><b>{{ ticket.date_echeance.strftime('%d/%m/%Y') }}</b></div>{% endif %}
         </div>
 
-        <!-- Save actions -->
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <button type="submit" form="editForm" class="btn btn-primary" style="width:100%;justify-content:center;gap:6px;padding:11px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <!-- Form Actions -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button type="submit" id="submitTicketBtn" class="btn btn-primary" style="width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             Enregistrer les modifications
           </button>
-          <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-ghost" style="width:100%;justify-content:center;">Annuler</a>
+          <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="btn btn-ghost" style="width: 100%; justify-content: center; border-radius: 12px;">Annuler</a>
         </div>
 
-      </div><!-- /right -->
+      </div>
+
     </div>
   </form>
-</div>
+
+</div><!-- /page -->
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
 (function () {
-  /* Unsaved dot */
-  var dirty = false, dot = document.getElementById('unsavedDot');
-  document.getElementById('editForm').addEventListener('input', function() {
-    if (!dirty) { dirty = true; dot.classList.add('on'); }
-  });
-  document.getElementById('editForm').addEventListener('submit', function() { dirty = false; });
-
-  /* Type cards */
-  var typeCards = document.querySelectorAll('.type-card');
+  /* ── 1. Type selection & Category filtering ── */
+  var typeCards    = document.querySelectorAll('.type-card');
+  var catCards     = document.querySelectorAll('.category-card');
+  var deptGroups   = document.querySelectorAll('.dept-group');
+  var noCatMsg     = document.getElementById('noCategoryMsg');
+  var deptField    = document.getElementById('deptAutoField');
+  var deptBadge    = document.getElementById('deptBadge');
+  
   function selectType(val) {
-    typeCards.forEach(function(tc) { tc.classList.toggle('active', tc.dataset.type === val); tc.querySelector('.type-radio').checked = (tc.dataset.type === val); });
-    var cc = document.getElementById('customTypeContainer'), ci = document.getElementById('custom_type_input');
-    if (val === 'autre') { cc.style.display='block'; ci.required=true; ci.focus(); }
-    else { cc.style.display='none'; ci.required=false; }
-  }
-  typeCards.forEach(function(tc) { tc.addEventListener('click', function() { selectType(tc.dataset.type); }); });
+    typeCards.forEach(function (tc) {
+      var sel = tc.dataset.type === val;
+      tc.style.borderColor = sel ? 'var(--color-brand,#dc2626)' : 'var(--border-subtle)';
+      tc.style.background  = sel ? 'rgba(220,38,38,.04)' : '';
+      tc.querySelector('.type-radio').checked = sel;
+    });
 
-  /* Routing */
+    var customContainer = document.getElementById('customTypeContainer');
+    var customInput = document.getElementById('custom_type_input');
+    if (val === 'autre') {
+        customContainer.style.display = 'block';
+        customInput.required = true;
+    } else {
+        customContainer.style.display = 'none';
+        customInput.required = false;
+    }
+  }
+
   window.toggleRoutingUI = function() {
-    var v = document.querySelector('input[name="routing_type"]:checked').value;
-    document.getElementById('routingSpecificUI').style.display = v === 'specific' ? 'block' : 'none';
-    document.getElementById('routingCollabUI').style.display = v === 'collab' ? 'flex' : 'none';
-    if (v === 'collab') {
+    var val = document.querySelector('input[name="routing_type"]:checked').value;
+    var specificUI = document.getElementById('routingSpecificUI');
+    var collabUI = document.getElementById('routingCollabUI');
+    
+    specificUI.style.display = 'none';
+    collabUI.style.display = 'none';
+    
+    if (val === 'specific') {
+      specificUI.style.display = 'block';
+    } else if (val === 'collab') {
+      collabUI.style.display = 'flex';
+
+      // Ensure the selected main department is active in the collaboration chips
       var mainDeptId = deptSelect ? deptSelect.value : '';
       if (mainDeptId && collabDeptSelect) {
         var opt = collabDeptSelect.querySelector('option[value="' + mainDeptId + '"]');
@@ -878,45 +838,80 @@ textarea.fi { resize: vertical; min-height: 140px; }
         if (opt && chip && !opt.selected) {
           opt.selected = true;
           chip.classList.add('active');
-          var check = chip.querySelector('.chip-check');
-          if (check) check.style.display = 'inline-flex';
-          var selectedDepts = Array.prototype.filter.call(collabDeptSelect.options, function (o) { return o.selected; });
-          if (collabDeptCount) {
-            collabDeptCount.textContent = selectedDepts.length + ' sélectionné' + (selectedDepts.length > 1 ? 's' : '');
-            collabDeptCount.classList.toggle('has-selected', selectedDepts.length > 0);
-          }
+          if (activeDeptOrder.indexOf(mainDeptId) === -1) activeDeptOrder.push(mainDeptId);
         }
       }
+      refreshCollabDeptBadges();
       if (typeof updateCollabUsers === 'function') updateCollabUsers();
     }
   };
 
-  /* ── Collaboration & Agent filtering logic ── */
-  var deptSelect = document.getElementById('departementSelect');
-  var agentSelect = document.getElementById('agentSelect');
-  var collabDeptSelect = document.getElementById('collabDeptSelect');
-  var collabUsersSelect = document.getElementById('collabUsersSelect');
-  var collabDeptCount = document.getElementById('collabDeptCount');
-  var collabUserCount = document.getElementById('collabUserCount');
-  var collabNoDeptPrompt = document.getElementById('collabNoDeptPrompt');
-  var collabUsersContainer = document.getElementById('collabUsersContainer');
-  var selectedCollabSummary = document.getElementById('selectedCollabSummary');
-  var selectedCollabChips = document.getElementById('selectedCollabChips');
+  typeCards.forEach(function (tc) { tc.addEventListener('click', function () { selectType(tc.dataset.type); }); });
+  var firstChecked = document.querySelector('.type-radio:checked');
+  if (firstChecked) selectType(firstChecked.value);
 
-  function filterAgents() {
+  /* ── 2b. Category: filtered by department, autofills type/priority ── */
+  var catSelect = document.getElementById('categorieSelect');
+  var catHint = document.getElementById('categorieHint');
+  var catWrapper = document.getElementById('categorieWrapper');
+  var deptSelect = document.getElementById('departementSelect');
+
+  function filterCategories(keep) {
+    var deptId = deptSelect.value;
+    var visible = 0;
+    if (!keep) { catSelect.value = ''; }
+    catHint.style.display = 'none';
+    Array.prototype.forEach.call(catSelect.options, function (o) {
+      if (!o.value) return;
+      var show = o.dataset.dept === deptId;
+      o.hidden = !show;
+      o.disabled = !show;
+      if (show) visible++;
+    });
+    catWrapper.style.display = (deptId && visible) ? 'block' : 'none';
+  }
+
+  var agentSelect = document.getElementById('agentSelect');
+  function filterAgents(keep) {
     if (!agentSelect) return;
     var deptId = deptSelect ? deptSelect.value : '';
+    if (!keep) { agentSelect.value = ''; }
     var visible = 0;
-    Array.prototype.forEach.call(agentSelect.options, function(o, idx) {
-      if (idx === 0) return;
+    Array.prototype.forEach.call(agentSelect.options, function (o, idx) {
+      if (idx === 0) return; // Keep placeholder
       var show = deptId ? (o.dataset.dept === deptId) : false;
       o.hidden = !show;
       o.disabled = !show;
       o.style.display = show ? '' : 'none';
       if (show) visible++;
     });
+    if (!deptId) {
+      agentSelect.options[0].textContent = "Sélectionnez d'abord un département ci-dessus...";
+    } else if (visible === 0) {
+      agentSelect.options[0].textContent = "Aucun agent disponible dans ce département";
+    } else {
+      agentSelect.options[0].textContent = "Sélectionner une personne (" + visible + " disponible" + (visible > 1 ? "s" : "") + ")...";
+    }
   }
 
+  /* ── 2c. Collaboration Assignment Filtering Logic ── */
+  var collabDeptSelect = document.getElementById('collabDeptSelect');
+  var collabUsersSelect = document.getElementById('collabUsersSelect');
+  var collabDeptCount = document.getElementById('collabDeptCount');
+  var collabUserCount = document.getElementById('collabUserCount');
+  var collabNoDeptPrompt = document.getElementById('collabNoDeptPrompt');
+  var collabUserFilterWrap = document.getElementById('collabUserFilterWrap');
+  var collabUsersContainer = document.getElementById('collabUsersContainer');
+  var selectedCollabSummary = document.getElementById('selectedCollabSummary');
+  var selectedCollabChips = document.getElementById('selectedCollabChips');
+
+  // Track the chronological activation order of departments
+  var activeDeptOrder = [];
+  if (collabDeptSelect) {
+    Array.prototype.forEach.call(collabDeptSelect.options, function (o) { if (o.selected) activeDeptOrder.push(o.value); });
+  }
+
+  // Cache user data
   var allCollabUsersData = [];
   if (collabUsersSelect) {
     Array.prototype.forEach.call(collabUsersSelect.options, function (opt) {
@@ -949,14 +944,6 @@ textarea.fi { resize: vertical; min-height: 140px; }
     return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
   }
 
-  // Track the chronological activation order of departments
-  var activeDeptOrder = [];
-  if (collabDeptSelect) {
-    Array.prototype.forEach.call(collabDeptSelect.options, function(o) {
-      if (o.selected) activeDeptOrder.push(o.value);
-    });
-  }
-
   function refreshCollabDeptBadges() {
     var selectedDepts = collabDeptSelect ? Array.prototype.filter.call(collabDeptSelect.options, function (o) { return o.selected; }) : [];
     if (collabDeptCount) {
@@ -972,9 +959,7 @@ textarea.fi { resize: vertical; min-height: 140px; }
 
     var isActive = chip.classList.toggle('active');
     opt.selected = isActive;
-    var check = chip.querySelector('.chip-check');
-    if (check) check.style.display = isActive ? 'inline-flex' : 'none';
-
+    
     if (isActive) {
       if (activeDeptOrder.indexOf(deptId) === -1) activeDeptOrder.push(deptId);
     } else {
@@ -984,16 +969,18 @@ textarea.fi { resize: vertical; min-height: 140px; }
 
     refreshCollabDeptBadges();
 
-    // Sync main department with primary active collab department
+    // Sync main department with the primary active collab department
     if (activeDeptOrder.length > 0 && deptSelect) {
       if (deptSelect.value !== activeDeptOrder[0]) {
         deptSelect.value = activeDeptOrder[0];
-        previousModifierMainDept = activeDeptOrder[0];
+        previousMainDept = activeDeptOrder[0];
+        filterCategories();
         filterAgents();
       }
     } else if (activeDeptOrder.length === 0 && deptSelect) {
       deptSelect.value = '';
-      previousModifierMainDept = '';
+      previousMainDept = '';
+      filterCategories();
       filterAgents();
     }
 
@@ -1005,12 +992,14 @@ textarea.fi { resize: vertical; min-height: 140px; }
     if (!opt) return;
 
     opt.selected = !opt.selected;
+    
+    // Update container row checkbox/style
     var card = document.querySelector('.collab-agent-card[data-user-id="' + userId + '"]');
     if (card) {
       card.classList.toggle('selected', opt.selected);
       var check = card.querySelector('.collab-check-box');
       if (check) {
-        check.innerHTML = opt.selected ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+        check.innerHTML = opt.selected ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
       }
     }
 
@@ -1042,6 +1031,7 @@ textarea.fi { resize: vertical; min-height: 140px; }
           activeDeptIds.push(dId);
         }
       });
+      // Catch any selected options not yet in activeDeptOrder
       Array.prototype.forEach.call(collabDeptSelect.options, function (o) {
         if (o.selected && activeDeptIds.indexOf(o.value) === -1) {
           activeDeptIds.push(o.value);
@@ -1049,30 +1039,35 @@ textarea.fi { resize: vertical; min-height: 140px; }
       });
     }
 
+    // Fallback to main ticket department if none explicitly picked
     var mainDeptId = deptSelect ? deptSelect.value : '';
     if (activeDeptIds.length === 0 && mainDeptId) {
       activeDeptIds.push(mainDeptId);
     }
 
     if (activeDeptIds.length === 0) {
-      if (collabNoDeptPrompt) collabNoDeptPrompt.style.display = 'block';
+      collabNoDeptPrompt.style.display = 'block';
+      collabUserFilterWrap.style.display = 'none';
       collabUsersContainer.style.display = 'none';
       collabUsersContainer.innerHTML = '';
       return;
     }
 
-    if (collabNoDeptPrompt) collabNoDeptPrompt.style.display = 'none';
+    collabNoDeptPrompt.style.display = 'none';
+    collabUserFilterWrap.style.display = 'block';
     collabUsersContainer.style.display = 'flex';
     collabUsersContainer.style.flexDirection = 'column';
-    collabUsersContainer.style.gap = '12px';
+    collabUsersContainer.style.gap = '14px';
     collabUsersContainer.innerHTML = '';
 
     var totalRendered = 0;
 
+    // For each department in order: render a department header then its users sorted alphabetically
     activeDeptIds.forEach(function (deptId) {
       var deptOpt = collabDeptSelect ? collabDeptSelect.querySelector('option[value="' + deptId + '"]') : null;
       var deptName = deptOpt ? deptOpt.textContent.trim() : (deptSelect && deptSelect.options[deptSelect.selectedIndex] ? deptSelect.options[deptSelect.selectedIndex].textContent.trim() : 'Département');
 
+      // Filter and sort users alphabetically by name
       var deptUsers = allCollabUsersData.filter(function (u) {
         return u.deptId === deptId;
       }).sort(function (a, b) {
@@ -1085,21 +1080,21 @@ textarea.fi { resize: vertical; min-height: 140px; }
       var groupSection = document.createElement('div');
       groupSection.className = 'collab-dept-group';
       groupSection.setAttribute('data-dept-id', deptId);
-      groupSection.style.cssText = 'border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px; background: var(--surface-1);';
+      groupSection.style.cssText = 'border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px 14px; background: var(--surface-1);';
 
       var groupHeader = document.createElement('div');
-      groupHeader.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dashed var(--border-subtle);';
+      groupHeader.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px dashed var(--border-subtle);';
       groupHeader.innerHTML = 
-        '<div style="display:flex; align-items:center; gap:6px;">' +
-          '<div style="width:18px; height:18px; border-radius:4px; background:rgba(232,33,63,0.1); color:#dc2626; display:flex; align-items:center; justify-content:center; font-size:10px;">' +
-            '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>' +
+        '<div style="display:flex; align-items:center; gap:8px;">' +
+          '<div style="width:20px; height:20px; border-radius:4px; background:rgba(232,33,63,0.1); color:#dc2626; display:flex; align-items:center; justify-content:center; font-size:11px;">' +
+            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>' +
           '</div>' +
-          '<span style="font-size:12px; font-weight:700; color:var(--text-primary);">' + deptName + '</span>' +
+          '<span style="font-size:12.5px; font-weight:700; color:var(--text-primary);">' + deptName + '</span>' +
         '</div>' +
-        '<span style="font-size:10.5px; font-weight:600; color:var(--text-muted);">' + deptUsers.length + ' membre(s)</span>';
+        '<span style="font-size:11px; font-weight:600; color:var(--text-muted);">' + deptUsers.length + ' membre(s)</span>';
 
       var usersGrid = document.createElement('div');
-      usersGrid.style.cssText = 'display:grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: 6px;';
+      usersGrid.style.cssText = 'display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px;';
 
       deptUsers.forEach(function (user) {
         var opt = collabUsersSelect.querySelector('option[value="' + user.id + '"]');
@@ -1115,14 +1110,14 @@ textarea.fi { resize: vertical; min-height: 140px; }
           toggleCollabUser(user.id);
         };
 
-        var checkIcon = isSelected ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+        var checkIcon = isSelected ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
 
         card.innerHTML = 
-          '<div style="display:flex; align-items:center; gap:8px; min-width:0;">' +
+          '<div style="display:flex; align-items:center; gap:10px; min-width:0;">' +
             '<div class="collab-avatar" style="background:' + gradient + ';">' + initials + '</div>' +
             '<div style="min-width:0;">' +
-              '<div style="font-weight:600; font-size:12px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + user.name + '</div>' +
-              '<div style="font-size:10px; color:var(--text-muted);">' + user.deptName + '</div>' +
+              '<div style="font-weight:600; font-size:12.5px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + user.name + '</div>' +
+              '<div style="font-size:10.5px; color:var(--text-muted); font-weight:500;">' + user.deptName + '</div>' +
             '</div>' +
           '</div>' +
           '<div class="collab-check-box">' + checkIcon + '</div>';
@@ -1136,7 +1131,7 @@ textarea.fi { resize: vertical; min-height: 140px; }
     });
 
     if (totalRendered === 0) {
-      collabUsersContainer.innerHTML = '<div style="padding: 14px; text-align: center; color: var(--text-muted); font-size: 12px;">Aucun collaborateur trouvé dans les départements sélectionnés.</div>';
+      collabUsersContainer.innerHTML = '<div style="padding: 18px; text-align: center; color: var(--text-muted); font-size: 13px;">Aucun collaborateur trouvé dans les départements sélectionnés.</div>';
     }
 
     renderSelectedCollabChips();
@@ -1170,9 +1165,11 @@ textarea.fi { resize: vertical; min-height: 140px; }
         chip.className = 'collab-selected-chip';
         chip.innerHTML = 
           '<span class="mini-avatar">' + initials + '</span>' +
-          '<span style="font-weight:600; font-size:11px;">' + user.name + '</span>' +
-          '<span style="color:var(--text-muted); font-size:10px;">(' + user.deptName + ')</span>' +
-          '<button type="button" class="remove-btn" onclick="toggleCollabUser(\'' + user.id + '\')" title="Retirer">×</button>';
+          '<span style="font-weight:600; font-size:12px;">' + user.name + '</span>' +
+          '<span style="color:var(--text-muted); font-size:11px;">(' + user.deptName + ')</span>' +
+          '<button type="button" class="remove-btn" onclick="toggleCollabUser(\'' + user.id + '\')" title="Retirer">' +
+            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+          '</button>';
         selectedCollabChips.appendChild(chip);
       });
     }
@@ -1187,6 +1184,7 @@ textarea.fi { resize: vertical; min-height: 140px; }
       var name = item.getAttribute('data-name') || '';
       item.style.display = (name.indexOf(query) !== -1) ? 'flex' : 'none';
     });
+    // Hide empty department sections if all cards in it are hidden by search
     document.querySelectorAll('.collab-dept-group').forEach(function(group) {
       var visibleInGroup = group.querySelectorAll('.collab-agent-card[style*="display: flex"]').length;
       if (!query) {
@@ -1197,25 +1195,25 @@ textarea.fi { resize: vertical; min-height: 140px; }
     });
   };
 
-  var previousModifierMainDept = deptSelect ? deptSelect.value : '';
+  var previousMainDept = deptSelect ? deptSelect.value : '';
 
   if (deptSelect) {
+    if (catSelect) deptSelect.addEventListener('change', function () { filterCategories(); });
     deptSelect.addEventListener('change', function() {
       var newDeptId = deptSelect.value;
       filterAgents();
 
       var routingVal = document.querySelector('input[name="routing_type"]:checked') ? document.querySelector('input[name="routing_type"]:checked').value : 'all';
-      
+
       if (routingVal === 'collab') {
-        if (previousModifierMainDept && previousModifierMainDept !== newDeptId && collabDeptSelect) {
-          var prevOpt = collabDeptSelect.querySelector('option[value="' + previousModifierMainDept + '"]');
-          var prevChip = document.querySelector('.collab-dept-chip[data-id="' + previousModifierMainDept + '"]');
+        // In collab mode, switching the main dropdown updates collaboration departments
+        if (previousMainDept && previousMainDept !== newDeptId && collabDeptSelect) {
+          var prevOpt = collabDeptSelect.querySelector('option[value="' + previousMainDept + '"]');
+          var prevChip = document.querySelector('.collab-dept-chip[data-id="' + previousMainDept + '"]');
           if (prevOpt && prevChip) {
             prevOpt.selected = false;
             prevChip.classList.remove('active');
-            var prevCheck = prevChip.querySelector('.chip-check');
-            if (prevCheck) prevCheck.style.display = 'none';
-            var pIdx = activeDeptOrder.indexOf(previousModifierMainDept);
+            var pIdx = activeDeptOrder.indexOf(previousMainDept);
             if (pIdx !== -1) activeDeptOrder.splice(pIdx, 1);
           }
         }
@@ -1226,20 +1224,15 @@ textarea.fi { resize: vertical; min-height: 140px; }
           if (newOpt && newChip) {
             newOpt.selected = true;
             newChip.classList.add('active');
-            var newCheck = newChip.querySelector('.chip-check');
-            if (newCheck) newCheck.style.display = 'inline-flex';
             if (activeDeptOrder.indexOf(newDeptId) === -1) activeDeptOrder.push(newDeptId);
           }
         }
       } else {
-        // Reset old collab selections if changed outside collab mode
+        // If not in collab mode, changing the main department resets previous collab selections
+        // so that switching back to collab later starts fresh from the newly chosen department
         if (collabDeptSelect) {
           Array.prototype.forEach.call(collabDeptSelect.options, function(o) { o.selected = false; });
-          document.querySelectorAll('.collab-dept-chip').forEach(function(c) {
-            c.classList.remove('active');
-            var chk = c.querySelector('.chip-check');
-            if (chk) chk.style.display = 'none';
-          });
+          document.querySelectorAll('.collab-dept-chip').forEach(function(c) { c.classList.remove('active'); });
           activeDeptOrder = [];
           if (newDeptId) {
             var nOpt = collabDeptSelect.querySelector('option[value="' + newDeptId + '"]');
@@ -1247,8 +1240,6 @@ textarea.fi { resize: vertical; min-height: 140px; }
             if (nOpt && nChip) {
               nOpt.selected = true;
               nChip.classList.add('active');
-              var nChk = nChip.querySelector('.chip-check');
-              if (nChk) nChk.style.display = 'inline-flex';
               activeDeptOrder.push(newDeptId);
             }
           }
@@ -1259,54 +1250,162 @@ textarea.fi { resize: vertical; min-height: 140px; }
         }
       }
 
-      previousModifierMainDept = newDeptId;
+      previousMainDept = newDeptId;
       refreshCollabDeptBadges();
       updateCollabUsers();
     });
+    if (catSelect) filterCategories(true);
+    filterAgents(true);
+
+    if (catSelect) {
+      catSelect.addEventListener('change', function () {
+        var opt = catSelect.options[catSelect.selectedIndex];
+        if (!opt || !opt.value) { catHint.style.display = 'none'; return; }
+        var d = opt.dataset.delai;
+        catHint.textContent = d ? 'Délai de résolution : ' + d + ' jour(s). L\'échéance sera calculée automatiquement.' : '';
+        catHint.style.display = d ? 'inline-block' : 'none';
+      });
+    }
   }
 
-  // Initial runs
-  filterAgents();
-  updateCollabUsers();
-
-  /* Priority */
-  var pRows = document.querySelectorAll('.priority-row'), hiddenP = document.getElementById('hiddenPriorite');
-  pRows.forEach(function(r) {
-    r.addEventListener('click', function() {
-      pRows.forEach(function(x) { x.classList.remove('active'); });
-      r.classList.add('active'); hiddenP.value = r.dataset.value;
+  /* ── 3. Priority Buttons Logic ── */
+  var pToggles = document.querySelectorAll('.priority-toggle');
+  var hiddenP  = document.getElementById('hiddenPriorite');
+  
+  function setPriority(val) {
+    pToggles.forEach(function(t) {
+      if (t.dataset.value === val) {
+        t.classList.add('active');
+        hiddenP.value = val;
+      } else {
+        t.classList.remove('active');
+      }
     });
+  }
+  
+  pToggles.forEach(function(t) {
+    t.addEventListener('click', function() { setPriority(this.dataset.value); });
   });
 
-  /* Checklist */
-  window.addChecklistItem = function() {
-    var c = document.getElementById('newChecklistItems'), row = document.createElement('div');
-    row.className = 'checklist-row'; row.style.marginBottom = '8px';
-    row.innerHTML =
-      '<svg class="drag-handle" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg>' +
-      '<input type="checkbox" style="width:15px;height:15px;border-radius:4px;accent-color:var(--success);cursor:pointer;flex-shrink:0;">' +
-      '<input type="text" name="taches[]" class="fi" placeholder="Nouvelle etape..." style="flex:1;padding:7px 10px;">' +
-      '<button type="button" style="background:none;border:none;cursor:pointer;padding:4px 5px;color:var(--text-faint);border-radius:var(--r-sm);transition:color var(--fast),background var(--fast);" onmouseover="this.style.color=\'#ef4444\';this.style.background=\'rgba(239,68,68,.08)\'" onmouseout="this.style.color=\'var(--text-faint)\';this.style.background=\'none\'" onclick="this.closest(\'.checklist-row\').remove()">' +
-      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
-    c.appendChild(row);
-    row.querySelector('input[type=text]').focus();
+
+  /* ── 5. File Drop (Cumulative) ── */
+  var dt = new DataTransfer();
+  
+  window.handleDrop = function (e) {
+    var files = e.dataTransfer.files;
+    if (files.length) { addFiles(files); }
   };
 
-  /* Files */
-  var dt = new DataTransfer();
-  window.handleDrop = function(e) { if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files); };
-  document.getElementById('fileInput').addEventListener('change', function(e) { addFiles(e.target.files); });
-  window.addFiles = function(files) { for (var i=0;i<files.length;i++) dt.items.add(files[i]); document.getElementById('fileInput').files=dt.files; renderFiles(); };
-  window.removeFile = function(i) { dt.items.remove(i); document.getElementById('fileInput').files=dt.files; renderFiles(); };
-  window.renderFiles = function() {
-    var list=document.getElementById('fileList'); list.innerHTML='';
-    for (var i=0;i<dt.files.length;i++) {
-      var f=dt.files[i], chip=document.createElement('div');
-      chip.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid var(--border-subtle);border-radius:var(--r-sm);background:var(--surface-2);';
-      chip.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg><span style="flex:1;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+f.name+'</span><span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">'+(f.size>1048576?(f.size/1048576).toFixed(1)+' MB':Math.round(f.size/1024)+' Ko')+'</span><button type="button" onclick="removeFile('+i+')" style="background:none;border:none;cursor:pointer;color:var(--text-faint);padding:2px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  document.getElementById('fileInput').addEventListener('change', function(e) {
+    addFiles(e.target.files);
+  });
+
+  window.addFiles = function(files) {
+    for (var i = 0; i < files.length; i++) {
+        dt.items.add(files[i]);
+    }
+    document.getElementById('fileInput').files = dt.files;
+    renderFiles();
+  };
+
+  window.removeFile = function(index) {
+    dt.items.remove(index);
+    document.getElementById('fileInput').files = dt.files;
+    renderFiles();
+  };
+
+  window.renderFiles = function () {
+    var list = document.getElementById('fileList');
+    list.innerHTML = '';
+    var files = dt.files;
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      var isImage = f.type.startsWith('image/');
+      var previewHtml = '';
+      if (isImage) {
+        var objectUrl = URL.createObjectURL(f);
+        previewHtml = '<img src="' + objectUrl + '" style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-subtle); flex-shrink: 0;" />';
+      } else {
+        previewHtml = '<div style="width: 36px; height: 36px; background: var(--surface-raised); border-radius: 6px; border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-shrink: 0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg></div>';
+      }
+      
+      var chip = document.createElement('div');
+      chip.style.cssText = 'display:flex; align-items:center; gap: 12px; padding: 8px; border-radius: 8px; background: var(--surface-base); border: 1px solid var(--border-subtle); text-align: left; box-shadow: 0 1px 2px rgba(0,0,0,0.02);';
+      
+      var sizeText = f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : Math.round(f.size/1024)+' KB';
+      
+      chip.innerHTML = previewHtml + 
+        '<div style="flex: 1; min-width: 0;">' +
+        '  <div style="font-size:12px; font-weight:600; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + f.name + '</div>' +
+        '  <div style="font-size:11px; color:var(--text-muted);">' + sizeText + '</div>' +
+        '</div>' +
+        '<button type="button" class="btn btn-ghost btn-sm" style="padding:0 8px; color:#ef4444;" onclick="removeFile(' + i + ')" title="Retirer le fichier">' +
+        '  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+        '</button>';
+        
       list.appendChild(chip);
     }
   };
+
+  /* ── 6. Form Submission Intercept ── */
+  var form = document.getElementById('editForm');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      var titre = document.getElementById('titre').value.trim();
+      var dept = document.getElementById('departementSelect').value;
+      var routing = document.querySelector('input[name="routing_type"]:checked').value;
+      
+      var isValid = true;
+      var errorMsg = '';
+      
+      if (!titre) {
+        isValid = false;
+        errorMsg = 'Le résumé du problème (titre) est obligatoire.';
+      } else if (!dept && document.getElementById('departementSelect').required) {
+        isValid = false;
+        errorMsg = 'Le département concerné est obligatoire.';
+      } else if (routing === 'specific') {
+        var assigne = document.getElementById('agentSelect').value;
+        if (!assigne) {
+          isValid = false;
+          errorMsg = 'Veuillez sélectionner l\'agent spécifique.';
+        }
+      }
+      
+      if (!isValid) {
+        e.preventDefault(); // Stop form from submitting (and reloading)
+        if (window.CHUB && window.CHUB.toast) {
+          window.CHUB.toast.error('Erreur de validation', errorMsg);
+        } else {
+          alert(errorMsg);
+        }
+        
+        // Disable the submit button spinning state if it was activated
+        var submitBtn = document.getElementById('submitTicketBtn');
+        if (submitBtn) {
+            submitBtn.classList.remove('disabled');
+            submitBtn.innerHTML = 'Enregistrer les modifications';
+        }
+      } else {
+        // Validation passed, show spinning state and let the native submission proceed
+        var submitBtn = document.getElementById('submitTicketBtn');
+        if (submitBtn && !submitBtn.classList.contains('disabled')) {
+            submitBtn.classList.add('disabled');
+            submitBtn.innerHTML = '<svg class="btn-spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Enregistrement...';
+            // Disable after a tiny delay so the form submit event isn't cancelled
+            setTimeout(function() { submitBtn.disabled = true; }, 50);
+        }
+      }
+    });
+  }
+
+  /* ── Modification : état initial et indicateur « non enregistré » ── */
+  refreshCollabDeptBadges();
+  updateCollabUsers();
+  var dirty = false, dot = document.getElementById('unsavedDot');
+  document.getElementById('editForm').addEventListener('input', function () { if (!dirty && dot) { dirty = true; dot.classList.add('on'); } });
+  document.getElementById('editForm').addEventListener('change', function () { if (!dirty && dot) { dirty = true; dot.classList.add('on'); } });
+
 })();
 </script>
 {% endblock %}
