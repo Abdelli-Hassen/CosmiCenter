@@ -37,7 +37,7 @@ body {
   transition: none !important;
 }
 /* Fondu enchaîné du changement de thème (View Transitions) : lent et doux */
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.7s; animation-timing-function: ease-in-out; mix-blend-mode: normal; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.35s; animation-timing-function: ease-out; mix-blend-mode: normal; }
 
 /* Le flou d'arrière-plan est recalculé après coup pendant le fondu : on le coupe le temps du changement */
 .theme-transitioning .chrome-bar, .theme-transitioning .sidebar {
