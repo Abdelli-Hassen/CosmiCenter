@@ -12,6 +12,9 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Liste des rôles en cartes pleine largeur (nom, badge Système, description, utilisateurs / pages / actions, boutons modifier / désactiver / supprimer) et boutons d'en-tête en grille.
 - Un appui sur un rôle ouvre l'**éditeur des autorisations en plein écran** (bouton « ← » pour revenir à la liste, en-tête et barre « Tout décocher / Enregistrer » collés en haut et en bas, cases à cocher plus grandes).
 
+### 🔎 Filtres de la liste des tickets
+- Recherche avec loupe, plus large, texte du champ lisible (le placeholder n'est plus coupé) ; listes déroulantes alignées (même hauteur, flèche soignée) ; focus rouge ; sur téléphone : recherche pleine largeur puis deux listes côte à côte.
+
 ### 🔴 Boutons principaux au survol
 - Les boutons rouges (ex. « Enregistrer les modifications ») devenaient transparents au survol, texte blanc illisible : la couleur `--brand-dark` n'existait pas. Remplacée par `--brand-hover` dans toutes les pages concernées.
 

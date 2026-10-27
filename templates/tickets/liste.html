@@ -168,14 +168,17 @@
     </div>
 
     <!-- Advanced filters -->
-    <form method="GET" action="{{ url_for(request.endpoint) }}" id="filterForm" style="display:flex; gap:12px; align-items:center;">
+    <form method="GET" action="{{ url_for(request.endpoint) }}" id="filterForm" class="tk-filters">
       {% if request.args.get('statut') %}
       <input type="hidden" name="statut" value="{{ request.args.get('statut') }}">
       {% endif %}
 
-      <input type="search" name="q" value="{{ q or '' }}" placeholder="Rechercher (n°, titre, description)" aria-label="Rechercher un ticket" maxlength="100" style="padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-subtle, #e5e7eb); background: var(--surface-base); font-size: 13px; color: var(--text-primary); min-width: 220px;">
+      <label class="tk-search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" name="q" value="{{ q or '' }}" placeholder="Rechercher un ticket…" aria-label="Rechercher un ticket (n°, titre, description)" title="Recherche par n°, titre ou description" maxlength="100">
+      </label>
 
-      <select name="priorite" aria-label="Filtrer par priorité" style="padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-subtle, #e5e7eb); background: var(--surface-base); font-size: 13px; color: var(--text-primary); cursor: pointer; outline: none;" onchange="this.form.submit()">
+      <select name="priorite" aria-label="Filtrer par priorité" class="tk-select" onchange="this.form.submit()">
         <option value="">Toutes les priorités</option>
         <option value="critique" {% if request.args.get('priorite') == 'critique' %}selected{% endif %}>Critique</option>
         <option value="urgente" {% if request.args.get('priorite') == 'urgente' %}selected{% endif %}>Urgente</option>
@@ -184,7 +187,7 @@
         <option value="basse" {% if request.args.get('priorite') == 'basse' %}selected{% endif %}>Basse</option>
       </select>
 
-      <select name="departement_id" aria-label="Filtrer par département" style="padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-subtle, #e5e7eb); background: var(--surface-base); font-size: 13px; color: var(--text-primary); cursor: pointer; outline: none;" onchange="this.form.submit()">
+      <select name="departement_id" aria-label="Filtrer par département" class="tk-select" onchange="this.form.submit()">
         <option value="">Tous les départements</option>
         {% for dept in departements %}
         <option value="{{ dept.id }}" {% if request.args.get('departement_id')|string == dept.id|string %}selected{% endif %}>
@@ -194,7 +197,7 @@
       </select>
 
       {% if request.args.get('statut') or request.args.get('priorite') or request.args.get('departement_id') or q %}
-      <a href="{{ url_for(request.endpoint) }}" style="font-size: 13px; color: var(--color-brand, #dc2626); text-decoration: none; font-weight: 500; margin-left: 4px;" title="Effacer tous les filtres">Effacer</a>
+      <a href="{{ url_for(request.endpoint) }}" class="tk-clear" title="Effacer tous les filtres">Effacer</a>
       {% endif %}
     </form>
   </div>
