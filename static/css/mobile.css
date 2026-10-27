@@ -976,3 +976,14 @@
   .access-actions .access-tool .btn-action.primary { flex: 1 1 auto; }
 }
 @media (max-width: 768px) { .access-actions > a.btn-copy { margin-left: auto; } }
+/* Accès à distance (téléphone) : fiche aérée, boutons groupés, « modifier » en coin */
+@media (max-width: 768px) {
+  #viewContainer .access-card { position: relative; padding: 16px 14px 14px !important; }
+  #viewContainer .access-card .access-card-header { padding: 0 44px 0 0 !important; margin: 0 0 14px 0 !important; gap: 12px !important; border-bottom: none !important; }
+  #viewContainer .access-card .access-details-wrap { margin: 0 0 14px 0 !important; }
+  #viewContainer .access-card .access-actions { display: flex; flex-direction: column; gap: 10px !important; padding: 0 !important; margin: 0 !important; }
+  #viewContainer .access-card .access-tool { display: flex; gap: 8px; width: 100%; }
+  #viewContainer .access-card .access-tool .btn-action.primary { flex: 1 1 auto; min-width: 0; min-height: 46px; box-shadow: none !important; border-radius: 12px !important; }
+  #viewContainer .access-card .access-tool .btn-copy { flex: 0 0 46px; width: 46px; min-height: 46px; padding: 0 !important; border-radius: 12px !important; box-shadow: none !important; }
+  #viewContainer .access-card .access-actions > a.btn-copy { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; min-height: 36px; padding: 0 !important; margin: 0 !important; border-radius: 10px !important; box-shadow: none !important; }
+}
