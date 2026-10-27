@@ -527,7 +527,7 @@ dialog::backdrop {
         </h2>
         <div class="dm-head-actions" style="display:flex; align-items:center; gap:8px;">
           <span class="badge badge-default" style="font-size:11px;">{{ membres|length }} membre(s)</span>
-          {% if current_user.has_permission('departements.modifier') or current_user.role.niveau >= 80 %}
+          {% if current_user.has_permission('departements.gerer_membres') %}
           <button class="btn btn-primary btn-sm" onclick="document.getElementById('addDeptMemberDialog').showModal()" style="display:inline-flex; align-items:center; gap:4px; padding:4px 10px; font-size:12px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Assigner
@@ -562,7 +562,7 @@ dialog::backdrop {
                 </div>
               </div>
             </a>
-            {% if current_user.has_permission('departements.modifier') or current_user.role.niveau >= 80 %}
+            {% if current_user.has_permission('departements.gerer_membres') %}
             <form action="{{ url_for('departements.retirer_membre', id=departement.id, user_id=m.id) }}" method="POST" style="margin:0;">
               <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--text-muted); padding:6px;" title="Retirer du département" data-confirm="{{ ('Retirer ' ~ m.nom_complet ~ ' de ce département ?')|forceescape }}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

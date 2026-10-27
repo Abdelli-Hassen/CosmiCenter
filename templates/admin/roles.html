@@ -430,7 +430,7 @@
                   <div style="border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden; background: var(--surface-1);">
                     {% set child_actions = [] %}
                     {% for ap in action_perms %}
-                       {% if (page_perm.code in ['tickets.voir_tous', 'tickets.voir_mes'] and ap.code in ['tickets.modifier', 'tickets.supprimer', 'tickets.assigner', 'tickets.cloturer']) or 
+                       {% if (page_perm.code in ['tickets.voir_tous', 'tickets.voir_mes'] and ap.code in ['tickets.modifier', 'tickets.supprimer', 'tickets.assigner', 'tickets.cloturer', 'tickets.commenter']) or 
                              (page_perm.code == 'pdv.voir' and ap.code == 'equipements.gerer') or 
                              (page_perm.code == (ap.code.split('.')[0] ~ '.voir')) %}
                           {% set _ = child_actions.append(ap) %}

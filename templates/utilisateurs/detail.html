@@ -1088,7 +1088,7 @@
           Modifier le profil
         </a>
 
-        {% if current_user.has_permission('utilisateurs.modifier') and current_user.id != utilisateur.id %}
+        {% if current_user.has_permission('utilisateurs.activer') and current_user.id != utilisateur.id %}
         <!-- Toggle Actif Button -->
         <button type="button"
           id="toggleActifBtn"

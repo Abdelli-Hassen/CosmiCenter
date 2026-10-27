@@ -970,7 +970,11 @@ def plan_action():
     """Plan d'action - calendrier et projets IT"""
     tasks = PlanActionTask.query.order_by(PlanActionTask.date_debut).all()
     utilisateurs = Utilisateur.query.filter_by(actif=True).all()
-    return render_template('admin/plan_action.html', tasks=tasks, utilisateurs=utilisateurs)
+    return render_template('admin/plan_action.html', tasks=tasks, utilisateurs=utilisateurs,
+                           can_create=current_user.has_permission('admin_plan_action.creer'),
+                           can_edit=_plan_action_edit_allowed(),
+                           can_delete=current_user.has_permission('admin_plan_action.supprimer'),
+                           can_export=current_user.has_permission('admin_plan_action.exporter'))
 
 
 @admin_bp.route('/api/plan-action/tasks')
@@ -1028,8 +1032,8 @@ def _read_plan_action_form():
 @login_required
 @permission_required('admin_plan_action.voir')
 def creer_plan_action():
-    if not _plan_action_edit_allowed():
-        flash("Vous n'avez pas la permission de modifier le plan d'action.", "danger")
+    if not current_user.has_permission('admin_plan_action.creer'):
+        flash("Vous n'avez pas la permission d'ajouter une tâche au plan d'action.", "danger")
         return redirect(url_for('admin.plan_action'))
     values, error = _read_plan_action_form()
     if error:
@@ -1090,8 +1094,8 @@ def modifier_plan_action(id):
 @login_required
 @permission_required('admin_plan_action.voir')
 def supprimer_plan_action(id):
-    if not _plan_action_edit_allowed():
-        flash("Vous n'avez pas la permission de modifier le plan d'action.", "danger")
+    if not current_user.has_permission('admin_plan_action.supprimer'):
+        flash("Vous n'avez pas la permission de supprimer une tâche du plan d'action.", "danger")
         return redirect(url_for('admin.plan_action'))
     task = PlanActionTask.query.get_or_404(id)
     db.session.delete(task)
@@ -1105,6 +1109,9 @@ def supprimer_plan_action(id):
 @permission_required('admin_plan_action.voir')
 def export_plan_action_excel():
     """Export du plan d'action en fichier Excel formaté"""
+    if not current_user.has_permission('admin_plan_action.exporter'):
+        flash("Vous n'avez pas la permission d'exporter le plan d'action.", "danger")
+        return redirect(url_for('admin.plan_action'))
     import openpyxl
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter

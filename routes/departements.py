@@ -54,7 +54,7 @@ def _can_edit_department(departement):
 
 
 def _can_manage_members():
-    return current_user.has_permission('departements.modifier') or role_level(current_user) >= 80
+    return current_user.has_permission('departements.gerer_membres')
 
 
 def _read_department_form(departement=None):
@@ -302,14 +302,10 @@ def modifier(id):
 
 @departements_bp.route('/<string:id>/supprimer', methods=['POST'])
 @login_required
-@any_permission('departements.modifier', 'departements.modifier_propre')
+@require_permission('departements.supprimer')
 def supprimer(id):
     """Supprimer un département"""
     departement = Departement.query.get_or_404(id)
-
-    if not _can_edit_department(departement):
-        flash('Accès non autorisé. Vous ne pouvez supprimer que votre propre département.', 'danger')
-        return redirect(url_for('departements.liste'))
 
     if departement.membres:
         flash(f'Impossible de supprimer: le département a {len(departement.membres)} membre(s).', 'danger')

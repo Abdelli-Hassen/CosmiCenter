@@ -115,6 +115,9 @@ def satisfaction_client():
 @permission_required('rapports_globaux.voir')
 def export_csv():
     """Exporte en CSV les tickets créés sur la période, avec les mêmes filtres que le rapport"""
+    if not current_user.has_permission('rapports_globaux.exporter'):
+        flash("Vous n'avez pas la permission d'exporter les rapports.", 'danger')
+        return redirect(url_for('rapports.tableau_bord'))
     for key in ('date_debut', 'date_fin'):
         if request.args.get(key) and not _parse_iso(request.args.get(key)):
             flash('Date invalide : utilisez le format AAAA-MM-JJ.', 'danger')

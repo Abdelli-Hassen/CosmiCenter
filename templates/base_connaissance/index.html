@@ -44,8 +44,10 @@
             <p>Documentation technique et procédures.</p>
         </div>
         <div class="kb-actions">
-            {% if current_user.has_permission('base_connaissance.creer') %}
+            {% if current_user.has_permission('base_connaissance.gerer_categories') %}
             <button type="button" class="kb-btn" onclick="openModal('newCategoryModal')">+ Nouvelle catégorie</button>
+            {% endif %}
+            {% if current_user.has_permission('base_connaissance.creer') %}
             <a href="{{ url_for('base_connaissance.nouvel_article') }}" class="kb-btn primary">+ Nouvel article</a>
             {% endif %}
         </div>

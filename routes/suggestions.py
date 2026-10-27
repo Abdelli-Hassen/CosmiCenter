@@ -11,16 +11,21 @@ TYPES_SUGGESTION = ['bug', 'amelioration', 'nouvelle_fonctionnalite']
 STATUTS_SUGGESTION = ['nouveau', 'lu', 'accepte', 'refuse', 'en_cours', 'termine']
 
 
-def _is_suggestion_admin():
-    """Administrateurs (niveau >= 90) ou rôles nommés Administrateur / Super Administrateur."""
-    role = current_user.role
-    return bool(role and (role.nom in ('Administrateur', 'Super Administrateur') or role_level(current_user) >= 90))
+def _denied(message="Accès non autorisé."):
+    flash(message, "danger")
+    return redirect(url_for('suggestions.index'))
 
 
 @suggestions_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
+    if not current_user.has_permission('idees.voir'):
+        flash("Vous n'avez pas la permission d'accéder à la boîte à idées.", "danger")
+        return redirect(url_for('tickets.tableau_bord'))
+
     if request.method == 'POST':
+        if not current_user.has_permission('idees.creer'):
+            return _denied("Vous n'avez pas la permission de proposer une idée.")
         titre = (request.form.get('titre') or '').strip()
         description = (request.form.get('description') or '').strip()
         type_suggestion = request.form.get('type_suggestion', 'amelioration')
@@ -44,8 +49,9 @@ def index():
 
         # Email aux administrateurs (contenu échappé : il provient d'un utilisateur)
         from services.email_service import send_email_notification
-        admins = Utilisateur.query.join(Role, Utilisateur.role_id == Role.id).filter(
-            Role.niveau >= 90, Utilisateur.actif.is_(True)).all()
+        # Prévenus : les rôles qui peuvent voir toutes les idées
+        roles_ids = [r.id for r in Role.query.all() if r.has_permission('idees.voir_toutes')]
+        admins = Utilisateur.query.filter(Utilisateur.role_id.in_(roles_ids), Utilisateur.actif.is_(True)).all() if roles_ids else []
         admin_emails = [a.email for a in admins if a.email]
         if admin_emails:
             base = current_app.config.get('PUBLIC_BASE_URL') or request.host_url.rstrip('/')
@@ -66,21 +72,23 @@ def index():
         flash("Merci ! Votre suggestion a été envoyée avec succès.", "success")
         return redirect(url_for('suggestions.index'))
 
-    # GET : toutes les suggestions pour un administrateur, sinon uniquement les siennes
-    if _is_suggestion_admin():
+    # GET : toutes les idées pour qui a « Voir les idées de tout le monde », sinon uniquement les siennes
+    if current_user.has_permission('idees.voir_toutes'):
         mes_suggestions = Suggestion.query.order_by(Suggestion.date_creation.desc()).all()
     else:
         mes_suggestions = Suggestion.query.filter_by(auteur_id=current_user.id).order_by(Suggestion.date_creation.desc()).all()
 
-    return render_template('suggestions/index.html', suggestions=mes_suggestions)
+    return render_template('suggestions/index.html', suggestions=mes_suggestions,
+                           can_create=current_user.has_permission('idees.creer'),
+                           can_edit=current_user.has_permission('idees.modifier'),
+                           can_delete=current_user.has_permission('idees.supprimer'))
 
 
 @suggestions_bp.route('/<suggestion_id>/statut', methods=['POST'])
 @login_required
 def modifier_statut(suggestion_id):
-    if not _is_suggestion_admin():
-        flash("Accès non autorisé.", "danger")
-        return redirect(url_for('suggestions.index'))
+    if not current_user.has_permission('idees.modifier'):
+        return _denied("Vous n'avez pas la permission de traiter les idées.")
 
     suggestion = Suggestion.query.get_or_404(suggestion_id)
     nouveau_statut = request.form.get('statut')
@@ -97,9 +105,8 @@ def modifier_statut(suggestion_id):
 @suggestions_bp.route('/<suggestion_id>/supprimer', methods=['POST'])
 @login_required
 def supprimer(suggestion_id):
-    if not _is_suggestion_admin():
-        flash("Accès non autorisé.", "danger")
-        return redirect(url_for('suggestions.index'))
+    if not current_user.has_permission('idees.supprimer'):
+        return _denied("Vous n'avez pas la permission de supprimer les idées.")
 
     suggestion = Suggestion.query.get_or_404(suggestion_id)
     db.session.delete(suggestion)

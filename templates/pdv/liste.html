@@ -329,7 +329,7 @@
         Gérez vos magasins, employés, équipements et thèmes personnalisés.
       </p>
     </div>
-    {% if current_user.has_permission('pdv.creer') or current_user.has_permission('pdv.gerer') %}
+    {% if current_user.has_permission('pdv.creer') %}
     <a href="{{ url_for('pdv.nouveau') }}" class="btn btn-primary" style="gap:8px;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Nouveau PDV
@@ -387,7 +387,7 @@
 
         <!-- Top Right Actions: Quick Theme Palette & Edit Button -->
         <div class="pdv-card-actions">
-          {% if current_user.has_permission('pdv.modifier') or current_user.has_permission('pdv.gerer') %}
+          {% if current_user.has_permission('pdv.modifier') %}
           <!-- Quick Color Palette Button -->
           <button type="button" 
                   class="pdv-card-btn-action" 
@@ -405,7 +405,7 @@
       </div>
 
       <!-- Quick Theme Popover (Opens on palette click) -->
-      {% if current_user.has_permission('pdv.modifier') or current_user.has_permission('pdv.gerer') %}
+      {% if current_user.has_permission('pdv.modifier') %}
       <div class="pdv-theme-popover" id="themePopover_{{ pdv.id }}" onclick="event.stopPropagation()">
         <div class="popover-title">Choisir le thème</div>
         <div class="popover-swatches">

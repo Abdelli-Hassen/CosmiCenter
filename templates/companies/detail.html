@@ -243,7 +243,7 @@
               <th>Poste</th>
               <th>Département</th>
               <th>Rôle</th>
-              {% if current_user.has_permission('admin_dashboard.voir') or current_user.role.niveau >= 80 %}
+              {% if current_user.has_permission('entreprises.gerer_collaborateurs') %}
               <th style="text-align:right;">Action</th>
               {% endif %}
             </tr>
@@ -277,7 +277,7 @@
                   {{ u.role.nom if u.role else 'Sans rôle' }}
                 </span>
               </td>
-              {% if current_user.has_permission('admin_dashboard.voir') or current_user.role.niveau >= 80 %}
+              {% if current_user.has_permission('entreprises.gerer_collaborateurs') %}
               <td class="cu-act" style="text-align:right;">
                 <form method="POST" action="{{ url_for('companies.retirer_employe', user_id=u.id) }}" data-confirm="{{ ('Détacher ce collaborateur de ' ~ entreprise.nom ~ ' ?')|forceescape }}" style="display:inline;">
                   <button type="submit" class="btn-action" style="padding:4px 8px; font-size:11px; color:#ef4444; border-color:rgba(239,68,68,0.2);">
@@ -316,7 +316,7 @@
       </div>
 
       <!-- Assigner un employé -->
-      {% if current_user.has_permission('admin_dashboard.voir') or current_user.role.niveau >= 80 %}
+      {% if current_user.has_permission('entreprises.gerer_collaborateurs') %}
       <div class="comp-box">
         <div class="comp-box-header">
           <h3 class="comp-box-title">Rattacher un collaborateur</h3>

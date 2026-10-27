@@ -12,7 +12,7 @@ base_connaissance_bp = Blueprint('base_connaissance', __name__)
 
 def peut_voir_lecteurs():
     """Seuls les gestionnaires de la base (création d'articles) voient qui a lu quoi."""
-    return current_user.has_permission('base_connaissance.creer')
+    return current_user.has_permission('base_connaissance.voir_lecteurs')
 
 
 def enregistrer_lecture(article_id):
@@ -165,7 +165,7 @@ def supprimer_article(id):
 @base_connaissance_bp.route('/categorie/nouvelle', methods=['GET', 'POST'])
 @login_required
 def nouvelle_categorie():
-    if not current_user.has_permission('base_connaissance.creer'):
+    if not current_user.has_permission('base_connaissance.gerer_categories'):
         flash("Vous n'avez pas la permission de créer des catégories.", "danger")
         return redirect(url_for('base_connaissance.index'))
 

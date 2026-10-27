@@ -653,6 +653,9 @@ def commenter(ticket_id):
     if not can_access_ticket(current_user, ticket):
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('tickets.liste'))
+    if not current_user.has_permission('tickets.commenter'):
+        flash("Vous n'avez pas la permission de commenter les tickets.", 'danger')
+        return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
     contenu = (request.form.get('contenu') or '').strip()
     if not contenu:

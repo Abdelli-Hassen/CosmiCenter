@@ -19,7 +19,7 @@ EQUIPEMENT_STATUTS = ['actif', 'en_panne', 'maintenance', 'hors_service']
 
 
 def _can_edit():
-    return current_user.has_permission('pdv.modifier') or current_user.has_permission('pdv.gerer')
+    return current_user.has_permission('pdv.modifier')
 
 
 def _categories(pdvs=None):
@@ -95,7 +95,7 @@ def liste():
 @pdv_bp.route('/nouveau', methods=['GET', 'POST'])
 @login_required
 def nouveau():
-    if not (current_user.has_permission('pdv.creer') or current_user.has_permission('pdv.gerer')):
+    if not current_user.has_permission('pdv.creer'):
         flash("Accès non autorisé.", "danger")
         return redirect(url_for('pdv.liste'))
 
@@ -240,7 +240,7 @@ def supprimer_equipement(equip_id):
 @pdv_bp.route('/<string:id>/employe/ajouter', methods=['POST'])
 @login_required
 def ajouter_employe(id):
-    if not _can_edit():
+    if not current_user.has_permission('pdv.gerer_employes'):
         flash("Accès non autorisé.", "danger")
         return redirect(url_for('pdv.detail', id=id))
 
@@ -262,7 +262,7 @@ def ajouter_employe(id):
 @pdv_bp.route('/<string:id>/employe/retirer/<string:user_id>', methods=['POST'])
 @login_required
 def retirer_employe(id, user_id):
-    if not _can_edit():
+    if not current_user.has_permission('pdv.gerer_employes'):
         flash("Accès non autorisé.", "danger")
         return redirect(url_for('pdv.detail', id=id))
 
@@ -294,7 +294,7 @@ def changer_couleur(id):
 # ─── Référentiels : catégories et palette de thèmes (stockés en base) ─────────
 
 def _can_configure():
-    return _can_edit() or role_level(current_user) >= 90
+    return current_user.has_permission('pdv.referentiels')
 
 
 def _config_denied():

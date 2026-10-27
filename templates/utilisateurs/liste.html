@@ -663,7 +663,7 @@
 
       <!-- Actions -->
       <div class="user-row-actions" onclick="event.stopPropagation()">
-        {% if current_user.has_permission('utilisateurs.modifier') and current_user.id != u.id %}
+        {% if current_user.has_permission('utilisateurs.activer') and current_user.id != u.id %}
           <!-- Toggle actif/inactif -->
           <button type="button"
             class="row-action-btn {{ 'danger' if u.actif else 'success' }}"

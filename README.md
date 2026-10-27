@@ -77,7 +77,7 @@ Cosmitto Coffee opère plusieurs points de vente (POS). CosmiCenter permet à ch
 | Agent | 50 | Tickets assignés, commentaires |
 | Utilisateur | 10 | Ses propres tickets |
 
-20+ permissions granulaires (tickets, admin, rapports, base de connaissances) sont désormais appliquées dynamiquement sur toutes les interfaces et les routes au lieu de vérifications statiques, garantissant un contrôle précis des actions (Création, Modification, Suppression, Désactivation).
+60+ permissions granulaires, page par page (tickets, boîte à idées, base de connaissances, départements, points de vente, entreprises, utilisateurs, plan d'action, rapports, administration) sont désormais appliquées dynamiquement sur toutes les interfaces et les routes au lieu de vérifications statiques, garantissant un contrôle précis des actions (Création, Modification, Suppression, Désactivation).
 
 ### Rapports
 - **Rapport global** : 10 indicateurs comparés à la période précédente (créés, résolus, en attente, en retard, taux de résolution, SLA, 1ère réponse, résolution moyenne/médiane, satisfaction, réouvertures), courbe créés/résolus, répartitions (statut, type, priorité), ancienneté du backlog, carte de chaleur jour × heure, performance par département, catégories et points de vente les plus actifs, agents, tickets en retard, satisfaction

@@ -464,7 +464,7 @@ def modifier(id):
 
 @utilisateurs_bp.route('/<string:id>/toggle-actif', methods=['POST'])
 @login_required
-@require_permission('utilisateurs.modifier')
+@require_permission('utilisateurs.activer')
 def toggle_actif(id):
     """Activer/Désactiver un utilisateur"""
     utilisateur = Utilisateur.query.get_or_404(id)

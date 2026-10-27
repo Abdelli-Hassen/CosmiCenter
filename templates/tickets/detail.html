@@ -347,6 +347,7 @@
       </div>
       {% endfor %}
 
+      {% if current_user.has_permission('tickets.commenter') %}
       <!-- Reply Box UX Design System -->
       <div style="margin-top: 20px; border: 1px solid var(--border-subtle); border-radius: 10px; overflow: hidden; background: var(--surface-base); box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
         <!-- Tabs -->
@@ -378,6 +379,7 @@
           </div>
         </form>
       </div>
+      {% endif %}
 
 <script>
   var commentDt = new DataTransfer();

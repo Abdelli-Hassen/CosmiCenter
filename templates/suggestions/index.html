@@ -67,10 +67,12 @@
         </div>
 
         <div class="sg-hero-cta" style="z-index: 1;">
+            {% if can_create %}
             <button onclick="let m = document.getElementById('modal-suggestion'); m.style.display='flex'; setTimeout(()=>m.style.opacity='1', 10);" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:10px; padding: 14px 28px; border-radius: 14px; font-weight: 700; background: linear-gradient(135deg, var(--brand), #ff5e7e); box-shadow: 0 8px 20px rgba(255, 51, 102, 0.3); border: none; transition: all 0.2s; cursor: pointer;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Nouvelle Suggestion
             </button>
+            {% endif %}
         </div>
     </div>
 
@@ -123,8 +125,9 @@
                 </div>
             </div>
 
-            {% if current_user.role.nom in ['Administrateur', 'Super Administrateur'] %}
+            {% if can_edit or can_delete %}
             <div class="card-admin-bar" style="padding:12px 24px; border-top:1px dashed var(--border-subtle); display:flex; justify-content:space-between; gap:12px; background: var(--surface-2); transition: background 0.2s;">
+                {% if can_edit %}
                 <form action="{{ url_for('suggestions.modifier_statut', suggestion_id=sugg.id) }}" method="POST" style="flex:1; display:flex; gap:8px;">
                     <div style="position: relative; flex: 1;">
                         <select name="statut" style="width:100%; appearance:none; background: var(--surface-base); border: 1px solid var(--border-default); padding: 8px 12px; font-size: 12px; font-weight: 600; color: var(--text-primary); border-radius: 8px; outline: none; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='var(--brand)'; this.style.background='var(--surface-1)';" onblur="this.style.borderColor='var(--border-default)';">
@@ -141,11 +144,14 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </button>
                 </form>
+                {% endif %}
+                {% if can_delete %}
                 <form action="{{ url_for('suggestions.supprimer', suggestion_id=sugg.id) }}" method="POST" data-confirm="Voulez-vous vraiment supprimer cette idée ?">
                     <button type="submit" title="Supprimer" style="background: var(--surface-2); border: 1px solid var(--border-subtle); color: var(--text-muted); width: 34px; height: 100%; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.15)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239,68,68,0.3)';" onmouseout="this.style.background='var(--surface-2)'; this.style.color='var(--text-muted)'; this.style.borderColor='var(--border-subtle)';">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
                 </form>
+                {% endif %}
             </div>
             {% endif %}
         </div>

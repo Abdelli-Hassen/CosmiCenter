@@ -17,9 +17,12 @@ def _code_conflict(code, exclude_id=None):
     return bool(existing and existing.id != exclude_id)
 
 def can_manage_companies():
-    """Verify if current user has permission to manage companies"""
+    """Vrai si l'utilisateur a au moins un droit de gestion sur les entreprises (affiche les outils de gestion)."""
     if not current_user.is_authenticated:
         return False
+    return any(current_user.has_permission(c) for c in (
+        'entreprises.creer', 'entreprises.modifier', 'entreprises.supprimer',
+        'entreprises.archiver', 'entreprises.gerer_collaborateurs'))
     if current_user.has_permission('entreprises.modifier') or current_user.has_permission('entreprises.creer') or current_user.has_permission('admin_dashboard.voir'):
         return True
     if current_user.role and current_user.role.niveau >= 60:
@@ -92,7 +95,7 @@ def liste():
 @login_required
 def nouvelle():
     """Create a new company"""
-    if not (current_user.has_permission('entreprises.creer') or can_manage_companies()):
+    if not current_user.has_permission('entreprises.creer'):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
             return jsonify({'success': False, 'message': 'Accès réservé aux administrateurs.'}), 403
         flash("Accès réservé aux administrateurs.", "danger")
@@ -190,7 +193,7 @@ def get_json(id):
 @login_required
 def modifier(id):
     """Edit company attributes"""
-    if not (current_user.has_permission('entreprises.modifier') or can_manage_companies()):
+    if not current_user.has_permission('entreprises.modifier'):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
             return jsonify({'success': False, 'message': 'Accès réservé aux administrateurs.'}), 403
         flash("Accès réservé aux administrateurs.", "danger")
@@ -255,7 +258,7 @@ def modifier(id):
 @login_required
 def toggle_archive(id):
     """Archive or unarchive a company"""
-    if not (current_user.has_permission('entreprises.supprimer') or current_user.has_permission('entreprises.modifier') or can_manage_companies()):
+    if not current_user.has_permission('entreprises.archiver'):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
             return jsonify({'success': False, 'message': 'Accès réservé aux administrateurs.'}), 403
         flash("Accès réservé aux administrateurs.", "danger")
@@ -284,7 +287,7 @@ def toggle_archive(id):
 @login_required
 def supprimer(id):
     """Delete a company and detach associated users"""
-    if not (current_user.has_permission('entreprises.supprimer') or can_manage_companies()):
+    if not current_user.has_permission('entreprises.supprimer'):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
             return jsonify({'success': False, 'message': 'Accès réservé aux administrateurs.'}), 403
         flash("Accès réservé aux administrateurs.", "danger")
@@ -317,7 +320,7 @@ def supprimer(id):
 @login_required
 def assigner_employe(id):
     """Attach an employee to this company"""
-    if not can_manage_companies():
+    if not current_user.has_permission('entreprises.gerer_collaborateurs'):
         flash("Accès réservé aux administrateurs.", "danger")
         return redirect(url_for('companies.detail', id=id))
 
@@ -334,7 +337,7 @@ def assigner_employe(id):
 @login_required
 def retirer_employe(user_id):
     """Detach an employee from their company"""
-    if not can_manage_companies():
+    if not current_user.has_permission('entreprises.gerer_collaborateurs'):
         flash("Accès réservé aux administrateurs.", "danger")
         return redirect(url_for('companies.liste'))
 

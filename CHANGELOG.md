@@ -24,6 +24,12 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 ### ✂️ E-mail → ticket (IMAP) supprimé
 - Les tickets ne se créent que depuis la plateforme : code IMAP, variables `IMAP_*` (config, `.env.example`, installateur) retirés.
 
+### 🔐 Permissions complètes, page par page (Rôles)
+- Chaque page a maintenant **toutes** ses cases dans « Rôles » (rangées sous la case « voir » de la page) : Boîte à idées (voir, proposer, voir toutes les idées, traiter/changer le statut, supprimer), Tickets (commenter), Base de connaissance (gérer les catégories, voir qui a lu), Départements (supprimer, gérer les membres, modifier son propre département), Points de vente (employés, catégories et thèmes), Entreprises (archiver, rattacher des collaborateurs), Utilisateurs (activer/désactiver), Plan d'action (ajouter, supprimer, exporter), Rapports (exporter CSV).
+- Les actions sont vérifiées côté serveur **et** masquées dans les pages quand le rôle n'a pas la case. Les rôles existants gardent ce qu'ils pouvaient déjà faire (droits d'origine accordés une seule fois à la création des nouvelles cases).
+- Corrigé : des permissions vérifiées dans le code n'existaient pas dans la liste (`pdv.gerer`, `departements.modifier_propre`) ; la suppression d'un département utilisait la case « modifier » au lieu de « supprimer » ; les droits sur les entreprises dépendaient du niveau du rôle.
+- Nouveau test `tests/permissions_test.py` (13 contrôles) : toute permission utilisée dans le code existe, et un rôle de test ne peut faire que ce qui est coché.
+
 ### 📎 Fichiers joints jusqu'à 30 Mo
 - Taille maximale d'un fichier joint : **30 Mo** (150 Mo par envoi ; Nginx `client_max_body_size 150m`).
 

@@ -25,3 +25,5 @@ venv/bin/python tests/cat_test.py                (Linux / macOS)
 **Principe :** chaque test crée des utilisateurs/données temporaires (`zz.*@example.invalid`, `ZZ…`), vérifie, puis supprime tout (`finally`).
 Base de référence attendue après les tests : **3 tickets, 69 utilisateurs, 8 points de vente**. Certains tests supposent des données existantes (département « Stock », rôle « Super Administrateur », 42 catégories).
 **Ne lancez pas ces scripts sur une base de production.**
+
+- `permissions_test.py` : toute permission du code existe dans « Rôles » ; un rôle de test ne peut faire que ce qui est coché (Boîte à idées…).
