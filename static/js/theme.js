@@ -57,14 +57,13 @@
    */
   function toggle() {
     const nextTheme = currentTheme() === DARK ? LIGHT : DARK;
-    // Pas de startViewTransition : son instantané laisse la barre du haut et le menu latéral
-    // (fond translucide + backdrop-filter) à moitié dans l'ancien thème. Fondu CSS à la place.
+    // Transitions coupées pendant le basculement : tout change dans la même image (voir base.css)
     document.documentElement.classList.add('theme-transitioning');
     setTheme(nextTheme);
-    clearTimeout(toggle._t);
-    toggle._t = setTimeout(() => {
+    void document.documentElement.offsetWidth; // applique les nouveaux styles avant de rétablir les transitions
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       document.documentElement.classList.remove('theme-transitioning');
-    }, 450);
+    }));
   }
 
   /**

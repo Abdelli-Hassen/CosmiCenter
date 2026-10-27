@@ -31,8 +31,10 @@ body {
   overflow-x: hidden;
 }
 
+/* Changement de thème : aucune transition le temps du basculement, pour que tout change d'un seul coup
+   (les dégradés, ombres et images ne se fondent pas : mélanger fondus et sauts donnait un décalage visible) */
 .theme-transitioning, .theme-transitioning *, .theme-transitioning ::before, .theme-transitioning ::after {
-  transition: background 0.4s ease, background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, fill 0.4s ease, stroke 0.4s ease !important;
+  transition: none !important;
 }
 /* Le flou d'arrière-plan est recalculé après coup pendant le fondu : on le coupe le temps du changement */
 .theme-transitioning .chrome-bar, .theme-transitioning .sidebar {
