@@ -901,32 +901,68 @@ def _tail_lines(path, max_bytes=1024 * 1024):
     return data.decode('utf-8', errors='replace').splitlines()
 
 
+_LOG_LINE = re.compile(r'^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})[,.]\d+ - (\S+) - (DEBUG|INFO|WARNING|ERROR|CRITICAL) - (.*)$')
+
+
+def _erreurs_par_jour(log_dir):
+    """Erreurs (ERROR/CRITICAL) de app.log et de ses rotations, groupées par jour.
+    Les lignes qui suivent une erreur (traceback) sont rattachées à celle-ci."""
+    fichiers = [os.path.join(log_dir, 'app.log')] + [os.path.join(log_dir, f'app.log.{n}') for n in range(1, 6)]
+    par_jour = {}
+    for chemin in fichiers:
+        if not os.path.exists(chemin):
+            continue
+        courante = None
+        for ligne in _tail_lines(chemin, 4 * 1024 * 1024):
+            m = _LOG_LINE.match(ligne)
+            if m:
+                jour, heure, source, niveau, message = m.groups()
+                if niveau in ('ERROR', 'CRITICAL'):
+                    courante = {'heure': heure, 'source': source, 'niveau': niveau, 'message': message, 'detail': []}
+                    par_jour.setdefault(jour, []).append(courante)
+                else:
+                    courante = None
+            elif courante is not None:
+                courante['detail'].append(ligne)
+    for entrees in par_jour.values():
+        entrees.sort(key=lambda e: e['heure'], reverse=True)
+        for e in entrees:
+            e['detail'] = '\n'.join(e['detail']).strip()
+    return par_jour
+
+
 @admin_bp.route('/logs')
 @login_required
 def logs():
-    """Visualisation des logs système"""
+    """Journal des erreurs, jour par jour (aujourd'hui par défaut)"""
     if not current_user.has_permission('admin_logs.voir'):
         flash("Accès non autorisé.", "danger")
         return redirect(url_for('tickets.tableau_bord'))
 
-    log_file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'logs', 'app.log')
-    logs_content = []
+    log_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'logs')
+    aujourdhui = datetime.now().strftime('%Y-%m-%d')
+    jour = request.args.get('jour', aujourdhui)
+    try:
+        d = datetime.strptime(jour, '%Y-%m-%d')
+    except ValueError:
+        d = datetime.now()
+        jour = aujourdhui
 
-    if os.path.exists(log_file_path):
-        try:
-            lines = _tail_lines(log_file_path)
-            # Ne garder que les erreurs/anomalies et les tracebacks
-            filtered = [line for line in lines if ' - INFO - ' not in line and ' - DEBUG - ' not in line]
-            # chaque ligne garde son saut de ligne : le gabarit les concatène dans un bloc <pre>
-            logs_content = [line + '\n' for line in filtered[-500:]]
-            logs_content.reverse()
-        except Exception as e:
-            logger.error(f"Lecture des logs impossible: {e}")
-            logs_content = ["Erreur lors de la lecture des logs."]
-    else:
-        logs_content = ["Aucun fichier de log trouvé."]
+    try:
+        par_jour = _erreurs_par_jour(log_dir)
+        erreur_lecture = False
+    except Exception as e:
+        logger.error(f"Lecture des logs impossible: {e}")
+        par_jour, erreur_lecture = {}, True
 
-    return render_template('admin/logs.html', logs=logs_content)
+    jours = [{'date': k, 'nb': len(v), 'label': datetime.strptime(k, '%Y-%m-%d').strftime('%d/%m')}
+             for k, v in sorted(par_jour.items(), reverse=True)[:14]]
+    precedent = (d - timedelta(days=1)).strftime('%Y-%m-%d')
+    suivant = (d + timedelta(days=1)).strftime('%Y-%m-%d')
+    return render_template('admin/logs.html', jour=jour, jour_fr=d.strftime('%d/%m/%Y'),
+                           est_aujourdhui=(jour == aujourdhui), entrees=par_jour.get(jour, []),
+                           jours=jours, precedent=precedent, suivant=suivant,
+                           aujourdhui=aujourdhui, erreur_lecture=erreur_lecture)
 
 
 # ─── Plan d'action ─────────────────────────────────────────────────────────

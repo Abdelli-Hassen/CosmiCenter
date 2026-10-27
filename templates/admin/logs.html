@@ -2,11 +2,38 @@
 {% block title %}Logs Système{% endblock %}
 
 {% block content %}
+<style>
+  .lg-day { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+  .lg-day .lg-nav { width:40px; height:40px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-2); color:var(--text-primary); display:inline-flex; align-items:center; justify-content:center; text-decoration:none; transition:all .2s; }
+  .lg-day .lg-nav:hover { background:var(--surface-3); }
+  .lg-day .lg-nav.is-off { opacity:.35; pointer-events:none; }
+  .lg-date { font-size:16px; font-weight:800; color:var(--text-primary); padding:0 6px; }
+  .lg-today { font-size:11px; font-weight:800; color:var(--brand); background:var(--brand-light); border-radius:999px; padding:3px 10px; }
+  .lg-chips { display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px; -webkit-overflow-scrolling:touch; }
+  .lg-chip { flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-1); color:var(--text-secondary); font-size:13px; font-weight:700; text-decoration:none; transition:all .2s; }
+  .lg-chip:hover { border-color:var(--brand); }
+  .lg-chip.is-active { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .lg-chip b { background:rgba(220,38,38,.14); color:#dc2626; border-radius:999px; padding:1px 7px; font-size:11px; }
+  .lg-chip.is-active b { background:rgba(255,255,255,.25); color:#fff; }
+  .lg-list { display:flex; flex-direction:column; gap:10px; }
+  .lg-item { background:var(--surface-1); border:1px solid var(--border-subtle); border-left:4px solid #dc2626; border-radius:14px; padding:12px 14px; min-width:0; }
+  .lg-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+  .lg-time { font-size:12px; font-weight:800; color:var(--text-primary); font-variant-numeric:tabular-nums; }
+  .lg-src { font-size:11px; font-weight:700; color:var(--text-muted); background:var(--surface-2); border-radius:6px; padding:2px 8px; overflow-wrap:anywhere; }
+  .lg-lvl { font-size:10px; font-weight:800; color:#dc2626; letter-spacing:.5px; }
+  .lg-msg { font-size:14px; font-weight:600; color:var(--text-primary); overflow-wrap:anywhere; line-height:1.45; }
+  .lg-item details { margin-top:10px; }
+  .lg-item summary { cursor:pointer; font-size:12px; font-weight:700; color:var(--brand); }
+  .lg-item pre { margin:8px 0 0; padding:12px; background:#1e1e1e; color:#d4d4d4; border-radius:10px; font-family:'Courier New',monospace; font-size:11.5px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; max-height:320px; overflow:auto; }
+  .lg-empty { text-align:center; padding:48px 16px; color:var(--text-muted); background:var(--surface-1); border:1px solid var(--border-subtle); border-radius:16px; }
+  .lg-empty h3 { margin:12px 0 4px; font-size:16px; color:var(--text-primary); }
+  .lg-empty p { margin:0; font-size:13px; }
+</style>
 <div class="page">
   <div class="page-header" style="align-items: center;">
     <div class="page-header-left" style="display:flex; flex-direction:row; align-items:center; gap:16px;">
       <button type="button" class="back-btn" style="margin:0;" title="Retour" aria-label="Retour" onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href='{{ url_for('admin.tableau_bord') }}'; }"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <h1 class="page-title" style="margin:0;">Logs Système</h1>
+      <h1 class="page-title" style="margin:0;">Erreurs système</h1>
     </div>
     <div class="page-header-actions">
       <button class="btn btn-secondary btn-sm" onclick="location.reload()" style="display: flex; gap: 6px; align-items: center;">
@@ -16,22 +43,41 @@
     </div>
   </div>
 
-  <div class="card card-raised" style="display:flex; flex-direction:column; max-height:calc(100vh - 85px);">
-    <div class="card-body" style="display:flex; flex-direction:column; padding: 0; flex:1; overflow: hidden; background: #1e1e1e; border-radius: var(--radius-lg);">
-      <pre style="flex:1; min-height:0; margin: 0; padding: 20px; font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #d4d4d4; overflow-y: auto; white-space: pre-wrap; line-height: 1.5;">
-{%- for line in logs -%}
-{%- if 'ERROR' in line or 'CRITICAL' in line -%}
-<span style="color: #fca5a5;">{{ line }}</span>
-{%- elif 'WARNING' in line -%}
-<span style="color: #fde047;">{{ line }}</span>
-{%- elif 'INFO' in line -%}
-<span style="color: #93c5fd;">{{ line }}</span>
-{%- else -%}
-{{ line }}
-{%- endif -%}
-{%- endfor -%}
-      </pre>
-    </div>
+  <div class="lg-day">
+    <a class="lg-nav" href="{{ url_for('admin.logs', jour=precedent) }}" title="Jour précédent" aria-label="Jour précédent"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></a>
+    <span class="lg-date">{{ jour_fr }}</span>
+    {% if est_aujourdhui %}<span class="lg-today">Aujourd'hui</span>{% endif %}
+    <a class="lg-nav {{ 'is-off' if jour >= aujourdhui }}" href="{{ url_for('admin.logs', jour=suivant) }}" title="Jour suivant" aria-label="Jour suivant"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></a>
   </div>
+
+  {% if jours %}
+  <div class="lg-chips" aria-label="Jours avec erreurs">
+    {% for j in jours %}
+    <a class="lg-chip {{ 'is-active' if j.date == jour }}" href="{{ url_for('admin.logs', jour=j.date) }}">{{ j.label }} <b>{{ j.nb }}</b></a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if erreur_lecture %}
+  <div class="lg-empty"><h3>Lecture impossible</h3><p>Le fichier de logs n'a pas pu être lu.</p></div>
+  {% elif entrees %}
+  <div class="lg-list">
+    {% for e in entrees %}
+    <div class="lg-item">
+      <div class="lg-top"><span class="lg-time">{{ e.heure }}</span><span class="lg-lvl">{{ e.niveau }}</span><span class="lg-src">{{ e.source }}</span></div>
+      <div class="lg-msg">{{ e.message }}</div>
+      {% if e.detail %}
+      <details><summary>Détails (trace)</summary><pre>{{ e.detail }}</pre></details>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="lg-empty">
+    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <h3>{% if est_aujourdhui %}Aucune erreur aujourd'hui{% else %}Aucune erreur ce jour-là{% endif %}</h3>
+    <p>{% if jours %}Choisissez un jour avec erreurs ci-dessus.{% else %}Aucune erreur enregistrée.{% endif %}</p>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}
