@@ -12,6 +12,9 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Liste des rôles en cartes pleine largeur (nom, badge Système, description, utilisateurs / pages / actions, boutons modifier / désactiver / supprimer) et boutons d'en-tête en grille.
 - Un appui sur un rôle ouvre l'**éditeur des autorisations en plein écran** (bouton « ← » pour revenir à la liste, en-tête et barre « Tout décocher / Enregistrer » collés en haut et en bas, cases à cocher plus grandes).
 
+### 👥 Colonne « Assigné à » des tickets
+- Plus de « Non assigné » quand un ticket vise tout un département : la liste affiche « Tous » + le nom du département. Une seule personne : son nom ; plusieurs : le nom de la première + « +N » (infobulle avec les autres). Macro partagée `tickets/_assignation.html` (liste des tickets et fiche point de vente).
+
 ### 🌗 Changement de thème synchronisé
 - Clair/sombre : fondu enchaîné doux (0,35 s) de toute la page d'un seul bloc (API View Transitions), donc toutes les couleurs changent ensemble, sans décalage entre dégradés, ombres et icônes. Navigateur sans cette API ou « réduire les animations » : bascule immédiate.
 

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'tickets/_assignation.html' import assignation %}
 
 {% block title %}Point de Vente : {{ pdv.nom }}{% endblock %}
 
@@ -1578,25 +1579,8 @@ dialog::backdrop {
 
               <!-- Assigné à -->
               <td class="tk-who">
-                {% if t.assigne_a %}
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  {% set dept_c = t.assigne_a.departement.couleur if t.assigne_a.departement and t.assigne_a.departement.couleur else '#dc2626' %}
-                  {% set initials = (t.assigne_a.prenom[0]|upper if t.assigne_a.prenom else '') ~ (t.assigne_a.nom[0]|upper if t.assigne_a.nom else '') %}
-                  <div style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, {{ dept_c }}, color-mix(in srgb, {{ dept_c }} 75%, #000)); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    {% if t.assigne_a.photo_profil %}
-                    <img src="{{ url_for('static', filename='uploads/' + t.assigne_a.photo_profil) }}" alt="{{ t.assigne_a.prenom }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.textContent={{ initials|tojson|forceescape }};">
-                    {% else %}
-                    {{ initials }}
-                    {% endif %}
-                  </div>
-                  <span style="font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap;">
-                    {{ t.assigne_a.prenom }} {{ t.assigne_a.nom }}
-                  </span>
-                </div>
-                {% else %}
-                <span style="font-size: 13px; color: var(--text-muted); font-style: italic;">Non assigné</span>
-                {% endif %}
-              </td>
+            {{ assignation(t, 24) }}
+          </td>
 
               <!-- Département -->
               <td class="tk-dept">

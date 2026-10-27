@@ -1,0 +1,39 @@
+{#
+  Colonne « Assigné à » d'une liste de tickets.
+  - une personne : son nom ; avec d'autres collaborateurs : « Nom +N » (infobulle = liste des autres)
+  - personne d'assigné mais un département : « Tous » + nom du département
+  - ni l'un ni l'autre : « Non assigné »
+#}
+{% macro assignation(ticket, size=26) %}
+  {% set personnes = [] %}
+  {% if ticket.assigne_a %}{% set _ = personnes.append(ticket.assigne_a) %}{% endif %}
+  {% for c in ticket.collaborateurs %}{% if not ticket.assigne_a or c.id != ticket.assigne_a.id %}{% set _ = personnes.append(c) %}{% endif %}{% endfor %}
+  {% if personnes %}
+    {% set p = personnes[0] %}
+    {% set dept_c = p.departement.couleur if p.departement and p.departement.couleur else '#dc2626' %}
+    {% set initials = (p.prenom[0]|upper if p.prenom else '') ~ (p.nom[0]|upper if p.nom else '') %}
+    <div class="asg">
+      <div class="asg-av" style="width: {{ size }}px; height: {{ size }}px; background: linear-gradient(135deg, {{ dept_c }}, color-mix(in srgb, {{ dept_c }} 75%, #000));">
+        {% if p.photo_profil %}
+        <img src="{{ url_for('static', filename='uploads/' + p.photo_profil) }}" alt="{{ p.prenom }}" onerror="this.onerror=null; this.parentElement.textContent={{ initials|tojson|forceescape }};">
+        {% else %}{{ initials }}{% endif %}
+      </div>
+      <span class="asg-name">{{ p.prenom }} {{ p.nom }}</span>
+      {% if personnes|length > 1 %}
+      <span class="asg-more" title="{% for o in personnes[1:] %}{{ o.prenom }} {{ o.nom }}{{ ', ' if not loop.last }}{% endfor %}">+{{ personnes|length - 1 }}</span>
+      {% endif %}
+    </div>
+  {% elif ticket.departement %}
+    <div class="asg">
+      <div class="asg-av asg-av-dept" style="width: {{ size }}px; height: {{ size }}px; color: {{ ticket.departement.couleur or '#dc2626' }};">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="asg-dept">
+        <span class="asg-name">Tous</span>
+        <span class="asg-sub">{{ ticket.departement.nom }}</span>
+      </div>
+    </div>
+  {% else %}
+    <span style="font-size: 13px; color: var(--text-muted); font-style: italic;">Non assigné</span>
+  {% endif %}
+{% endmacro %}
