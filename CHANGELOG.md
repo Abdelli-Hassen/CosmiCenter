@@ -12,6 +12,9 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Liste des rôles en cartes pleine largeur (nom, badge Système, description, utilisateurs / pages / actions, boutons modifier / désactiver / supprimer) et boutons d'en-tête en grille.
 - Un appui sur un rôle ouvre l'**éditeur des autorisations en plein écran** (bouton « ← » pour revenir à la liste, en-tête et barre « Tout décocher / Enregistrer » collés en haut et en bas, cases à cocher plus grandes).
 
+### ⚙️ Paramètres sur téléphone
+- Profil, Sécurité et Notifications : bandeau compact, onglets pleine largeur, champs sur une colonne (16 px, pas de zoom iOS), boutons pleine largeur, sessions et notifications lisibles.
+
 ### 🖥️ Accès à distance sur téléphone
 - Recherche pleine largeur (16 px), filtre Tous / Avec ID / Sans ID en trois boutons avec texte, cartes des collaborateurs compactes (identifiants lisibles, boutons Connecter / copier pleine hauteur), fenêtre de profil en feuille du bas ; le choix grille / liste est masqué sur téléphone.
 
