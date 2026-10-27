@@ -12,8 +12,13 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Liste des rôles en cartes pleine largeur (nom, badge Système, description, utilisateurs / pages / actions, boutons modifier / désactiver / supprimer) et boutons d'en-tête en grille.
 - Un appui sur un rôle ouvre l'**éditeur des autorisations en plein écran** (bouton « ← » pour revenir à la liste, en-tête et barre « Tout décocher / Enregistrer » collés en haut et en bas, cases à cocher plus grandes).
 
-### 📧 E-mails de ticket complets : « envoyé » et « reçu » + fichiers jusqu'à 30 Mo
-- À la création d'un ticket, le **créateur** reçoit « Ticket envoyé » et les **destinataires** reçoivent « Ticket reçu » (avant : un seul message identique pour tous, sans accusé distinct). Contenu complet : salutation, titre, description entière (sans troncature), statut, type, priorité, département, catégorie, destinataires, échéance, checklist, pièces jointes, bouton « Ouvrir le ticket » et formule de fin. Les tickets créés par e-mail suivent le même modèle (`templates/emails/ticket.html`, `services/email_service.send_ticket_emails`).
+### 🔊 Sons « ticket envoyé » / « ticket reçu » complets
+- Les deux sons étaient coupés au début et à la fin : le fichier n'était pas encore chargé quand le toast s'affichait et l'objet audio pouvait être libéré en plein son. Ils sont maintenant préchargés et décodés dès l'ouverture de la page (Web Audio), jouent après un court silence d'amorce (carte son / Bluetooth), gardent leur référence jusqu'à la fin, et un son bloqué par le navigateur est joué au premier clic au lieu d'être perdu (`static/js/sounds.js`).
+
+### ✂️ E-mail → ticket (IMAP) supprimé
+- Les tickets ne se créent que depuis la plateforme : code IMAP, variables `IMAP_*` (config, `.env.example`, installateur) retirés.
+
+### 📎 Fichiers joints jusqu'à 30 Mo
 - Taille maximale d'un fichier joint : **30 Mo** (150 Mo par envoi ; Nginx `client_max_body_size 150m`).
 
 ### 🎚️ Priorité manuelle, catégories sans délai

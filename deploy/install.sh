@@ -186,7 +186,6 @@ MAIL_USERNAME=
 MAIL_PASSWORD=
 MAIL_DEFAULT_SENDER=noreply@example.com
 
-IMAP_ENABLE_POLLING=false
 ENV
   chown "$APP_USER:$APP_USER" "$APP_DIR/.env"; chmod 600 "$APP_DIR/.env"
   ok "Base '$DB_NAME' et fichier .env créés (mots de passe générés automatiquement)"

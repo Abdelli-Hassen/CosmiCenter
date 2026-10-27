@@ -59,14 +59,14 @@
     const duration = (opts.duration !== undefined) ? opts.duration : (DEFAULT_DURATIONS[type] || 5000);
     const c = getContainer();
     
-    // Play audio notifications
+    // Son : « ticket envoyé » (toast « Ticket créé… ») ou « ticket reçu » (demandé par le sondage des notifications)
     try {
-        const textToMatch = ((opts.title || '') + ' ' + (opts.message || '')).toLowerCase();
-        if (type === 'success' && textToMatch.includes('ticket') && textToMatch.includes('créé')) {
-            new Audio('/static/ticket%20sent.mp3').play().catch(e => console.log('Audio play error:', e));
-        } else if (textToMatch.includes('nouveau') && textToMatch.includes('ticket')) {
-            new Audio('/static/new%20ticket.mp3').play().catch(e => console.log('Audio play error:', e));
-        }
+      let sound = opts.sound;
+      if (!sound && type === 'success') {
+        const txt = ((opts.title || '') + ' ' + (opts.message || '')).toLowerCase();
+        if (txt.includes('ticket') && txt.includes('créé')) sound = 'sent';
+      }
+      if (sound && window.CHUB && window.CHUB.sound) window.CHUB.sound.play(sound);
     } catch (err) {}
 
     // Enforce max — dismiss oldest
@@ -396,7 +396,9 @@
                 const newest = data.data.notifications[0];
                 // Only show toast for non-chat notifications
                 if (newest.titre !== 'Nouveau message') {
-                  show({ title: newest.titre, message: newest.message, type: 'info' });
+                  const t = ((newest.titre || '') + ' ' + (newest.message || '')).toLowerCase();
+                  show({ title: newest.titre, message: newest.message, type: 'info',
+                         sound: (t.includes('nouveau') && t.includes('ticket')) ? 'received' : undefined });
                 }
               }
 

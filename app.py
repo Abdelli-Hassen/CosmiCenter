@@ -130,13 +130,6 @@ def create_app(config_name='default'):
     app.register_blueprint(companies_bp, url_prefix='/companies')
     app.register_blueprint(suggestions_bp, url_prefix='/suggestions')
 
-    # Polling IMAP (email -> ticket) : uniquement si IMAP_ENABLE_POLLING=true
-    if app.config.get('IMAP_ENABLE_POLLING') and not app.testing:
-        # Avec le reloader Werkzeug, ne démarrer que dans le processus enfant
-        if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-            from services.email_service import start_imap_polling
-            start_imap_polling(app)
-
     # Route principale
     @app.route('/')
     def index():

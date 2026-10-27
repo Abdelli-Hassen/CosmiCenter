@@ -68,15 +68,6 @@ class Config:
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'noreply@example.com')
     MAIL_TIMEOUT = int(os.getenv('MAIL_TIMEOUT', 20))
 
-    # IMAP (intégration Email-to-Ticket, désactivée par défaut : IMAP_ENABLE_POLLING=true pour l'activer)
-    IMAP_SERVER = os.getenv('IMAP_SERVER', 'imap.gmail.com')
-    IMAP_PORT = int(os.getenv('IMAP_PORT', 993))
-    IMAP_USE_SSL = os.getenv('IMAP_USE_SSL', 'true').lower() == 'true'
-    IMAP_USERNAME = os.getenv('IMAP_USERNAME', MAIL_USERNAME)
-    IMAP_PASSWORD = os.getenv('IMAP_PASSWORD', MAIL_PASSWORD)
-    IMAP_POLL_INTERVAL = int(os.getenv('IMAP_POLL_INTERVAL', 60))  # en secondes
-    IMAP_ENABLE_POLLING = _env_bool('IMAP_ENABLE_POLLING', False)
-
     # Pagination
     TICKETS_PER_PAGE = 25
     USERS_PER_PAGE = 50
