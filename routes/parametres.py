@@ -46,6 +46,24 @@ def profil():
     return render_template('parametres/profil.html', stats=_stats())
 
 
+@parametres_bp.route('/profil/photo/supprimer', methods=['POST'])
+@login_required
+def supprimer_photo():
+    """Retirer la photo de profil (retour aux initiales)"""
+    ancienne = current_user.photo_profil
+    if ancienne:
+        current_user.photo_profil = None
+        try:
+            db.session.commit()
+            remove_upload(ancienne)
+            flash('Photo de profil supprimée.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f'Erreur suppression photo: {e}', exc_info=True)
+            flash('Erreur lors de la suppression de la photo.', 'danger')
+    return redirect(url_for('parametres.profil'))
+
+
 @parametres_bp.route('/profil/modifier', methods=['POST'])
 @login_required
 def modifier_profil():

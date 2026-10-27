@@ -12,6 +12,9 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Liste des rôles en cartes pleine largeur (nom, badge Système, description, utilisateurs / pages / actions, boutons modifier / désactiver / supprimer) et boutons d'en-tête en grille.
 - Un appui sur un rôle ouvre l'**éditeur des autorisations en plein écran** (bouton « ← » pour revenir à la liste, en-tête et barre « Tout décocher / Enregistrer » collés en haut et en bas, cases à cocher plus grandes).
 
+### 🖼️ Photo de profil : suppression
+- Bouton « Supprimer la photo » dans le bandeau du profil (avec confirmation) : retire la photo, supprime le fichier et revient aux initiales.
+
 ### 🧾 Logs système : erreurs par jour
 - La page Logs n'affiche plus que les erreurs (ERROR/CRITICAL) avec leur trace (repliable), pour un seul jour à la fois : aujourd'hui par défaut, flèches jour précédent/suivant et pastilles des jours qui contiennent des erreurs (avec leur nombre). Lecture de `app.log` et de ses rotations.
 
