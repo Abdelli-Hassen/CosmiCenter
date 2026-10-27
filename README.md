@@ -159,7 +159,7 @@ Autoriser le port 8080 dans le pare-feu Windows si nécessaire. Cookies `Secure`
 - **CSRF** : jeton de session vérifié sur toutes les requêtes POST/PUT/DELETE (formulaires et `fetch`), injecté automatiquement par `static/js/csrf.js`.
 - **Verrouillage de compte** : 7 échecs de connexion (`MAX_LOGIN_ATTEMPTS`) verrouillent le compte 30 minutes (`LOCKOUT_DURATION_MINUTES`) ; un administrateur peut le lever immédiatement (Réactiver).
 - **Sessions** : changer son mot de passe ou « Déconnecter les autres sessions » invalide toutes les autres sessions ; désactiver un compte coupe ses sessions.
-- **Fichiers uploadés** : réservés aux utilisateurs connectés, 10 Mo par fichier, types autorisés uniquement, servis avec `nosniff` et une CSP « sandbox ».
+- **Fichiers uploadés** : réservés aux utilisateurs connectés, 30 Mo par fichier, types autorisés uniquement, servis avec `nosniff` et une CSP « sandbox ».
 - **Mots de passe AnyDesk / TeamViewer** : chiffrés en base (Fernet, clé `FIELD_ENCRYPTION_KEY` ou dérivée de `SECRET_KEY` — ne pas changer `SECRET_KEY` sans migrer ces champs) et visibles uniquement par l'intéressé et les détenteurs de `admin_acces.voir`.
 - **Journaux** : rotation automatique (5 Mo x 5).
 

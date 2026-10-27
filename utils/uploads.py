@@ -6,7 +6,7 @@ from flask import current_app
 from werkzeug.utils import secure_filename
 
 IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024   # 10 Mo par fichier (affiché dans le formulaire)
+MAX_ATTACHMENT_BYTES = 30 * 1024 * 1024   # 30 Mo par fichier (affiché dans le formulaire)
 MAX_IMAGE_BYTES = 5 * 1024 * 1024         # 5 Mo pour photos / logos
 
 

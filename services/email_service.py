@@ -44,10 +44,19 @@ def _clean_header(value):
 
 def send_email_notification(app, subject, recipients, html_body):
     """
-    Envoie un email en arrière-plan via SMTP.
+    Envoie le même email à plusieurs destinataires, en arrière-plan via SMTP.
     """
     recipients = [r for r in dict.fromkeys(recipients or []) if r and '@' in r]
-    if not recipients:
+    send_email_batch(app, subject, [(r, html_body) for r in recipients])
+
+
+def send_email_batch(app, subject, items):
+    """
+    Envoie un email par destinataire, chacun avec son propre corps HTML (une seule connexion SMTP).
+    `items` : liste de (adresse, corps_html). Même sujet pour tous.
+    """
+    items = [(r, h) for r, h in items if r and '@' in r]
+    if not items:
         return
 
     def send_async():
@@ -78,7 +87,7 @@ def send_email_notification(app, subject, recipients, html_body):
                 server.login(mail_user, mail_pass)
 
                 # Envoyer individuellement pour éviter qu'une mauvaise adresse bloque les autres
-                for recipient in recipients:
+                for recipient, html_body in items:
                     msg = EmailMessage()
                     msg['Subject'] = _clean_header(subject)
                     msg['From'] = _clean_header(sender)
@@ -105,6 +114,36 @@ def send_email_notification(app, subject, recipients, html_body):
     thread = threading.Thread(target=send_async)
     thread.daemon = True
     thread.start()
+
+
+def send_ticket_emails(app, ticket, createur, destinataires, ticket_url=None):
+    """
+    Deux e-mails complets pour un nouveau ticket :
+      - « Ticket envoyé » pour le créateur (toujours) ;
+      - « Ticket reçu » pour chaque destinataire qui n'a pas coupé les notifications e-mail.
+    À appeler dans un contexte d'application ; le ticket doit déjà être enregistré (checklist, pièces jointes).
+    """
+    from flask import render_template
+    morceaux = []
+    if ticket.assigne_a:
+        morceaux.append(ticket.assigne_a.nom_complet)
+    elif ticket.departement:
+        morceaux.append(f"tout le département {ticket.departement.nom}")
+    if ticket.departements_collab:
+        morceaux.append("département(s) " + ', '.join(d.nom for d in ticket.departements_collab))
+    if ticket.collaborateurs:
+        morceaux.append(', '.join(u.nom_complet for u in ticket.collaborateurs))
+    a_qui = ' ; '.join(morceaux)
+
+    def corps(mode, destinataire):
+        return render_template('emails/ticket.html', ticket=ticket, mode=mode, destinataire=destinataire,
+                               a_qui=a_qui, ticket_url=ticket_url)
+
+    send_email_batch(app, f"Ticket envoyé : [#{ticket.numero}] {ticket.titre}",
+                     [(createur.email, corps('envoye', createur))])
+    recus = [u for u in destinataires if u.email and u.id != createur.id and u.notifications_email is not False]
+    send_email_batch(app, f"Ticket reçu : [#{ticket.numero}] {ticket.titre}",
+                     [(u.email, corps('recu', u)) for u in recus])
 
 
 def _extract_body(msg):
@@ -228,13 +267,14 @@ def process_incoming_email(app, sender_email, subject, body):
         db.session.commit()
         logger.info("Nouveau ticket créé via email : %s", numero)
 
-        send_email_notification(
-            app,
-            f"Ticket : [#{numero}] {nouveau_ticket.titre}",
-            [utilisateur.email],
-            f"<p>Bonjour {escape(utilisateur.prenom)},</p>"
-            f"<p>Votre ticket <b>#{escape(numero)}</b> a bien été créé depuis votre email.</p>"
-        )
+        dest = []
+        if nouveau_ticket.departement_id:
+            from models import Departement
+            dept = db.session.get(Departement, nouveau_ticket.departement_id)
+            dest = [u for u in (dept.membres if dept else []) if u.actif]
+        base = app.config.get('PUBLIC_BASE_URL')
+        url = (base + '/tickets/' + nouveau_ticket.id) if base else None
+        send_ticket_emails(app, nouveau_ticket, utilisateur, dest, url)
 
 
 def start_imap_polling(app):

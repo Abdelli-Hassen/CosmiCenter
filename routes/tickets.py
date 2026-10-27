@@ -6,7 +6,7 @@ from flask_login import login_required, current_user
 from html import escape
 from models import (db, Ticket, Utilisateur, Departement, CategorieTicket, Commentaire, HistoriqueTicket,
                     Tache, PieceJointe, Notification)
-from services.email_service import send_email_notification
+from services.email_service import send_email_notification, send_ticket_emails
 from sqlalchemy import or_
 from utils.permissions import (visible_tickets_query, can_access_ticket, can_manage_ticket, role_level)
 from utils.security import like_escape
@@ -371,15 +371,8 @@ def _notify_new_ticket(ticket):
 
     users_to_notify.discard(current_user._get_current_object())
 
-    # Le créateur reçoit toujours l'accusé de réception ; les autres selon leur préférence « notifications par e-mail »
-    recipients = [current_user.email] + [u.email for u in users_to_notify if u.notifications_email is not False]
-    send_email_notification(
-        current_app._get_current_object(),
-        f"Ticket : [#{ticket.numero}] {ticket.titre}",
-        recipients,
-        render_template('emails/nouveau_ticket.html', ticket=ticket,
-                        ticket_url=_public_url('tickets.detail', ticket_id=ticket.id))
-    )
+    send_ticket_emails(current_app._get_current_object(), ticket, current_user._get_current_object(),
+                       users_to_notify, _public_url('tickets.detail', ticket_id=ticket.id))
 
     for user in users_to_notify:
         db.session.add(Notification(

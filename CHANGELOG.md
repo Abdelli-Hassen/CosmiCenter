@@ -12,6 +12,10 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Liste des rôles en cartes pleine largeur (nom, badge Système, description, utilisateurs / pages / actions, boutons modifier / désactiver / supprimer) et boutons d'en-tête en grille.
 - Un appui sur un rôle ouvre l'**éditeur des autorisations en plein écran** (bouton « ← » pour revenir à la liste, en-tête et barre « Tout décocher / Enregistrer » collés en haut et en bas, cases à cocher plus grandes).
 
+### 📧 E-mails de ticket complets : « envoyé » et « reçu » + fichiers jusqu'à 30 Mo
+- À la création d'un ticket, le **créateur** reçoit « Ticket envoyé » et les **destinataires** reçoivent « Ticket reçu » (avant : un seul message identique pour tous, sans accusé distinct). Contenu complet : salutation, titre, description entière (sans troncature), statut, type, priorité, département, catégorie, destinataires, échéance, checklist, pièces jointes, bouton « Ouvrir le ticket » et formule de fin. Les tickets créés par e-mail suivent le même modèle (`templates/emails/ticket.html`, `services/email_service.send_ticket_emails`).
+- Taille maximale d'un fichier joint : **30 Mo** (150 Mo par envoi ; Nginx `client_max_body_size 150m`).
+
 ### 🎚️ Priorité manuelle, catégories sans délai
 - Choisir une catégorie ou un type ne sélectionne plus la priorité (création **et** modification) : elle se choisit toujours à la main.
 - Les catégories n'ont plus de délai de résolution ni de priorité par défaut : champs retirés du formulaire et du tableau d'administration, message « Délai de résolution… » retiré des formulaires de ticket, colonne « Délai prévu » retirée du rapport global. L'échéance d'un ticket vient uniquement du SLA de son département.

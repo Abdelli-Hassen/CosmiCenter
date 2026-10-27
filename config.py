@@ -38,7 +38,7 @@ class Config:
     # Upload de fichiers (chemin absolu, indépendant du dossier de lancement)
     _upload = os.getenv('UPLOAD_FOLDER', 'static/uploads')
     UPLOAD_FOLDER = _upload if os.path.isabs(_upload) else os.path.join(_BASE_DIR, _upload)
-    MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50 MB par requête (10 MB par fichier, voir utils/uploads.py)
+    MAX_CONTENT_LENGTH = 150 * 1024 * 1024  # 150 Mo par requête (30 Mo par fichier, voir utils/uploads.py)
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'log', 'csv', 'zip', 'rar'}
 
     # Session / cookies. SESSION_COOKIE_SECURE=true uniquement derrière HTTPS.

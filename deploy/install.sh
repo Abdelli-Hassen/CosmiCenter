@@ -264,7 +264,7 @@ server {
     listen 80;
     server_name __SERVER_NAME__;
 
-    client_max_body_size 50m;          # l'application accepte jusqu'à 50 Mo par envoi
+    client_max_body_size 150m;         # l'application accepte jusqu'à 150 Mo par envoi (30 Mo par fichier)
 
     location / {
         proxy_pass http://127.0.0.1:__APP_PORT__;
