@@ -970,4 +970,3 @@
   .sp-save .btn-save { width: 100%; justify-content: center; min-height: 48px; }
 }
 
-@media (max-width: 768px) { .st-page .avatar-remove { position: static; } }

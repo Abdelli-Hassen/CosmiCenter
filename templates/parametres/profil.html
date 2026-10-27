@@ -113,9 +113,10 @@
   }
   .tab-nav-item:hover { color: var(--text-primary); }
   .tab-nav-item.active { background: var(--surface-1); color: var(--brand); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-  .avatar-remove { margin: 0; z-index: 2; position: absolute; top: 14px; right: 14px; }
-  .avatar-remove-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.45); background: rgba(255,255,255,.15); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s; }
-  .avatar-remove-btn:hover { background: rgba(255,255,255,.3); }
+  .avatar-wrap { position: relative; flex-shrink: 0; z-index: 1; }
+  .avatar-remove { margin: 0; position: absolute; right: -2px; bottom: 2px; z-index: 3; }
+  .avatar-remove-btn { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 2px solid #fff; background: #1f2937; color: #fff; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,.3); transition: all .2s; }
+  .avatar-remove-btn:hover { background: #dc2626; transform: scale(1.1); }
 </style>
 {% endblock %}
 
@@ -123,6 +124,7 @@
 <div class="page st-page" style="padding: 32px; max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box;">
 
   <div class="profile-hero">
+    <div class="avatar-wrap">
     <div class="profile-avatar-large" style="position:relative; cursor:pointer; overflow:hidden;" onclick="document.getElementById('photoUpload').click()">
       {% if current_user.photo_profil %}
         <img id="avatarPreview" src="{{ url_for('static', filename='uploads/' + current_user.photo_profil) }}" alt="{{ current_user.prenom }} {{ current_user.nom }}" style="width:100%; height:100%; object-fit:cover;">
@@ -137,12 +139,12 @@
     
     {% if current_user.photo_profil %}
     <form method="POST" action="{{ url_for('parametres.supprimer_photo') }}" class="avatar-remove" onsubmit="return confirm('Supprimer votre photo de profil ?');">
-      <button type="submit" class="avatar-remove-btn" title="Supprimer la photo de profil">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        Supprimer la photo
+      <button type="submit" class="avatar-remove-btn" title="Supprimer la photo" aria-label="Supprimer la photo de profil">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </form>
     {% endif %}
+    </div>
 
     <div class="profile-hero-info">
       <h1 class="profile-hero-name">{{ current_user.prenom }} {{ current_user.nom }}</h1>
