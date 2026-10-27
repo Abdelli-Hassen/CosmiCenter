@@ -1,0 +1,52 @@
+{#
+  Pièces jointes d'un ticket : même présentation partout (fiche du ticket, messages, modification).
+  Comportement géré par static/js/attachments.js ; styles dans components.css (.attach-*).
+  - image : carte avec miniature ; clic = visionneuse sur la même page
+  - autre fichier : pastille ; clic = téléchargement (sans changer de page)
+  - removable=True (page de modification) : bouton corbeille = retrait au prochain « Enregistrer »
+#}
+{% macro attachments(pjs, removable=False, compact=False) %}
+{% if pjs %}
+<div class="attach-grid{{ ' is-compact' if compact }}">
+  {% for pj in pjs %}
+    {% set url = url_for('static', filename=pj.chemin) %}
+    {% set ext = (pj.nom_fichier or '').split('.')[-1]|lower %}
+    {% set is_img = (pj.type_mime and 'image' in pj.type_mime) or ext in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'] %}
+    {% set taille = (pj.taille / 1024)|round(0)|int if pj.taille else 0 %}
+    {% if is_img %}
+    <div class="attach-img-card" data-att-img data-url="{{ url }}" data-name="{{ pj.nom_original }}" data-size="{{ taille }} Ko" tabindex="0" role="button" aria-label="Aperçu de {{ pj.nom_original }}">
+      <img src="{{ url }}" alt="" class="attach-img-thumb" loading="lazy">
+      <div class="attach-img-overlay">
+        <span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          Aperçu
+        </span>
+      </div>
+      <div class="attach-img-meta">
+        <div class="attach-img-text">
+          <div class="attach-img-name" title="{{ pj.nom_original }}">{{ pj.nom_original }}</div>
+          <div class="attach-img-size">{{ taille }} Ko</div>
+        </div>
+        <div class="attach-acts">
+          <a href="{{ url }}" download="{{ pj.nom_original }}" class="attach-act" title="Télécharger" aria-label="Télécharger {{ pj.nom_original }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
+          {% if removable %}<button type="button" class="attach-act is-danger" data-att-remove title="Retirer cette pièce jointe" aria-label="Retirer {{ pj.nom_original }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>{% endif %}
+        </div>
+      </div>
+      {% if removable %}<input type="checkbox" name="supprimer_pj[]" value="{{ pj.id }}" hidden>{% endif %}
+    </div>
+    {% else %}
+    <div class="attach-file-chip" data-att-file data-url="{{ url }}" data-name="{{ pj.nom_original }}" tabindex="0" role="button" title="Télécharger {{ pj.nom_original }}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+      <span class="attach-file-name">{{ pj.nom_original }}</span>
+      <span class="attach-file-size">{{ taille }} Ko</span>
+      <span class="attach-acts">
+        <a href="{{ url }}" download="{{ pj.nom_original }}" class="attach-act" title="Télécharger" aria-label="Télécharger {{ pj.nom_original }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
+        {% if removable %}<button type="button" class="attach-act is-danger" data-att-remove title="Retirer cette pièce jointe" aria-label="Retirer {{ pj.nom_original }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>{% endif %}
+      </span>
+      {% if removable %}<input type="checkbox" name="supprimer_pj[]" value="{{ pj.id }}" hidden>{% endif %}
+    </div>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+{% endmacro %}

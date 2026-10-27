@@ -1740,3 +1740,46 @@
   .tk-select { min-width: 0; width: 100%; }
   .tk-clear { grid-column: 1 / -1; text-align: center; }
 }
+
+/* ---- Pièces jointes (templates/tickets/_attachments.html + static/js/attachments.js) ---- */
+.attach-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
+.attach-grid.is-compact { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); margin-top: 0; margin-bottom: 12px; }
+.attach-img-card { position: relative; width: 150px; border-radius: 12px; overflow: hidden; background: var(--surface-2); border: 1px solid var(--border-subtle); box-shadow: 0 2px 8px rgba(0,0,0,.04); transition: all .2s cubic-bezier(.16,1,.3,1); cursor: pointer; display: flex; flex-direction: column; outline: none; }
+.is-compact .attach-img-card { width: auto; }
+.attach-img-card:hover, .attach-img-card:focus-visible { transform: translateY(-2px); border-color: var(--brand); box-shadow: 0 8px 20px rgba(0,0,0,.08); }
+.attach-img-thumb { width: 100%; height: 95px; object-fit: cover; display: block; background: var(--surface-3); transition: transform .25s ease; }
+.attach-img-card:hover .attach-img-thumb { transform: scale(1.04); }
+.attach-img-overlay { position: absolute; top: 0; left: 0; right: 0; height: 95px; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s ease; color: #fff; pointer-events: none; }
+.attach-img-card:hover .attach-img-overlay, .attach-img-card:focus-visible .attach-img-overlay { opacity: 1; }
+.attach-img-overlay span { display: inline-flex; align-items: center; gap: 4px; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #fff; }
+.attach-img-meta { padding: 7px 8px 7px 10px; background: var(--surface-1); border-top: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 6px; }
+.attach-img-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.attach-img-name { font-size: 11.5px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.attach-img-size { font-size: 10.5px; color: var(--text-muted); font-weight: 600; }
+.attach-file-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: 12px; font-size: 12px; font-weight: 600; color: var(--text-primary); cursor: pointer; transition: all .15s ease; max-width: 100%; box-sizing: border-box; outline: none; }
+.is-compact .attach-file-chip { grid-column: 1 / -1; }
+.attach-file-chip:hover, .attach-file-chip:focus-visible { border-color: var(--brand); background: var(--brand-light); color: var(--brand); }
+.attach-file-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attach-file-size { color: var(--text-muted); font-size: 11px; white-space: nowrap; }
+.attach-acts { display: inline-flex; gap: 4px; margin-left: auto; flex: 0 0 auto; }
+.attach-act { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border-subtle); background: var(--surface-1); color: var(--text-secondary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; padding: 0; transition: all .2s; }
+.attach-act:hover { color: var(--brand); border-color: var(--brand); background: var(--brand-light); }
+.attach-act.is-danger:hover { color: #ef4444; border-color: #ef4444; background: rgba(239,68,68,.1); }
+.is-removed { opacity: .6; border-style: dashed !important; border-color: #ef4444 !important; }
+.is-removed .attach-img-name, .is-removed .attach-file-name { text-decoration: line-through; }
+.is-removed .attach-act.is-danger { color: #fff; background: #ef4444; border-color: #ef4444; }
+
+/* Visionneuse d'image (créée par attachments.js) */
+.image-lightbox { display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(10,10,18,.88); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 24px; animation: fadeIn .2s ease; }
+.image-lightbox.open { display: flex; }
+.lightbox-content { position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center; }
+.lightbox-img { max-width: 88vw; max-height: 80vh; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,.5); object-fit: contain; background: #000; }
+.lightbox-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; margin-top: 12px; color: #fff; }
+.lightbox-title { font-size: 13.5px; font-weight: 700; color: #f1f5f9; text-shadow: 0 1px 3px rgba(0,0,0,.5); overflow-wrap: anywhere; }
+.lightbox-meta { font-size: 11px; opacity: .75; margin-top: 2px; }
+.lightbox-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.lightbox-btn { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; transition: all .15s ease; }
+.lightbox-btn:hover { background: rgba(255,255,255,.25); color: #fff; }
+.lightbox-close { position: absolute; top: -44px; right: 0; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s ease; }
+.lightbox-close:hover { background: rgba(239,68,68,.85); border-color: transparent; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
