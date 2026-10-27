@@ -12,6 +12,9 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Liste des rôles en cartes pleine largeur (nom, badge Système, description, utilisateurs / pages / actions, boutons modifier / désactiver / supprimer) et boutons d'en-tête en grille.
 - Un appui sur un rôle ouvre l'**éditeur des autorisations en plein écran** (bouton « ← » pour revenir à la liste, en-tête et barre « Tout décocher / Enregistrer » collés en haut et en bas, cases à cocher plus grandes).
 
+### 💬 Fenêtre de confirmation maison
+- Les messages « Voulez-vous vraiment… ? » du navigateur sont remplacés par une fenêtre aux couleurs de CosmiCenter (icône, titre, boutons Annuler / Confirmer, feuille du bas sur téléphone, Échap pour fermer). S'utilise avec `data-confirm="Message"` sur un formulaire ou un bouton (`static/js/confirm.js`).
+
 ### 🖼️ Photo de profil : suppression
 - Bouton « Supprimer la photo » dans le bandeau du profil (avec confirmation) : retire la photo, supprime le fichier et revient aux initiales.
 

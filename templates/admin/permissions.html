@@ -133,7 +133,7 @@
               <td style="font-size:13px; color:var(--text-muted); font-weight:500;">{{ p.description or '—' }}</td>
               <td><span class="perm-cat">{{ p.categorie or 'Général' }}</span></td>
               <td style="text-align:right;">
-                <form method="POST" action="{{ url_for('admin.supprimer_permission', id=p.id) }}" onsubmit="return confirm('Supprimer définitivement la permission {{ p.code }} ? Cela la retirera de tous les rôles associés.');">
+                <form method="POST" action="{{ url_for('admin.supprimer_permission', id=p.id) }}" data-confirm="Supprimer définitivement la permission {{ p.code }} ? Cela la retirera de tous les rôles associés.">
                   <button type="submit" class="btn-action danger" title="Supprimer">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>

@@ -224,7 +224,7 @@
         
         <form method="POST" action="{{ url_for('parametres.securite') }}">
           <input type="hidden" name="action" value="revoke_all_sessions">
-          <button type="submit" onclick="return confirm('Déconnecter toutes les autres sessions ?');" style="padding:8px 16px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-2); color:var(--text-secondary); font-weight:600; cursor:pointer; font-size:12px;">
+          <button type="submit" data-confirm="Déconnecter toutes les autres sessions ?" style="padding:8px 16px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-2); color:var(--text-secondary); font-weight:600; cursor:pointer; font-size:12px;">
             Déconnecter les autres sessions
           </button>
         </form>

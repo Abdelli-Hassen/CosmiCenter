@@ -199,7 +199,7 @@
 
       {% if entreprise.type_entreprise != 'principale' %}
       <form action="{{ url_for('companies.toggle_archive', id=entreprise.id) }}" method="POST" style="margin:0;">
-        <button type="submit" class="btn-action" style="padding:10px 18px; border-radius:12px; cursor:pointer;" onclick="return confirm('{{ 'Voulez-vous archiver cette entreprise ?' if entreprise.actif else 'Voulez-vous réactiver cette entreprise ?' }}')">
+        <button type="submit" class="btn-action" style="padding:10px 18px; border-radius:12px; cursor:pointer;" data-confirm="{{ 'Voulez-vous archiver cette entreprise ?' if entreprise.actif else 'Voulez-vous réactiver cette entreprise ?' }}"{% if not entreprise.actif %} data-confirm-tone="primary" data-confirm-ok="Réactiver"{% endif %}>
           {% if entreprise.actif %}
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
           Archiver
@@ -211,7 +211,7 @@
       </form>
 
       <form action="{{ url_for('companies.supprimer', id=entreprise.id) }}" method="POST" style="margin:0;">
-        <button type="submit" class="btn-action danger" style="padding:10px 18px; border-radius:12px; cursor:pointer; background:rgba(239,68,68,0.1); color:#ef4444;" onclick="return confirm('Attention : cette action est irréversible. Les collaborateurs rattachés seront détachés. Supprimer définitivement ?')">
+        <button type="submit" class="btn-action danger" style="padding:10px 18px; border-radius:12px; cursor:pointer; background:rgba(239,68,68,0.1); color:#ef4444;" data-confirm="Attention : cette action est irréversible. Les collaborateurs rattachés seront détachés. Supprimer définitivement ?">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           Supprimer
         </button>
@@ -279,7 +279,7 @@
               </td>
               {% if current_user.has_permission('admin_dashboard.voir') or current_user.role.niveau >= 80 %}
               <td class="cu-act" style="text-align:right;">
-                <form method="POST" action="{{ url_for('companies.retirer_employe', user_id=u.id) }}" onsubmit="return confirm({{ ('Détacher ce collaborateur de ' ~ entreprise.nom ~ ' ?')|tojson|forceescape }});" style="display:inline;">
+                <form method="POST" action="{{ url_for('companies.retirer_employe', user_id=u.id) }}" data-confirm="{{ ('Détacher ce collaborateur de ' ~ entreprise.nom ~ ' ?')|forceescape }}" style="display:inline;">
                   <button type="submit" class="btn-action" style="padding:4px 8px; font-size:11px; color:#ef4444; border-color:rgba(239,68,68,0.2);">
                     Détacher
                   </button>

@@ -6,6 +6,7 @@
   <meta name="description" content="{{ app_name }} — Plateforme de service d'assistance">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <script src="{{ url_for('static', filename='js/csrf.js') }}?v=1"></script>
+  <script src="{{ url_for('static', filename='js/confirm.js') }}?v=1" defer></script>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo-icon.png') }}">
   <title>{% block title %}{{ app_name }}{% endblock %} — {{ app_name }}</title>
 
@@ -39,7 +40,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}?v=104">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}?v=102">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v=103">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v=105">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v=106">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tickets.css') }}?v=102">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=102">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tooltip.css') }}?v=2">

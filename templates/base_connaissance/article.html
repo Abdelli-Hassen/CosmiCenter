@@ -50,7 +50,7 @@
         <div style="display:flex; gap:10px;">
             <a href="{{ url_for('base_connaissance.modifier_article', id=article.id) }}" class="btn btn-secondary" style="background: var(--surface-2); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: 8px; padding: 8px 16px; font-weight: 600; text-decoration: none;">Modifier</a>
             {% if current_user.has_permission('base_connaissance.supprimer') %}
-            <form action="{{ url_for('base_connaissance.supprimer_article', id=article.id) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet article ?');">
+            <form action="{{ url_for('base_connaissance.supprimer_article', id=article.id) }}" method="POST" data-confirm="Êtes-vous sûr de vouloir supprimer cet article ?">
                 <button type="submit" class="btn btn-danger" style="background:#dc2626; color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:600;">Supprimer</button>
             </form>
             {% endif %}

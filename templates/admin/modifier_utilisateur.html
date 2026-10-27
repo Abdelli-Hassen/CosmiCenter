@@ -271,7 +271,7 @@
         </p>
       </div>
       {% if utilisateur.actif %}
-      <form method="POST" action="{{ url_for('admin.desactiver_utilisateur', user_id=utilisateur.id) }}" onsubmit="return confirm('Désactiver définitivement ce compte ?');">
+      <form method="POST" action="{{ url_for('admin.desactiver_utilisateur', user_id=utilisateur.id) }}" data-confirm="Désactiver définitivement ce compte ?">
         <button type="submit" class="btn-action danger">
           Désactiver le compte
         </button>
