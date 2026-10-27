@@ -367,7 +367,7 @@
         </div>
         {% endif %}
         
-        <div class="access-detail">
+        <div class="access-detail{{ ' is-unset' if not user.poste_machine }}">
           <span class="access-label">Poste</span>
           <span class="access-value">{{ user.poste_machine or 'Non spécifié' }}</span>
         </div>
