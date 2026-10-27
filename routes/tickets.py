@@ -10,7 +10,7 @@ from services.email_service import send_email_notification
 from sqlalchemy import or_
 from utils.permissions import (visible_tickets_query, can_access_ticket, can_manage_ticket, role_level)
 from utils.security import like_escape
-from utils.uploads import save_upload, UploadError, MAX_ATTACHMENT_BYTES
+from utils.uploads import save_upload, remove_upload, UploadError, MAX_ATTACHMENT_BYTES
 from datetime import datetime, timedelta
 import logging
 
@@ -539,6 +539,16 @@ def modifier(ticket_id):
             elif routing_type != 'specific' and ticket.assigne_a_id:
                 changes.append(('Assigné à', ticket.assigne_a.nom_complet, 'Non assigné'))
 
+            # Pièces jointes retirées dans le formulaire (celles du ticket uniquement)
+            fichiers_a_effacer = []
+            ids_retirees = set(request.form.getlist('supprimer_pj[]'))
+            if ids_retirees:
+                for pj in list(ticket.pieces_jointes):
+                    if pj.id in ids_retirees:
+                        changes.append(('Pièce jointe', pj.nom_original, 'Supprimée'))
+                        fichiers_a_effacer.append(pj.chemin)
+                        db.session.delete(pj)
+
             for champ, old_val, new_val in changes:
                 db.session.add(HistoriqueTicket(
                     ticket_id=ticket.id,
@@ -610,6 +620,8 @@ def modifier(ticket_id):
             upload_errors = _save_attachments(ticket)
 
             db.session.commit()
+            for chemin in fichiers_a_effacer:
+                remove_upload(chemin.split('uploads/', 1)[-1])
             flash('Ticket modifié avec succès', 'success')
             for msg in upload_errors:
                 flash(msg, 'warning')
