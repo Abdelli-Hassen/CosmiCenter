@@ -99,7 +99,7 @@ psql -U postgres -f cosmicenter.example.sql
 
 ⚠ **Changer ce mot de passe dès la première connexion** (*Paramètres du compte*), puis supprimer ou remplacer les données d'exemple. Les 12 autres utilisateurs d'exemple sont **inactifs** (aucune connexion possible) : activez-les ou supprimez-les.
 
-Puis dans `.env` : `DATABASE_URL=postgresql+psycopg://cosmicenter:<mot_de_passe>@localhost:5432/cosmicenter`.
+Puis dans `.env` : `DATABASE_URL=postgresql+psycopg://cosmicenter:testtest@localhost:5432/cosmicenter`.
 
 > **À savoir**
 > - **`cosmicenter.sql` (avec les données)** est un fichier **local, ignoré par git** (`.gitignore`) : copie de la vraie base (utilisateurs, entreprises, départements, points de vente, catégories de tickets, base de connaissances, rôle personnalisé « HR »…) **sans** tickets, commentaires, pièces jointes ni messages. Il contient des e-mails et des hachages de mots de passe : ne jamais le publier. Les seuls fichiers qui portent des secrets sont donc **`.env`** et **`cosmicenter.sql`**, tous deux hors de git.
