@@ -2,6 +2,16 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.7.2] - 2026-11-03
+
+### 🗄️ Script SQL complet de la base
+- Nouveau `cosmicenter.example.sql` (versionné, comme `.env.example`) : crée le rôle et la base PostgreSQL, les 26 tables (clés, contraintes, index), la séquence `ticket_numero_seq`, les 62 permissions, les 6 rôles standard avec leurs 159 droits, les réglages par défaut, un **compte Super Administrateur par défaut** (`admin@example.com`, mot de passe à changer immédiatement) et des **données d'exemple fictives** couvrant toutes les pages (1 entreprise, 7 départements, 4 points de vente avec équipements, 17 catégories, 13 utilisateurs inactifs sauf l'administrateur, 12 tickets de tous statuts/types/priorités avec tâches, commentaires, historique, évaluations et collaboration, notifications, messages, idées, plan d'action, modèles de réponse, base de connaissances). Aucune donnée réelle. Généré à partir de `models.py`, validé dans un schéma jetable (annulé).
+- `cosmicenter.sql` (copie locale avec utilisateurs, entreprises, départements, points de vente, catégories, permissions, rôles, base de connaissances ; sans tickets ni messages) est **ignoré par git**. Fichiers `.xlsx` retirés ; le contenu de `static/uploads/` est ignoré par git.
+- `scripts/create_db.sql` : mot de passe en clair remplacé par un espace réservé.
+
+### 📖 README refondu
+- Réécrit entièrement (sommaire, technologies, démarrage rapide, base de données, configuration, fonctionnalités à jour, rôles et permissions, sécurité, structure, tests, déploiement). Captures d'écran des interfaces retirées.
+
 ## [2.7.1] - 2026-10-26
 
 ### 📱 Performance des agents sur téléphone

@@ -77,3 +77,11 @@ coverage.xml
 
 # Pytest
 .pytest_cache/
+
+# Fichiers envoyés par les utilisateurs (photos, pièces jointes) : jamais dans git, on garde seulement les .gitkeep
+static/uploads/**
+!static/uploads/**/
+!static/uploads/**/.gitkeep
+
+# Copie locale de la base avec ses données (comptes, e-mails, hachages) : secret, jamais dans git. Modèle versionné : cosmicenter.example.sql
+cosmicenter.sql
