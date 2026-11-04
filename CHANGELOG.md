@@ -2,6 +2,18 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.7.4] - 2026-11-04
+
+### 📖 README mis à jour de A à Z (vérifié sur le code)
+- Contenu relu ligne par ligne et vérifié sur le projet : version, technologies et versions, lanceurs Windows et Linux (`start.bat`, `run_dev.bat`, `run_prod.bat`, `start.sh`, `Activate_venv.bat`), configuration (toutes les variables du `.env.example` + `FIELD_ENCRYPTION_KEY`, `ADMIN_PASSWORD`, `PUBLIC_BASE_URL`, `MAIL_TIMEOUT`), fonctionnalités page par page, raccourcis clavier, limites de fichiers (30 Mo pièces jointes, 25 Mo messagerie, 5 Mo photos), sécurité, structure du projet (13 blueprints, 131 routes, 64 gabarits), tests, déploiement (sauvegardes 14 jours, Nginx 150 Mo).
+- Corrigé : la commande `init-db` est **historique** (5 anciens rôles, une vingtaine de permissions, 4 départements d'exemple) et ne crée pas les 6 rôles ni les 62 permissions actuels ; `seed_db.py` n'est plus dans le dépôt ; l'alerte e-mail de la boîte à idées va aux rôles qui peuvent voir toutes les idées ; l'option « Se souvenir de moi » remplace une durée de session non appliquée ; l'en-tête HSTS dépend de `SESSION_COOKIE_SECURE`.
+- Ajouté : note sur les paquets hérités non utilisés de `requirements.txt` (`o365`, `msal`, `psycopg2-binary`, `alembic`) et sur Flask-Migrate sans dossier `migrations/`.
+
+## [2.7.3] - 2026-11-04
+
+### 📖 README : section « Clé secrète (SECRET_KEY) »
+- À quoi sert la clé (sessions de connexion, protection CSRF, chiffrement des mots de passe AnyDesk / TeamViewer), d'où elle vient (on la génère soi-même), comment la créer ou la remplacer étape par étape (Windows et Linux), et les règles à respecter (jamais dans git, `FIELD_ENCRYPTION_KEY` avant tout changement).
+
 ## [2.7.2] - 2026-11-03
 
 ### 🗄️ Script SQL complet de la base
