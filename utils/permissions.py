@@ -61,6 +61,9 @@ def ticket_visibility_filter(user):
     if user.departement_id:
         clauses.append(Ticket.departement_id == user.departement_id)
         clauses.append(Ticket.departements_collab.any(Departement.id == user.departement_id))
+    pdv_ids = [p.id for p in user.tous_pdvs]
+    if pdv_ids:  # ticket adressé à l'un de mes points de vente
+        clauses.append(Ticket.pdv_id.in_(pdv_ids))
     return or_(*clauses) if clauses else false()
 
 
@@ -110,7 +113,8 @@ def can_access_ticket(user, ticket):
 
 
 def ticket_in_my_scope(user, ticket):
-    """Ticket « à moi » : créé par moi, assigné à moi, ou de mon département / en collaboration avec moi."""
+    """Ticket « à moi » : créé par moi, assigné à moi, de mon département / adressé à l'un de mes points de vente,
+    ou en collaboration avec moi."""
     if ticket.createur_id == user.id or ticket.assigne_a_id == user.id:
         return True
     if user.departement_id:
@@ -118,6 +122,8 @@ def ticket_in_my_scope(user, ticket):
             return True
         if any(d.id == user.departement_id for d in ticket.departements_collab):
             return True
+    if ticket.pdv_id and any(p.id == ticket.pdv_id for p in user.tous_pdvs):
+        return True
     return any(c.id == user.id for c in ticket.collaborateurs)
 
 

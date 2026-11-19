@@ -221,6 +221,11 @@ class PointDeVente(db.Model):
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
 
     @property
+    def tous_employes(self):
+        """Tout le personnel du PDV : ceux dont c'est le PDV principal et ceux qui l'ont en supplément."""
+        return list({u.id: u for u in (list(self.employes) + self.employes_multi)}.values())
+
+    @property
     def employes_multi(self):
         """Utilisateurs pour qui ce PDV est un PDV supplémentaire (hors principal)."""
         return Utilisateur.query.filter(Utilisateur.pdv_extra_ids.contains(self.id, autoescape=True)).all()

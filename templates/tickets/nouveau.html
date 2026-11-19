@@ -445,12 +445,31 @@
 
           <!-- 3. Département & Catégorie & Routage -->
           <div style="margin-bottom: 28px;">
-            <label class="premium-label" style="margin-bottom: 8px;">Département concerné</label>
+            <label class="premium-label" style="margin-bottom: 8px;">Destinataire du ticket</label>
             <div style="background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
+              <!-- Département ou point de vente (pour joindre les personnes rattachées à un PDV, sans département) -->
+              <div style="display:flex; gap:12px; margin-bottom: 16px; flex-wrap: wrap;">
+                <label class="routing-radio">
+                  <input type="radio" name="dest_type" value="dept" checked onchange="setDest('dept')">
+                  <span>Département</span>
+                </label>
+                <label class="routing-radio">
+                  <input type="radio" name="dest_type" value="pdv" onchange="setDest('pdv')">
+                  <span>Point de vente</span>
+                </label>
+              </div>
+
               <select name="departement_id" id="departementSelect" class="premium-input" required style="margin-bottom: 16px;">
                 <option value="">Sélectionner un département...</option>
                 {% for dept in departements %}
                 <option value="{{ dept.id }}">{{ dept.nom }}</option>
+                {% endfor %}
+              </select>
+
+              <select name="pdv_id" id="pdvSelect" class="premium-input" style="display:none; margin-bottom: 16px;">
+                <option value="">Sélectionner un point de vente...</option>
+                {% for p in pdvs %}
+                <option value="{{ p.id }}">{{ p.nom }}{% if p.ville or p.categorie %} ({{ p.ville or p.categorie }}){% endif %}</option>
                 {% endfor %}
               </select>
 
@@ -498,13 +517,13 @@
                 <div style="display:flex; gap:12px; margin-bottom: 20px; flex-wrap: wrap;">
                   <label class="routing-radio">
                     <input type="radio" name="routing_type" value="all" checked onchange="toggleRoutingUI()"> 
-                    <span>À tout le département</span>
+                    <span id="routingAllLabel">À tout le département</span>
                   </label>
                   <label class="routing-radio">
                     <input type="radio" name="routing_type" value="specific" onchange="toggleRoutingUI()"> 
                     <span>À une personne spécifique</span>
                   </label>
-                  <label class="routing-radio">
+                  <label class="routing-radio" id="routingCollabRadio">
                     <input type="radio" name="routing_type" value="collab" onchange="toggleRoutingUI()"> 
                     <span>Collaboration (multiples)</span>
                   </label>
@@ -515,7 +534,7 @@
                   <select name="assigne_a_id" id="agentSelect" class="premium-input">
                     <option value="">Sélectionner une personne...</option>
                     {% for u in utilisateurs %}
-                    <option value="{{ u.id }}" data-dept="{{ u.departement_id if u.departement_id else '' }}">{{ u.prenom }} {{ u.nom }} ({{ u.departement.nom if u.departement else 'Sans Dpt' }})</option>
+                    <option value="{{ u.id }}" data-dept="{{ u.departement_id if u.departement_id else '' }}" data-pdvs=",{{ u.tous_pdvs|map(attribute='id')|join(',') }},">{{ u.prenom }} {{ u.nom }} ({{ u.departement.nom if u.departement else (u.pdv.nom if u.pdv else 'Sans Dpt') }})</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -809,27 +828,58 @@
   }
 
   var agentSelect = document.getElementById('agentSelect');
+  var pdvSelect = document.getElementById('pdvSelect');
+  function currentDest() {
+    var r = document.querySelector('input[name="dest_type"]:checked');
+    return r ? r.value : 'dept';
+  }
   function filterAgents() {
     if (!agentSelect) return;
-    var deptId = deptSelect ? deptSelect.value : '';
+    var pdvMode = currentDest() === 'pdv';
+    var deptId = pdvMode ? (pdvSelect ? pdvSelect.value : '') : (deptSelect ? deptSelect.value : '');
     agentSelect.value = '';
     var visible = 0;
     Array.prototype.forEach.call(agentSelect.options, function (o, idx) {
       if (idx === 0) return; // Keep placeholder
-      var show = deptId ? (o.dataset.dept === deptId) : false;
+      var show = deptId ? (pdvMode ? ((o.dataset.pdvs || '').indexOf(',' + deptId + ',') > -1) : (o.dataset.dept === deptId)) : false;
       o.hidden = !show;
       o.disabled = !show;
       o.style.display = show ? '' : 'none';
       if (show) visible++;
     });
     if (!deptId) {
-      agentSelect.options[0].textContent = "Sélectionnez d'abord un département ci-dessus...";
+      agentSelect.options[0].textContent = pdvMode ? "Sélectionnez d'abord un point de vente ci-dessus..." : "Sélectionnez d'abord un département ci-dessus...";
     } else if (visible === 0) {
-      agentSelect.options[0].textContent = "Aucun agent disponible dans ce département";
+      agentSelect.options[0].textContent = pdvMode ? "Aucune personne dans ce point de vente" : "Aucun agent disponible dans ce département";
     } else {
       agentSelect.options[0].textContent = "Sélectionner une personne (" + visible + " disponible" + (visible > 1 ? "s" : "") + ")...";
     }
   }
+
+  /* ── 2b'. Destinataire : département OU point de vente ── */
+  window.setDest = function (mode) {
+    var pdvMode = mode === 'pdv';
+    deptSelect.style.display = pdvMode ? 'none' : '';
+    deptSelect.required = !pdvMode;
+    pdvSelect.style.display = pdvMode ? '' : 'none';
+    pdvSelect.required = pdvMode;
+    if (pdvMode) {
+      deptSelect.value = '';
+      deptSelect.dispatchEvent(new Event('change'));   // vide catégories, collaboration et personnes
+    } else {
+      pdvSelect.value = '';
+    }
+    document.getElementById('routingAllLabel').textContent = pdvMode ? 'À tout le point de vente' : 'À tout le département';
+    var collabRadio = document.getElementById('routingCollabRadio');
+    collabRadio.style.display = pdvMode ? 'none' : 'flex';
+    var checked = document.querySelector('input[name="routing_type"]:checked');
+    if (pdvMode && checked && checked.value === 'collab') {
+      document.querySelector('input[name="routing_type"][value="all"]').checked = true;
+      toggleRoutingUI();
+    }
+    filterAgents();
+  };
+  if (pdvSelect) pdvSelect.addEventListener('change', filterAgents);
 
   /* ── 2c. Collaboration Assignment Filtering Logic ── */
   var collabDeptSelect = document.getElementById('collabDeptSelect');
@@ -1277,7 +1327,8 @@
   if (form) {
     form.addEventListener('submit', function(e) {
       var titre = document.getElementById('titre').value.trim();
-      var dept = document.getElementById('departementSelect').value;
+      var dest = currentDest();
+      var dept = dest === 'pdv' ? document.getElementById('pdvSelect').value : document.getElementById('departementSelect').value;
       var routing = document.querySelector('input[name="routing_type"]:checked').value;
       
       var isValid = true;
@@ -1288,7 +1339,7 @@
         errorMsg = 'Le résumé du problème (titre) est obligatoire.';
       } else if (!dept) {
         isValid = false;
-        errorMsg = 'Le département concerné est obligatoire.';
+        errorMsg = dest === 'pdv' ? 'Le point de vente concerné est obligatoire.' : 'Le département concerné est obligatoire.';
       } else if (routing === 'specific') {
         var assigne = document.getElementById('agentSelect').value;
         if (!assigne) {

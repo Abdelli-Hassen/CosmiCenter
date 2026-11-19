@@ -2,6 +2,14 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.9.0] - 2026-11-19
+
+### 🏪 Tickets : écrire à un point de vente, pas seulement à un département
+- Problème : une personne rattachée à un **point de vente sans département** (ex. un/une gérant/e) n'apparaissait nulle part dans « Nouveau ticket » : la liste des personnes dépend du département choisi. 
+- **Nouvelle ligne « Destinataire du ticket : Département / Point de vente »** dans *Nouveau ticket*. En mode *Point de vente* : choix du PDV, puis *À tout le point de vente* ou *À une personne spécifique* (liste des personnes de ce PDV, principal ou supplémentaire). La collaboration multiple reste réservée aux départements ; une personne hors du PDV choisi est refusée par le serveur.
+- Le ticket garde son PDV (`tickets.pdv_id`, colonne qui existait déjà) : **tout le personnel du PDV** (principal ou supplémentaire) est **notifié** (notification + e-mail selon sa préférence), **voit** le ticket dans « Mes tickets » et peut l'ouvrir ; les personnes d'un autre PDV, non. Fiche et liste des tickets affichent le point de vente à la place du département.
+- Nouveau test : `tests/ticket_pdv_test.py` (15 vérifications).
+
 ## [2.8.6] - 2026-11-19
 
 ### 🔒 Plan d'action : chacun ses propres données

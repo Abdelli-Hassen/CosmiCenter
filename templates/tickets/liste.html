@@ -317,6 +317,8 @@
               </span>
               {% endif %}
             </div>
+            {% elif ticket.pdv_associe %}
+            <span style="font-size: 13px; font-weight: 500; color: var(--text-secondary);" title="Ticket adressé à un point de vente">{{ ticket.pdv_associe.nom }}</span>
             {% else %}
             <span style="font-size: 13px; color: var(--text-muted);">—</span>
             {% endif %}

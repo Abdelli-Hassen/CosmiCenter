@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from html import escape
 from models import (db, Ticket, Utilisateur, Departement, CategorieTicket, Commentaire, HistoriqueTicket,
-                    Tache, PieceJointe, Notification)
+                    Tache, PieceJointe, Notification, PointDeVente)
 from services.email_service import send_email_notification
 from sqlalchemy import or_
 from utils.permissions import (visible_tickets_query, can_access_ticket, can_change_status, can_work_on_ticket,
@@ -259,9 +259,23 @@ def nouveau():
     if request.method == 'POST':
         fields, errors = _read_ticket_fields()
         routing_type = request.form.get('routing_type', 'all')
-        departement_id, dept_ok = _valid_department_id(request.form.get('departement_id'))
-        if not dept_ok:
-            errors.append('Département introuvable.')
+        # Destinataire : un département OU un point de vente (pour les personnes rattachées à un PDV, sans département)
+        dest_type = 'pdv' if request.form.get('dest_type') == 'pdv' else 'dept'
+        pdv_id = None
+        if dest_type == 'pdv':
+            departement_id = None
+            pdv_obj = db.session.get(PointDeVente, request.form.get('pdv_id') or '')
+            if not pdv_obj or not pdv_obj.actif:
+                errors.append('Point de vente introuvable.')
+            else:
+                pdv_id = pdv_obj.id
+            if routing_type == 'collab':
+                errors.append("La collaboration multiple n'est pas disponible pour un point de vente : "
+                              "choisissez « À tout le point de vente » ou « À une personne spécifique ».")
+        else:
+            departement_id, dept_ok = _valid_department_id(request.form.get('departement_id'))
+            if not dept_ok:
+                errors.append('Département introuvable.')
 
         assigne_id = None
         if routing_type == 'specific':
@@ -270,6 +284,8 @@ def nouveau():
                 assignee = db.session.get(Utilisateur, assigne_id)
                 if not assignee or not assignee.actif:
                     errors.append("L'agent assigné est introuvable ou inactif.")
+                elif pdv_id and not any(p.id == pdv_id for p in assignee.tous_pdvs):
+                    errors.append("La personne choisie n'appartient pas à ce point de vente.")
 
         if errors:
             for msg in errors:
@@ -284,6 +300,7 @@ def nouveau():
                 type_ticket=fields['type_ticket'],
                 priorite=fields['priorite'],
                 departement_id=departement_id,
+                pdv_id=pdv_id,
                 assigne_a_id=assigne_id,
                 createur_id=current_user.id
             )
@@ -346,10 +363,12 @@ def nouveau():
 
 def _render_nouveau():
     departements, utilisateurs, categories = _form_context()
+    pdvs = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
     return render_template('tickets/nouveau.html',
                            departements=departements,
                            categories=categories,
-                           utilisateurs=utilisateurs)
+                           utilisateurs=utilisateurs,
+                           pdvs=pdvs)
 
 
 def _notify_new_ticket(ticket):
@@ -363,6 +382,12 @@ def _notify_new_ticket(ticket):
         dept = db.session.get(Departement, ticket.departement_id)
         if dept:
             for user in dept.membres:
+                if user.actif:
+                    users_to_notify.add(user)
+    elif ticket.pdv_id:  # ticket adressé à un point de vente : tout son personnel
+        pdv = db.session.get(PointDeVente, ticket.pdv_id)
+        if pdv:
+            for user in pdv.tous_employes:
                 if user.actif:
                     users_to_notify.add(user)
 

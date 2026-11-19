@@ -14,6 +14,7 @@ venv/bin/python tests/cat_test.py                (Linux / macOS)
 | `chat_test.py` | messagerie et pièces jointes |
 | `kb_views_test.py` | base de connaissances : lecteurs distincts et nombre de lectures par personne |
 | `pdv_ref_test.py` | catégories et thèmes des points de vente (base + cache) |
+| `ticket_pdv_test.py` | ticket adressé à un point de vente : choix, notifications, visibilité |
 | `plan_action_test.py` | plan d'action personnel : chacun ne voit / modifie / exporte que ses tâches |
 | `sound_pref_test.py` | préférence « Sons des notifications » du profil + thème absent du profil |
 | `pdv_scope_test.py` | sans `pdv.tous`, on ne modifie / gère que ses propres PDV (serveur + boutons) |
