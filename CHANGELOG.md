@@ -2,6 +2,14 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.8.6] - 2026-11-19
+
+### 🔒 Plan d'action : chacun ses propres données
+- Le plan d'action était commun à tous ceux qui avaient `admin_plan_action.voir` (tout le monde voyait, modifiait et exportait les tâches de tout le monde). Il est désormais **personnel** : la page, le calendrier, la modification, « terminer / rouvrir », la suppression et l'**export Excel** ne concernent que les tâches **créées par la personne connectée**. Même règle pour un Super Administrateur ; la tâche d'un autre renvoie une erreur 404.
+- Les permissions (`voir`, `creer`, `modifier`, `supprimer`, `exporter`) fonctionnent comme avant, mais sur **ses** tâches. Le champ « Assigné à » reste une simple étiquette : une tâche assignée à quelqu'un ne devient pas visible pour lui.
+- Les tâches déjà enregistrées appartiennent à leur créateur : il est le seul à les revoir.
+- Nouveau test : `tests/plan_action_test.py` (15 vérifications).
+
 ## [2.8.5] - 2026-11-19
 
 ### 🐞 Liste des utilisateurs : cliquer sur une personne ouvre bien sa fiche, et on ne voit que son périmètre

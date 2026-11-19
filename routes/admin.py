@@ -920,12 +920,22 @@ def logs():
 
 # ─── Plan d'action ─────────────────────────────────────────────────────────
 
+def _my_plan_tasks():
+    """Le plan d'action est PERSONNEL : chacun ne voit et ne gère que les tâches qu'il a créées (aucune donnée
+    partagée, même pour un administrateur)."""
+    return PlanActionTask.query.filter(PlanActionTask.createur_id == current_user.id)
+
+
+def _my_plan_task_or_404(id):
+    return _my_plan_tasks().filter(PlanActionTask.id == id).first_or_404()
+
+
 @admin_bp.route('/plan-action')
 @login_required
 @permission_required('admin_plan_action.voir')
 def plan_action():
-    """Plan d'action - calendrier et projets IT"""
-    tasks = PlanActionTask.query.order_by(PlanActionTask.date_debut).all()
+    """Plan d'action - calendrier et projets IT (personnel)"""
+    tasks = _my_plan_tasks().order_by(PlanActionTask.date_debut).all()
     utilisateurs = Utilisateur.query.filter_by(actif=True).all()
     return render_template('admin/plan_action.html', tasks=tasks, utilisateurs=utilisateurs,
                            can_create=current_user.has_permission('admin_plan_action.creer'),
@@ -938,7 +948,7 @@ def plan_action():
 @login_required
 @permission_required('admin_plan_action.voir')
 def api_plan_action_tasks():
-    tasks = PlanActionTask.query.all()
+    tasks = _my_plan_tasks().all()
     events = []
     for t in tasks:
         events.append({
@@ -1007,7 +1017,7 @@ def _set_plan_status(id, statut, message):
     if not _plan_action_edit_allowed():
         flash("Vous n'avez pas la permission de modifier le plan d'action.", "danger")
         return redirect(url_for('admin.plan_action'))
-    task = PlanActionTask.query.get_or_404(id)
+    task = _my_plan_task_or_404(id)
     task.statut = statut
     db.session.commit()
     flash(message, 'success')
@@ -1035,7 +1045,7 @@ def modifier_plan_action(id):
     if not _plan_action_edit_allowed():
         flash("Vous n'avez pas la permission de modifier le plan d'action.", "danger")
         return redirect(url_for('admin.plan_action'))
-    task = PlanActionTask.query.get_or_404(id)
+    task = _my_plan_task_or_404(id)
     values, error = _read_plan_action_form()
     if error:
         flash(error, "danger")
@@ -1054,7 +1064,7 @@ def supprimer_plan_action(id):
     if not current_user.has_permission('admin_plan_action.supprimer'):
         flash("Vous n'avez pas la permission de supprimer une tâche du plan d'action.", "danger")
         return redirect(url_for('admin.plan_action'))
-    task = PlanActionTask.query.get_or_404(id)
+    task = _my_plan_task_or_404(id)
     db.session.delete(task)
     db.session.commit()
     flash("Tâche supprimée.", "success")
@@ -1079,7 +1089,7 @@ def export_plan_action_excel():
     date_from = request.args.get('date_from', '')
     date_to = request.args.get('date_to', '')
 
-    query = PlanActionTask.query
+    query = _my_plan_tasks()
 
     if mode == 'day' and date_jour:
         d = _parse_datetime(date_jour)
