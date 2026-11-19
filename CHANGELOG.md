@@ -2,6 +2,11 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.9.3] - 2026-11-19
+
+### 🎨 Boutons « Tout sélectionner » : même style que le compteur
+- Le bouton et le compteur voisin (« 9 sélectionnés ») n'avaient ni la même forme ni la même hauteur. Ils ont maintenant la **même hauteur (28 px), la même forme en pilule**, la même typographie, sont alignés sur la même ligne, et le bouton réagit au survol (bordure et fond de la couleur de la marque). Les boutons « Tout / Aucun » des groupes sont assortis (24 px).
+
 ## [2.9.2] - 2026-11-19
 
 ### ✅ « Tout sélectionner » dans la collaboration des tickets
