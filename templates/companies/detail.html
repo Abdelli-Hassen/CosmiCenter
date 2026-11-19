@@ -190,13 +190,8 @@
 .cp-fact { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 32px; font-size: 13px; }
 .cp-fact-k { color: var(--text-muted); font-weight: 600; }
 .cp-fact-v { color: var(--text-primary); font-weight: 700; text-align: right; }
-.cp-bar-row { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
-.cp-bar-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 13px; }
-.cp-bar-name { color: var(--text-primary); font-weight: 600; overflow-wrap: anywhere; }
-.cp-bar-n { color: var(--text-muted); font-weight: 700; flex-shrink: 0; }
-.cp-bar-track { height: 8px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
-.cp-bar-fill { height: 100%; border-radius: 4px; background: var(--cp-accent); transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-@media (prefers-reduced-motion: reduce) { .cp-bar-fill, .cp-about { transition: none; } }
+.cp-role-name { color: var(--text-primary); font-weight: 600; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { .cp-about { transition: none; } }
 
 @media (max-width: 960px) {
   .comp-layout { grid-template-columns: 1fr; }
@@ -404,10 +399,7 @@
           <div class="cp-about-sec">
             <h4 class="cp-about-sec-title">Répartition par rôle</h4>
             {% for name, n in (ns.counts.items()|sort(attribute='1', reverse=true))[:5] %}
-            <div class="cp-bar-row">
-              <div class="cp-bar-top"><span class="cp-bar-name">{{ name }}</span><span class="cp-bar-n">{{ n }}</span></div>
-              <div class="cp-bar-track"><div class="cp-bar-fill" style="width: {{ (n * 100 / employes|length)|round(1) }}%;"></div></div>
-            </div>
+            <div class="cp-fact"><span class="cp-fact-k cp-role-name">{{ name }}</span><span class="cp-fact-v">{{ n }}</span></div>
             {% endfor %}
           </div>
           {% endif %}
