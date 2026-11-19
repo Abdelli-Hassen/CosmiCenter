@@ -113,6 +113,8 @@ class Utilisateur(UserMixin, db.Model):
     couleur = db.Column(db.String(20), default='#E8213F')
     notifications_email = db.Column(db.Boolean, default=True)
     notifications_push = db.Column(db.Boolean, default=True)
+    # Sons « ticket envoyé » / « ticket reçu » : désactivés = aucun son pour cet utilisateur
+    sons_actifs = db.Column(db.Boolean, nullable=False, default=True, server_default='true')
     
     # État
     actif = db.Column(db.Boolean, default=True)

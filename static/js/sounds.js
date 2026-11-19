@@ -106,8 +106,14 @@
     todo.forEach(function (p) { play(p.name); });
   }
 
+  // Préférence du profil (« Sons des notifications ») : désactivée = aucun son, jamais mis en attente
+  function enabled() {
+    var m = document.querySelector('meta[name="chub-sound"]');
+    return !m || m.getAttribute('content') !== '0';
+  }
+
   function play(name, waited) {
-    if (!FILES[name]) return;
+    if (!FILES[name] || !enabled()) return;
     var c = ensureContext();
     // Son demandé pendant le décodage (ex. toast affiché dès l'ouverture de la page) : on attend la fin
     // au lieu de lancer l'élément <audio> qui, lui, coupe le début.

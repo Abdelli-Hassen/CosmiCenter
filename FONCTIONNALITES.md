@@ -410,7 +410,7 @@ Statistiques personnelles : tickets créés, assignés actifs, résolus.
 Route : `GET/POST /parametres/profil/modifier`
 
 - Nom, prénom, téléphone
-- Préférences d'affichage : thème (clair/sombre/auto), langue
+- Préférences du profil : notifications par e-mail, **sons des notifications** (son « ticket envoyé » / « ticket reçu » ; désactivé = aucun son) ; le thème clair/sombre se règle avec le bouton de l'en-tête, plus dans le profil
 - Notifications : e-mail, push
 
 ### 8.3 Sécurité — changer le mot de passe

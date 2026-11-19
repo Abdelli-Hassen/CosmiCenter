@@ -2,6 +2,13 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.8.3] - 2026-11-19
+
+### 🔔 Profil : sons des notifications, plus de réglage du thème
+- Nouvelle préférence **« Sons des notifications »** dans *Paramètres → Profil → Préférences & Interface* (colonne `utilisateurs.sons_actifs`, activée par défaut, ajoutée automatiquement au démarrage). Désactivée, l'utilisateur n'entend **aucun** son : ni « ticket envoyé » ni « ticket reçu », et rien n'est mis en attente pour plus tard (`static/js/sounds.js` lit la balise `chub-sound` de `base.html`).
+- Le **bouton de thème a été retiré du profil** (le thème clair/sombre se change avec le bouton de l'en-tête). Enregistrer le profil ne modifie plus le thème ; la fiche utilisateur affiche désormais « Sons : Activés/Désactivés » à la place du thème.
+- Nouveau test : `tests/sound_pref_test.py` (13 vérifications).
+
 ## [2.8.2] - 2026-11-19
 
 ### 🔒 Points de vente : chacun ne gère que les siens

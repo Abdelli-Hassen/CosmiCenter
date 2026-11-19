@@ -276,15 +276,11 @@
         </div>
 
         <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
-          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Thème de l'interface</label>
+          <label style="font-size:13px; font-weight:700; color:var(--text-secondary);">Sons des notifications</label>
           <div style="display:flex; align-items:center; height:100%; padding:0 8px;">
-            <label style="display:flex; align-items:center; gap:12px; cursor:pointer;">
-              <input type="checkbox" name="theme_sombre" id="themeToggle" style="display:none;"
-                     {% if request.form.get('theme_sombre') or current_user.theme == 'dark' %}checked{% endif %}>
-              <div id="themeTrack" style="position:relative; width:48px; height:26px; border-radius:13px; background:var(--surface-4); transition:background 0.3s;">
-                <div id="themeThumb" style="position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow:0 2px 5px rgba(0,0,0,0.2);"></div>
-              </div>
-              <span id="themeLabel" style="font-size:14px; font-weight:700; color:var(--text-primary);">Mode Clair</span>
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; font-weight:600; color:var(--text-primary);">
+              <input type="checkbox" name="sons_actifs" {% if current_user.sons_actifs %}checked{% endif %}>
+              Jouer un son quand un ticket est envoyé ou reçu
             </label>
           </div>
         </div>
@@ -318,37 +314,6 @@
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const toggle = document.getElementById('themeToggle');
-  const track = document.getElementById('themeTrack');
-  const thumb = document.getElementById('themeThumb');
-  const label = document.getElementById('themeLabel');
-
-  function updateThemeUI() {
-    if (toggle.checked) {
-      track.style.background = 'var(--brand)';
-      thumb.style.left = '25px';
-      label.textContent = 'Mode Sombre';
-    } else {
-      track.style.background = 'var(--surface-4)';
-      thumb.style.left = '3px';
-      label.textContent = 'Mode Clair';
-    }
-  }
-
-  updateThemeUI();
-
-  toggle.addEventListener('change', function() {
-    updateThemeUI();
-    // Use the site's built-in theme manager to sync everything properly
-    if (window.CHUB && window.CHUB.theme) {
-      if(toggle.checked) {
-        window.CHUB.theme.set('dark');
-      } else {
-        window.CHUB.theme.set('light');
-      }
-    }
-  });
-
   const couleurInput = document.getElementById('couleur');
   const couleurHex = document.getElementById('couleurHex');
   if (couleurInput && couleurHex) {

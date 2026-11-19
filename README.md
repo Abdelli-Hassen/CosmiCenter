@@ -215,7 +215,7 @@ python3 -c "import secrets; print(secrets.token_hex(32))"      # ou : openssl ra
 
 ### Connexion et compte
 - Connexion par e-mail et mot de passe ; la page « mot de passe oublié » explique que la réinitialisation est faite par un administrateur.
-- **Paramètres du compte** : profil (nom, téléphone, photo avec suppression, thème, notifications par e-mail), **sécurité** (changement de mot de passe, sessions actives avec navigateur, système, adresse IP et heure, « Déconnecter les autres sessions »), centre de **notifications**.
+- **Paramètres du compte** : profil (nom, téléphone, photo avec suppression, notifications par e-mail, **sons des notifications** activables/désactivables ; le thème clair/sombre se change avec le bouton de l'en-tête), **sécurité** (changement de mot de passe, sessions actives avec navigateur, système, adresse IP et heure, « Déconnecter les autres sessions »), centre de **notifications**.
 
 ### Tickets
 - 5 types (incident, demande, besoin, plainte, tâche), 5 priorités (critique, urgente, haute, moyenne, basse), statuts nouveau → en cours → en attente → résolu → fermé (ou annulé), avec réouverture possible. La **priorité se choisit à la main**.

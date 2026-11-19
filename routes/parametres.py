@@ -80,8 +80,8 @@ def modifier_profil():
     teamviewer_password = request.form.get('teamviewer_password', '').strip()
     poste_machine = request.form.get('poste_machine', '').strip()
 
-    theme_str = 'dark' if request.form.get('theme_sombre') == 'on' else 'light'
     notifications_email = request.form.get('notifications_email') == 'on'
+    sons_actifs = request.form.get('sons_actifs') == 'on'
     couleur = request.form.get('couleur', '').strip()
 
     if not all([nom, prenom, email]):
@@ -129,8 +129,9 @@ def modifier_profil():
     current_user.teamviewer_password = teamviewer_password[:100] or None
     current_user.poste_machine = poste_machine[:100] or None
 
-    current_user.theme = theme_str
+    # Le thème clair/sombre se change avec le bouton de l'en-tête (cookie) : le profil n'y touche plus.
     current_user.notifications_email = notifications_email
+    current_user.sons_actifs = sons_actifs
     if couleur:
         current_user.couleur = couleur
 
@@ -140,9 +141,7 @@ def modifier_profil():
             remove_upload(old_photo)
         flash('Profil modifié avec succès!', 'success')
 
-        resp = redirect(url_for('parametres.profil'))
-        resp.set_cookie('chub_theme', theme_str, max_age=31536000, path='/', samesite='Lax')
-        return resp
+        return redirect(url_for('parametres.profil'))
 
     except Exception as e:
         db.session.rollback()

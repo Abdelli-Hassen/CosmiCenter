@@ -1284,7 +1284,7 @@
             <span class="user-prop-label">Préférences</span>
           </div>
           <div class="user-prop-val">
-            <span style="font-size:12px; color:var(--text-secondary);">Langue : <strong>{{ utilisateur.langue|upper if utilisateur.langue else 'FR' }}</strong> • Thème : <strong>{{ utilisateur.theme|capitalize if utilisateur.theme else 'Système' }}</strong></span>
+            <span style="font-size:12px; color:var(--text-secondary);">Langue : <strong>{{ utilisateur.langue|upper if utilisateur.langue else 'FR' }}</strong> • Sons : <strong>{{ 'Activés' if utilisateur.sons_actifs else 'Désactivés' }}</strong></span>
           </div>
         </div>
 

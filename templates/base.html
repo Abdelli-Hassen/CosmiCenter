@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="{{ app_name }} — Plateforme de service d'assistance">
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="chub-sound" content="{{ '0' if current_user.is_authenticated and not current_user.sons_actifs else '1' }}">
   <script src="{{ url_for('static', filename='js/csrf.js') }}?v=1"></script>
   <script src="{{ url_for('static', filename='js/confirm.js') }}?v=1" defer></script>
   <script src="{{ url_for('static', filename='js/attachments.js') }}?v=1" defer></script>
@@ -409,7 +410,7 @@
   <script src="{{ url_for('static', filename='js/app.js') }}?v=103"></script>
   <script src="{{ url_for('static', filename='js/mobile.js') }}?v=1"></script>
   <script src="{{ url_for('static', filename='js/theme.js') }}?v=105"></script>
-  <script src="{{ url_for('static', filename='js/sounds.js') }}?v=1"></script>
+  <script src="{{ url_for('static', filename='js/sounds.js') }}?v=2"></script>
   <script src="{{ url_for('static', filename='js/notifications.js') }}?v=104"></script>
   <script src="{{ url_for('static', filename='js/command-palette.js') }}?v=102"></script>
   <script src="{{ url_for('static', filename='js/keyboard.js') }}?v=102"></script>
