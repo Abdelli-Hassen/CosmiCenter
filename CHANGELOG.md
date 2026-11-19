@@ -2,6 +2,12 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.9.2] - 2026-11-19
+
+### ✅ « Tout sélectionner » dans la collaboration des tickets
+- *Nouveau ticket* et *Modifier le ticket*, mode **Collaboration (multiples)** : bouton **« Tout sélectionner / Tout désélectionner »** pour les **départements impliqués**, et pour les **membres & collaborateurs** (il ne prend que les personnes affichées : la recherche est respectée). Chaque département a aussi son bouton **« Tout / Aucun »** pour ne cocher que ses membres. Les libellés suivent l'état réel.
+- *Nouveau ticket*, destinataire **Point de vente** : bouton **« Tout cocher / Tout décocher »** sous la liste des PDV (la liste des personnes se met à jour).
+
 ## [2.9.1] - 2026-11-19
 
 ### 🏪 Tickets : plusieurs points de vente à la fois

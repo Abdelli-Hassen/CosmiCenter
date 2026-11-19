@@ -325,6 +325,20 @@
     align-items: center;
     margin-bottom: 8px;
   }
+  .collab-selall {
+    background: none;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+    white-space: nowrap;
+  }
+  .collab-selall:hover { border-color: var(--color-brand, #dc2626); color: var(--color-brand, #dc2626); }
+  .collab-head-actions { display: flex; align-items: center; gap: 8px; }
   .collab-shelf-title {
     font-size: 11px;
     font-weight: 700;
@@ -482,7 +496,10 @@
                   </label>
                   {% endfor %}
                 </div>
-                <div id="pdvChecksHint" style="font-size:12px; color:var(--text-muted); margin-top:6px;">Cochez un ou plusieurs points de vente.</div>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:8px;">
+                  <span id="pdvChecksHint" style="font-size:12px; color:var(--text-muted);">Cochez un ou plusieurs points de vente.</span>
+                  <button type="button" id="pdvAllBtn" class="collab-selall" onclick="toggleAllPdvs()">Tout cocher</button>
+                </div>
               </div>
 
               <!-- Catégorie : n'affiche que celles du département choisi -->
@@ -561,7 +578,10 @@
                         </span>
                         <span>Départements impliqués</span>
                       </div>
-                      <span id="collabDeptCount" class="collab-count-badge">0 sélectionné</span>
+                      <div class="collab-head-actions">
+                        <button type="button" id="collabDeptAllBtn" class="collab-selall" onclick="selectAllCollabDepts()">Tout sélectionner</button>
+                        <span id="collabDeptCount" class="collab-count-badge">0 sélectionné</span>
+                      </div>
                     </div>
                     <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 10px 0; line-height: 1.4;">
                       Activez un ou plusieurs départements pour charger leurs collaborateurs respectifs.
@@ -594,7 +614,10 @@
                         </span>
                         <span>Membres & Collaborateurs</span>
                       </div>
-                      <span id="collabUserCount" class="collab-count-badge">0 sélectionné</span>
+                      <div class="collab-head-actions">
+                        <button type="button" id="collabSelectAllBtn" class="collab-selall" style="display:none;" onclick="selectAllCollabUsers()">Tout sélectionner</button>
+                        <span id="collabUserCount" class="collab-count-badge">0 sélectionné</span>
+                      </div>
                     </div>
 
                     <!-- Native multi-select preserved for form submission -->
@@ -894,7 +917,20 @@
     }
     filterAgents();
   };
-  if (pdvBox) pdvBox.addEventListener('change', filterAgents);
+  function refreshPdvAllBtn() {
+    var boxes = document.querySelectorAll('#pdvChecks input[name="pdv_ids"]');
+    var all = boxes.length > 0 && selectedPdvs().length === boxes.length;
+    var b = document.getElementById('pdvAllBtn');
+    if (b) b.textContent = all ? 'Tout décocher' : 'Tout cocher';
+  }
+  window.toggleAllPdvs = function () {
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('#pdvChecks input[name="pdv_ids"]'));
+    var all = boxes.length > 0 && boxes.every(function (c) { return c.checked; });
+    boxes.forEach(function (c) { c.checked = !all; });
+    refreshPdvAllBtn();
+    filterAgents();
+  };
+  if (pdvBox) pdvBox.addEventListener('change', function () { refreshPdvAllBtn(); filterAgents(); });
 
   /* ── 2c. Collaboration Assignment Filtering Logic ── */
   var collabDeptSelect = document.getElementById('collabDeptSelect');
@@ -948,6 +984,11 @@
     if (collabDeptCount) {
       collabDeptCount.textContent = selectedDepts.length + ' sélectionné' + (selectedDepts.length > 1 ? 's' : '');
       collabDeptCount.classList.toggle('has-selected', selectedDepts.length > 0);
+    }
+    var deptAllBtn = document.getElementById('collabDeptAllBtn');
+    if (deptAllBtn) {
+      var chipsAll = document.querySelectorAll('.collab-dept-chip');
+      deptAllBtn.textContent = (chipsAll.length && selectedDepts.length === chipsAll.length) ? 'Tout désélectionner' : 'Tout sélectionner';
     }
   }
 
@@ -1018,6 +1059,52 @@
     renderSelectedCollabChips();
   };
 
+  /* ── Tout sélectionner (départements, membres, groupes) ── */
+  function isVisibleCard(c) { return c.style.display !== 'none'; }
+
+  function refreshSelectAllLabels() {
+    function allOn(scope) {
+      var cards = Array.prototype.filter.call(scope.querySelectorAll('.collab-agent-card'), isVisibleCard);
+      return cards.length > 0 && cards.every(function (c) { return c.classList.contains('selected'); });
+    }
+    var g = document.getElementById('collabSelectAllBtn');
+    if (g && collabUsersContainer) {
+      var any = collabUsersContainer.querySelector('.collab-agent-card') !== null;
+      g.style.display = any ? '' : 'none';
+      g.textContent = allOn(collabUsersContainer) ? 'Tout désélectionner' : 'Tout sélectionner';
+    }
+    document.querySelectorAll('.collab-group-all').forEach(function (b) {
+      var grp = b.closest('.collab-dept-group');
+      b.textContent = grp && allOn(grp) ? 'Aucun' : 'Tout';
+    });
+  }
+
+  window.selectAllCollabUsers = function (scope) {
+    if (!collabUsersSelect) return;
+    var root = scope || collabUsersContainer;
+    var cards = Array.prototype.filter.call(root.querySelectorAll('.collab-agent-card'), isVisibleCard);
+    if (!cards.length) return;
+    var allOn = cards.every(function (c) { return c.classList.contains('selected'); });
+    cards.forEach(function (card) {
+      var opt = collabUsersSelect.querySelector('option[value="' + card.getAttribute('data-user-id') + '"]');
+      if (!opt) return;
+      opt.selected = !allOn;
+      card.classList.toggle('selected', !allOn);
+      var check = card.querySelector('.collab-check-box');
+      if (check) check.innerHTML = !allOn ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+    });
+    renderSelectedCollabChips();
+  };
+
+  window.selectAllCollabDepts = function () {
+    var chips = Array.prototype.slice.call(document.querySelectorAll('.collab-dept-chip'));
+    if (!chips.length) return;
+    var allActive = chips.every(function (c) { return c.classList.contains('active'); });
+    chips.forEach(function (c) {
+      if (c.classList.contains('active') === allActive) toggleCollabDept(c.getAttribute('data-id'));
+    });
+  };
+
   function updateCollabUsers() {
     if (!collabUsersContainer) return;
 
@@ -1049,6 +1136,7 @@
       collabUserFilterWrap.style.display = 'none';
       collabUsersContainer.style.display = 'none';
       collabUsersContainer.innerHTML = '';
+      refreshSelectAllLabels();
       return;
     }
 
@@ -1090,7 +1178,11 @@
           '</div>' +
           '<span style="font-size:12.5px; font-weight:700; color:var(--text-primary);">' + deptName + '</span>' +
         '</div>' +
-        '<span style="font-size:11px; font-weight:600; color:var(--text-muted);">' + deptUsers.length + ' membre(s)</span>';
+        '<div class="collab-head-actions">' +
+          '<span style="font-size:11px; font-weight:600; color:var(--text-muted);">' + deptUsers.length + ' membre(s)</span>' +
+          '<button type="button" class="collab-selall collab-group-all">Tout</button>' +
+        '</div>';
+      groupHeader.querySelector('.collab-group-all').onclick = function (ev) { ev.stopPropagation(); selectAllCollabUsers(groupSection); };
 
       var usersGrid = document.createElement('div');
       usersGrid.style.cssText = 'display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px;';
@@ -1172,6 +1264,7 @@
         selectedCollabChips.appendChild(chip);
       });
     }
+    refreshSelectAllLabels();
   }
 
   window.filterCollabUserList = function() {
@@ -1192,6 +1285,7 @@
         group.style.display = visibleInGroup > 0 ? 'block' : 'none';
       }
     });
+    refreshSelectAllLabels();
   };
 
   var previousMainDept = deptSelect ? deptSelect.value : '';
