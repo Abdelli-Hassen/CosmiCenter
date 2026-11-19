@@ -10,6 +10,10 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 - Retirer un employé d'un PDV fonctionne aussi pour ses PDV supplémentaires.
 - Nouveau test : `tests/pdv_scope_test.py` (18 vérifications).
 
+### 🎨 Fiche d'une entreprise redessinée
+- Même rythme que le profil utilisateur (grille de 8 px) : bannière en aplat de la couleur de l'entreprise, logo 96 px, badges de 32 px, boutons de 40 px, coordonnées en 4 colonnes séparées par un filet (plus de bloc gris serré). Animations et survols conservés ; adapté tablette et téléphone.
+- Tableau des collaborateurs : colonnes à largeur fixe (plus de débordement ni de bouton « Détacher » rogné), rôle et département **à la ligne au lieu d'être coupés** (« PERSONNEL POINT DE VENT… »), avatars de la même couleur que dans la liste des utilisateurs, e-mails longs tronqués proprement.
+
 ## [2.8.1] - 2026-11-19
 
 ### 🏪 Plusieurs points de vente par utilisateur
