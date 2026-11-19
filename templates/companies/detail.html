@@ -174,6 +174,30 @@
 .up-selected { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; padding:8px 12px; border-radius:10px; background:var(--brand-light); color:var(--brand); font-size:13px; font-weight:700; }
 .btn-action:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 
+/* ── Bloc « À propos » (grille de 8 px) ── */
+.cp-about { --cp-accent: {{ entreprise.couleur or '#6366F1' }}; transition: box-shadow 0.2s; }
+.cp-about:hover { box-shadow: var(--shadow-md); }
+.cp-about-ico {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--cp-accent); background: color-mix(in srgb, var(--cp-accent) 14%, transparent);
+}
+.cp-about-body { padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+.cp-about-desc { margin: 0; font-size: 14px; line-height: 24px; color: var(--text-secondary); }
+.cp-about-desc.empty { color: var(--text-muted); font-style: italic; }
+.cp-about-sec { display: flex; flex-direction: column; gap: 8px; padding-top: 24px; border-top: 1px solid var(--border-subtle); }
+.cp-about-sec-title { margin: 0 0 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+.cp-fact { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 32px; font-size: 13px; }
+.cp-fact-k { color: var(--text-muted); font-weight: 600; }
+.cp-fact-v { color: var(--text-primary); font-weight: 700; text-align: right; }
+.cp-bar-row { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
+.cp-bar-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 13px; }
+.cp-bar-name { color: var(--text-primary); font-weight: 600; overflow-wrap: anywhere; }
+.cp-bar-n { color: var(--text-muted); font-weight: 700; flex-shrink: 0; }
+.cp-bar-track { height: 8px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
+.cp-bar-fill { height: 100%; border-radius: 4px; background: var(--cp-accent); transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+@media (prefers-reduced-motion: reduce) { .cp-bar-fill, .cp-about { transition: none; } }
+
 @media (max-width: 960px) {
   .comp-layout { grid-template-columns: 1fr; }
 }
@@ -345,15 +369,48 @@
     <!-- Colonne Droite : Renseignements & Rapprochement -->
     <div style="display:flex; flex-direction:column; gap:20px;">
       
-      <!-- Box Info -->
-      <div class="comp-box">
+      <!-- Box Info : À propos -->
+      <div class="comp-box cp-about">
         <div class="comp-box-header">
-          <h3 class="comp-box-title">À propos de l'organisation</h3>
+          <h3 class="comp-box-title">
+            <span class="cp-about-ico">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </span>
+            À propos de l'organisation
+          </h3>
         </div>
-        <div style="padding:20px;">
-          <p style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin:0;">
-            {{ entreprise.description or 'Aucune description spécifique n\'a été ajoutée.' }}
-          </p>
+        <div class="cp-about-body">
+          {% if entreprise.description %}
+          <p class="cp-about-desc">{{ entreprise.description }}</p>
+          {% else %}
+          <p class="cp-about-desc empty">Aucune description n'a encore été ajoutée.</p>
+          {% endif %}
+
+          <div class="cp-about-sec">
+            <h4 class="cp-about-sec-title">En bref</h4>
+            <div class="cp-fact"><span class="cp-fact-k">Type</span><span class="cp-fact-v">{{ entreprise.type_entreprise|capitalize }}</span></div>
+            {% if entreprise.code %}<div class="cp-fact"><span class="cp-fact-k">Code</span><span class="cp-fact-v">{{ entreprise.code }}</span></div>{% endif %}
+            <div class="cp-fact"><span class="cp-fact-k">Statut</span><span class="cp-fact-v">{{ 'Active' if entreprise.actif else 'Archivée' }}</span></div>
+            <div class="cp-fact"><span class="cp-fact-k">Collaborateurs</span><span class="cp-fact-v">{{ employes|length }}</span></div>
+            {% if entreprise.date_creation %}<div class="cp-fact"><span class="cp-fact-k">Créée le</span><span class="cp-fact-v">{{ entreprise.date_creation.strftime('%d/%m/%Y') }}</span></div>{% endif %}
+          </div>
+
+          {% if employes %}
+          {% set ns = namespace(counts={}) %}
+          {% for u in employes %}
+            {% set k = u.role.nom if u.role else 'Sans rôle' %}
+            {% set _ = ns.counts.update({k: ns.counts.get(k, 0) + 1}) %}
+          {% endfor %}
+          <div class="cp-about-sec">
+            <h4 class="cp-about-sec-title">Répartition par rôle</h4>
+            {% for name, n in (ns.counts.items()|sort(attribute='1', reverse=true))[:5] %}
+            <div class="cp-bar-row">
+              <div class="cp-bar-top"><span class="cp-bar-name">{{ name }}</span><span class="cp-bar-n">{{ n }}</span></div>
+              <div class="cp-bar-track"><div class="cp-bar-fill" style="width: {{ (n * 100 / employes|length)|round(1) }}%;"></div></div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
         </div>
       </div>
 

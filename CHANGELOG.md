@@ -4,6 +4,9 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 
 ## [2.8.3] - 2026-11-19
 
+### 🎨 Fiche entreprise : bloc « À propos » repensé
+- Le bloc n'était qu'un titre et deux lignes de texte. Il contient maintenant : la description (ou un texte discret si elle est vide), une section **« En bref »** (type, code, statut, nombre de collaborateurs, date de création) et une **répartition par rôle** (les 5 rôles les plus présents, barres de proportion à la couleur de l'entreprise). Même grille de 8 px que le reste de la page, icône dans l'en-tête, survol conservé, animation des barres désactivée si le système demande de réduire les animations.
+
 ### 🔔 Profil : sons des notifications, plus de réglage du thème
 - Nouvelle préférence **« Sons des notifications »** dans *Paramètres → Profil → Préférences & Interface* (colonne `utilisateurs.sons_actifs`, activée par défaut, ajoutée automatiquement au démarrage). Désactivée, l'utilisateur n'entend **aucun** son : ni « ticket envoyé » ni « ticket reçu », et rien n'est mis en attente pour plus tard (`static/js/sounds.js` lit la balise `chub-sound` de `base.html`).
 - Le **bouton de thème a été retiré du profil** (le thème clair/sombre se change avec le bouton de l'en-tête). Enregistrer le profil ne modifie plus le thème ; la fiche utilisateur affiche désormais « Sons : Activés/Désactivés » à la place du thème.
