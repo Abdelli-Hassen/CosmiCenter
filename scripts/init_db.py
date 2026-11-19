@@ -80,7 +80,6 @@ def initialiser_roles(permissions):
             'nom': 'Super Administrateur',
             'description': 'Accès complet à toutes les fonctionnalités',
             'couleur': '#DC2626',
-            'niveau': 100,
             'systeme': True,
             'permissions': list(perms_dict.values())  # Toutes les permissions
         },
@@ -88,7 +87,6 @@ def initialiser_roles(permissions):
             'nom': 'Administrateur',
             'description': 'Gestion des utilisateurs, départements et tickets',
             'couleur': '#EA580C',
-            'niveau': 90,
             'systeme': True,
             'permissions': [
                 perms_dict['tickets.creer'],
@@ -113,7 +111,6 @@ def initialiser_roles(permissions):
             'nom': 'Manager',
             'description': 'Gestion des tickets de son département',
             'couleur': '#2563EB',
-            'niveau': 70,
             'systeme': True,
             'permissions': [
                 perms_dict['tickets.creer'],
@@ -133,7 +130,6 @@ def initialiser_roles(permissions):
             'nom': 'Agent',
             'description': 'Traitement des tickets assignés',
             'couleur': '#10B981',
-            'niveau': 50,
             'systeme': True,
             'permissions': [
                 perms_dict['tickets.creer'],
@@ -147,7 +143,6 @@ def initialiser_roles(permissions):
             'nom': 'Utilisateur',
             'description': 'Création et suivi de ses propres tickets',
             'couleur': '#6B7280',
-            'niveau': 10,
             'systeme': True,
             'permissions': [
                 perms_dict['tickets.creer'],

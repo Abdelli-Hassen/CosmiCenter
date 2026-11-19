@@ -3,7 +3,7 @@ from html import escape
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from models import db, Suggestion, Utilisateur, Role
-from utils.permissions import role_level
+from utils.permissions import home_endpoint
 
 suggestions_bp = Blueprint('suggestions', __name__)
 
@@ -21,7 +21,7 @@ def _denied(message="Accès non autorisé."):
 def index():
     if not current_user.has_permission('idees.voir'):
         flash("Vous n'avez pas la permission d'accéder à la boîte à idées.", "danger")
-        return redirect(url_for('tickets.tableau_bord'))
+        return redirect(url_for(home_endpoint(current_user)))
 
     if request.method == 'POST':
         if not current_user.has_permission('idees.creer'):

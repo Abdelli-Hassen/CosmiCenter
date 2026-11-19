@@ -5,6 +5,7 @@ from services import reporting
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from functools import wraps
+from utils.permissions import permission_required
 from utils.security import csv_safe
 import io
 import csv
@@ -13,21 +14,6 @@ rapports_bp = Blueprint('rapports', __name__)
 
 PERIODES = {'7j': 7, '30j': 30, '90j': 90, '1a': 365}
 STATUTS_OUVERTS = ['nouveau', 'ouvert', 'en_cours', 'en_attente']
-
-
-def permission_required(permission_name):
-    """Restreint l'accès selon une permission (les rôles de niveau 100 passent implicitement)."""
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not current_user.is_authenticated:
-                return redirect(url_for('auth.connexion'))
-            if not current_user.has_permission(permission_name):
-                flash('Accès non autorisé.', 'danger')
-                return redirect(url_for('tickets.tableau_bord'))
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
 
 
 def _periode(default='30j'):
@@ -62,7 +48,7 @@ def tableau_bord():
                            departements=Departement.query.filter_by(actif=True).order_by(Departement.nom).all(),
                            pdvs=PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all(),
                            agents=sorted([u for u in Utilisateur.query.filter_by(actif=True).all()
-                                          if u.has_permission('tickets.modifier') or u.has_permission('tickets.cloturer')],
+                                          if any(u.has_permission(c) for c in ('tickets.modifier', 'tickets.cloturer', 'tickets.modifier_mes', 'tickets.cloturer_mes'))],
                                          key=lambda u: (u.nom_complet or '').upper()),
                            types=reporting.TYPES, priorites=reporting.PRIORITES,
                            export_args=reporting.query_args(f),
@@ -74,7 +60,7 @@ def _agents_list():
     """Agents = utilisateurs actifs autorisés à traiter des tickets, ou à qui des tickets ont été assignés."""
     assigned = {row[0] for row in db.session.query(Ticket.assigne_a_id).filter(Ticket.assigne_a_id.isnot(None)).distinct()}
     return [u for u in Utilisateur.query.filter_by(actif=True).all()
-            if u.id in assigned or u.has_permission('tickets.modifier') or u.has_permission('tickets.cloturer')]
+            if u.id in assigned or any(u.has_permission(c) for c in ('tickets.modifier', 'tickets.cloturer', 'tickets.modifier_mes', 'tickets.cloturer_mes'))]
 
 
 PERIODES_AGENTS = [('7j', '7 jours'), ('30j', '30 jours'), ('90j', '90 jours'), ('1a', '12 mois')]

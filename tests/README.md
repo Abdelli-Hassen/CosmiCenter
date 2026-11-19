@@ -18,6 +18,9 @@ venv/bin/python tests/cat_test.py                (Linux / macOS)
 | `report_test.py` | rapport global, filtres, export CSV |
 | `agents_test.py` | performance des agents et fiche agent |
 | `portability_test.py` | **aucun chemin absolu** (C:\, /Users/, /home/nom/…) dans le code, les gabarits, les scripts, les docs, le `.env` ni les données de la base ; fichiers référencés présents dans le dossier du projet |
+| `ticket_scope_test.py` | portée des actions tickets : `tickets.<action>` (tous) vs `tickets.<action>_mes` (mes tickets), sans base |
+| `ticket_scope_http_test.py` | page Rôles (cases rangées sous « Mes tickets » / « Tous les tickets ») et commentaires réellement limités à la portée du droit ; rôles/utilisateurs/tickets de test supprimés |
+| `permissions_enforcement_test.py` | **chaque permission est appliquée par le serveur** : plus de niveaux, menu seul → page protégée, tickets (modifier / clôturer / supprimer), suppression utilisateur et PDV, protection du Super Administrateur, garde-fou du rôle racine ; tout est nettoyé |
 | `prod_test.py`, `proxy_test.py` | configuration de production et ProxyFix |
 | `dbq.py` | requêtes SQL **en lecture seule** : `python tests\dbq.py "select count(*) from tickets"` |
 | `seed_sample_tickets.py` | `seed` / `clean` : 140 tickets d'exemple pour regarder les rapports |

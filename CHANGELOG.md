@@ -2,6 +2,63 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.8.1] - 2026-11-19
+
+### 🏪 Plusieurs points de vente par utilisateur
+- Les formulaires *Nouvel utilisateur* / *Modifier l'utilisateur* (pages Utilisateurs et Administration) proposent maintenant une **liste à cocher** de PDV à la place du menu déroulant : un responsable de point de vente peut être rattaché à plusieurs PDV. Aucun coché = Siège / HQ.
+- Le premier PDV coché reste le **PDV principal** (colonne `pdv_id`, utilisée par les rapports et les tickets) ; les autres sont enregistrés dans la nouvelle table `utilisateur_pdvs` (créée automatiquement au démarrage).
+- Affichage : profil (tous les PDV), liste des utilisateurs (« PDV +N »), fiche d'un PDV (le responsable apparaît dans chacun de ses PDV), filtre PDV de la liste des utilisateurs (inclut les PDV supplémentaires).
+
+## [2.8.0] - 2026-11-16
+
+### 🔐 Fin des niveaux : seules les permissions décident
+- **Plus aucun niveau, plus aucun droit implicite.** Avant, le « niveau 100 » avait toutes les permissions sans case cochée, et les niveaux 60 / 70 / 90 donnaient des passe-droits (pages admin, notes internes, plan d'action, catégories, outils Entreprises, hiérarchie des comptes…). Désormais un rôle fait **exactement** ce qui est coché dans *Rôles*. La colonne `niveau` reste en base mais n'est plus lue.
+- **Super Administrateur** : migration automatique au démarrage (une seule fois, `v2-super-admin-explicite`) qui lui **coche** toutes les permissions ; toute nouvelle permission lui est donnée à sa création. Seul lui peut attribuer ce rôle ; seuls les Super Administrateurs peuvent modifier / désactiver / supprimer un compte Super Administrateur. Garde-fou : le rôle ne peut pas perdre `admin_roles.voir` / `admin_roles.modifier`.
+- Les pages d'administration sont protégées par leurs permissions : tableau de bord `admin_dashboard.voir`, rôles `admin_roles.voir` (lecture) et `admin_roles.modifier` (créer / modifier / supprimer un rôle, changer ses permissions, ajouter ou supprimer un code de permission), utilisateurs admin `utilisateurs.voir / creer / modifier / activer`.
+
+### ✅ Permissions qui n'agissaient que sur le menu : maintenant appliquées par le serveur
+- `tickets.creer` (page et envoi de « Nouveau ticket »), `tickets.voir_mes` (« Mes tickets »), `tickets.voir_tous` (« Tous les tickets »), `dashboard.voir` (tableau de bord), `departements.voir` (liste et fiche), `utilisateurs.voir` (liste et profils d'autrui ; son propre profil reste toujours accessible), `utilisateurs.voir_tous` (sans elle : profils de son département seulement), `entreprises.voir` (aussi la fiche et son JSON).
+- Un refus ramène désormais à une page autorisée : le tableau de bord, ou **le profil** si l'on n'a pas `dashboard.voir` (aucune boucle de redirection). Les liens « Nouveau ticket » des pages PDV / listes / tableau de bord n'apparaissent qu'avec `tickets.creer`.
+
+### 🎫 Règles des tickets, sans exception « créateur / assigné »
+- Modifier les détails : `tickets.modifier` / `tickets.modifier_mes`.
+- **Clôturer, résoudre, rouvrir** : `tickets.cloturer` / `tickets.cloturer_mes`. **Autres changements de statut** : `tickets.modifier(_mes)`. Même règle dans la fiche, l'action rapide, les actions groupées, l'API et le formulaire Modifier ; les menus de statut et les boutons de la fiche suivent.
+- Notes internes : `tickets.modifier(_mes)` ou `tickets.cloturer(_mes)`.
+
+### 🗑️ Nouvelles suppressions (les permissions existaient mais ne faisaient rien)
+- **Supprimer un ticket** (`tickets.supprimer` = tous, `tickets.supprimer_mes` = mes tickets) : bouton avec confirmation sur la fiche ; commentaires, historique, tâches, notifications et pièces jointes (fichiers compris) partent avec lui.
+- **Supprimer un point de vente** (`pdv.supprimer`) : bouton avec confirmation ; refusé tant qu'il a des tickets, des employés ou des équipements.
+- **Supprimer un utilisateur** (`utilisateurs.supprimer`) : bouton avec confirmation sur le profil ; refusé avec le détail (« lié à 3 commentaires, 12 lignes d'historique… ») si le compte a des données liées — vérifié dans le schéma réel de la base — on le désactive alors.
+
+### 🐞 Page Rôles : une permission n'était pas affichée
+- `admin.categories` (« Gérer les catégories ») n'avait pas de page parente dans la page Rôles : elle n'était donc **jamais dessinée** (47 actions comptées dans l'éditeur au lieu de 48) et **disparaissait en silence** de tout rôle dont on enregistrait les cases. Elle est maintenant rangée dans la catégorie *Administration*, sous « Administration » (`admin_dashboard.voir`) ; mise à jour automatique au démarrage. Le test vérifie que chacune des 67 permissions a sa case.
+
+### 🧪 Tests et technique
+- Nouvelle suite `tests/permissions_enforcement_test.py` (71 contrôles) : chaque décision ci-dessus, avec rôles / utilisateurs / tickets / PDV temporaires nettoyés. Les autres suites ont été adaptées (une page libre sert de source du jeton CSRF).
+- `utils/permissions.py` : `permission_required`, `deny_access`, `home_endpoint`, `can_change_status`, `can_work_on_ticket`, `is_super_admin`, `can_assign_role`, `can_act_on_user` ; suppression de `role_level`, `is_admin`, `can_manage_ticket`. Les décorateurs dispersés dans les routes utilisent désormais l'unique `permission_required`.
+- Code mort retiré (`routes/companies.py` : droits d'entreprise liés à un niveau après un `return`).
+
+## [2.7.6] - 2026-11-12
+
+### 🔐 Rôles : « Mes tickets » et « Tous les tickets » ont maintenant chacun leurs propres actions
+- Avant, les deux cases affichaient les mêmes 5 actions (assigner, clôturer, commenter, modifier, supprimer) : cocher l'une cochait l'autre.
+- **Tous les tickets** garde `tickets.assigner / cloturer / commenter / modifier / supprimer` (tous les tickets).
+- **Mes tickets / Tickets département** a ses propres cases : `tickets.assigner_mes / cloturer_mes / commenter_mes / modifier_mes / supprimer_mes` (uniquement les tickets que l'on a créés, qui nous sont assignés, ou de son département / en collaboration).
+- Appliqué côté serveur (`utils/permissions.py` : `can_ticket`, `ticket_in_my_scope`) dans les routes tickets et l'API, et dans le détail du ticket (réponse, assignation).
+- Migration automatique au démarrage : les rôles qui avaient déjà une action reçoivent aussi sa version « mes tickets » (aucune perte d'accès).
+
+## [2.7.5] - 2026-11-06
+
+### 🔧 Interrogation des notifications (`/api/notifications/poll`)
+- Corrigé : la page de connexion (et toute page sans session) interrogeait `/api/notifications/poll` toutes les 2,5 s sans jamais s'arrêter ; chaque appel était redirigé vers la page de connexion (réponse HTML) et la lecture JSON échouait en boucle, d'où des centaines de requêtes inutiles dans les journaux Nginx.
+- L'interrogation ne démarre plus que si l'utilisateur est connecté (`CHUB_CONFIG.isAuthenticated`), se met en pause quand l'onglet est en arrière-plan, et **s'arrête d'elle-même** si le serveur répond par une redirection ou autre chose que du JSON (session expirée).
+- `static/js/notifications.js` : version de cache `?v=104` dans `base.html`.
+
+### 🗄️ Un seul fichier de structure de base : `cosmicenter.example.sql`
+- Vérifié identique à `models.py` : 26 tables (colonnes), 43 clés étrangères, 40 index, séquence `ticket_numero_seq`, 62 permissions, 6 rôles et leurs droits. Aucune RLS PostgreSQL : l'accès est contrôlé par l'application.
+- Retiré du fichier : tickets, sous-tâches, commentaires, historique, notifications et messages d'exemple ; la séquence repart à 1.
+- `cosmicenter.sql` (copie locale avec données réelles, ignorée par git) reste une sauvegarde, pas une seconde définition de la structure.
+
 ## [2.7.4] - 2026-11-04
 
 ### 📖 README mis à jour de A à Z (vérifié sur le code)

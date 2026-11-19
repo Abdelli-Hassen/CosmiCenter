@@ -8,7 +8,8 @@ from models import (db, Ticket, Utilisateur, Departement, CategorieTicket, Comme
                     Tache, PieceJointe, Notification)
 from services.email_service import send_email_notification
 from sqlalchemy import or_
-from utils.permissions import (visible_tickets_query, can_access_ticket, can_manage_ticket, role_level)
+from utils.permissions import (visible_tickets_query, can_access_ticket, can_change_status, can_work_on_ticket,
+                               can_ticket, permission_required, home_endpoint)
 from utils.security import like_escape
 from utils.uploads import save_upload, remove_upload, UploadError, MAX_ATTACHMENT_BYTES
 from datetime import datetime, timedelta
@@ -147,7 +148,7 @@ def _filtered_listing(base_query, page_title):
 
     # Agents assignables (actions groupées), uniquement pour les détenteurs de tickets.assigner
     assignables = []
-    if current_user.has_permission('tickets.assigner'):
+    if can_ticket(current_user, 'assigner'):
         assignables = sorted(Utilisateur.query.filter_by(actif=True).all(),
                              key=lambda u: (u.nom_complet or '').strip().upper())
 
@@ -163,6 +164,7 @@ def _filtered_listing(base_query, page_title):
 
 @tickets_bp.route('/tableau-bord')
 @login_required
+@permission_required('dashboard.voir')
 def tableau_bord():
     """Tableau de bord principal"""
     base_query = visible_tickets_query(current_user)
@@ -191,6 +193,7 @@ def tableau_bord():
 
 @tickets_bp.route('/liste')
 @login_required
+@permission_required('tickets.voir_tous')
 def liste():
     """Liste de tous les tickets visibles par l'utilisateur"""
     return _filtered_listing(visible_tickets_query(current_user), "Tous les tickets")
@@ -198,6 +201,7 @@ def liste():
 
 @tickets_bp.route('/mes-tickets')
 @login_required
+@permission_required('tickets.voir_mes')
 def mes_tickets():
     """Liste de mes tickets (créés, assignés, département, collaboration)"""
     from utils.permissions import ticket_visibility_filter
@@ -249,6 +253,7 @@ def _valid_department_id(value):
 
 @tickets_bp.route('/nouveau', methods=['GET', 'POST'])
 @login_required
+@permission_required('tickets.creer')
 def nouveau():
     """Créer un nouveau ticket"""
     if request.method == 'POST':
@@ -469,10 +474,9 @@ def modifier(ticket_id):
     """Modifier un ticket"""
     ticket = Ticket.query.get_or_404(ticket_id)
 
-    # Seul le créateur, un manager/admin ou un détenteur de tickets.modifier peut modifier les détails
-    est_admin = role_level(current_user) >= 70 or current_user.has_permission('tickets.modifier')
-    if not est_admin and ticket.createur_id != current_user.id:
-        flash("Seul le créateur du ticket peut en modifier les détails. Les agents peuvent uniquement changer le statut.", "danger")
+    # Modifier les détails : permission tickets.modifier (tous) ou tickets.modifier_mes (mes tickets)
+    if not can_access_ticket(current_user, ticket) or not can_ticket(current_user, 'modifier', ticket):
+        flash("Vous n'avez pas la permission de modifier ce ticket.", "danger")
         return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
     if request.method == 'POST':
@@ -480,6 +484,8 @@ def modifier(ticket_id):
         new_statut = request.form.get('statut', ticket.statut)
         if new_statut not in STATUTS:
             errors.append('Statut invalide.')
+        elif new_statut != ticket.statut and not can_change_status(current_user, ticket, new_statut):
+            errors.append("Vous n'avez pas la permission de changer le statut vers « %s » (clôturer / rouvrir = permission « Clôturer un ticket »)." % new_statut)
         new_dept_id, dept_ok = _valid_department_id(request.form.get('departement_id'))
         if not dept_ok:
             errors.append('Département introuvable.')
@@ -653,7 +659,7 @@ def commenter(ticket_id):
     if not can_access_ticket(current_user, ticket):
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('tickets.liste'))
-    if not current_user.has_permission('tickets.commenter'):
+    if not can_ticket(current_user, 'commenter', ticket):
         flash("Vous n'avez pas la permission de commenter les tickets.", 'danger')
         return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
@@ -665,7 +671,7 @@ def commenter(ticket_id):
         flash(f'Le commentaire ne doit pas dépasser {MAX_COMMENT} caractères.', 'danger')
         return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
-    interne = request.form.get('interne') in ('on', '1', 'true', 'True') and can_manage_ticket(current_user, ticket)
+    interne = request.form.get('interne') in ('on', '1', 'true', 'True') and can_work_on_ticket(current_user, ticket)
 
     try:
         commentaire = Commentaire(
@@ -727,12 +733,15 @@ def changer_statut(ticket_id):
     """Mettre à jour rapidement le statut ou l'assignation d'un ticket depuis la barre latérale"""
     ticket = Ticket.query.get_or_404(ticket_id)
 
-    if not can_access_ticket(current_user, ticket) or not can_manage_ticket(current_user, ticket):
+    if not can_access_ticket(current_user, ticket):
         flash("Vous n'êtes pas autorisé à modifier ce ticket.", "danger")
         return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
     nouveau_statut = request.form.get('statut')
     nouvel_assigne = request.form.get('assigne_a_id')
+    if nouveau_statut and nouveau_statut in STATUTS and ticket.statut != nouveau_statut             and not can_change_status(current_user, ticket, nouveau_statut):
+        flash("Vous n'avez pas la permission de changer le statut de ce ticket.", "danger")
+        return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
     try:
         modifie = False
@@ -748,7 +757,7 @@ def changer_statut(ticket_id):
                 modifie = True
 
         # Assignation : réservée à la permission tickets.assigner
-        if nouvel_assigne is not None and current_user.has_permission('tickets.assigner'):
+        if nouvel_assigne is not None and can_ticket(current_user, 'assigner', ticket):
             nouvel_assigne_val = nouvel_assigne or None
             nouvel_user = db.session.get(Utilisateur, nouvel_assigne_val) if nouvel_assigne_val else None
             if nouvel_assigne_val and (not nouvel_user or not nouvel_user.actif):
@@ -787,8 +796,8 @@ def changer_statut(ticket_id):
 def _close_or_reopen(ticket_id, target_status, action_label, ok_message):
     ticket = Ticket.query.get_or_404(ticket_id)
 
-    if not can_access_ticket(current_user, ticket) or not can_manage_ticket(current_user, ticket):
-        flash('Accès non autorisé', 'danger')
+    if not can_change_status(current_user, ticket, target_status):
+        flash("Vous n'avez pas la permission de clôturer ou rouvrir ce ticket.", 'danger')
         return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
     try:
@@ -818,6 +827,41 @@ def fermer(ticket_id):
 def reouvrir(ticket_id):
     """Réouvrir un ticket fermé"""
     return _close_or_reopen(ticket_id, 'en_cours', 'Réouverture de ticket', 'Ticket réouvert avec succès')
+
+
+@tickets_bp.route('/<ticket_id>/supprimer', methods=['POST'])
+@login_required
+def supprimer(ticket_id):
+    """Supprimer définitivement un ticket (commentaires, historique, tâches et pièces jointes avec lui).
+    Permission `tickets.supprimer` (tous) ou `tickets.supprimer_mes` (mes tickets / ceux de mon département)."""
+    ticket = Ticket.query.get_or_404(ticket_id)
+    if not can_access_ticket(current_user, ticket) or not can_ticket(current_user, 'supprimer', ticket):
+        flash("Vous n'avez pas la permission de supprimer ce ticket.", 'danger')
+        return redirect(url_for('tickets.detail', ticket_id=ticket_id))
+
+    numero, titre = ticket.numero, ticket.titre
+    fichiers = [pj.chemin for pj in ticket.pieces_jointes] + [pj.miniature for pj in ticket.pieces_jointes if pj.miniature]
+    try:
+        # Les notifications pointent vers la page du ticket : on les retire avec lui
+        lien = url_for('tickets.detail', ticket_id=ticket.id)
+        Notification.query.filter(Notification.lien == lien).delete(synchronize_session=False)
+        db.session.delete(ticket)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Suppression du ticket impossible: {e}', exc_info=True)
+        flash('Erreur lors de la suppression du ticket.', 'danger')
+        return redirect(url_for('tickets.detail', ticket_id=ticket_id))
+
+    for chemin in fichiers:
+        remove_upload(chemin)
+    flash(f'Ticket #{numero} « {titre} » supprimé définitivement.', 'success')
+    logger.info(f'Ticket {numero} supprimé par {current_user.email}')
+    if current_user.has_permission('tickets.voir_tous'):
+        return redirect(url_for('tickets.liste'))
+    if current_user.has_permission('tickets.voir_mes'):
+        return redirect(url_for('tickets.mes_tickets'))
+    return redirect(url_for(home_endpoint(current_user)))
 
 
 @tickets_bp.route('/tache/<tache_id>/toggle', methods=['POST'])
@@ -856,7 +900,7 @@ def bulk_update():
         if value not in STATUTS:
             return jsonify({'success': False, 'message': 'Statut invalide.'}), 400
     elif action == 'assigner':
-        if not current_user.has_permission('tickets.assigner'):
+        if not can_ticket(current_user, 'assigner'):
             return jsonify({'success': False, 'message': "Vous n'avez pas le droit d'assigner."}), 403
         assignee = None
         if value:
@@ -869,7 +913,9 @@ def bulk_update():
     updated = skipped = 0
     try:
         for ticket in Ticket.query.filter(Ticket.id.in_(ids)).all():
-            if not can_access_ticket(current_user, ticket) or not can_manage_ticket(current_user, ticket):
+            if not can_access_ticket(current_user, ticket) \
+                    or (action == 'statut' and not can_change_status(current_user, ticket, value)) \
+                    or (action == 'assigner' and not can_ticket(current_user, 'assigner', ticket)):
                 skipped += 1
                 continue
             if action == 'statut':

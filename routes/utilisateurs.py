@@ -6,7 +6,7 @@ import logging
 import re
 from datetime import datetime
 
-from utils.permissions import role_level, can_assign_role
+from utils.permissions import can_assign_role, can_act_on_user, permission_required, deny_access, home_endpoint
 
 utilisateurs_bp = Blueprint('utilisateurs', __name__)
 logger = logging.getLogger(__name__)
@@ -16,30 +16,23 @@ PASSWORD_MIN_LENGTH = 8
 
 
 def require_permission(permission_code):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not current_user.is_authenticated or not current_user.has_permission(permission_code):
-                flash('Accès non autorisé.', 'danger')
-                return redirect(url_for('tickets.tableau_bord'))
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
+    return permission_required(permission_code)
 
 
 def _role_error(role_id):
-    """Erreur si le rôle n'existe pas ou dépasse le niveau de l'utilisateur connecté."""
+    """Erreur si le rôle n'existe pas ou si l'on n'a pas le droit de l'attribuer (Super Administrateur réservé)."""
     if not role_id:
         return None
     role = db.session.get(Role, role_id)
     if role is None:
         return 'Rôle introuvable.'
     if not can_assign_role(current_user, role):
-        return "Vous ne pouvez pas attribuer un rôle de niveau supérieur au vôtre."
+        return "Seul un Super Administrateur peut attribuer le rôle Super Administrateur."
     return None
 
 @utilisateurs_bp.route('/')
 @login_required
+@permission_required('utilisateurs.voir')
 def liste():
     """Liste tous les utilisateurs"""
     page = request.args.get('page', 1, type=int)
@@ -95,7 +88,8 @@ def liste():
 
     pdv_filter = request.args.get('pdv', '')
     if pdv_filter:
-        query = query.filter_by(pdv_id=pdv_filter)
+        query = query.filter(db.or_(Utilisateur.pdv_id == pdv_filter,
+                                    Utilisateur.pdvs_supplementaires.any(PointDeVente.id == pdv_filter)))
     
     actif_filter = request.args.get('actif', '')
     if actif_filter == '1':
@@ -220,7 +214,7 @@ def nouveau():
 
         # Validation
         from models import Entreprise, PointDeVente
-        roles_all = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
+        roles_all = Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all()
         departements_all = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
         entreprises_all = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
         pdvs_all = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
@@ -253,7 +247,7 @@ def nouveau():
         
         # Créer l'utilisateur
         entreprise_id = request.form.get('entreprise_id', '').strip() or None
-        pdv_id = request.form.get('pdv_id', '').strip() or None
+        pdv_ids = request.form.getlist('pdv_ids')
         utilisateur = Utilisateur(
             nom=nom,
             prenom=prenom,
@@ -269,9 +263,9 @@ def nouveau():
             role_id=role_id,
             departement_id=departement_id,
             entreprise_id=entreprise_id,
-            pdv_id=pdv_id,
             actif=True
         )
+        utilisateur.set_pdvs(pdv_ids)
         utilisateur.set_password(password)
         
         try:
@@ -285,7 +279,7 @@ def nouveau():
             flash('Erreur lors de la création de l\'utilisateur.', 'danger')
 
     from models import Entreprise, PointDeVente
-    roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
+    roles = Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all()
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
     entreprises = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
     pdvs = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
@@ -302,8 +296,14 @@ def detail(id):
     """Afficher les détails d'un utilisateur"""
     utilisateur = Utilisateur.query.get_or_404(id)
     
-    # Pas de restriction stricte pour visualiser un profil
-    # Tous les utilisateurs peuvent voir le profil de base des autres
+    # Son propre profil : toujours. Celui d'un autre : permission utilisateurs.voir, et — sans utilisateurs.voir_tous —
+    # uniquement les personnes de son département.
+    if utilisateur.id != current_user.id:
+        if not current_user.has_permission('utilisateurs.voir'):
+            return deny_access("Vous n'avez pas la permission de consulter les profils.")
+        if not current_user.has_permission('utilisateurs.voir_tous') and (
+                not current_user.departement_id or utilisateur.departement_id != current_user.departement_id):
+            return deny_access("Vous ne pouvez consulter que les profils de votre département.")
     
     # Statistiques
     stats = {
@@ -325,7 +325,7 @@ def detail(id):
     # Les mots de passe AnyDesk / TeamViewer ne sont visibles que par l'intéressé et les administrateurs d'accès distant
     can_see_remote_secrets = (current_user.id == utilisateur.id
                               or current_user.has_permission('admin_acces.voir')
-                              or role_level(current_user) >= 90)
+                              )
 
     return render_template('utilisateurs/detail.html',
                          utilisateur=utilisateur,
@@ -344,10 +344,10 @@ def modifier(id):
     peut_modifier = current_user.has_permission('utilisateurs.modifier')
     if not peut_modifier and current_user.id != utilisateur.id:
         flash('Accès non autorisé.', 'danger')
-        return redirect(url_for('tickets.tableau_bord'))
-    # Pas de modification d'un compte de niveau supérieur au sien (sauf soi-même)
-    if current_user.id != utilisateur.id and role_level(utilisateur) > role_level(current_user):
-        flash("Vous ne pouvez pas modifier un compte de niveau supérieur au vôtre.", 'danger')
+        return redirect(url_for(home_endpoint(current_user)))
+    # Un compte Super Administrateur n'est modifiable que par un Super Administrateur (ou par lui-même)
+    if not can_act_on_user(current_user, utilisateur):
+        flash("Seul un Super Administrateur peut modifier un compte Super Administrateur.", 'danger')
         return redirect(url_for('utilisateurs.detail', id=id))
 
     if request.method == 'POST':
@@ -361,13 +361,13 @@ def modifier(id):
         if peut_modifier:
             role_id = request.form.get('role_id', '').strip() or None
             departement_id = request.form.get('departement_id', '').strip() or None
-            pdv_id = request.form.get('pdv_id', '').strip() or None
+            pdv_ids = request.form.getlist('pdv_ids')
             entreprise_id = request.form.get('entreprise_id', '').strip() or None
             actif = request.form.get('actif') == '1'
         else:
             role_id = utilisateur.role_id
             departement_id = utilisateur.departement_id
-            pdv_id = utilisateur.pdv_id
+            pdv_ids = [p.id for p in utilisateur.tous_pdvs]
             entreprise_id = utilisateur.entreprise_id
             actif = utilisateur.actif
 
@@ -376,7 +376,7 @@ def modifier(id):
         
         # Validation
         from models import Entreprise, PointDeVente
-        roles_all = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
+        roles_all = Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all()
         departements_all = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
         entreprises_all = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
         pdvs_all = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
@@ -426,7 +426,7 @@ def modifier(id):
         utilisateur.poste_machine = request.form.get('poste_machine', '').strip() or None
         utilisateur.role_id = role_id
         utilisateur.departement_id = departement_id
-        utilisateur.pdv_id = pdv_id
+        utilisateur.set_pdvs(pdv_ids)
         utilisateur.entreprise_id = entreprise_id
         if utilisateur.actif and not actif:
             utilisateur.revoke_sessions()
@@ -450,7 +450,7 @@ def modifier(id):
             flash('Erreur lors de la modification.', 'danger')
     
     from models import Entreprise, PointDeVente
-    roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
+    roles = Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all()
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
     entreprises = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
     pdvs = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
@@ -478,9 +478,9 @@ def toggle_actif(id):
         flash(msg, 'danger')
         return redirect(url_for('utilisateurs.detail', id=id))
 
-    # Ni un compte de niveau supérieur au sien
-    if role_level(utilisateur) > role_level(current_user):
-        msg = "Vous ne pouvez pas modifier un compte de niveau supérieur au vôtre."
+    # Un compte Super Administrateur n'est modifiable que par un Super Administrateur
+    if not can_act_on_user(current_user, utilisateur):
+        msg = "Seul un Super Administrateur peut modifier un compte Super Administrateur."
         if is_ajax:
             return jsonify({'error': msg}), 403
         flash(msg, 'danger')
@@ -518,32 +518,71 @@ def toggle_actif(id):
 
 
 
+# Libellés des données qui bloquent la suppression d'un compte (table -> texte)
+LIENS_BLOQUANTS = {
+    'tickets': 'ticket(s)', 'commentaires': 'commentaire(s)', 'historique_tickets': "ligne(s) d'historique",
+    'notifications': 'notification(s)', 'pieces_jointes': 'pièce(s) jointe(s)', 'taches': 'tâche(s)',
+    'departements': 'département(s) dont il est responsable', 'modeles_reponses': 'modèle(s) de réponse',
+    'base_connaissance': 'article(s) de la base de connaissance', 'articles_connaissance': 'article(s) de connaissance',
+    'messages': 'message(s) privé(s)', 'suggestions': 'idée(s)', 'plan_action_tasks': "tâche(s) du plan d'action",
+    'points_de_vente': 'point(s) de vente',
+}
+# Simples liaisons / compteurs de lecture : retirées avec le compte, elles ne bloquent pas
+LIENS_IGNORES = {'ticket_collaborateurs', 'articles_connaissance_vues'}
+
+
+def donnees_liees(utilisateur):
+    """Données qui empêchent de supprimer le compte : [(texte, nombre)].
+    Lu dans le catalogue de la VRAIE base (clés étrangères vers `utilisateurs` sans « mise à NULL »), donc fiable même si
+    le modèle Python et le schéma réel divergent. En cas d'échec de la vérification, on refuse par prudence."""
+    try:
+        fks = db.session.execute(db.text(
+            "SELECT c.conrelid::regclass::text AS tbl, a.attname AS col "
+            "FROM pg_constraint c JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey) "
+            "WHERE c.contype = 'f' AND c.confrelid = 'utilisateurs'::regclass AND c.confdeltype <> 'n'")).all()
+        trouve = []
+        for tbl, col in fks:
+            nom = tbl.strip('"')
+            if nom in LIENS_IGNORES:
+                continue
+            n = db.session.execute(db.text(f'SELECT count(*) FROM "{nom}" WHERE "{col}" = :uid'),
+                                   {'uid': utilisateur.id}).scalar()
+            if n:
+                trouve.append((LIENS_BLOQUANTS.get(nom, nom), n))
+        return trouve
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Vérification des données liées impossible: {e}', exc_info=True)
+        return [('données (vérification impossible)', 1)]
+
+
 @utilisateurs_bp.route('/<string:id>/supprimer', methods=['POST'])
 @login_required
 @require_permission('utilisateurs.supprimer')
 def supprimer(id):
-    """Supprimer un utilisateur"""
+    """Supprimer un utilisateur — refusé (avec le détail) s'il a des données liées : on le désactive alors."""
     utilisateur = Utilisateur.query.get_or_404(id)
-    
-    # Ne pas se supprimer soi-même
+
     if utilisateur.id == current_user.id:
         flash('Vous ne pouvez pas vous supprimer vous-même.', 'danger')
         return redirect(url_for('utilisateurs.detail', id=id))
-    
-    if role_level(utilisateur) > role_level(current_user):
-        flash("Vous ne pouvez pas supprimer un compte de niveau supérieur au vôtre.", 'danger')
+
+    if not can_act_on_user(current_user, utilisateur):
+        flash("Seul un Super Administrateur peut supprimer un compte Super Administrateur.", 'danger')
         return redirect(url_for('utilisateurs.detail', id=id))
 
-    # Vérifier s'il y a des tickets
-    if utilisateur.tickets_crees or utilisateur.tickets_assignes:
-        flash('Impossible de supprimer: cet utilisateur a des tickets associés. Désactivez-le plutôt.', 'danger')
+    liens = donnees_liees(utilisateur)
+    if liens:
+        detail = ', '.join(f'{n} {txt}' for txt, n in liens)
+        flash(f"Suppression impossible : ce compte est lié à {detail}. Désactivez-le plutôt (l'historique est conservé).", 'danger')
         return redirect(url_for('utilisateurs.detail', id=id))
-    
+
     nom = utilisateur.nom_complet
     try:
         db.session.delete(utilisateur)
         db.session.commit()
-        flash(f'Utilisateur "{nom}" supprimé avec succès!', 'success')
+        logger.info(f'Utilisateur supprimé par {current_user.email}')
+        flash(f'Utilisateur « {nom} » supprimé avec succès.', 'success')
         return redirect(url_for('utilisateurs.liste'))
     except Exception as e:
         db.session.rollback()

@@ -1,6 +1,6 @@
 -- =============================================================================
 --  CosmiCenter — EXEMPLE de création de la base de données (PostgreSQL 14+) : structure, permissions, rôles et données d'exemple
---  Généré à partir de models.py (APP_VERSION 2.7.2). Données entièrement fictives (@example.com) + un compte Super Administrateur par défaut.
+--  Généré à partir de models.py (APP_VERSION 2.7.5). Données entièrement fictives (@example.com) + un compte Super Administrateur par défaut.
 --  (Même principe que .env.example : on copie, on adapte, on exécute. La vraie base avec ses données
 --   est dans cosmicenter.sql, fichier local ignoré par git.)
 --
@@ -9,7 +9,7 @@
 --    1. Tables, clés, contraintes, index
 --    2. Séquence des numéros de ticket     (ticket_numero_seq)
 --    3. Permissions, 6 rôles standard et leurs droits (les « policies » de l'application), réglages par défaut
---    3b. Données d'exemple fictives et compte Super Administrateur par défaut (admin@example.com)
+--    3b. Données d'exemple fictives (sans ticket ni message) et compte Super Administrateur par défaut (admin@example.com)
 --    4. Droits PostgreSQL du rôle applicatif
 --
 --  Utilisation :
@@ -875,83 +875,6 @@ INSERT INTO categories_tickets (id, nom, description, type_ticket, departement_i
     ('a204be22-deb5-5ed6-9f8f-33f9d6e479c5', 'Organisation du planning', NULL, 'tache', 'ff87813d-a7a4-5836-91ac-58ea9e61677b', 'moyenne', 7, NULL, FALSE, '#F59E0B', 'ticket', NULL, TRUE, FALSE, '2026-01-05 10:00:00')
 ON CONFLICT DO NOTHING;
 
--- tickets (12)
-INSERT INTO tickets (id, numero, titre, description, type_ticket, priorite, statut, impact, urgence, createur_id, assigne_a_id, categorie_id, departement_id, pdv_id, date_creation, date_modification, date_echeance, date_premiere_reponse, date_resolution, date_fermeture, sla_respecte, temps_premiere_reponse_minutes, temps_resolution_minutes, satisfaction, commentaire_satisfaction, article_demande, quantite_demandee, unite, nature_besoin, justification, personne_concernee, date_incident, lieu_incident, donnees_personnalisees, tags) VALUES
-    ('68491f4d-c77d-51fa-aa56-03ffc8052b96', '1', 'Exemple : la caisse ne démarre plus', 'La caisse principale reste sur l''écran noir depuis ce matin.', 'incident', 'critique', 'nouveau', NULL, NULL, '80408191-2577-5a24-86bd-09a3e5342429', NULL, '2380d411-f382-5f1f-98b6-358e69afe2b8', '31777259-74e3-5779-b6b9-4ad9d453a0fd', 'a62042d2-a17c-5626-b9ac-0832ce8a9cc4', '2026-01-12 08:15:00', '2026-01-12 08:15:00', '2026-01-13 08:15:00', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-    ('b6891082-bdee-5319-892a-decba73b0ce7', '2', 'Exemple : demande de compte pour un nouveau barista', 'Merci de créer un compte pour le nouvel employé.', 'demande', 'moyenne', 'en_cours', NULL, NULL, 'efba5e13-3757-5fb1-a081-5605595c4a70', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', 'cf66fb6e-18d7-52bf-bdfc-9aef604b7719', '31777259-74e3-5779-b6b9-4ad9d453a0fd', 'a62042d2-a17c-5626-b9ac-0832ce8a9cc4', '2026-01-12 09:00:00', '2026-01-12 09:00:00', '2026-01-13 09:00:00', '2026-01-12 09:40:00', NULL, NULL, NULL, 40, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-    ('95e51995-5693-5c01-a34e-8c453c743239', '3', 'Exemple : Wi-Fi lent en salle', 'Le Wi-Fi se coupe aux heures de pointe.', 'incident', 'basse', 'resolu', NULL, NULL, 'efba5e13-3757-5fb1-a081-5605595c4a70', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', '66ec794e-cf06-5512-8b04-d5214ba31433', '31777259-74e3-5779-b6b9-4ad9d453a0fd', 'a62042d2-a17c-5626-b9ac-0832ce8a9cc4', '2026-01-10 14:00:00', '2026-01-10 14:00:00', '2026-01-11 14:00:00', '2026-01-10 14:30:00', '2026-01-10 16:00:00', NULL, TRUE, 30, 120, 5, 'Rapide et efficace, merci !', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-    ('618d66ae-99b4-5d73-90dd-f7e1b58a5ea3', '4', 'Exemple : la machine à café fuit', 'De l''eau coule sous la machine principale.', 'incident', 'urgente', 'en_cours', NULL, NULL, '87251909-d48d-5ad7-b88d-2c6c8bc4a6a8', '11a5c7b8-dbeb-5f99-aa14-d6cb98e3347c', '0b1be7f5-733b-57d1-9552-77cbff55948b', '4605ecc0-c2c3-5acb-841f-92d81012df17', '68ec9829-a142-5022-9bcd-f9bf08cce073', '2026-01-12 07:30:00', '2026-01-12 07:30:00', '2026-01-13 07:30:00', '2026-01-12 07:50:00', NULL, NULL, NULL, 20, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-    ('c140cf1b-f4ae-5cd8-a19e-0fd1a346401c', '5', 'Exemple : commande de gobelets et de lait', 'Stock presque épuisé avant le week-end.', 'besoin', 'haute', 'en_attente', NULL, NULL, '733b37be-2514-5f45-85e1-73f05c478961', '7e3723a4-830b-5ae0-901e-b5f90daa736e', 'bc7bcfc2-a6b4-5afc-9542-9e2d00eb8b7f', 'f105965b-b185-5391-b1e4-c98554f2866f', '88e4a071-64fe-5947-9af7-f3ff8b8e4db3', '2026-01-11 16:00:00', '2026-01-11 16:00:00', '2026-01-12 16:00:00', '2026-01-11 16:20:00', NULL, NULL, NULL, 20, NULL, NULL, NULL, 'Gobelets 12 oz', 500, 'pièces', 'Consommable', 'Rupture prévue samedi.', NULL, NULL, NULL, NULL, NULL),
-    ('a9618a61-15ec-5789-b86e-838fd25880e3', '6', 'Exemple : attestation de travail', 'Besoin d''une attestation pour une démarche bancaire.', 'demande', 'basse', 'ferme', NULL, NULL, '1bb33247-1a04-5c5e-9e60-2294692a3257', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', '91104b72-dc4d-5f64-afcb-bd85fa41cbb6', 'af4e1baf-4d2e-57c0-8326-8f9680984692', '68ec9829-a142-5022-9bcd-f9bf08cce073', '2026-01-05 10:00:00', '2026-01-05 10:00:00', '2026-01-06 10:00:00', '2026-01-05 11:00:00', '2026-01-05 15:00:00', '2026-01-06 09:00:00', TRUE, 60, 300, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-    ('25fdce9d-dce1-52a6-b1b5-bcf3c58c88c1', '7', 'Exemple : client mécontent du café', 'Un client se plaint d''un café trop amer.', 'plainte', 'moyenne', 'nouveau', NULL, NULL, '733b37be-2514-5f45-85e1-73f05c478961', NULL, '2a92c3a4-ef4a-5682-a668-5aa218755d31', '3af8649a-1b54-5d9f-8a15-684893974b91', '88e4a071-64fe-5947-9af7-f3ff8b8e4db3', '2026-01-12 12:00:00', '2026-01-12 12:00:00', '2026-01-13 12:00:00', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Client (ticket de caisse n° 4521)', NULL, NULL, NULL, NULL),
-    ('e08c9dae-11fe-5e1b-b3ad-1b4cafd3c1ad', '8', 'Exemple : contrôle d''hygiène mensuel', 'Préparer la visite d''hygiène du mois.', 'tache', 'basse', 'en_cours', NULL, NULL, '1d96e0d0-e385-55b9-9260-1137826fb513', '7e3723a4-830b-5ae0-901e-b5f90daa736e', '12a71020-088b-5ee5-92e6-7033fac706ee', '3af8649a-1b54-5d9f-8a15-684893974b91', 'a62042d2-a17c-5626-b9ac-0832ce8a9cc4', '2026-01-08 09:00:00', '2026-01-08 09:00:00', '2026-01-20 09:00:00', '2026-01-08 10:00:00', NULL, NULL, NULL, 60, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-    ('46b4d164-92c5-5933-bd55-59ff2bb4428a', '9', 'Exemple : double débit sur un paiement carte', 'Un client a été débité deux fois.', 'incident', 'haute', 'resolu', NULL, NULL, '87251909-d48d-5ad7-b88d-2c6c8bc4a6a8', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', 'a3d6a3dc-2a54-575f-9b57-7c818f090efc', 'dad4dbcb-2a8e-5f3d-ab4d-19aa560a1ed7', '68ec9829-a142-5022-9bcd-f9bf08cce073', '2026-01-09 11:00:00', '2026-01-09 11:00:00', '2026-01-10 11:00:00', '2026-01-09 11:30:00', '2026-01-10 13:00:00', NULL, FALSE, 30, 1560, 3, 'Résolu mais un peu long.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-    ('0fee31cf-d611-5f63-9c37-3105f72f3841', '10', 'Exemple : imprimante de tickets bloquée', 'Le papier se coince à chaque ticket.', 'incident', 'moyenne', 'ferme', NULL, NULL, '80408191-2577-5a24-86bd-09a3e5342429', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', '7a7f0bda-ce0e-5f69-b1c3-ba19306f7f38', '31777259-74e3-5779-b6b9-4ad9d453a0fd', 'a62042d2-a17c-5626-b9ac-0832ce8a9cc4', '2026-01-07 09:00:00', '2026-01-07 09:00:00', '2026-01-08 09:00:00', '2026-01-07 09:20:00', '2026-01-07 11:00:00', '2026-01-07 18:00:00', TRUE, 20, 120, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-    ('e146b2d7-0e8f-5cb1-8422-205ac324d6a7', '11', 'Exemple : question sur le planning de la semaine', 'Doublon du ticket précédent, à ignorer.', 'demande', 'basse', 'annule', NULL, NULL, '733b37be-2514-5f45-85e1-73f05c478961', NULL, 'd7abfd95-672b-5848-b7be-90144bb89d39', 'af4e1baf-4d2e-57c0-8326-8f9680984692', '88e4a071-64fe-5947-9af7-f3ff8b8e4db3', '2026-01-06 08:00:00', '2026-01-06 08:00:00', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-    ('0b4c2c6e-e475-5622-9d78-4b5adeb6b723', '12', 'Exemple : frigo qui ne refroidit plus', 'La température du frigo monte à 12 °C.', 'incident', 'urgente', 'nouveau', NULL, NULL, 'efba5e13-3757-5fb1-a081-5605595c4a70', NULL, 'e6e2afc6-09d9-5096-9bf5-6396f473f928', '4605ecc0-c2c3-5acb-841f-92d81012df17', 'a62042d2-a17c-5626-b9ac-0832ce8a9cc4', '2026-01-12 10:00:00', '2026-01-12 10:00:00', '2026-01-13 10:00:00', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
-ON CONFLICT DO NOTHING;
-
--- ticket_collaborateurs (2)
-INSERT INTO ticket_collaborateurs (ticket_id, utilisateur_id) VALUES
-    ('e08c9dae-11fe-5e1b-b3ad-1b4cafd3c1ad', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a'),
-    ('e08c9dae-11fe-5e1b-b3ad-1b4cafd3c1ad', '7e3723a4-830b-5ae0-901e-b5f90daa736e')
-ON CONFLICT DO NOTHING;
-
--- ticket_departements_collab (1)
-INSERT INTO ticket_departements_collab (ticket_id, departement_id) VALUES
-    ('e08c9dae-11fe-5e1b-b3ad-1b4cafd3c1ad', 'f105965b-b185-5391-b1e4-c98554f2866f')
-ON CONFLICT DO NOTHING;
-
--- taches (6)
-INSERT INTO taches (id, ticket_id, titre, description, assigne_a_id, terminee, ordre, date_creation, date_echeance, date_completion) VALUES
-    ('24347362-515a-5f14-a205-96edd862023a', 'b6891082-bdee-5319-892a-decba73b0ce7', 'Créer le compte', NULL, 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', TRUE, 1, '2026-01-12 09:10:00', NULL, '2026-01-12 10:00:00'),
-    ('7cba8d1c-088d-5de6-837b-2a31edef0462', 'b6891082-bdee-5319-892a-decba73b0ce7', 'Envoyer les identifiants au responsable', NULL, 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', FALSE, 0, '2026-01-12 09:10:00', NULL, NULL),
-    ('4fa7f780-0ca0-5684-b813-e9ee8872935e', '618d66ae-99b4-5d73-90dd-f7e1b58a5ea3', 'Couper l''eau et sécuriser la zone', NULL, '11a5c7b8-dbeb-5f99-aa14-d6cb98e3347c', TRUE, 1, '2026-01-12 09:10:00', NULL, '2026-01-12 08:00:00'),
-    ('5597c09b-d924-5031-a075-0b256b0e2cfe', '618d66ae-99b4-5d73-90dd-f7e1b58a5ea3', 'Remplacer le joint', NULL, '11a5c7b8-dbeb-5f99-aa14-d6cb98e3347c', FALSE, 0, '2026-01-12 09:10:00', NULL, NULL),
-    ('9de15c2b-632b-5d8a-8994-d5a232bd90c2', 'e08c9dae-11fe-5e1b-b3ad-1b4cafd3c1ad', 'Vérifier les températures', NULL, '7e3723a4-830b-5ae0-901e-b5f90daa736e', FALSE, 1, '2026-01-12 09:10:00', NULL, NULL),
-    ('f3ca952c-2278-58e8-9d97-07f9b00cc800', 'e08c9dae-11fe-5e1b-b3ad-1b4cafd3c1ad', 'Contrôler les dates limites', NULL, '7e3723a4-830b-5ae0-901e-b5f90daa736e', FALSE, 0, '2026-01-12 09:10:00', NULL, NULL)
-ON CONFLICT DO NOTHING;
-
--- commentaires (9)
-INSERT INTO commentaires (id, ticket_id, auteur_id, contenu, interne, type_commentaire, date_creation, date_modification, modifie) VALUES
-    ('b2456cb7-6af3-5fdd-9753-895220044349', 'b6891082-bdee-5319-892a-decba73b0ce7', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', 'Bonjour, j''ai commencé la création du compte. Je reviens vers vous dans la journée.', FALSE, 'commentaire', '2026-01-12 09:40:00', '2026-01-12 09:40:00', FALSE),
-    ('638ec3c6-0b2d-5bc3-8903-d6e090847f3b', '95e51995-5693-5c01-a34e-8c453c743239', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', 'Canal Wi-Fi changé et routeur redémarré : la connexion est stable.', FALSE, 'solution', '2026-01-10 16:00:00', '2026-01-10 16:00:00', FALSE),
-    ('e1af4191-ae0d-57e8-81de-bcd22c0aec0a', '618d66ae-99b4-5d73-90dd-f7e1b58a5ea3', '11a5c7b8-dbeb-5f99-aa14-d6cb98e3347c', 'Technicien en route, coupez l''arrivée d''eau de la machine en attendant.', FALSE, 'commentaire', '2026-01-12 07:50:00', '2026-01-12 07:50:00', FALSE),
-    ('a4030f7d-83be-5880-a2a4-534d1224b085', '618d66ae-99b4-5d73-90dd-f7e1b58a5ea3', '87251909-d48d-5ad7-b88d-2c6c8bc4a6a8', 'C''est fait, merci. La fuite continue au sol.', FALSE, 'commentaire', '2026-01-12 08:05:00', '2026-01-12 08:05:00', FALSE),
-    ('0b28d00c-e185-5f1c-b7e4-8ff7ffb741e5', 'c140cf1b-f4ae-5cd8-a19e-0fd1a346401c', '7e3723a4-830b-5ae0-901e-b5f90daa736e', 'Commande passée chez le fournisseur, livraison prévue lundi.', FALSE, 'commentaire', '2026-01-11 16:20:00', '2026-01-11 16:20:00', FALSE),
-    ('249d0d0c-0ae7-5aaa-b830-ce43c061ad6b', 'a9618a61-15ec-5789-b86e-838fd25880e3', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', 'Attestation envoyée par e-mail au responsable.', FALSE, 'solution', '2026-01-05 15:00:00', '2026-01-05 15:00:00', FALSE),
-    ('59e5de04-77d1-59a4-b760-e84e9e185149', '46b4d164-92c5-5933-bd55-59ff2bb4428a', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', 'Remboursement lancé auprès de la banque, délai de 24 à 48 h.', FALSE, 'solution', '2026-01-10 13:00:00', '2026-01-10 13:00:00', FALSE),
-    ('73011d3e-9fea-5f2a-b346-67e8c4da19c5', '0fee31cf-d611-5f63-9c37-3105f72f3841', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', 'Rouleau remplacé et guide papier nettoyé.', FALSE, 'solution', '2026-01-07 11:00:00', '2026-01-07 11:00:00', FALSE),
-    ('abf190f9-262f-5d93-a68c-8db9c750be74', 'e08c9dae-11fe-5e1b-b3ad-1b4cafd3c1ad', '1d96e0d0-e385-55b9-9260-1137826fb513', 'Merci de joindre la liste de contrôle au ticket une fois terminée.', TRUE, 'note', '2026-01-08 10:30:00', '2026-01-08 10:30:00', FALSE)
-ON CONFLICT DO NOTHING;
-
--- historique_tickets (9)
-INSERT INTO historique_tickets (id, ticket_id, utilisateur_id, action, details, champ_modifie, ancienne_valeur, nouvelle_valeur, date_creation) VALUES
-    ('28a41384-a0ab-569c-b6fe-bfb24441d2a5', '68491f4d-c77d-51fa-aa56-03ffc8052b96', '80408191-2577-5a24-86bd-09a3e5342429', 'Ticket créé', NULL, NULL, NULL, NULL, '2026-01-12 08:15:00'),
-    ('1a49fad9-b200-557f-a89d-6b77590f66b5', 'b6891082-bdee-5319-892a-decba73b0ce7', 'efba5e13-3757-5fb1-a081-5605595c4a70', 'Ticket créé', NULL, NULL, NULL, NULL, '2026-01-12 09:00:00'),
-    ('23457dc0-e105-579a-9bbd-a139ecca4e25', 'b6891082-bdee-5319-892a-decba73b0ce7', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', 'Statut modifié', NULL, 'statut', 'nouveau', 'en_cours', '2026-01-12 09:40:00'),
-    ('66297db8-42c4-5305-b32b-484077891cf6', '95e51995-5693-5c01-a34e-8c453c743239', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', 'Statut modifié', NULL, 'statut', 'en_cours', 'resolu', '2026-01-10 16:00:00'),
-    ('9842e9d9-4916-57b1-949f-873d387c64cb', '618d66ae-99b4-5d73-90dd-f7e1b58a5ea3', '87251909-d48d-5ad7-b88d-2c6c8bc4a6a8', 'Ticket créé', NULL, NULL, NULL, NULL, '2026-01-12 07:30:00'),
-    ('e689a4b8-753e-50c3-9b73-7fde9bec9ecd', '618d66ae-99b4-5d73-90dd-f7e1b58a5ea3', '11a5c7b8-dbeb-5f99-aa14-d6cb98e3347c', 'Statut modifié', NULL, 'statut', 'nouveau', 'en_cours', '2026-01-12 07:50:00'),
-    ('7c37e2de-3921-5382-983e-ba9313416286', 'c140cf1b-f4ae-5cd8-a19e-0fd1a346401c', '7e3723a4-830b-5ae0-901e-b5f90daa736e', 'Statut modifié', NULL, 'statut', 'en_cours', 'en_attente', '2026-01-11 16:30:00'),
-    ('022cc8de-d5cf-5aae-815a-3dd186f6b35b', 'a9618a61-15ec-5789-b86e-838fd25880e3', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', 'Statut modifié', NULL, 'statut', 'resolu', 'ferme', '2026-01-06 09:00:00'),
-    ('4832f500-42c5-56f8-a228-fe623d108380', 'e146b2d7-0e8f-5cb1-8422-205ac324d6a7', '733b37be-2514-5f45-85e1-73f05c478961', 'Statut modifié', NULL, 'statut', 'nouveau', 'annule', '2026-01-06 08:30:00')
-ON CONFLICT DO NOTHING;
-
--- notifications (3)
-INSERT INTO notifications (id, utilisateur_id, titre, message, type_notification, lien, lue, date_creation, date_lecture) VALUES
-    ('db5afdab-241c-5100-9680-74de3935c45a', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', 'Nouveau ticket : Exemple', 'Un ticket vous a été assigné.', 'ticket', NULL, FALSE, '2026-01-12 09:00:00', NULL),
-    ('159ec2ef-fbbc-582f-a6d5-94db5d77e727', '11a5c7b8-dbeb-5f99-aa14-d6cb98e3347c', 'Ticket urgent : machine à café', 'Une fuite est signalée au PDV Nord.', 'ticket', NULL, FALSE, '2026-01-12 07:30:00', NULL),
-    ('e234cbd3-fc85-5cfd-88db-89abd5e7eb74', 'efba5e13-3757-5fb1-a081-5605595c4a70', 'Ticket résolu', 'Votre ticket « Wi-Fi lent en salle » est résolu.', 'ticket', NULL, TRUE, '2026-01-10 16:00:00', '2026-01-10 16:30:00')
-ON CONFLICT DO NOTHING;
-
--- messages (3)
-INSERT INTO messages (id, sender_id, receiver_id, content, timestamp, is_read, fichier_nom, fichier_chemin, fichier_type, fichier_taille) VALUES
-    ('f20ca7d5-bcea-5fec-ad9c-01112aee6b0b', 'f2a5cc55-be1e-5a1b-a2eb-81660b26cd30', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', 'Bonjour Lina, peux-tu traiter le ticket n°2 en priorité ?', '2026-01-12 09:05:00', TRUE, NULL, NULL, NULL, NULL),
-    ('8295a18f-9c90-5477-bc94-aaa8d790a56e', 'e4f4d43b-6084-5ad7-8752-dff878f52f6a', 'f2a5cc55-be1e-5a1b-a2eb-81660b26cd30', 'C''est en cours, je termine d''ici midi.', '2026-01-12 09:12:00', FALSE, NULL, NULL, NULL, NULL),
-    ('0b1834d1-9b8f-5704-b4ec-ecb89bfcbebd', '87251909-d48d-5ad7-b88d-2c6c8bc4a6a8', '11a5c7b8-dbeb-5f99-aa14-d6cb98e3347c', 'Merci d''être intervenu pour la machine, tout refonctionne.', '2026-01-12 11:00:00', FALSE, NULL, NULL, NULL, NULL)
-ON CONFLICT DO NOTHING;
-
 -- suggestions (3)
 INSERT INTO suggestions (id, titre, description, type_suggestion, statut, auteur_id, date_creation) VALUES
     ('7eef3e62-a167-552c-8ace-48f0bf51728f', 'Imprimer le rapport global en un clic', 'Ce serait pratique d''imprimer le rapport global en un clic.', 'amelioration', 'nouveau', 'efba5e13-3757-5fb1-a081-5605595c4a70', '2026-01-11 11:00:00'),
@@ -1005,8 +928,8 @@ UPDATE departements SET responsable_id = 'c8cd5767-cd54-55ea-b8e3-4420833eea81' 
 UPDATE points_de_vente SET responsable_id = '87251909-d48d-5ad7-b88d-2c6c8bc4a6a8' WHERE id = '68ec9829-a142-5022-9bcd-f9bf08cce073';
 UPDATE points_de_vente SET responsable_id = 'efba5e13-3757-5fb1-a081-5605595c4a70' WHERE id = 'a62042d2-a17c-5626-b9ac-0832ce8a9cc4';
 
--- Le prochain ticket créé portera le n°13
-SELECT setval('ticket_numero_seq', 12);
+-- Aucun ticket ni message d'exemple : le premier ticket créé portera le n°1
+SELECT setval('ticket_numero_seq', 1, false);
 
 -- ───────────────────────────── 4. Droits PostgreSQL du rôle applicatif ─────────────────────────────
 ALTER DATABASE cosmicenter OWNER TO cosmicenter;
@@ -1017,4 +940,3 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO cosmicenter;
 
 COMMIT;
 
--- Les tickets repartent de zéro : la séquence ticket_numero_seq démarre à 1.

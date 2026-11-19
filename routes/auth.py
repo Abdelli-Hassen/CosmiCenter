@@ -6,6 +6,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from models import db, Utilisateur
 from datetime import datetime, timedelta
 from utils.security import is_safe_redirect, rotate_csrf_token
+from utils.permissions import home_endpoint
 import logging
 
 # Créer le blueprint
@@ -33,7 +34,7 @@ def connexion():
     """Page de connexion"""
     # Si l'utilisateur est déjà connecté, rediriger vers le tableau de bord
     if current_user.is_authenticated:
-        return redirect(url_for('tickets.tableau_bord'))
+        return redirect(url_for(home_endpoint(current_user)))
 
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
@@ -88,7 +89,7 @@ def connexion():
             next_page = request.args.get('next')
             if is_safe_redirect(next_page):
                 return redirect(next_page)
-            return redirect(url_for('tickets.tableau_bord'))
+            return redirect(url_for(home_endpoint(utilisateur)))
 
         # Mauvais mot de passe
         utilisateur.tentatives_connexion = (utilisateur.tentatives_connexion or 0) + 1

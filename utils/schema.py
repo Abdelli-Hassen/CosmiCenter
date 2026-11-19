@@ -22,23 +22,38 @@ STATEMENTS = [
     "ALTER TABLE messages ADD COLUMN IF NOT EXISTS fichier_taille INTEGER",
     # Catégories de tickets : archivage
     "ALTER TABLE categories_tickets ADD COLUMN IF NOT EXISTS archivee BOOLEAN NOT NULL DEFAULT FALSE",
+    # « Gérer les catégories » est une action de la page Administration : sans cette catégorie, la page Rôles ne la dessinait pas
+    "UPDATE permissions SET categorie = 'Administration' WHERE code = 'admin.categories' AND categorie <> 'Administration'",
 ]
 
 # Permissions créées au démarrage si elles manquent :
 #   (code, nom, description, catégorie, accordée d'office à…)
 # Le dernier champ ne sert qu'à la CRÉATION de la permission : il rend aux rôles existants ce qu'ils pouvaient déjà
 # faire avant que l'action ait sa propre case (aucune perte d'accès). Ensuite, tout se règle dans « Rôles ».
-#   ('a', 'code')  = rôles qui ont déjà cette permission     ('niveau', n) = rôles de niveau >= n
+#   ('a', 'code')  = rôles qui ont déjà cette permission     ('roles', [noms]) = ces rôles-là
 #   ('tous',)      = tous les rôles                          None          = personne (à cocher à la main)
+# Il n'y a plus de niveaux : le Super Administrateur reçoit toute nouvelle permission à sa création, comme une case cochée.
 # Rangement dans la page Rôles : « <page>.<action> » se place sous la case « <page>.voir ».
 DEFAULT_PERMISSIONS = [
     ('admin.categories', 'Gérer les catégories de tickets',
      'Créer, modifier, activer, archiver et supprimer les catégories (incidents, demandes...). '
-     'Ajoute un bouton « Gérer les catégories » sur la page Nouveau ticket.', 'Espace de travail', None),
+     'Ajoute un bouton « Gérer les catégories » sur la page Nouveau ticket.', 'Administration', None),
 
     # ── Tickets ──
     ('tickets.commenter', 'Commenter un ticket',
      "Écrire des messages dans la conversation d'un ticket auquel on a accès.", 'Espace de travail', ('tous',)),
+
+    # ── Tickets : actions limitées à « Mes tickets » (les codes sans _mes valent pour « Tous les tickets ») ──
+    ('tickets.assigner_mes', 'Assigner un ticket', 'Assigner des tickets aux agents ou départements — uniquement parmi mes tickets / ceux de mon département.',
+     'Espace de travail', ('a', 'tickets.assigner')),
+    ('tickets.cloturer_mes', 'Clôturer un ticket', 'Résoudre et fermer les tickets — uniquement parmi mes tickets / ceux de mon département.',
+     'Espace de travail', ('a', 'tickets.cloturer')),
+    ('tickets.commenter_mes', 'Commenter un ticket', "Écrire des messages dans la conversation d'un ticket — uniquement parmi mes tickets / ceux de mon département.",
+     'Espace de travail', ('a', 'tickets.commenter')),
+    ('tickets.modifier_mes', 'Modifier un ticket', 'Modifier les tickets existants — uniquement parmi mes tickets / ceux de mon département.',
+     'Espace de travail', ('a', 'tickets.modifier')),
+    ('tickets.supprimer_mes', 'Supprimer un ticket', 'Supprimer des tickets — uniquement parmi mes tickets / ceux de mon département.',
+     'Espace de travail', ('a', 'tickets.supprimer')),
 
     # ── Boîte à idées ──
     ('idees.creer', 'Proposer une idée',
@@ -46,10 +61,10 @@ DEFAULT_PERMISSIONS = [
      'Espace de travail', ('a', 'idees.voir')),
     ('idees.voir_toutes', 'Voir les idées de tout le monde',
      'Voir toutes les idées envoyées (sinon : seulement les siennes) et être prévenu par e-mail des nouvelles idées.',
-     'Espace de travail', ('niveau', 90)),
+     'Espace de travail', ('roles', ['Super Administrateur'])),
     ('idees.modifier', "Traiter / changer le statut d'une idée",
-     'Marquer une idée comme lue, acceptée, refusée, en cours ou terminée.', 'Espace de travail', ('niveau', 90)),
-    ('idees.supprimer', 'Supprimer une idée', 'Supprimer définitivement une idée.', 'Espace de travail', ('niveau', 90)),
+     'Marquer une idée comme lue, acceptée, refusée, en cours ou terminée.', 'Espace de travail', ('roles', ['Super Administrateur'])),
+    ('idees.supprimer', 'Supprimer une idée', 'Supprimer définitivement une idée.', 'Espace de travail', ('roles', ['Super Administrateur'])),
 
     # ── Base de connaissance ──
     ('base_connaissance.gerer_categories', "Gérer les catégories d'articles",
@@ -73,9 +88,9 @@ DEFAULT_PERMISSIONS = [
 
     # ── Entreprises ──
     ('entreprises.archiver', 'Archiver / réactiver une entreprise',
-     'Masquer une entreprise sans la supprimer, ou la réactiver.', 'Opérations', ('niveau', 60)),
+     'Masquer une entreprise sans la supprimer, ou la réactiver.', 'Opérations', ('roles', ['Super Administrateur', 'Directrice Réseau', 'Responsable Département'])),
     ('entreprises.gerer_collaborateurs', 'Rattacher / détacher des collaborateurs',
-     "Associer ou retirer des utilisateurs d'une entreprise.", 'Opérations', ('niveau', 60)),
+     "Associer ou retirer des utilisateurs d'une entreprise.", 'Opérations', ('roles', ['Super Administrateur', 'Directrice Réseau', 'Responsable Département'])),
 
     # ── Utilisateurs ──
     ('utilisateurs.activer', 'Activer / désactiver un compte',
@@ -98,8 +113,8 @@ DEFAULT_PERMISSIONS = [
 # Quand une action change de permission, les rôles qui pouvaient déjà la faire la gardent.
 ONE_TIME_GRANTS = [
     ('v1-departements-supprimer', [('departements.supprimer', ('a', 'departements.modifier'))]),
-    ('v1-entreprises-niveau60', [('entreprises.creer', ('niveau', 60)), ('entreprises.modifier', ('niveau', 60)),
-                                 ('entreprises.supprimer', ('niveau', 60))]),
+    ('v1-entreprises-niveau60', [('entreprises.creer', ('roles', ['Super Administrateur', 'Directrice Réseau', 'Responsable Département'])), ('entreprises.modifier', ('roles', ['Super Administrateur', 'Directrice Réseau', 'Responsable Département'])),
+                                 ('entreprises.supprimer', ('roles', ['Super Administrateur', 'Directrice Réseau', 'Responsable Département']))]),
 ]
 
 
@@ -111,8 +126,8 @@ def _roles_for(rule):
     roles = Role.query.all()
     if kind == 'tous':
         return roles
-    if kind == 'niveau':
-        return [r for r in roles if (r.niveau or 0) >= rule[1]]
+    if kind == 'roles':
+        return [r for r in roles if r.nom in rule[1]]
     if kind == 'a':
         return [r for r in roles if any(p.code == rule[1] for p in r.permissions)]
     return []
@@ -124,7 +139,19 @@ def _grant(code, rule):
     if not perm:
         return
     for role in _roles_for(rule):
-        if (role.niveau or 0) < 100 and perm not in role.permissions:
+        if perm not in role.permissions:
+            role.permissions.append(perm)
+
+
+def _grant_super_admin(perms):
+    """Donne ces permissions au rôle Super Administrateur (case cochée, plus de droit implicite)."""
+    from models import Role, SUPER_ADMIN_ROLE
+    role = Role.query.filter_by(nom=SUPER_ADMIN_ROLE).first()
+    if not role:
+        return
+    have = {p.code for p in role.permissions}
+    for perm in perms:
+        if perm.code not in have:
             role.permissions.append(perm)
 
 
@@ -142,6 +169,8 @@ def ensure_permissions(db):
         db.session.flush()
         for code, grant in created:
             _grant(code, grant)
+        if created:
+            _grant_super_admin(Permission.query.filter(Permission.code.in_([c for c, _ in created])).all())
 
         done = set(json.loads(ConfigurationSysteme.get_valeur('permission_rattrapages', '[]') or '[]'))
         for ident, grants in ONE_TIME_GRANTS:
@@ -149,6 +178,11 @@ def ensure_permissions(db):
                 for code, rule in grants:
                     _grant(code, rule)
                 done.add(ident)
+        # v2.8.0 — plus de niveaux : le Super Administrateur avait toutes les permissions « implicitement », il les
+        # reçoit désormais explicitement (une seule fois ; ensuite tout se règle dans Rôles).
+        if 'v2-super-admin-explicite' not in done:
+            _grant_super_admin(Permission.query.all())
+            done.add('v2-super-admin-explicite')
         ConfigurationSysteme.set_valeur('permission_rattrapages', json.dumps(sorted(done)),
                                         'Rattrapages de permissions déjà appliqués')
         db.session.commit()

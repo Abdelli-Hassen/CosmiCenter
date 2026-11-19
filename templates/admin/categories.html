@@ -10,7 +10,7 @@
   .cat-ico-danger { color:#EF4444; }
   .cat-ico-danger:hover { background:rgba(239,68,68,.12); color:#EF4444; border-color:rgba(239,68,68,.35); }
 </style>
-{% set est_admin = current_user.role and current_user.role.niveau >= 90 %}
+{% set est_admin = current_user.has_permission('admin_dashboard.voir') %}
 {% set prio_couleurs = {'basse': '#64748B', 'moyenne': '#3B82F6', 'haute': '#F59E0B', 'urgente': '#EF4444', 'critique': '#B91C1C'} %}
 <div class="page">
 

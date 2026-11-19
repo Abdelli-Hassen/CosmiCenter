@@ -161,7 +161,7 @@ Route : `GET /utilisateurs/`
 
 Route : `GET /utilisateurs/<id>`
 
-- Informations complètes : nom, poste, département / PDV, entreprise, e-mail, téléphone
+- Informations complètes : nom, poste, département / PDV (un utilisateur peut avoir **plusieurs PDV** : le premier coché est le principal), entreprise, e-mail, téléphone
 - Statistiques : tickets créés, tickets en cours assignés, tickets résolus, commentaires
 - 10 derniers tickets récents
 
@@ -269,7 +269,7 @@ Permet la structuration des filiales et entités juridiques du groupe (Cosmitto 
 
 ## 8. Administration
 
-Accès réservé aux utilisateurs avec `role.niveau >= 70`.
+Chaque page est protégée par sa propre permission (plus de niveaux) : `admin_dashboard.voir` (tableau de bord), `utilisateurs.*` (utilisateurs), `admin_roles.voir` / `admin_roles.modifier` (rôles et permissions), `admin.categories` (catégories), `admin_parametres.*`, `admin_logs.voir`, `admin_acces.voir`, `admin_plan_action.*`.
 
 ### 6.1 Tableau de bord admin
 
@@ -295,12 +295,12 @@ Route : `GET /admin/utilisateurs`
 
 Route : `GET /admin/roles`
 
-- Liste des rôles avec niveau hiérarchique et couleur
+- Liste des rôles avec leur couleur (aucun niveau : seules les cases cochées comptent)
 - Permissions organisées par catégorie dans une interface en accordéon.
 - Rôles système (non modifiables) vs rôles personnalisés
 - Les actions enfants sont grisées et désactivées si la page parente est décochée.
 
-**Créer un rôle** : `POST /admin/roles/creer` — nom, niveau, couleur, description
+**Créer un rôle** : `POST /admin/roles/creer` — nom, couleur, description (`admin_roles.modifier`)
 **Modifier un rôle** : `POST /admin/roles/<id>/modifier`
 **Modifier les permissions** : `POST /admin/roles/<id>/permissions` — cases à cocher hiérarchisées.
 
@@ -459,7 +459,7 @@ Toutes les routes API requièrent `@login_required`.
 | Modèle | Rôle principal |
 |--------|---------------|
 | `Utilisateur` | Comptes utilisateurs avec rôles, département, préférences |
-| `Role` | Rôles hiérarchiques avec niveau et permissions associées |
+| `Role` | Rôles et permissions associées (colonne `niveau` conservée mais plus utilisée) |
 | `Permission` | Permissions granulaires par code (ex. `tickets.modifier`) |
 | `Departement` | Unités organisationnelles avec SLA et responsable |
 | `CategorieTicket` | Catégories de tickets par type et département |

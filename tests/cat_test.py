@@ -44,7 +44,7 @@ try:
     r = c.get("/admin/categories")
     check("role without permission: page refused", r.status_code == 302)
     check("role without permission: no button on new ticket page", "Gérer les catégories" not in c.get("/tickets/nouveau").get_data(as_text=True))
-    t = tok("/tickets/nouveau")
+    t = tok("/parametres/profil")
     c.post("/admin/categories/creer", data={"nom": "ZZ-Nope", "departement_id": dept_id, "csrf_token": t})
     check("role without permission: cannot create", cat("ZZ-Nope") is None)
 
@@ -53,6 +53,7 @@ try:
         rr = db.session.get(Role, low_role_id)
         pp = Permission.query.filter_by(code="admin.categories").first()
         rr.permissions.append(pp)
+        rr.permissions.append(Permission.query.filter_by(code="tickets.creer").first())  # pour ouvrir « Nouveau ticket »
         db.session.commit()
     c, tok = client(LOW)
     html = c.get("/tickets/nouveau").get_data(as_text=True)

@@ -13,7 +13,7 @@ from flask_login import login_required, current_user
 
 from models import (db, Utilisateur, Departement, CategorieTicket, Ticket, Role, Permission,
                     PointDeVente, Entreprise, PlanActionTask, ConfigurationSysteme)
-from utils.permissions import role_level, can_assign_role
+from utils.permissions import can_assign_role, can_act_on_user, permission_required, is_super_admin, home_endpoint
 from utils.security import csv_safe, safe_color, parse_int
 import logging
 
@@ -26,34 +26,6 @@ PERMISSION_CODE_RE = re.compile(r'^[a-z0-9_]+(\.[a-z0-9_]+)*$')
 TICKET_TYPES = ['demande', 'besoin', 'plainte', 'incident', 'tache']
 CATEGORY_PRIORITIES = ['basse', 'moyenne', 'haute', 'urgente', 'critique']
 STATUTS_OUVERTS = ['nouveau', 'ouvert']
-
-
-def admin_required(f):
-    """Décorateur pour restreindre l'accès aux administrateurs (niveau >= 90)"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated:
-            return redirect(url_for('auth.connexion'))
-        if role_level(current_user) < 90:
-            flash('Accès réservé aux administrateurs', 'danger')
-            return redirect(url_for('tickets.tableau_bord'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-
-def permission_required(permission_name):
-    """Décorateur pour restreindre l'accès selon une permission spécifique"""
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not current_user.is_authenticated:
-                return redirect(url_for('auth.connexion'))
-            if not current_user.has_permission(permission_name) and role_level(current_user) < 90:
-                flash('Accès non autorisé', 'danger')
-                return redirect(url_for('tickets.tableau_bord'))
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
 
 
 def _parse_datetime(value):
@@ -69,21 +41,21 @@ def _parse_datetime(value):
 def _user_form_context():
     return dict(
         departements=Departement.query.filter_by(actif=True).order_by(Departement.nom).all(),
-        roles=Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all(),
+        roles=Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all(),
         pdvs=PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all(),
         entreprises=Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all(),
     )
 
 
 def _check_role_assignment(role_id):
-    """Retourne un message d'erreur si le rôle est inexistant ou de niveau supérieur à celui de l'acteur."""
+    """Retourne un message d'erreur si le rôle est inexistant ou si l'on n'a pas le droit de l'attribuer."""
     if not role_id:
         return None
     role = db.session.get(Role, role_id)
     if role is None:
         return 'Rôle introuvable.'
     if not can_assign_role(current_user, role):
-        return "Vous ne pouvez pas attribuer un rôle de niveau supérieur au vôtre."
+        return "Seul un Super Administrateur peut attribuer le rôle Super Administrateur."
     return None
 
 
@@ -109,7 +81,7 @@ def _system_health():
 
 @admin_bp.route('/tableau-bord')
 @login_required
-@admin_required
+@permission_required('admin_dashboard.voir')
 def tableau_bord():
     """Tableau de bord administrateur"""
     stats = {
@@ -139,7 +111,7 @@ def tableau_bord():
 
 @admin_bp.route('/utilisateurs')
 @login_required
-@admin_required
+@permission_required('utilisateurs.voir')
 def utilisateurs():
     """Liste des utilisateurs"""
     page = request.args.get('page', 1, type=int)
@@ -204,7 +176,7 @@ def utilisateurs():
     total_actifs = Utilisateur.query.filter_by(actif=True).count()
     total_inactifs = Utilisateur.query.filter_by(actif=False).count()
 
-    roles = Role.query.filter_by(actif=True).order_by(Role.niveau.desc()).all()
+    roles = Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all()
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
 
     return render_template(
@@ -242,7 +214,6 @@ def _read_user_form(existing=None):
     values = dict(
         nom=nom, prenom=prenom, email=email, role_id=role_id,
         departement_id=request.form.get('departement_id') or None,
-        pdv_id=request.form.get('pdv_id') or None,
         entreprise_id=request.form.get('entreprise_id') or None,
         telephone=request.form.get('telephone', '').strip()[:20] or None,
         poste=request.form.get('poste', '').strip()[:100] or None,
@@ -257,7 +228,7 @@ def _read_user_form(existing=None):
 
 @admin_bp.route('/utilisateurs/nouveau', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@permission_required('utilisateurs.creer')
 def nouvel_utilisateur():
     """Créer un nouvel utilisateur"""
     if request.method == 'POST':
@@ -274,6 +245,7 @@ def nouvel_utilisateur():
 
         try:
             utilisateur = Utilisateur(matricule=None, **values)
+            utilisateur.set_pdvs(request.form.getlist('pdv_ids'))
             utilisateur.set_password(password)
             db.session.add(utilisateur)
             db.session.commit()
@@ -292,14 +264,14 @@ def nouvel_utilisateur():
 
 @admin_bp.route('/utilisateurs/<user_id>/modifier', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@permission_required('utilisateurs.modifier')
 def modifier_utilisateur(user_id):
     """Modifier un utilisateur"""
     utilisateur = Utilisateur.query.get_or_404(user_id)
 
-    # Un administrateur ne peut pas modifier un compte de niveau supérieur au sien
-    if role_level(utilisateur) > role_level(current_user):
-        flash("Vous ne pouvez pas modifier un compte de niveau supérieur au vôtre.", 'danger')
+    # Un compte Super Administrateur n'est modifiable que par un Super Administrateur
+    if not can_act_on_user(current_user, utilisateur):
+        flash("Seul un Super Administrateur peut modifier un compte Super Administrateur.", 'danger')
         return redirect(url_for('admin.utilisateurs'))
 
     if request.method == 'POST':
@@ -319,6 +291,7 @@ def modifier_utilisateur(user_id):
         try:
             for key, value in values.items():
                 setattr(utilisateur, key, value)
+            utilisateur.set_pdvs(request.form.getlist('pdv_ids'))
             if utilisateur.actif and not actif:
                 utilisateur.revoke_sessions()
             utilisateur.actif = actif
@@ -342,7 +315,7 @@ def modifier_utilisateur(user_id):
 
 @admin_bp.route('/utilisateurs/<user_id>/desactiver', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('utilisateurs.activer')
 def desactiver_utilisateur(user_id):
     """Désactiver un utilisateur"""
     if user_id == current_user.id:
@@ -350,8 +323,8 @@ def desactiver_utilisateur(user_id):
         return redirect(url_for('admin.utilisateurs'))
 
     utilisateur = Utilisateur.query.get_or_404(user_id)
-    if role_level(utilisateur) > role_level(current_user):
-        flash("Vous ne pouvez pas désactiver un compte de niveau supérieur au vôtre.", 'danger')
+    if not can_act_on_user(current_user, utilisateur):
+        flash("Seul un Super Administrateur peut désactiver un compte Super Administrateur.", 'danger')
         return redirect(url_for('admin.utilisateurs'))
 
     try:
@@ -372,12 +345,12 @@ def desactiver_utilisateur(user_id):
 
 @admin_bp.route('/utilisateurs/<user_id>/reactiver', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('utilisateurs.activer')
 def reactiver_utilisateur(user_id):
     """Réactiver un utilisateur désactivé (et lever un éventuel verrouillage)"""
     utilisateur = Utilisateur.query.get_or_404(user_id)
-    if role_level(utilisateur) > role_level(current_user):
-        flash("Vous ne pouvez pas modifier un compte de niveau supérieur au vôtre.", 'danger')
+    if not can_act_on_user(current_user, utilisateur):
+        flash("Seul un Super Administrateur peut modifier un compte Super Administrateur.", 'danger')
         return redirect(url_for('admin.utilisateurs'))
     try:
         utilisateur.actif = True
@@ -396,10 +369,10 @@ def reactiver_utilisateur(user_id):
 
 @admin_bp.route('/roles')
 @login_required
-@admin_required
+@permission_required('admin_roles.voir')
 def roles():
     """Gestion des rôles et permissions"""
-    roles = Role.query.order_by(Role.niveau.desc()).all()
+    roles = Role.query.order_by(Role.systeme.desc(), Role.nom).all()
     permissions = Permission.query.order_by(Permission.categorie, Permission.nom).all()
     perms_by_cat_raw = {}
     for p in permissions:
@@ -425,7 +398,7 @@ def roles():
 
 @admin_bp.route('/roles/ordonner-categories', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('admin_roles.modifier')
 def ordonner_categories_roles():
     """Sauvegarde l'ordre permanent des catégories de permissions (drag & drop)"""
     data = request.get_json(silent=True) or {}
@@ -442,7 +415,7 @@ def ordonner_categories_roles():
 
 @admin_bp.route('/permissions')
 @login_required
-@admin_required
+@permission_required('admin_roles.voir')
 def permissions():
     """Liste de toutes les permissions système"""
     permissions_list = Permission.query.order_by(Permission.categorie, Permission.nom).all()
@@ -454,7 +427,7 @@ def permissions():
 
 @admin_bp.route('/permissions/creer', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('admin_roles.modifier')
 def creer_permission():
     nom = request.form.get('nom', '').strip()
     code = request.form.get('code', '').strip()
@@ -477,7 +450,7 @@ def creer_permission():
 
 @admin_bp.route('/permissions/<string:id>/supprimer', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('admin_roles.modifier')
 def supprimer_permission(id):
     p = Permission.query.get_or_404(id)
     db.session.delete(p)
@@ -488,15 +461,23 @@ def supprimer_permission(id):
 
 @admin_bp.route('/roles/<role_id>/permissions', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('admin_roles.modifier')
 def modifier_permissions_role(role_id):
     """Modifier les permissions d'un rôle"""
     role = Role.query.get_or_404(role_id)
-    if (role.niveau or 0) > role_level(current_user):
-        flash("Vous ne pouvez pas modifier un rôle de niveau supérieur au vôtre.", 'danger')
+    if role.est_super_admin and not is_super_admin(current_user):
+        flash("Seul un Super Administrateur peut modifier les permissions du rôle Super Administrateur.", 'danger')
         return redirect(url_for('admin.roles'))
     perm_ids = request.form.getlist('permissions')
-    role.permissions = Permission.query.filter(Permission.id.in_(perm_ids)).all()
+    nouvelles = Permission.query.filter(Permission.id.in_(perm_ids)).all()
+    if role.est_super_admin:
+        # Garde-fou : on ne peut pas se couper l'accès à la gestion des rôles (aucun moyen de revenir en arrière)
+        manquantes = {'admin_roles.voir', 'admin_roles.modifier'} - {p.code for p in nouvelles}
+        if manquantes:
+            flash("Le rôle Super Administrateur doit garder « admin_roles.voir » et « admin_roles.modifier » "
+                  "(sinon plus personne ne pourrait gérer les rôles).", 'danger')
+            return redirect(url_for('admin.roles'))
+    role.permissions = nouvelles
     db.session.commit()
     flash(f'Permissions du rôle "{role.nom}" mises à jour.', 'success')
     return redirect(url_for('admin.roles'))
@@ -504,7 +485,7 @@ def modifier_permissions_role(role_id):
 
 @admin_bp.route('/roles/creer', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('admin_roles.modifier')
 def creer_role():
     nom = request.form.get('nom', '').strip()
     if not nom:
@@ -516,18 +497,11 @@ def creer_role():
     if Role.query.filter_by(nom=nom).first():
         flash(f'Un rôle nommé "{nom}" existe déjà.', 'danger')
         return redirect(url_for('admin.roles'))
-    niveau = parse_int(request.form.get('niveau', 0), None, 0, 100)
-    if niveau is None:
-        flash('Le niveau doit être un entier entre 0 et 100.', 'danger')
-        return redirect(url_for('admin.roles'))
-    if niveau > role_level(current_user):
-        flash("Vous ne pouvez pas créer un rôle de niveau supérieur au vôtre.", 'danger')
-        return redirect(url_for('admin.roles'))
     role = Role(
         nom=nom,
         description=request.form.get('description', '').strip(),
         couleur=safe_color(request.form.get('couleur', ''), '#3B82F6'),
-        niveau=niveau,
+        niveau=0,
         systeme=False,
         actif=True,
     )
@@ -539,22 +513,15 @@ def creer_role():
 
 @admin_bp.route('/roles/<role_id>/modifier', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('admin_roles.modifier')
 def modifier_role(role_id):
     role = Role.query.get_or_404(role_id)
     if role.systeme:
         flash('Les rôles système ne peuvent pas être modifiés.', 'warning')
         return redirect(url_for('admin.roles'))
-    if (role.niveau or 0) > role_level(current_user):
-        flash("Vous ne pouvez pas modifier un rôle de niveau supérieur au vôtre.", 'danger')
-        return redirect(url_for('admin.roles'))
     nom = request.form.get('nom', role.nom).strip()
-    niveau = parse_int(request.form.get('niveau', role.niveau), None, 0, 100)
-    if not nom or len(nom) > 100 or niveau is None:
-        flash('Nom ou niveau invalide (niveau : entier entre 0 et 100).', 'danger')
-        return redirect(url_for('admin.roles'))
-    if niveau > role_level(current_user):
-        flash("Vous ne pouvez pas attribuer un niveau supérieur au vôtre.", 'danger')
+    if not nom or len(nom) > 100:
+        flash('Nom invalide (100 caractères maximum).', 'danger')
         return redirect(url_for('admin.roles'))
     other = Role.query.filter(Role.nom == nom, Role.id != role.id).first()
     if other:
@@ -563,7 +530,6 @@ def modifier_role(role_id):
     role.nom = nom
     role.description = request.form.get('description', '').strip()
     role.couleur = safe_color(request.form.get('couleur', ''), role.couleur)
-    role.niveau = niveau
     db.session.commit()
     flash(f'Rôle "{role.nom}" mis à jour.', 'success')
     return redirect(url_for('admin.roles'))
@@ -571,7 +537,7 @@ def modifier_role(role_id):
 
 @admin_bp.route('/roles/<role_id>/supprimer', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('admin_roles.modifier')
 def supprimer_role(role_id):
     role = Role.query.get_or_404(role_id)
     if role.systeme:
@@ -591,7 +557,7 @@ def supprimer_role(role_id):
 
 @admin_bp.route('/roles/<role_id>/toggle-actif', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('admin_roles.modifier')
 def toggle_role_actif(role_id):
     role = Role.query.get_or_404(role_id)
     if role.systeme:
@@ -607,17 +573,8 @@ def toggle_role_actif(role_id):
 
 # ─── Catégories de tickets ─────────────────────────────────────────────────
 # Accès : permission « admin.categories » (attribuable à n'importe quel rôle depuis Rôles & permissions),
-# le Super Administrateur l'a implicitement.
-def categories_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated:
-            return redirect(url_for('auth.connexion'))
-        if not (current_user.has_permission('admin.categories') or role_level(current_user) >= 90):
-            flash("Vous n'avez pas la permission de gérer les catégories.", 'danger')
-            return redirect(url_for('tickets.tableau_bord'))
-        return f(*args, **kwargs)
-    return decorated_function
+# (aucun droit implicite : le rôle Super Administrateur la reçoit comme les autres, par case cochée).
+categories_required = permission_required('admin.categories', message="Vous n'avez pas la permission de gérer les catégories.")
 
 
 def _categorie_fields():
@@ -775,7 +732,7 @@ def parametres_systeme():
 
     if not current_user.has_permission('admin_parametres.voir'):
         flash("Accès non autorisé.", "danger")
-        return redirect(url_for('tickets.tableau_bord'))
+        return redirect(url_for(home_endpoint(current_user)))
 
     dotenv_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '.env')
 
@@ -933,7 +890,7 @@ def logs():
     """Journal des erreurs, jour par jour (aujourd'hui par défaut)"""
     if not current_user.has_permission('admin_logs.voir'):
         flash("Accès non autorisé.", "danger")
-        return redirect(url_for('tickets.tableau_bord'))
+        return redirect(url_for(home_endpoint(current_user)))
 
     log_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'logs')
     aujourdhui = datetime.now().strftime('%Y-%m-%d')
@@ -1001,7 +958,7 @@ def api_plan_action_tasks():
 
 
 def _plan_action_edit_allowed():
-    return current_user.has_permission('admin_plan_action.modifier') or role_level(current_user) >= 90
+    return current_user.has_permission('admin_plan_action.modifier')
 
 
 def _read_plan_action_form():

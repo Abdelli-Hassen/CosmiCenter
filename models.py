@@ -8,8 +8,19 @@ from utils.crypto import EncryptedString
 
 db = SQLAlchemy()
 
+# Association utilisateur <-> points de vente supplémentaires (créée par db.create_all())
+utilisateur_pdvs = db.Table(
+    'utilisateur_pdvs',
+    db.Column('utilisateur_id', db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('pdv_id', db.String(36), db.ForeignKey('points_de_vente.id', ondelete='CASCADE'), primary_key=True),
+)
+
 def generate_uuid():
     return str(uuid.uuid4())
+
+
+# Nom du rôle racine : lui seul peut être attribué (ou modifié) par un Super Administrateur.
+SUPER_ADMIN_ROLE = 'Super Administrateur'
 
 
 # Table d'association pour les rôles et permissions
@@ -53,20 +64,22 @@ class Role(db.Model):
     nom = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.Text)
     couleur = db.Column(db.String(20), default='#3B82F6')  # Couleur pour l'UI
-    niveau = db.Column(db.Integer, default=0)  # Hiérarchie des rôles
+    niveau = db.Column(db.Integer, default=0)  # Hérité : plus utilisé (seules les permissions décident)
     systeme = db.Column(db.Boolean, default=False)  # Rôle système non modifiable
     actif = db.Column(db.Boolean, default=True)
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relations
-    permissions = db.relationship('Permission', secondary=roles_permissions, 
+    permissions = db.relationship('Permission', secondary=roles_permissions,
                                  backref=db.backref('roles', lazy='dynamic'))
 
+    @property
+    def est_super_admin(self):
+        """Le rôle « Super Administrateur » : seul lui peut s'attribuer ou toucher ses comptes."""
+        return self.nom == SUPER_ADMIN_ROLE
+
     def has_permission(self, permission_code):
-        """Vérifie si le rôle a une permission spécifique"""
-        # Le super administrateur (niveau 100) a toutes les permissions implicitement
-        if self.niveau >= 100:
-            return True
+        """Vérifie si le rôle a une permission spécifique (aucun droit implicite : tout se règle dans « Rôles »)."""
         return any(p.code == permission_code for p in self.permissions)
 
     def __repr__(self):
@@ -120,7 +133,10 @@ class Utilisateur(UserMixin, db.Model):
     role = db.relationship('Role', backref='utilisateurs')
     departement = db.relationship('Departement', foreign_keys=[departement_id], backref='membres')
     pdv = db.relationship('PointDeVente', foreign_keys=[pdv_id], backref='employes')
-    entreprise = db.relationship('Entreprise', foreign_keys=[entreprise_id], backref=db.backref('employes', lazy='dynamic'))
+    # PDV supplémentaires (un responsable peut gérer plusieurs points de vente ; `pdv` reste le principal)
+    pdvs_supplementaires = db.relationship('PointDeVente', secondary=utilisateur_pdvs,
+                                           backref=db.backref('employes_multi', lazy='select'))
+    entreprise =db.relationship('Entreprise', foreign_keys=[entreprise_id], backref=db.backref('employes', lazy='dynamic'))
     tickets_crees = db.relationship('Ticket', foreign_keys='Ticket.createur_id', backref='createur')
     tickets_assignes = db.relationship('Ticket', foreign_keys='Ticket.assigne_a_id', backref='assigne_a')
     commentaires = db.relationship('Commentaire', backref='auteur', cascade='all, delete-orphan')
@@ -142,6 +158,22 @@ class Utilisateur(UserMixin, db.Model):
     @property
     def nom_complet(self):
         return f"{self.prenom} {self.nom}"
+
+    @property
+    def tous_pdvs(self):
+        """PDV principal en premier, puis les PDV supplémentaires (sans doublon)."""
+        liste = [self.pdv] if self.pdv else []
+        liste += [p for p in self.pdvs_supplementaires if not self.pdv or p.id != self.pdv.id]
+        return liste
+
+    def set_pdvs(self, pdv_ids):
+        """Affecte plusieurs PDV : le premier devient le principal (`pdv_id`), les autres sont supplémentaires."""
+        from models import PointDeVente
+        ids = list(dict.fromkeys(i for i in (pdv_ids or []) if i))
+        pdvs = {p.id: p for p in PointDeVente.query.filter(PointDeVente.id.in_(ids)).all()} if ids else {}
+        ids = [i for i in ids if i in pdvs]
+        self.pdv_id = ids[0] if ids else None
+        self.pdvs_supplementaires = [pdvs[i] for i in ids[1:]]
 
     def has_permission(self, permission_code):
         """Vérifie si l'utilisateur a une permission spécifique"""

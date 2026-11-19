@@ -134,7 +134,8 @@ def create_app(config_name='default'):
     @app.route('/')
     def index():
         if current_user.is_authenticated:
-            return redirect(url_for('tickets.tableau_bord'))
+            from utils.permissions import home_endpoint
+            return redirect(url_for(home_endpoint(current_user)))
         return redirect(url_for('auth.connexion'))
 
     # Favicon
@@ -187,8 +188,9 @@ def create_app(config_name='default'):
             'notifications': user_notifications
         }
 
-    from utils.permissions import ticket_is_unread
+    from utils.permissions import ticket_is_unread, can_ticket
     app.jinja_env.globals['ticket_is_unread'] = ticket_is_unread
+    app.jinja_env.globals['can_ticket'] = can_ticket
 
     # Filtres Jinja personnalisés
     @app.template_filter('datetime_format')

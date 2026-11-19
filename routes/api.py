@@ -4,7 +4,7 @@ API REST pour CosmiCenter
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 from models import db, Ticket, Utilisateur, Departement, Notification, Message
-from utils.permissions import (visible_tickets_query, can_access_ticket, can_manage_ticket, ticket_visibility_filter,
+from utils.permissions import (visible_tickets_query, can_access_ticket, can_change_status, can_ticket, ticket_visibility_filter,
                                unopened_tickets_count)
 from utils.security import like_escape
 from datetime import datetime, timedelta
@@ -138,7 +138,7 @@ def changer_statut_ticket(ticket_id):
     try:
         ticket = Ticket.query.get_or_404(ticket_id)
 
-        if not can_access_ticket(current_user, ticket) or not can_manage_ticket(current_user, ticket):
+        if not can_access_ticket(current_user, ticket):
             return json_response(success=False, message='Accès non autorisé', status=403)
 
         data = request.get_json(silent=True) or {}
@@ -146,6 +146,8 @@ def changer_statut_ticket(ticket_id):
 
         if nouveau_statut not in STATUTS_VALIDES:
             return json_response(success=False, message='Statut invalide', status=400)
+        if ticket.statut != nouveau_statut and not can_change_status(current_user, ticket, nouveau_statut):
+            return json_response(success=False, message='Accès non autorisé', status=403)
 
         if ticket.statut != nouveau_statut:
             from routes.tickets import _apply_status
@@ -170,10 +172,9 @@ def changer_statut_ticket(ticket_id):
 def assigner_ticket(ticket_id):
     """Assigner un ticket à un utilisateur"""
     try:
-        if not current_user.has_permission('tickets.assigner'):
-            return json_response(success=False, message="Accès réservé aux utilisateurs autorisés à assigner", status=403)
-
         ticket = Ticket.query.get_or_404(ticket_id)
+        if not can_ticket(current_user, 'assigner', ticket):
+            return json_response(success=False, message="Accès réservé aux utilisateurs autorisés à assigner", status=403)
         if not can_access_ticket(current_user, ticket):
             return json_response(success=False, message='Accès non autorisé', status=403)
 

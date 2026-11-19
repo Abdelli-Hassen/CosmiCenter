@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 
 from models import db, PointDeVente, Equipement, Utilisateur, Ticket
 from services import referentiels
-from utils.permissions import role_level
+from utils.permissions import home_endpoint
 from utils.security import safe_color, is_hex_color
 
 pdv_bp = Blueprint('pdv', __name__)
@@ -85,7 +85,7 @@ def _read_pdv_form(pdv=None):
 def liste():
     if not current_user.has_permission('pdv.voir'):
         flash("Accès non autorisé.", "danger")
-        return redirect(url_for('tickets.tableau_bord'))
+        return redirect(url_for(home_endpoint(current_user)))
 
     pdvs = PointDeVente.query.order_by(PointDeVente.nom).all()
     return render_template('pdv/liste.html', pdvs=pdvs, categories=_categories(pdvs),
@@ -176,6 +176,44 @@ def modifier(id):
     utilisateurs = Utilisateur.query.filter_by(actif=True).all()
     return render_template('pdv/formulaire.html', pdv=pdv, utilisateurs=utilisateurs, categories=_categories(),
                            themes=referentiels.get_themes())
+
+
+@pdv_bp.route('/<string:id>/supprimer', methods=['POST'])
+@login_required
+def supprimer(id):
+    """Supprimer un point de vente — refusé tant qu'il porte des tickets, du personnel ou du matériel."""
+    if not current_user.has_permission('pdv.supprimer'):
+        flash("Accès non autorisé.", "danger")
+        return redirect(url_for('pdv.detail', id=id))
+
+    pdv = PointDeVente.query.get_or_404(id)
+    liens = []
+    nb_tickets = Ticket.query.filter(Ticket.pdv_id == pdv.id).count()
+    nb_employes = Utilisateur.query.filter(Utilisateur.pdv_id == pdv.id).count()
+    nb_equipements = Equipement.query.filter(Equipement.pdv_id == pdv.id).count()
+    if nb_tickets:
+        liens.append(f'{nb_tickets} ticket(s)')
+    if nb_employes:
+        liens.append(f'{nb_employes} employé(s)')
+    if nb_equipements:
+        liens.append(f'{nb_equipements} équipement(s)')
+    if liens:
+        flash(f"Suppression impossible : ce point de vente a encore {', '.join(liens)}. "
+              "Retirez-les d'abord (ou désactivez le point de vente).", 'danger')
+        return redirect(url_for('pdv.detail', id=id))
+
+    nom = pdv.nom
+    try:
+        db.session.delete(pdv)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Suppression du point de vente impossible: {e}', exc_info=True)
+        flash('Erreur lors de la suppression du point de vente.', 'danger')
+        return redirect(url_for('pdv.detail', id=id))
+    logger.info(f'Point de vente supprimé par {current_user.email}')
+    flash(f'Point de vente « {nom} » supprimé.', 'success')
+    return redirect(url_for('pdv.liste'))
 
 
 @pdv_bp.route('/<string:id>/equipement/nouveau', methods=['POST'])

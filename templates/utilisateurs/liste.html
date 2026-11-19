@@ -628,7 +628,7 @@
               <polyline points="9 22 9 12 15 12 15 22"/>
             </svg>
           </span>
-          <span class="pdv-badge-text">{{ u.pdv.nom }}</span>
+          <span class="pdv-badge-text">{{ u.pdv.nom }}{% if u.pdvs_supplementaires %} +{{ u.pdvs_supplementaires|length }}{% endif %}</span>
         </a>
         {% elif u.role and ('point de vente' in u.role.nom|lower or 'pdv' in u.role.nom|lower) %}
         <span class="pdv-cell-badge unassigned" title="Personnel Point de vente">

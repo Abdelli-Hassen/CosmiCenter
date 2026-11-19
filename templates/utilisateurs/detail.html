@@ -1042,12 +1042,12 @@
             {% endif %}
 
             <!-- Point de Vente Badge -->
-            {% if utilisateur.pdv %}
+            {% for p in utilisateur.tous_pdvs %}
             <span class="user-pill user-pill-pdv">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              {{ utilisateur.pdv.nom }}
+              {{ p.nom }}
             </span>
-            {% endif %}
+            {% endfor %}
 
             <!-- Status Pill -->
             {% if utilisateur.actif %}
@@ -1106,6 +1106,18 @@
           {% endif %}
         </button>
         {% endif %}
+        {% endif %}
+
+        {% if current_user.has_permission('utilisateurs.supprimer') and current_user.id != utilisateur.id %}
+        <!-- Supprimer (refusé avec le détail si le compte a des données liées : on propose alors de le désactiver) -->
+        <form action="{{ url_for('utilisateurs.supprimer', id=utilisateur.id) }}" method="POST" style="display:contents;">
+          <button type="submit" class="btn-action-danger" title="Supprimer définitivement ce compte"
+            data-confirm="Supprimer définitivement « {{ utilisateur.prenom }} {{ utilisateur.nom }} » ? Cette action est irréversible. Si le compte a des tickets, commentaires ou un historique, la suppression sera refusée : désactivez-le plutôt."
+            data-confirm-ok="Supprimer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Supprimer
+          </button>
+        </form>
         {% endif %}
       </div>
 
@@ -1322,10 +1334,12 @@
             <span class="user-prop-label">Point de vente</span>
           </div>
           <div class="user-prop-val">
-            {% if utilisateur.pdv %}
-              <span class="user-pill user-pill-pdv" style="font-size:12px; padding:3px 9px;">
-                {{ utilisateur.pdv.nom }} ({{ utilisateur.pdv.ville or 'PDV' }})
+            {% if utilisateur.tous_pdvs %}
+              {% for p in utilisateur.tous_pdvs %}
+              <span class="user-pill user-pill-pdv" style="font-size:12px; padding:3px 9px; margin:0 4px 4px 0;">
+                {{ p.nom }} ({{ p.ville or 'PDV' }})
               </span>
+              {% endfor %}
             {% else %}
               <span style="color:var(--text-muted); font-weight:500;">Siège / Direction centrale</span>
             {% endif %}

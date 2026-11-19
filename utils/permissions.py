@@ -1,24 +1,32 @@
-"""Règles d'accès communes (visibilité des tickets, niveaux de rôle)."""
+"""Règles d'accès communes (visibilité des tickets, protection du Super Administrateur).
+
+Il n'y a plus de niveaux : seules les permissions cochées dans « Rôles » décident de ce qu'un rôle peut faire.
+Seule exception : le rôle « Super Administrateur » ne peut être attribué (ni ses comptes modifiés) que par un
+Super Administrateur."""
 from sqlalchemy import false, or_
 
 from models import db, Departement, HistoriqueTicket, Message, Ticket, Utilisateur
 
 
-def role_level(user):
-    if user is None or not getattr(user, 'role', None) or user.role.niveau is None:
-        return 0
-    return user.role.niveau
-
-
-def is_admin(user):
-    return role_level(user) >= 90
+def is_super_admin(user):
+    """Vrai si l'utilisateur porte le rôle Super Administrateur."""
+    role = getattr(user, 'role', None)
+    return bool(role and role.est_super_admin)
 
 
 def can_assign_role(actor, role):
-    """Un utilisateur ne peut attribuer qu'un rôle de niveau inférieur ou égal au sien."""
+    """Le rôle Super Administrateur ne peut être attribué que par un Super Administrateur ; les autres, librement."""
     if role is None:
         return True
-    return (role.niveau or 0) <= role_level(actor)
+    return (not role.est_super_admin) or is_super_admin(actor)
+
+
+def can_act_on_user(actor, target):
+    """Un compte Super Administrateur ne peut être modifié, désactivé ou supprimé que par un Super Administrateur
+    (ou par lui-même pour ce qui le concerne)."""
+    if target is None or actor.id == target.id:
+        return True
+    return (not is_super_admin(target)) or is_super_admin(actor)
 
 
 def ticket_visibility_filter(user):
@@ -73,6 +81,11 @@ def unread_messages_count(user):
 def can_access_ticket(user, ticket):
     if user.has_permission('tickets.voir_tous'):
         return True
+    return ticket_in_my_scope(user, ticket)
+
+
+def ticket_in_my_scope(user, ticket):
+    """Ticket « à moi » : créé par moi, assigné à moi, ou de mon département / en collaboration avec moi."""
     if ticket.createur_id == user.id or ticket.assigne_a_id == user.id:
         return True
     if user.departement_id:
@@ -83,8 +96,68 @@ def can_access_ticket(user, ticket):
     return any(c.id == user.id for c in ticket.collaborateurs)
 
 
-def can_manage_ticket(user, ticket):
-    """Changer statut / fermer : accès au ticket + (créateur, assigné, admin ou permission dédiée)."""
-    if role_level(user) >= 70 or user.has_permission('tickets.modifier') or user.has_permission('tickets.cloturer'):
+def can_ticket(user, action, ticket=None):
+    """Droit d'agir sur les tickets, séparé en deux portées :
+    `tickets.<action>` = tous les tickets ; `tickets.<action>_mes` = uniquement mes tickets.
+    Sans `ticket`, indique si l'utilisateur détient l'un des deux droits (affichage des boutons)."""
+    if user.has_permission(f'tickets.{action}'):
         return True
-    return ticket.createur_id == user.id or ticket.assigne_a_id == user.id
+    if not user.has_permission(f'tickets.{action}_mes'):
+        return False
+    return ticket is None or ticket_in_my_scope(user, ticket)
+
+
+CLOSED_STATUSES = ('resolu', 'ferme')
+
+
+def can_change_status(user, ticket, target):
+    """Changer le statut d'un ticket : accès au ticket + permission dédiée, sans exception créateur / assigné.
+    Résoudre, fermer ou rouvrir = `tickets.cloturer(_mes)` ; tout autre changement = `tickets.modifier(_mes)`."""
+    if not can_access_ticket(user, ticket):
+        return False
+    if target in CLOSED_STATUSES or ticket.statut in CLOSED_STATUSES:
+        return can_ticket(user, 'cloturer', ticket)
+    return can_ticket(user, 'modifier', ticket)
+
+
+def can_work_on_ticket(user, ticket):
+    """Droit « technique » sur un ticket (notes internes) : modifier ou clôturer, sur tous ou sur les miens."""
+    return can_ticket(user, 'modifier', ticket) or can_ticket(user, 'cloturer', ticket)
+
+
+# ───────────────────────── Garde d'accès par permission ─────────────────────────
+def home_endpoint(user):
+    """Page d'accueil sûre pour `user` : le tableau de bord s'il y a droit, sinon son profil (jamais de boucle)."""
+    if user.is_authenticated and user.has_permission('dashboard.voir'):
+        return 'tickets.tableau_bord'
+    return 'parametres.profil'
+
+
+def deny_access(message="Accès non autorisé."):
+    """Refus uniforme : 403 JSON pour les appels d'API, sinon message + retour à une page autorisée."""
+    from flask import flash, jsonify, redirect, request, url_for
+    from flask_login import current_user
+    wants_json = request.is_json or request.path.startswith(('/api/', '/chat/api/')) \
+        or request.accept_mimetypes.best == 'application/json'
+    if wants_json:
+        return jsonify({'success': False, 'error': message, 'message': message}), 403
+    flash(message, 'danger')
+    return redirect(url_for(home_endpoint(current_user)))
+
+
+def permission_required(*codes, message="Accès non autorisé."):
+    """Décorateur : exige l'une des permissions `codes` (aucun passe-droit lié à un niveau)."""
+    from functools import wraps
+    from flask import redirect, url_for
+    from flask_login import current_user
+
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return redirect(url_for('auth.connexion'))
+            if not any(current_user.has_permission(c) for c in codes):
+                return deny_access(message)
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator

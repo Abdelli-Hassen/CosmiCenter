@@ -379,11 +379,23 @@
   // ─── Initialise on DOM ready ───────────────────────────────────────────────
 
   function startPollingNotifications() {
-    setInterval(function () {
-      fetch('/api/notifications/poll')
-        .then(res => res.json())
+    // Pas de session (page de connexion...) : rien à interroger, le serveur répondrait par une redirection.
+    if (!(window.CHUB_CONFIG && window.CHUB_CONFIG.isAuthenticated)) return;
+
+    var pollTimer = setInterval(function () {
+      if (document.hidden) return; // onglet en arrière-plan : on économise les requêtes
+      fetch('/api/notifications/poll', { headers: { 'Accept': 'application/json' } })
+        .then(res => {
+          // Session expirée : le serveur redirige vers la page de connexion (HTML, pas du JSON) -> on arrête d'interroger.
+          const isJson = (res.headers.get('content-type') || '').indexOf('application/json') !== -1;
+          if (res.redirected || !res.ok || !isJson) {
+            clearInterval(pollTimer);
+            return null;
+          }
+          return res.json();
+        })
         .then(data => {
-          if (data.success && data.data) {
+          if (data && data.success && data.data) {
             const notifs = data.data.unread_notifications;
             const msgs = data.data.unread_messages;
 

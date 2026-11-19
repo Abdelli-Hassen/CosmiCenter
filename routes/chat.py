@@ -9,6 +9,7 @@ from flask import Blueprint, render_template, request, jsonify, url_for, send_fi
 from flask_login import login_required, current_user
 from models import db, Message, Utilisateur, Notification
 from sqlalchemy import or_, and_, func
+from utils.permissions import permission_required
 from utils.security import like_escape
 from datetime import datetime, timedelta
 
@@ -27,18 +28,7 @@ def chat_files_dir():
     return path
 
 
-def chat_permission_required(f):
-    """La messagerie est réservée aux rôles disposant de la permission messagerie.voir."""
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if not current_user.has_permission('messagerie.voir'):
-            if request.path.startswith('/chat/api/'):
-                return jsonify({'error': 'Accès non autorisé'}), 403
-            from flask import flash, redirect
-            flash('Accès non autorisé.', 'danger')
-            return redirect(url_for('tickets.tableau_bord'))
-        return f(*args, **kwargs)
-    return decorated
+chat_permission_required = permission_required('messagerie.voir')
 
 
 def _initials(user):

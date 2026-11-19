@@ -851,16 +851,30 @@ dialog::backdrop {
       </a>
       {% endif %}
 
+      {% if current_user.has_permission('pdv.supprimer') %}
+      <form action="{{ url_for('pdv.supprimer', id=pdv.id) }}" method="POST" style="margin:0;">
+        <button type="submit" class="btn btn-secondary" style="display:flex; align-items:center; gap:6px; color:#ef4444;"
+          title="Supprimer ce point de vente"
+          data-confirm="Supprimer définitivement « {{ pdv.nom }} » ? Cette action est irréversible. La suppression est refusée tant qu'il reste des tickets, des employés ou des équipements."
+          data-confirm-ok="Supprimer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Supprimer
+        </button>
+      </form>
+      {% endif %}
+
+      {% if current_user.has_permission('tickets.creer') %}
       <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary" style="display:flex; align-items:center; gap:6px;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Nouveau ticket
       </a>
+      {% endif %}
     </div>
   </div>
 
   <!-- ==================== RESPONSABLE & COORDONNÉES PDV ==================== -->
   {% set actual_staff = [] %}
-  {% for emp in pdv.employes %}
+  {% for emp in (pdv.employes + pdv.employes_multi)|unique(attribute='id') %}
     {% set is_mgr = (pdv.responsable and emp.id == pdv.responsable.id) %}
     {% set is_store_acc = (emp.prenom == 'Store Account' or emp.nom_complet.startswith('Store Account') or 'Store Account' in emp.nom_complet) %}
     {% if not is_mgr and not is_store_acc %}
@@ -1414,10 +1428,10 @@ dialog::backdrop {
           {{ pdv.tickets_associes|length }} tickets
         </span>
       </h2>
-      <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
+      {% if current_user.has_permission('tickets.creer') %}<a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Nouveau ticket
-      </a>
+      </a>{% endif %}
     </div>
 
     {% if pdv.tickets_associes %}
@@ -1646,10 +1660,10 @@ dialog::backdrop {
         </div>
         <div style="font-size:15px; font-weight:700; color:var(--text-primary);">Aucun ticket soumis par ce PDV</div>
         <div style="font-size:13px; color:var(--text-muted); max-width:400px;">Ce point de vente n'a encore enregistré aucun ticket d'incident ou de demande de support.</div>
-        <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary" style="margin-top:8px; display:inline-flex; align-items:center; gap:6px;">
+        {% if current_user.has_permission('tickets.creer') %}<a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary" style="margin-top:8px; display:inline-flex; align-items:center; gap:6px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Créer le premier ticket
-        </a>
+        </a>{% endif %}
       </div>
       {% endif %}
     </div>

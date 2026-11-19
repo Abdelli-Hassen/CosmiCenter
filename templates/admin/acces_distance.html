@@ -425,7 +425,7 @@
           </button>
         </div>
         {% endif %}
-        {% if current_user.role and current_user.role.niveau >= 90 %}
+        {% if current_user.has_permission('utilisateurs.modifier') %}
         <a href="{{ url_for('admin.modifier_utilisateur', user_id=user.id) }}" class="btn-action btn-copy" title="Modifier l'utilisateur">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
         </a>
@@ -675,7 +675,7 @@ function openUserModal(raw) {
       </div>
     </div>
     
-    {% if current_user.role and current_user.role.niveau >= 90 %}
+    {% if current_user.has_permission('utilisateurs.modifier') %}
     <div style="margin-top: 32px; display: flex; justify-content: stretch;">
       <a href="${esc(user.editUrl)}" class="btn-action primary" style="flex: 1; justify-content: center; padding: 12px; font-weight: 600; border-radius: 12px; text-decoration: none; display: flex; gap: 8px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>

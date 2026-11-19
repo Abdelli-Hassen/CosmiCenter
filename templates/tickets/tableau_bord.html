@@ -277,7 +277,7 @@
         </div>
         <h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0 0 8px 0;">Aucun ticket pour l'instant</h3>
         <p style="font-size: 14px; color: var(--text-secondary); margin: 0 auto 24px;">Créez votre premier ticket pour commencer.</p>
-        <a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm" style="padding: 8px 16px; border-radius: 8px; font-weight: 500;">Nouveau Ticket</a>
+        {% if current_user.has_permission('tickets.creer') %}<a href="{{ url_for('tickets.nouveau') }}" class="btn btn-primary btn-sm" style="padding: 8px 16px; border-radius: 8px; font-weight: 500;">Nouveau Ticket</a>{% endif %}
       </div>
       {% endif %}
     </div>

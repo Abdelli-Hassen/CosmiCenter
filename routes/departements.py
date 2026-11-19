@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import logging
 import re
 
-from utils.permissions import role_level
+from utils.permissions import permission_required, home_endpoint
 from utils.security import safe_color, parse_int
 from utils.uploads import save_upload, remove_upload, UploadError, IMAGE_EXTENSIONS, MAX_IMAGE_BYTES
 
@@ -19,30 +19,11 @@ STATUTS_NON_TERMINES = ['nouveau', 'ouvert', 'en_cours', 'en_attente']
 
 
 def require_permission(permission_code):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not current_user.is_authenticated or not current_user.has_permission(permission_code):
-                flash('Accès non autorisé.', 'danger')
-                return redirect(url_for('tickets.tableau_bord'))
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
+    return permission_required(permission_code)
+
 
 def any_permission(*permission_codes):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not current_user.is_authenticated:
-                flash('Accès non autorisé.', 'danger')
-                return redirect(url_for('tickets.tableau_bord'))
-            has_perm = any(current_user.has_permission(code) for code in permission_codes)
-            if not has_perm:
-                flash('Accès non autorisé.', 'danger')
-                return redirect(url_for('tickets.tableau_bord'))
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
+    return permission_required(*permission_codes)
 
 
 def _can_edit_department(departement):
@@ -126,6 +107,7 @@ def _active_users_sorted():
 
 @departements_bp.route('/')
 @login_required
+@permission_required('departements.voir')
 def liste():
     """Liste tous les départements"""
     page = request.args.get('page', 1, type=int)
@@ -215,6 +197,7 @@ def nouveau():
 
 @departements_bp.route('/<string:id>')
 @login_required
+@permission_required('departements.voir')
 def detail(id):
     """Afficher les détails d'un département"""
     departement = Departement.query.get_or_404(id)

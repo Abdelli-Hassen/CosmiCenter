@@ -4,7 +4,7 @@
 
 **CosmiCenter** est la plateforme interne de tickets et d'incidents de **Cosmitto Coffee**, réseau multi-points de vente (PDV) de cafés. Elle centralise les incidents, demandes, besoins, plaintes et tâches des points de vente vers les équipes centrales (Support IT, Maintenance, Stock, Qualité, RH, Finances, SI), avec priorisation, suivi des délais (SLA) et historique complet. L'interface est en français et s'utilise aussi bien sur ordinateur que sur téléphone ou tablette.
 
-**Version actuelle : 2.7.4** (voir [CHANGELOG.md](CHANGELOG.md)).
+**Version actuelle : 2.7.5** (voir [CHANGELOG.md](CHANGELOG.md)).
 
 ## Sommaire
 
@@ -103,7 +103,7 @@ Le fichier **[`cosmicenter.example.sql`](cosmicenter.example.sql)** joue le mêm
 | 1 | Les **26 tables**, clés étrangères, contraintes d'unicité et index |
 | 2 | La séquence `ticket_numero_seq` (numéros de ticket atomiques) |
 | 3 | Les « policies » de l'application : **62 permissions**, les **6 rôles standard** (Super Administrateur, Directrice Réseau, Responsable Département, Agent, Responsable Point de Vente, Personnel Point de Vente) et leurs **159 droits**, plus les réglages par défaut (catégories et thèmes des PDV) |
-| 3b | Des **données d'exemple** fictives, pour voir toutes les pages remplies : 1 entreprise, 7 départements, 4 points de vente (dont 4 équipements), 17 catégories de tickets, **13 utilisateurs** (au moins 1 par rôle), **12 tickets** couvrant tous les statuts (nouveau, en cours, en attente, résolu, fermé, annulé), tous les types et toutes les priorités, avec 6 sous-tâches, 9 commentaires, historique, évaluations de satisfaction et une collaboration multi-agents ; 3 notifications, 3 messages, 3 idées (bug, amélioration, fonctionnalité), 3 tâches du plan d'action, 3 modèles de réponse, 4 catégories et 5 articles de base de connaissances |
+| 3b | Des **données d'exemple** fictives, pour voir toutes les pages remplies : 1 entreprise, 7 départements, 4 points de vente (dont 4 équipements), 17 catégories de tickets, **13 utilisateurs** (au moins 1 par rôle), **aucun ticket ni message** (départ à zéro, premier ticket n°1) ; 3 idées (bug, amélioration, fonctionnalité), 3 tâches du plan d'action, 3 modèles de réponse, 4 catégories et 5 articles de base de connaissances |
 | 4 | Les droits PostgreSQL du rôle applicatif |
 
 ```bash
@@ -258,26 +258,24 @@ python3 -c "import secrets; print(secrets.token_hex(32))"      # ou : openssl ra
 ### API JSON
 12 endpoints sous `/api` : statistiques (globales, par jour, par département, par priorité), changement de statut, assignation, recherche d'utilisateurs, notifications (interrogation, marquage lu), santé (`/api/health`). Voir `FONCTIONNALITES.md`.
 
-Au total : **13 modules (blueprints)** et **131 routes**.
+Au total : **13 modules (blueprints)** et **135 routes**.
 
 ---
 
 ## Rôles et permissions
 
-Le niveau d'un rôle sert de repère hiérarchique ; **le niveau 100 a toutes les permissions implicitement**, les autres rôles ne peuvent faire que ce qui est coché dans *Administration → Rôles*.
+**Il n'y a plus de niveaux : seules les permissions cochées dans *Administration → Rôles* décident de ce qu'un rôle peut faire.** Aucun rôle n'a de droit implicite — pas même le Super Administrateur, dont les cases sont cochées comme celles des autres (toute nouvelle permission lui est donnée à sa création).
 
-| Rôle | Niveau |
+| Rôle (exemples) | Remarque |
 |---|---|
-| Super Administrateur | 100 |
-| Directrice Réseau | 85 |
-| Responsable Département | 60 |
-| Agent Support (« Agent ») | 50 |
-| Responsable Point de Vente | 30 |
-| Personnel Point de Vente | 10 |
+| Super Administrateur | Rôle système. Seul un Super Administrateur peut attribuer ce rôle ou modifier / désactiver / supprimer un compte qui le porte. Il ne peut pas perdre `admin_roles.voir` / `admin_roles.modifier` (anti-verrouillage). |
+| Directrice Réseau, Responsable Département, Agent, Responsable Point de Vente, Personnel Point de Vente… | Ce que permettent leurs cases, ni plus ni moins. |
 
-- **62 permissions** en 4 catégories : Espace de travail, Opérations, Intelligence, Administration. Chaque page a toutes ses cases (voir, créer, modifier, supprimer, exporter…), rangées sous la case « voir » de la page.
-- Les actions sont vérifiées **côté serveur** et masquées dans l'interface quand le rôle n'a pas la case. Des rôles personnalisés peuvent être créés, modifiés, désactivés et supprimés ; la création et la modification de rôles et d'utilisateurs est limitée au niveau de l'acteur (pas d'escalade de droits).
-- Une permission ajoutée dans une nouvelle version reçoit, à sa création, les droits d'origine des rôles qui pouvaient déjà faire l'action : aucune perte d'accès.
+- **67 permissions** en 4 catégories : Espace de travail, Opérations, Intelligence, Administration. Chaque page a toutes ses cases (voir, créer, modifier, supprimer, exporter…), rangées sous la case « voir » de la page.
+- Chaque case est vérifiée **côté serveur** (pas seulement masquée dans le menu) : `dashboard.voir`, `tickets.voir_mes` / `voir_tous`, `tickets.creer`, `departements.voir`, `utilisateurs.voir` (+ `voir_tous` pour les profils d'autres départements), `entreprises.voir`, `admin_dashboard.voir`, `admin_roles.voir` / `modifier`… Un refus ramène à une page autorisée (le tableau de bord, sinon son profil).
+- Tickets : modifier les détails = `tickets.modifier(_mes)` ; **clôturer / résoudre / rouvrir = `tickets.cloturer(_mes)`** ; tout autre changement de statut = `tickets.modifier(_mes)` ; **supprimer = `tickets.supprimer(_mes)`** (commentaires, historique et pièces jointes supprimés avec le ticket). Plus d'exception « créateur / assigné ».
+- Suppressions : **utilisateur** (`utilisateurs.supprimer`, refusée avec le détail s'il a des tickets, commentaires, historique…, on le désactive alors) et **point de vente** (`pdv.supprimer`, refusée tant qu'il a des tickets, des employés ou des équipements).
+- Des rôles personnalisés peuvent être créés, modifiés, désactivés et supprimés (`admin_roles.modifier`).
 - Visibilité des tickets : selon le département, la collaboration et le rôle (`utils/permissions.py`) ; la liste, la fiche et les actions appliquent les mêmes règles.
 
 ---
@@ -310,7 +308,7 @@ CosmiCenter/
 ├── requirements.txt        # Dépendances Python
 ├── .env.example            # Modèle de configuration (copier en .env)
 ├── cosmicenter.example.sql # Exemple de base : structure, rôles et données fictives
-├── routes/                 # 13 blueprints, 131 routes
+├── routes/                 # 13 blueprints, 135 routes
 │   ├── auth, tickets, utilisateurs, departements, companies, pdv
 │   ├── rapports, parametres, admin, api
 │   └── chat, suggestions, base_connaissance

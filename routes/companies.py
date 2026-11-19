@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from models import db, Entreprise, Utilisateur, Ticket
 from datetime import datetime
+from utils.permissions import home_endpoint
 from utils.security import safe_color
 
 companies_bp = Blueprint('companies', __name__)
@@ -16,6 +17,11 @@ def _code_conflict(code, exclude_id=None):
     existing = Entreprise.query.filter_by(code=code).first()
     return bool(existing and existing.id != exclude_id)
 
+def can_view_companies():
+    """Voir les entreprises : entreprises.voir, ou pdv.voir / utilisateurs.voir (qui y mènent)."""
+    return any(current_user.has_permission(c) for c in ('entreprises.voir', 'pdv.voir', 'utilisateurs.voir'))
+
+
 def can_manage_companies():
     """Vrai si l'utilisateur a au moins un droit de gestion sur les entreprises (affiche les outils de gestion)."""
     if not current_user.is_authenticated:
@@ -23,20 +29,15 @@ def can_manage_companies():
     return any(current_user.has_permission(c) for c in (
         'entreprises.creer', 'entreprises.modifier', 'entreprises.supprimer',
         'entreprises.archiver', 'entreprises.gerer_collaborateurs'))
-    if current_user.has_permission('entreprises.modifier') or current_user.has_permission('entreprises.creer') or current_user.has_permission('admin_dashboard.voir'):
-        return True
-    if current_user.role and current_user.role.niveau >= 60:
-        return True
-    return False
 
 
 @companies_bp.route('/')
 @login_required
 def liste():
     """List all companies and external entities with filtering, archiving and search"""
-    if not current_user.has_permission('entreprises.voir') and not current_user.has_permission('pdv.voir') and not current_user.has_permission('utilisateurs.voir'):
+    if not can_view_companies():
         flash("Accès non autorisé.", "danger")
-        return redirect(url_for('tickets.tableau_bord'))
+        return redirect(url_for(home_endpoint(current_user)))
 
     type_filter = request.args.get('type', 'all')
     status_filter = request.args.get('statut', 'all')  # 'all', 'actif', 'archive'
@@ -161,6 +162,9 @@ def nouvelle():
 @login_required
 def detail(id):
     """View company details and its associated staff"""
+    if not can_view_companies():
+        flash("Accès non autorisé.", "danger")
+        return redirect(url_for(home_endpoint(current_user)))
     ent = Entreprise.query.get_or_404(id)
     employes = sorted(ent.employes.all(), key=lambda u: (u.nom_complet or '').strip().upper())
     all_users = sorted(Utilisateur.query.filter_by(actif=True).all(), key=lambda u: (u.nom_complet or '').strip().upper())
@@ -172,6 +176,8 @@ def detail(id):
 @login_required
 def get_json(id):
     """Get company details as JSON for interactive modals"""
+    if not can_view_companies():
+        return jsonify({'error': 'Accès non autorisé.'}), 403
     ent = Entreprise.query.get_or_404(id)
     return jsonify({
         'id': ent.id,

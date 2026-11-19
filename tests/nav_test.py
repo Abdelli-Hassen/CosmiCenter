@@ -58,7 +58,7 @@ try:
     check("bulk assignment applied to the 2 selected tickets", r.status_code == 200 and asg[:2] == [usrid] * 2 and asg[2] is None, r.get_json())
     r = ca.post("/tickets/bulk", json={"ids": ticket_ids, "action": "statut", "value": "hacked"}, headers={"X-CSRFToken": ca.tok("/tickets/liste")})
     check("bulk with an invalid status refused (400)", r.status_code == 400)
-    r = cu.post("/tickets/bulk", json={"ids": ticket_ids, "action": "assigner", "value": admid}, headers={"X-CSRFToken": cu.tok("/tickets/liste")})
+    r = cu.post("/tickets/bulk", json={"ids": ticket_ids, "action": "assigner", "value": admid}, headers={"X-CSRFToken": cu.tok("/parametres/profil")})
     check("bulk assign refused without the tickets.assigner permission (403)", r.status_code == 403, r.status_code)
     r = ca.post("/tickets/bulk", json={"ids": "x"}, headers={"X-CSRFToken": ca.tok("/tickets/liste")})
     check("bulk with a malformed payload refused (400)", r.status_code == 400)
