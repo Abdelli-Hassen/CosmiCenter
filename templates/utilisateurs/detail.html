@@ -91,7 +91,7 @@
 
 /* ── Hero Profile Card ─────────────────────────────────────── */
 .user-hero-card {
-  --hero-accent: {{ utilisateur.role.couleur if utilisateur.role and utilisateur.role.couleur else 'var(--brand)' }};
+  --hero-accent: {{ utilisateur.couleur_affichage }};  /* même couleur que l'avatar de la liste */
   position: relative;
   background: var(--surface-1);
   border: 1px solid var(--border-subtle);
@@ -108,12 +108,8 @@
 
 .user-hero-banner {
   height: 96px;
-  /* Une seule teinte (celle du rôle) pour la bannière ET l'avatar : plus de mélange vert/rouge qui ternit */
-  background: linear-gradient(135deg,
-    color-mix(in srgb, var(--hero-accent) 24%, var(--surface-1)) 0%,
-    color-mix(in srgb, var(--hero-accent) 10%, var(--surface-1)) 65%,
-    var(--surface-1) 100%
-  );
+  /* Aplat (pas de dégradé) : la couleur de la personne, éclaircie */
+  background: color-mix(in srgb, var(--hero-accent) 16%, var(--surface-1));
   border-bottom: 1px solid var(--border-subtle);
   position: relative;
   overflow: hidden;
@@ -170,7 +166,7 @@
   font-size: 28px;
   font-weight: 800;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--hero-accent), color-mix(in srgb, var(--hero-accent) 72%, #000));
+  background: var(--hero-accent);
   user-select: none;
   position: relative;
   cursor: pointer;

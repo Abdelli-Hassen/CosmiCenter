@@ -152,6 +152,16 @@ class Utilisateur(UserMixin, db.Model):
         return f"{self.prenom} {self.nom}"
 
     @property
+    def couleur_affichage(self):
+        """Couleur unique de la personne (avatar + bannière), la même dans la liste et le profil :
+        couleur du département, sinon du PDV principal, sinon vert par défaut."""
+        if self.departement and self.departement.couleur:
+            return self.departement.couleur
+        if self.pdv and self.pdv.couleur:
+            return self.pdv.couleur
+        return '#10B981'
+
+    @property
     def pdvs_supplementaires(self):
         """PDV supplémentaires (hors principal), d'après la colonne `pdv_extra_ids`."""
         ids = [i for i in (self.pdv_extra_ids or '').split(',') if i and i != self.pdv_id]

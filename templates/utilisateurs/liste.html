@@ -560,12 +560,12 @@
     <!-- Rows -->
     {% for u in utilisateurs.items %}
     {% set initials = (u.prenom[0]|upper) + (u.nom[0]|upper) %}
-    {% set dept_color = u.departement.couleur if u.departement and u.departement.couleur else (u.pdv.couleur if u.pdv and u.pdv.couleur else '#10B981') %}
+    {% set dept_color = u.couleur_affichage %}
     <div class="user-row {% if not u.actif %}inactive{% endif %}" onclick="if(!event.target.closest('a, button, input, select')) window.location.href='{{ url_for('utilisateurs.detail', id=u.id) }}'">
 
       <!-- Avatar -->
       <a href="{{ url_for('utilisateurs.detail', id=u.id) }}" style="text-decoration:none; display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation();">
-        <div class="user-row-avatar" style="background: linear-gradient(135deg, {{ dept_color }}, color-mix(in srgb, {{ dept_color }} 70%, #000));">
+        <div class="user-row-avatar" style="background: {{ dept_color }};">
           {% if u.photo_profil %}
             <img src="{{ url_for('static', filename='uploads/' + u.photo_profil) }}" alt="{{ u.prenom }}">
           {% else %}
