@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 STATEMENTS = [
     "ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS date_verrouillage TIMESTAMP",
     "ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0",
+    "ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS pdv_extra_ids TEXT",
     "ALTER TABLE pieces_jointes ADD COLUMN IF NOT EXISTS commentaire_id VARCHAR(36) "
     "REFERENCES commentaires(id) ON DELETE CASCADE",
     # Messagerie : fichier joint à un message (nom d'origine, nom stocké, type, taille)

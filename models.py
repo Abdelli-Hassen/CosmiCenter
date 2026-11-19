@@ -8,13 +8,6 @@ from utils.crypto import EncryptedString
 
 db = SQLAlchemy()
 
-# Association utilisateur <-> points de vente supplémentaires (créée par db.create_all())
-utilisateur_pdvs = db.Table(
-    'utilisateur_pdvs',
-    db.Column('utilisateur_id', db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), primary_key=True),
-    db.Column('pdv_id', db.String(36), db.ForeignKey('points_de_vente.id', ondelete='CASCADE'), primary_key=True),
-)
-
 def generate_uuid():
     return str(uuid.uuid4())
 
@@ -110,8 +103,10 @@ class Utilisateur(UserMixin, db.Model):
     role_id = db.Column(db.String(36), db.ForeignKey('roles.id', ondelete='SET NULL'), index=True)
     departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='SET NULL'), index=True)
     pdv_id = db.Column(db.String(36), db.ForeignKey('points_de_vente.id', ondelete='SET NULL'), index=True)
+    # PDV supplémentaires (ids séparés par des virgules) : un responsable peut gérer plusieurs PDV, `pdv_id` reste le principal
+    pdv_extra_ids = db.Column(db.Text)
     entreprise_id = db.Column(db.String(36), db.ForeignKey('entreprises.id', ondelete='SET NULL'), index=True)
-    
+
     # Paramètres
     langue = db.Column(db.String(10), default='fr')
     theme = db.Column(db.String(20), default='light')  # light, dark, auto
@@ -133,9 +128,6 @@ class Utilisateur(UserMixin, db.Model):
     role = db.relationship('Role', backref='utilisateurs')
     departement = db.relationship('Departement', foreign_keys=[departement_id], backref='membres')
     pdv = db.relationship('PointDeVente', foreign_keys=[pdv_id], backref='employes')
-    # PDV supplémentaires (un responsable peut gérer plusieurs points de vente ; `pdv` reste le principal)
-    pdvs_supplementaires = db.relationship('PointDeVente', secondary=utilisateur_pdvs,
-                                           backref=db.backref('employes_multi', lazy='select'))
     entreprise =db.relationship('Entreprise', foreign_keys=[entreprise_id], backref=db.backref('employes', lazy='dynamic'))
     tickets_crees = db.relationship('Ticket', foreign_keys='Ticket.createur_id', backref='createur')
     tickets_assignes = db.relationship('Ticket', foreign_keys='Ticket.assigne_a_id', backref='assigne_a')
@@ -160,20 +152,26 @@ class Utilisateur(UserMixin, db.Model):
         return f"{self.prenom} {self.nom}"
 
     @property
+    def pdvs_supplementaires(self):
+        """PDV supplémentaires (hors principal), d'après la colonne `pdv_extra_ids`."""
+        ids = [i for i in (self.pdv_extra_ids or '').split(',') if i and i != self.pdv_id]
+        if not ids:
+            return []
+        trouves = {p.id: p for p in PointDeVente.query.filter(PointDeVente.id.in_(ids)).all()}
+        return [trouves[i] for i in ids if i in trouves]
+
+    @property
     def tous_pdvs(self):
         """PDV principal en premier, puis les PDV supplémentaires (sans doublon)."""
-        liste = [self.pdv] if self.pdv else []
-        liste += [p for p in self.pdvs_supplementaires if not self.pdv or p.id != self.pdv.id]
-        return liste
+        return ([self.pdv] if self.pdv else []) + self.pdvs_supplementaires
 
     def set_pdvs(self, pdv_ids):
-        """Affecte plusieurs PDV : le premier devient le principal (`pdv_id`), les autres sont supplémentaires."""
-        from models import PointDeVente
+        """Affecte plusieurs PDV : le premier devient le principal (`pdv_id`), les autres vont dans `pdv_extra_ids`."""
         ids = list(dict.fromkeys(i for i in (pdv_ids or []) if i))
-        pdvs = {p.id: p for p in PointDeVente.query.filter(PointDeVente.id.in_(ids)).all()} if ids else {}
-        ids = [i for i in ids if i in pdvs]
+        valides = {p.id for p in PointDeVente.query.filter(PointDeVente.id.in_(ids)).all()} if ids else set()
+        ids = [i for i in ids if i in valides]
         self.pdv_id = ids[0] if ids else None
-        self.pdvs_supplementaires = [pdvs[i] for i in ids[1:]]
+        self.pdv_extra_ids = ','.join(ids[1:]) or None
 
     def has_permission(self, permission_code):
         """Vérifie si l'utilisateur a une permission spécifique"""
@@ -203,6 +201,11 @@ class PointDeVente(db.Model):
     actif = db.Column(db.Boolean, default=True)
     couleur = db.Column(db.String(30), default='#10b981')
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def employes_multi(self):
+        """Utilisateurs pour qui ce PDV est un PDV supplémentaire (hors principal)."""
+        return Utilisateur.query.filter(Utilisateur.pdv_extra_ids.contains(self.id, autoescape=True)).all()
 
     def __repr__(self):
         return f'<PointDeVente {self.nom}>'

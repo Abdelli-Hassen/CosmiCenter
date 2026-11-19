@@ -89,7 +89,7 @@ def liste():
     pdv_filter = request.args.get('pdv', '')
     if pdv_filter:
         query = query.filter(db.or_(Utilisateur.pdv_id == pdv_filter,
-                                    Utilisateur.pdvs_supplementaires.any(PointDeVente.id == pdv_filter)))
+                                    Utilisateur.pdv_extra_ids.contains(pdv_filter, autoescape=True)))
     
     actif_filter = request.args.get('actif', '')
     if actif_filter == '1':
