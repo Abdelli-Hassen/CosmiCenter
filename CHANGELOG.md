@@ -7,6 +7,7 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 ### 🏪 Plusieurs points de vente par utilisateur
 - Les formulaires *Nouvel utilisateur* / *Modifier l'utilisateur* (pages Utilisateurs et Administration) proposent maintenant une **liste à cocher** de PDV à la place du menu déroulant : un responsable de point de vente peut être rattaché à plusieurs PDV. Aucun coché = Siège / HQ.
 - Le premier PDV coché reste le **PDV principal** (colonne `pdv_id`, utilisée par les rapports et les tickets) ; les autres sont enregistrés dans la nouvelle colonne `utilisateurs.pdv_extra_ids` (ids séparés par des virgules ; ajoutée automatiquement au démarrage, aucune nouvelle table).
+- Profil utilisateur : en-tête redessiné sur une grille de 8 px (avatar 96 px, nom et poste sous la bannière, boutons de 40 px alignés avec le nom, badges de 32 px sur une rangée séparée) ; animations et survols conservés.
 - Affichage : profil (tous les PDV), liste des utilisateurs (« PDV +N »), fiche d'un PDV (le responsable apparaît dans chacun de ses PDV), filtre PDV de la liste des utilisateurs (inclut les PDV supplémentaires).
 
 ## [2.8.0] - 2026-11-16
