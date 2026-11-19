@@ -2,6 +2,13 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.9.1] - 2026-11-19
+
+### 🏪 Tickets : plusieurs points de vente à la fois
+- En mode *Point de vente*, le sélecteur devient une **liste de cases à cocher** : un même ticket peut être adressé à **un ou plusieurs PDV**. *À tout le personnel des points de vente cochés* notifie et donne accès à tout le personnel de chacun d'eux ; *À une personne spécifique* propose les personnes de **l'un** des PDV cochés (une personne d'aucun d'eux est refusée par le serveur).
+- Stockage dans la table `tickets` (pas de nouvelle table) : `pdv_id` = le premier PDV, `pdv_extra_ids` = les autres (ids séparés par des virgules, colonne ajoutée automatiquement au démarrage). Visibilité (« Mes tickets », ouverture de la fiche) et notifications couvrent tous les PDV visés ; un PDV non visé ne voit rien. Fiche : tous les PDV listés ; liste : « PDV Azur +1 ».
+- `tests/ticket_pdv_test.py` : 23 vérifications.
+
 ## [2.9.0] - 2026-11-19
 
 ### 🏪 Tickets : écrire à un point de vente, pas seulement à un département

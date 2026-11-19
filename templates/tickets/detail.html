@@ -524,9 +524,9 @@
           </div>
 
           <div class="prop-row">
-            <div class="prop-label">{{ 'Point de vente' if (ticket.pdv_associe and not ticket.departement) else 'Département' }}</div>
+            <div class="prop-label">{{ ('Points de vente' if ticket.pdvs_cibles|length > 1 else 'Point de vente') if (ticket.pdvs_cibles and not ticket.departement) else 'Département' }}</div>
             <div class="prop-val">
-              {{ ticket.departement.nom if ticket.departement else (ticket.pdv_associe.nom if ticket.pdv_associe else '—') }}
+              {{ ticket.departement.nom if ticket.departement else (ticket.pdvs_cibles|map(attribute='nom')|join(', ') if ticket.pdvs_cibles else '—') }}
               {% if ticket.departements_collab %}
               <div style="margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px;">
                 {% for cdept in ticket.departements_collab %}
@@ -617,15 +617,15 @@
             {% if ticket.assigne_a.departement %}<span class="user-sub">{{ ticket.assigne_a.departement.nom }}</span>{% endif %}
           </div>
         </div>
-        {% elif ticket.pdv_associe and not ticket.departement %}
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px; margin-top:16px;">Assigné à (Point de vente)</div>
+        {% elif ticket.pdvs_cibles and not ticket.departement %}
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px; margin-top:16px;">Assigné à ({{ 'Points de vente' if ticket.pdvs_cibles|length > 1 else 'Point de vente' }})</div>
         <div class="user-row">
           <div class="modern-avatar" style="width:32px; height:32px; background:var(--surface-raised); color:var(--text-primary); border:1px solid var(--border-subtle);">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
           </div>
           <div class="user-info">
-            <span class="user-name">{{ ticket.pdv_associe.nom }}</span>
-            <span class="user-sub">Tout le point de vente</span>
+            <span class="user-name">{{ ticket.pdvs_cibles|map(attribute='nom')|join(', ') }}</span>
+            <span class="user-sub">{{ 'Tout le personnel de ces points de vente' if ticket.pdvs_cibles|length > 1 else 'Tout le point de vente' }}</span>
           </div>
         </div>
         {% elif ticket.departement %}

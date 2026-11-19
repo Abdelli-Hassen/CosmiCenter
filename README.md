@@ -220,7 +220,7 @@ python3 -c "import secrets; print(secrets.token_hex(32))"      # ou : openssl ra
 ### Tickets
 - 5 types (incident, demande, besoin, plainte, tâche), 5 priorités (critique, urgente, haute, moyenne, basse), statuts nouveau → en cours → en attente → résolu → fermé (ou annulé), avec réouverture possible. La **priorité se choisit à la main**.
 - Pages : tableau de bord, liste de **tous les tickets**, **mes tickets**, nouveau ticket, fiche et modification.
-- Routage : un département **ou un point de vente** (pour joindre les personnes en PDV sans département), un ou plusieurs agents, ou **collaboration multi-départements et multi-agents** (départements uniquement).
+- Routage : un département **ou un/plusieurs points de vente** (pour joindre les personnes en PDV sans département), un ou plusieurs agents, ou **collaboration multi-départements et multi-agents** (départements uniquement).
 - Catégories regroupées par département ; gestion complète (créer, modifier, activer/désactiver, archiver, supprimer) avec la permission `admin.categories`, aussi accessible par un bouton sur la page Nouveau ticket.
 - Sous-tâches (checklist), commentaires, **pièces jointes jusqu'à 30 Mo** (150 Mo par envoi) avec miniatures et visionneuse intégrée (même composant sur la fiche et la modification).
 - Modification = même page que « Nouveau ticket », pré-remplie ; historique d'audit de chaque changement.

@@ -261,14 +261,16 @@ def nouveau():
         routing_type = request.form.get('routing_type', 'all')
         # Destinataire : un département OU un point de vente (pour les personnes rattachées à un PDV, sans département)
         dest_type = 'pdv' if request.form.get('dest_type') == 'pdv' else 'dept'
-        pdv_id = None
+        pdv_ids = []
         if dest_type == 'pdv':
             departement_id = None
-            pdv_obj = db.session.get(PointDeVente, request.form.get('pdv_id') or '')
-            if not pdv_obj or not pdv_obj.actif:
+            wanted = list(dict.fromkeys(i for i in (request.form.getlist('pdv_ids') or [request.form.get('pdv_id')]) if i))
+            found = {p.id: p for p in PointDeVente.query.filter(PointDeVente.id.in_(wanted)).all()} if wanted else {}
+            pdv_ids = [i for i in wanted if i in found and found[i].actif]
+            if not wanted:
+                errors.append('Choisissez au moins un point de vente.')
+            elif len(pdv_ids) != len(wanted):
                 errors.append('Point de vente introuvable.')
-            else:
-                pdv_id = pdv_obj.id
             if routing_type == 'collab':
                 errors.append("La collaboration multiple n'est pas disponible pour un point de vente : "
                               "choisissez « À tout le point de vente » ou « À une personne spécifique ».")
@@ -284,8 +286,8 @@ def nouveau():
                 assignee = db.session.get(Utilisateur, assigne_id)
                 if not assignee or not assignee.actif:
                     errors.append("L'agent assigné est introuvable ou inactif.")
-                elif pdv_id and not any(p.id == pdv_id for p in assignee.tous_pdvs):
-                    errors.append("La personne choisie n'appartient pas à ce point de vente.")
+                elif pdv_ids and not ({p.id for p in assignee.tous_pdvs} & set(pdv_ids)):
+                    errors.append("La personne choisie n'appartient à aucun des points de vente choisis.")
 
         if errors:
             for msg in errors:
@@ -300,7 +302,8 @@ def nouveau():
                 type_ticket=fields['type_ticket'],
                 priorite=fields['priorite'],
                 departement_id=departement_id,
-                pdv_id=pdv_id,
+                pdv_id=pdv_ids[0] if pdv_ids else None,
+                pdv_extra_ids=','.join(pdv_ids[1:]) or None,
                 assigne_a_id=assigne_id,
                 createur_id=current_user.id
             )
@@ -384,9 +387,8 @@ def _notify_new_ticket(ticket):
             for user in dept.membres:
                 if user.actif:
                     users_to_notify.add(user)
-    elif ticket.pdv_id:  # ticket adressé à un point de vente : tout son personnel
-        pdv = db.session.get(PointDeVente, ticket.pdv_id)
-        if pdv:
+    elif ticket.pdv_id:  # ticket adressé à un ou plusieurs points de vente : tout leur personnel
+        for pdv in ticket.pdvs_cibles:
             for user in pdv.tous_employes:
                 if user.actif:
                     users_to_notify.add(user)

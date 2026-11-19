@@ -85,7 +85,7 @@ Route : `GET/POST /tickets/nouveau`
 - Impact et urgence → calcul automatique de priorité via matrice Impact × Urgence
 - Champs spécifiques par type : article demandé, quantité, unité, nature du besoin, personne concernée, date et lieu d'incident
 - Numéro unique généré automatiquement (ex. `TK-2026-0042`)
-- **Destinataire : département OU point de vente** : une ligne « Département / Point de vente » au-dessus du routage. Le mode *Point de vente* permet de joindre les personnes rattachées à un PDV sans département (ex. un/une gérant/e) : *À tout le point de vente* (tout le personnel du PDV, principal ou supplémentaire, est notifié et voit le ticket dans « Mes tickets ») ou *À une personne spécifique* (liste des personnes de ce PDV). La collaboration multiple reste réservée au mode département.
+- **Destinataire : département OU point de vente** : une ligne « Département / Point de vente » au-dessus du routage. Le mode *Point de vente* permet de joindre les personnes rattachées à un PDV sans département (ex. un/une gérant/e) : on peut cocher **un ou plusieurs PDV** ; *À tout le personnel des points de vente cochés* (tout leur personnel, PDV principal ou supplémentaire, est notifié et voit le ticket dans « Mes tickets ») ou *À une personne spécifique* (liste des personnes de l'un de ces PDV). La collaboration multiple reste réservée au mode département.
 - **Modes d'assignation & Routage** :
   - *À tout le département* : assignation globale à l'équipe du département.
   - *À une personne spécifique* : assignation directe à un agent filtré selon le département sélectionné.

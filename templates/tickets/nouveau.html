@@ -466,12 +466,24 @@
                 {% endfor %}
               </select>
 
-              <select name="pdv_id" id="pdvSelect" class="premium-input" style="display:none; margin-bottom: 16px;">
-                <option value="">Sélectionner un point de vente...</option>
-                {% for p in pdvs %}
-                <option value="{{ p.id }}">{{ p.nom }}{% if p.ville or p.categorie %} ({{ p.ville or p.categorie }}){% endif %}</option>
-                {% endfor %}
-              </select>
+              <div id="pdvChecks" style="display:none; margin-bottom: 16px;">
+                <style>
+                  .tk-pdv-multi { border:1px solid var(--border-subtle); border-radius:10px; background:var(--surface-base); max-height:220px; overflow-y:auto; padding:6px; }
+                  .tk-pdv-multi label { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600; color:var(--text-primary); transition:background .15s; }
+                  .tk-pdv-multi label:hover { background:var(--surface-2); }
+                  .tk-pdv-multi input { accent-color:var(--color-brand, #dc2626); width:16px; height:16px; }
+                  .tk-pdv-multi small { color:var(--text-muted); font-weight:500; }
+                </style>
+                <div class="tk-pdv-multi" role="group" aria-label="Points de vente destinataires">
+                  {% for p in pdvs %}
+                  <label>
+                    <input type="checkbox" name="pdv_ids" value="{{ p.id }}">
+                    <span>{{ p.nom }} <small>({{ p.ville or p.categorie or 'PDV' }})</small></span>
+                  </label>
+                  {% endfor %}
+                </div>
+                <div id="pdvChecksHint" style="font-size:12px; color:var(--text-muted); margin-top:6px;">Cochez un ou plusieurs points de vente.</div>
+              </div>
 
               <!-- Catégorie : n'affiche que celles du département choisi -->
               <div id="categorieWrapper" style="display:none; margin-bottom: 24px;">
@@ -828,7 +840,10 @@
   }
 
   var agentSelect = document.getElementById('agentSelect');
-  var pdvSelect = document.getElementById('pdvSelect');
+  var pdvBox = document.getElementById('pdvChecks');
+  function selectedPdvs() {
+    return Array.prototype.map.call(document.querySelectorAll('#pdvChecks input[name="pdv_ids"]:checked'), function (c) { return c.value; });
+  }
   function currentDest() {
     var r = document.querySelector('input[name="dest_type"]:checked');
     return r ? r.value : 'dept';
@@ -836,21 +851,22 @@
   function filterAgents() {
     if (!agentSelect) return;
     var pdvMode = currentDest() === 'pdv';
-    var deptId = pdvMode ? (pdvSelect ? pdvSelect.value : '') : (deptSelect ? deptSelect.value : '');
+    var pdvIds = pdvMode ? selectedPdvs() : [];
+    var deptId = pdvMode ? (pdvIds.length ? '1' : '') : (deptSelect ? deptSelect.value : '');
     agentSelect.value = '';
     var visible = 0;
     Array.prototype.forEach.call(agentSelect.options, function (o, idx) {
       if (idx === 0) return; // Keep placeholder
-      var show = deptId ? (pdvMode ? ((o.dataset.pdvs || '').indexOf(',' + deptId + ',') > -1) : (o.dataset.dept === deptId)) : false;
+      var show = deptId ? (pdvMode ? pdvIds.some(function (id) { return (o.dataset.pdvs || '').indexOf(',' + id + ',') > -1; }) : (o.dataset.dept === deptId)) : false;
       o.hidden = !show;
       o.disabled = !show;
       o.style.display = show ? '' : 'none';
       if (show) visible++;
     });
     if (!deptId) {
-      agentSelect.options[0].textContent = pdvMode ? "Sélectionnez d'abord un point de vente ci-dessus..." : "Sélectionnez d'abord un département ci-dessus...";
+      agentSelect.options[0].textContent = pdvMode ? "Cochez d'abord un point de vente ci-dessus..." : "Sélectionnez d'abord un département ci-dessus...";
     } else if (visible === 0) {
-      agentSelect.options[0].textContent = pdvMode ? "Aucune personne dans ce point de vente" : "Aucun agent disponible dans ce département";
+      agentSelect.options[0].textContent = pdvMode ? "Aucune personne dans les points de vente cochés" : "Aucun agent disponible dans ce département";
     } else {
       agentSelect.options[0].textContent = "Sélectionner une personne (" + visible + " disponible" + (visible > 1 ? "s" : "") + ")...";
     }
@@ -861,15 +877,14 @@
     var pdvMode = mode === 'pdv';
     deptSelect.style.display = pdvMode ? 'none' : '';
     deptSelect.required = !pdvMode;
-    pdvSelect.style.display = pdvMode ? '' : 'none';
-    pdvSelect.required = pdvMode;
+    pdvBox.style.display = pdvMode ? 'block' : 'none';
     if (pdvMode) {
       deptSelect.value = '';
       deptSelect.dispatchEvent(new Event('change'));   // vide catégories, collaboration et personnes
     } else {
-      pdvSelect.value = '';
+      Array.prototype.forEach.call(document.querySelectorAll('#pdvChecks input[name="pdv_ids"]'), function (c) { c.checked = false; });
     }
-    document.getElementById('routingAllLabel').textContent = pdvMode ? 'À tout le point de vente' : 'À tout le département';
+    document.getElementById('routingAllLabel').textContent = pdvMode ? 'À tout le personnel des points de vente cochés' : 'À tout le département';
     var collabRadio = document.getElementById('routingCollabRadio');
     collabRadio.style.display = pdvMode ? 'none' : 'flex';
     var checked = document.querySelector('input[name="routing_type"]:checked');
@@ -879,7 +894,7 @@
     }
     filterAgents();
   };
-  if (pdvSelect) pdvSelect.addEventListener('change', filterAgents);
+  if (pdvBox) pdvBox.addEventListener('change', filterAgents);
 
   /* ── 2c. Collaboration Assignment Filtering Logic ── */
   var collabDeptSelect = document.getElementById('collabDeptSelect');
@@ -1328,7 +1343,7 @@
     form.addEventListener('submit', function(e) {
       var titre = document.getElementById('titre').value.trim();
       var dest = currentDest();
-      var dept = dest === 'pdv' ? document.getElementById('pdvSelect').value : document.getElementById('departementSelect').value;
+      var dept = dest === 'pdv' ? (selectedPdvs().length ? '1' : '') : document.getElementById('departementSelect').value;
       var routing = document.querySelector('input[name="routing_type"]:checked').value;
       
       var isValid = true;
@@ -1339,7 +1354,7 @@
         errorMsg = 'Le résumé du problème (titre) est obligatoire.';
       } else if (!dept) {
         isValid = false;
-        errorMsg = dest === 'pdv' ? 'Le point de vente concerné est obligatoire.' : 'Le département concerné est obligatoire.';
+        errorMsg = dest === 'pdv' ? 'Cochez au moins un point de vente.' : 'Le département concerné est obligatoire.';
       } else if (routing === 'specific') {
         var assigne = document.getElementById('agentSelect').value;
         if (!assigne) {

@@ -384,6 +384,8 @@ class Ticket(db.Model):
     categorie_id = db.Column(db.String(36), db.ForeignKey('categories_tickets.id', ondelete='SET NULL'), index=True)
     departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='SET NULL'), index=True)
     pdv_id = db.Column(db.String(36), db.ForeignKey('points_de_vente.id', ondelete='SET NULL'), index=True)
+    # Ticket adressé à PLUSIEURS points de vente : `pdv_id` = le premier, les autres ici (ids séparés par des virgules)
+    pdv_extra_ids = db.Column(db.Text)
 
     # Dates
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
@@ -431,6 +433,22 @@ class Ticket(db.Model):
                                      backref=db.backref('tickets_en_collaboration', lazy=True))
     departements_collab = db.relationship('Departement', secondary=ticket_departements_collab, lazy='subquery',
                                           backref=db.backref('tickets_en_collaboration', lazy=True))
+
+    @property
+    def pdv_cibles_ids(self):
+        """Ids de tous les points de vente visés (premier + supplémentaires), sans doublon."""
+        ids = [self.pdv_id] if self.pdv_id else []
+        ids += [i for i in (self.pdv_extra_ids or '').split(',') if i and i not in ids]
+        return ids
+
+    @property
+    def pdvs_cibles(self):
+        """Points de vente visés, dans l'ordre choisi."""
+        ids = self.pdv_cibles_ids
+        if not ids:
+            return []
+        trouves = {p.id: p for p in PointDeVente.query.filter(PointDeVente.id.in_(ids)).all()}
+        return [trouves[i] for i in ids if i in trouves]
 
     @property
     def departement(self):

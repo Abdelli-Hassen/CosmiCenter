@@ -61,9 +61,9 @@ def ticket_visibility_filter(user):
     if user.departement_id:
         clauses.append(Ticket.departement_id == user.departement_id)
         clauses.append(Ticket.departements_collab.any(Departement.id == user.departement_id))
-    pdv_ids = [p.id for p in user.tous_pdvs]
-    if pdv_ids:  # ticket adressé à l'un de mes points de vente
-        clauses.append(Ticket.pdv_id.in_(pdv_ids))
+    for pdv in user.tous_pdvs:  # ticket adressé à l'un de mes points de vente (premier ou supplémentaire)
+        clauses.append(Ticket.pdv_id == pdv.id)
+        clauses.append(Ticket.pdv_extra_ids.contains(pdv.id, autoescape=True))
     return or_(*clauses) if clauses else false()
 
 
@@ -122,7 +122,7 @@ def ticket_in_my_scope(user, ticket):
             return True
         if any(d.id == user.departement_id for d in ticket.departements_collab):
             return True
-    if ticket.pdv_id and any(p.id == ticket.pdv_id for p in user.tous_pdvs):
+    if {p.id for p in user.tous_pdvs} & set(ticket.pdv_cibles_ids):
         return True
     return any(c.id == user.id for c in ticket.collaborateurs)
 
