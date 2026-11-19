@@ -72,7 +72,7 @@ with app.app_context():
     r_delm = mkrole("delm", "tickets.voir_mes", "tickets.supprimer_mes")
     r_dela = mkrole("dela", "tickets.voir_tous", "tickets.supprimer")
     r_pdv = mkrole("pdv", "pdv.voir")
-    r_pdvd = mkrole("pdvd", "pdv.voir", "pdv.supprimer")
+    r_pdvd = mkrole("pdvd", "pdv.voir", "pdv.supprimer", "pdv.tous")
     r_ugest = mkrole("ugest", "utilisateurs.voir", "utilisateurs.voir_tous", "utilisateurs.modifier", "utilisateurs.activer",
                      "utilisateurs.supprimer", "utilisateurs.creer")
 

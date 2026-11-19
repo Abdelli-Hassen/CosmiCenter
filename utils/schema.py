@@ -81,6 +81,11 @@ DEFAULT_PERMISSIONS = [
      'Ajouter ou retirer des membres dans un département.', 'Opérations', ('a', 'departements.modifier')),
 
     # ── Points de vente ──
+    ('pdv.tous', 'Gérer tous les points de vente',
+     "Sans cette case, les droits « Modifier », « Matériel » et « Employés » d'un point de vente ne valent que pour "
+     "SES propres points de vente (ceux qui lui sont affectés).",
+     'Opérations', ('a_sauf', 'pdv.modifier', ['Gérant/e', 'Gérant', 'Gérante', 'Responsable Point de Vente',
+                                                'Personnel Point de Vente'])),
     ('pdv.gerer_employes', "Gérer les employés d'un point de vente",
      "Ajouter / retirer des employés d'un point de vente.", 'Opérations', ('a', 'pdv.modifier')),
     ('pdv.referentiels', 'Gérer les catégories et thèmes des points de vente',
@@ -131,6 +136,8 @@ def _roles_for(rule):
         return [r for r in roles if r.nom in rule[1]]
     if kind == 'a':
         return [r for r in roles if any(p.code == rule[1] for p in r.permissions)]
+    if kind == 'a_sauf':  # rôles qui ont la permission rule[1], sauf ceux dont le nom est dans rule[2]
+        return [r for r in roles if r.nom not in rule[2] and any(p.code == rule[1] for p in r.permissions)]
     return []
 
 

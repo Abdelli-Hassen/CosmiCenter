@@ -18,8 +18,14 @@ EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 EQUIPEMENT_STATUTS = ['actif', 'en_panne', 'maintenance', 'hors_service']
 
 
-def _can_edit():
-    return current_user.has_permission('pdv.modifier')
+def _can_edit(pdv_id=None):
+    """pdv.modifier, et — sans pdv.tous — seulement sur un PDV qui nous est affecté."""
+    return current_user.has_permission('pdv.modifier') and (pdv_id is None or current_user.peut_gerer_pdv(pdv_id))
+
+
+def _not_yours(id):
+    flash("Vous ne pouvez agir que sur vos propres points de vente.", "danger")
+    return redirect(url_for('pdv.detail', id=id))
 
 
 def _categories(pdvs=None):
@@ -150,9 +156,11 @@ def detail(id):
 @pdv_bp.route('/<string:id>/modifier', methods=['GET', 'POST'])
 @login_required
 def modifier(id):
-    if not _can_edit():
+    if not current_user.has_permission('pdv.modifier'):
         flash("Accès non autorisé.", "danger")
         return redirect(url_for('pdv.detail', id=id))
+    if not current_user.peut_gerer_pdv(id):
+        return _not_yours(id)
 
     pdv = PointDeVente.query.get_or_404(id)
 
@@ -185,6 +193,8 @@ def supprimer(id):
     if not current_user.has_permission('pdv.supprimer'):
         flash("Accès non autorisé.", "danger")
         return redirect(url_for('pdv.detail', id=id))
+    if not current_user.peut_gerer_pdv(id):
+        return _not_yours(id)
 
     pdv = PointDeVente.query.get_or_404(id)
     liens = []
@@ -222,6 +232,8 @@ def ajouter_equipement(id):
     if not current_user.has_permission('equipements.gerer'):
         flash("Accès non autorisé.", "danger")
         return redirect(url_for('pdv.detail', id=id))
+    if not current_user.peut_gerer_pdv(id):
+        return _not_yours(id)
 
     pdv = PointDeVente.query.get_or_404(id)
 
@@ -267,6 +279,8 @@ def supprimer_equipement(equip_id):
     if not current_user.has_permission('equipements.gerer'):
         flash("Accès non autorisé.", "danger")
         return redirect(url_for('pdv.detail', id=equip.pdv_id))
+    if not current_user.peut_gerer_pdv(equip.pdv_id):
+        return _not_yours(equip.pdv_id)
 
     pdv_id = equip.pdv_id
     db.session.delete(equip)
@@ -281,6 +295,8 @@ def ajouter_employe(id):
     if not current_user.has_permission('pdv.gerer_employes'):
         flash("Accès non autorisé.", "danger")
         return redirect(url_for('pdv.detail', id=id))
+    if not current_user.peut_gerer_pdv(id):
+        return _not_yours(id)
 
     pdv = PointDeVente.query.get_or_404(id)
     user = db.session.get(Utilisateur, request.form.get('utilisateur_id') or '')
@@ -303,10 +319,12 @@ def retirer_employe(id, user_id):
     if not current_user.has_permission('pdv.gerer_employes'):
         flash("Accès non autorisé.", "danger")
         return redirect(url_for('pdv.detail', id=id))
+    if not current_user.peut_gerer_pdv(id):
+        return _not_yours(id)
 
     user = db.session.get(Utilisateur, user_id)
-    if user and user.pdv_id == id:
-        user.pdv_id = None
+    if user and any(p.id == id for p in user.tous_pdvs):
+        user.set_pdvs([p.id for p in user.tous_pdvs if p.id != id])
         db.session.commit()
         flash("L'employé a été retiré de ce PDV.", "success")
 
@@ -316,7 +334,7 @@ def retirer_employe(id, user_id):
 @pdv_bp.route('/<string:id>/couleur', methods=['POST'])
 @login_required
 def changer_couleur(id):
-    if not _can_edit():
+    if not _can_edit(id):
         return jsonify({'success': False, 'message': 'Non autorisé'}), 403
     pdv = PointDeVente.query.get_or_404(id)
     data = request.get_json(silent=True) or {}

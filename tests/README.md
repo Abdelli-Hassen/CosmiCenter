@@ -14,6 +14,7 @@ venv/bin/python tests/cat_test.py                (Linux / macOS)
 | `chat_test.py` | messagerie et pièces jointes |
 | `kb_views_test.py` | base de connaissances : lecteurs distincts et nombre de lectures par personne |
 | `pdv_ref_test.py` | catégories et thèmes des points de vente (base + cache) |
+| `pdv_scope_test.py` | sans `pdv.tous`, on ne modifie / gère que ses propres PDV (serveur + boutons) |
 | `cat_test.py` | gestion des catégories de tickets (créer, modifier, archiver, supprimer, permission) |
 | `report_test.py` | rapport global, filtres, export CSV |
 | `agents_test.py` | performance des agents et fiche agent |

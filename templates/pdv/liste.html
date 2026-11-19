@@ -387,7 +387,7 @@
 
         <!-- Top Right Actions: Quick Theme Palette & Edit Button -->
         <div class="pdv-card-actions">
-          {% if current_user.has_permission('pdv.modifier') %}
+          {% if current_user.has_permission('pdv.modifier') and current_user.peut_gerer_pdv(pdv.id) %}
           <!-- Quick Color Palette Button -->
           <button type="button" 
                   class="pdv-card-btn-action" 
@@ -405,7 +405,7 @@
       </div>
 
       <!-- Quick Theme Popover (Opens on palette click) -->
-      {% if current_user.has_permission('pdv.modifier') %}
+      {% if current_user.has_permission('pdv.modifier') and current_user.peut_gerer_pdv(pdv.id) %}
       <div class="pdv-theme-popover" id="themePopover_{{ pdv.id }}" onclick="event.stopPropagation()">
         <div class="popover-title">Choisir le thème</div>
         <div class="popover-swatches">

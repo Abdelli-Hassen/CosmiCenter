@@ -252,6 +252,7 @@ Le module Points de Vente centralise la gestion du réseau de cafés Cosmitto :
   - Équipe rattachée au point de vente.
   - Historique et tableau des tickets d'incidents / demandes liés au PDV.
   - Coordonnées, localisation géographique et gérant.
+- **Chacun ne gère que ses PDV** : sans la permission `pdv.tous` (« Gérer tous les points de vente »), modifier, supprimer, ajouter du matériel ou gérer les employés n'est possible que sur les PDV affectés à la personne (principal + supplémentaires) ; les boutons sont masqués ailleurs.
 - Thème visuel distinctif : dans l'annuaire et les tickets, les équipes en PDV sont mises en valeur avec une palette ambrée et une icône boutique pour les distinguer immédiatement des départements du siège.
 
 ---

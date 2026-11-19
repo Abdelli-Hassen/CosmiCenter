@@ -2,6 +2,14 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.8.2] - 2026-11-19
+
+### 🔒 Points de vente : chacun ne gère que les siens
+- **Correctif de sécurité** : un rôle avec `pdv.modifier` (par ex. « Gérant/e ») pouvait modifier **n'importe quel** point de vente. Désormais, sans la nouvelle permission **`pdv.tous`** (« Gérer tous les points de vente »), les droits *Modifier*, *Supprimer*, *Matériel* (`equipements.gerer`), *Employés* (`pdv.gerer_employes`) et le changement de couleur ne valent que pour **les PDV de la personne** (principal + supplémentaires). Contrôle côté serveur (message « Vous ne pouvez agir que sur vos propres points de vente ») **et** boutons masqués sur les autres PDV (fiche et liste).
+- Migration au démarrage : `pdv.tous` est donnée aux rôles qui avaient `pdv.modifier` **sauf** « Gérant/e », « Gérant », « Gérante », « Responsable Point de Vente », « Personnel Point de Vente » (et au Super Administrateur). Ajustable ensuite dans *Rôles*.
+- Retirer un employé d'un PDV fonctionne aussi pour ses PDV supplémentaires.
+- Nouveau test : `tests/pdv_scope_test.py` (18 vérifications).
+
 ## [2.8.1] - 2026-11-19
 
 ### 🏪 Plusieurs points de vente par utilisateur

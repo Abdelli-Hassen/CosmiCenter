@@ -151,6 +151,12 @@ class Utilisateur(UserMixin, db.Model):
     def nom_complet(self):
         return f"{self.prenom} {self.nom}"
 
+    def peut_gerer_pdv(self, pdv_id):
+        """Peut-on agir (modifier, matériel, employés...) sur ce PDV ? Oui avec `pdv.tous`, sinon seulement sur ses PDV."""
+        if self.has_permission('pdv.tous'):
+            return True
+        return bool(pdv_id) and any(p.id == pdv_id for p in self.tous_pdvs)
+
     @property
     def couleur_affichage(self):
         """Couleur unique de la personne (avatar + bannière), la même dans la liste et le profil :
