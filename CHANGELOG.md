@@ -2,11 +2,13 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
-## [2.8.4] - 2026-11-19
+## [2.8.5] - 2026-11-19
 
-### 🐞 Liste des utilisateurs : cliquer sur une personne ouvre bien sa fiche
-- Un compte **sans département** avec `utilisateurs.voir` (sans `utilisateurs.voir_tous`), par exemple un Gérant/e de point de vente, voyait dans la liste les comptes sans département mais, au clic, la fiche le renvoyait au tableau de bord (« vous n'avez pas de département »). La liste et la fiche appliquent maintenant la **même règle** : sans `voir_tous`, on ouvre les fiches des personnes du même département — « sans département » compte comme un groupe, comme dans la liste. Les fiches d'un département restent refusées.
-- Test ajouté dans `tests/permissions_enforcement_test.py` (73 vérifications).
+### 🐞 Liste des utilisateurs : cliquer sur une personne ouvre bien sa fiche, et on ne voit que son périmètre
+- Un compte **sans département** avec `utilisateurs.voir` (sans `utilisateurs.voir_tous`), par exemple un Gérant/e de point de vente, voyait dans la liste des comptes dont la fiche le renvoyait ensuite au tableau de bord. La liste et la fiche appliquent maintenant la **même règle** (`utils/permissions.py` : `user_visibility_filter` / `can_view_user`) : sans `voir_tous`, on voit **soi-même, les personnes de son département et celles qui partagent un de ses points de vente** (principal ou supplémentaire).
+- Conséquence voulue : une personne **sans département mais avec des PDV** ne voit que les gens de ses PDV (plus tous les comptes sans département) ; sans département ni PDV, seulement soi-même.
+- Supprimer un point de vente est maintenant aussi refusé s'il reste des personnes pour qui c'est un PDV **supplémentaire**.
+- Tests : `tests/permissions_enforcement_test.py` (76 vérifications).
 
 ## [2.8.3] - 2026-11-19
 

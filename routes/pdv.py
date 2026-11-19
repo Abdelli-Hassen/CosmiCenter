@@ -199,7 +199,8 @@ def supprimer(id):
     pdv = PointDeVente.query.get_or_404(id)
     liens = []
     nb_tickets = Ticket.query.filter(Ticket.pdv_id == pdv.id).count()
-    nb_employes = Utilisateur.query.filter(Utilisateur.pdv_id == pdv.id).count()
+    nb_employes = Utilisateur.query.filter(db.or_(
+        Utilisateur.pdv_id == pdv.id, Utilisateur.pdv_extra_ids.contains(pdv.id, autoescape=True))).count()
     nb_equipements = Equipement.query.filter(Equipement.pdv_id == pdv.id).count()
     if nb_tickets:
         liens.append(f'{nb_tickets} ticket(s)')

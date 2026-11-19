@@ -29,6 +29,31 @@ def can_act_on_user(actor, target):
     return (not is_super_admin(target)) or is_super_admin(actor)
 
 
+def user_visibility_filter(user):
+    """Critère SQLAlchemy des comptes visibles par `user` (hors permission utilisateurs.voir_tous) : lui-même, les
+    personnes de son département, et celles qui partagent au moins un de ses points de vente (principal ou
+    supplémentaire). Une personne sans département mais avec des PDV ne voit donc QUE les gens de ses PDV."""
+    clauses = [Utilisateur.id == user.id]
+    if user.departement_id:
+        clauses.append(Utilisateur.departement_id == user.departement_id)
+    for pdv in user.tous_pdvs:
+        clauses.append(Utilisateur.pdv_id == pdv.id)
+        clauses.append(Utilisateur.pdv_extra_ids.contains(pdv.id, autoescape=True))
+    return or_(*clauses)
+
+
+def can_view_user(user, target):
+    """Même règle que `user_visibility_filter`, pour un compte déjà chargé (fiche d'un utilisateur)."""
+    if target.id == user.id or user.has_permission('utilisateurs.voir_tous'):
+        return True
+    if not user.has_permission('utilisateurs.voir'):
+        return False
+    if user.departement_id and target.departement_id == user.departement_id:
+        return True
+    mine = {p.id for p in user.tous_pdvs}
+    return bool(mine & {p.id for p in target.tous_pdvs})
+
+
 def ticket_visibility_filter(user):
     """Critère SQLAlchemy des tickets visibles par `user` (hors permission tickets.voir_tous)."""
     clauses = [Ticket.createur_id == user.id, Ticket.assigne_a_id == user.id,

@@ -6,7 +6,8 @@ import logging
 import re
 from datetime import datetime
 
-from utils.permissions import can_assign_role, can_act_on_user, permission_required, deny_access, home_endpoint
+from utils.permissions import (can_assign_role, can_act_on_user, permission_required, deny_access, home_endpoint,
+                               user_visibility_filter, can_view_user)
 
 utilisateurs_bp = Blueprint('utilisateurs', __name__)
 logger = logging.getLogger(__name__)
@@ -41,7 +42,8 @@ def liste():
     if current_user.has_permission('utilisateurs.voir_tous'):
         base_query = Utilisateur.query
     else:
-        base_query = Utilisateur.query.filter_by(departement_id=current_user.departement_id)
+        # Sans voir_tous : son département + les personnes de ses points de vente
+        base_query = Utilisateur.query.filter(user_visibility_filter(current_user))
     
     # Counts for header stats (before filters)
     total_actifs = base_query.filter_by(actif=True).count()
@@ -297,14 +299,12 @@ def detail(id):
     utilisateur = Utilisateur.query.get_or_404(id)
     
     # Son propre profil : toujours. Celui d'un autre : permission utilisateurs.voir, et — sans utilisateurs.voir_tous —
-    # uniquement les personnes de son département. Même règle que la liste (« sans département » = les comptes sans
-    # département) : sinon la liste montre des personnes dont la fiche est ensuite refusée.
+    # uniquement les personnes de son département ou de ses points de vente (même règle que la liste).
     if utilisateur.id != current_user.id:
         if not current_user.has_permission('utilisateurs.voir'):
             return deny_access("Vous n'avez pas la permission de consulter les profils.")
-        if not current_user.has_permission('utilisateurs.voir_tous') and (
-                utilisateur.departement_id != current_user.departement_id):
-            return deny_access("Vous ne pouvez consulter que les profils de votre département.")
+        if not can_view_user(current_user, utilisateur):
+            return deny_access("Vous ne pouvez consulter que les profils de votre département ou de vos points de vente.")
     
     # Statistiques
     stats = {

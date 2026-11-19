@@ -106,6 +106,11 @@ with app.app_context():
     PDV_FREE, PDV_BUSY = pdv_free.id, pdv_busy.id
     U["staff"] = mkuser("staff", r_none, D1).id
     db.session.get(Utilisateur, U["staff"]).pdv_id = PDV_BUSY
+    # « uvnodept » : sans département, rattaché à PDV_BUSY ; « uvmulti » : sans département, PDV_MULTI (principal) + PDV_BUSY
+    pdv_multi = PointDeVente(nom="ZZ-ENF-PDV-MULTI"); db.session.add(pdv_multi); db.session.flush(); made_pdv.append(pdv_multi.id)
+    db.session.get(Utilisateur, U["uvnodept"]).set_pdvs([PDV_BUSY])
+    U["uvmulti"] = mkuser("uvmulti", r_uvoir, None).id
+    db.session.get(Utilisateur, U["uvmulti"]).set_pdvs([pdv_multi.id, PDV_BUSY])
     ent = Entreprise(nom="ZZ-ENF-ENT", type_entreprise="externe"); db.session.add(ent); db.session.flush(); made_ent.append(ent.id)
     ENT = ent.id
     # un utilisateur avec des données liées (commentaire) -> suppression refusée
@@ -182,10 +187,18 @@ try:
     check("avec utilisateurs.voir seul : profil d'un autre département refusé", no(cv.get(f"/utilisateurs/{U['target2']}")))
     check("avec utilisateurs.voir_tous : profil d'un autre département ouvert", ok(client("uvtous").get(f"/utilisateurs/{U['target2']}")))
     cnd = client("uvnodept")
-    check("sans département + utilisateurs.voir : la fiche d'un compte listé (lui aussi sans département) s'ouvre",
-          ok(cnd.get(f"/utilisateurs/{U['targetnodept']}")))
-    check("sans département + utilisateurs.voir : la fiche d'un compte d'un département reste refusée",
+    check("sans département mais avec un PDV : la fiche d'une personne du même PDV s'ouvre",
+          ok(cnd.get(f"/utilisateurs/{U['staff']}")))
+    check("sans département mais avec un PDV : un autre compte sans département (hors de ses PDV) est refusé",
+          no(cnd.get(f"/utilisateurs/{U['targetnodept']}")))
+    check("sans département mais avec un PDV : un compte d'un département hors de ses PDV est refusé",
           no(cnd.get(f"/utilisateurs/{U['target1']}")))
+    lst = cnd.get("/utilisateurs/").get_data(as_text=True)
+    check("sa liste : les gens de son PDV y sont, pas les autres comptes sans département ni ceux des départements",
+          mail("staff") in lst and mail("targetnodept") not in lst and mail("target1") not in lst)
+    cmu = client("uvmulti")
+    check("PDV principal + supplémentaire : voit les personnes de chacun de ses PDV",
+          ok(cmu.get(f"/utilisateurs/{U['staff']}")))
 
     # ───────────────────────── D. admin_roles.modifier ─────────────────────────
     def post_role(tag, nom):
