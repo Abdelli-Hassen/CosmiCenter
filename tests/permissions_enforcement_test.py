@@ -83,7 +83,8 @@ with app.app_context():
                             ("uvtous", r_uvtous, D1), ("ent", r_ent, D1), ("adash", r_adash, D1), ("arv", r_arv, D1),
                             ("arm", r_arm, D1), ("clo", r_clo, D1), ("mod", r_mod, D1), ("delm", r_delm, D1),
                             ("dela", r_dela, D2), ("pdv", r_pdv, D1), ("pdvd", r_pdvd, D1), ("ugest", r_ugest, D1),
-                            ("target1", r_none, D1), ("target2", r_none, D2)):
+                            ("target1", r_none, D1), ("target2", r_none, D2),
+                            ("uvnodept", r_uvoir, None), ("targetnodept", r_none, None)):
         U[tag] = mkuser(tag, role, dept).id
     sa_user = mkuser("sa", sa, D1); U["sa"] = sa_user.id
     sa_target = mkuser("satarget", sa, D1); U["satarget"] = sa_target.id
@@ -180,6 +181,11 @@ try:
     check("avec utilisateurs.voir : profil d'un collègue du même département ouvert", ok(cv.get(f"/utilisateurs/{U['target1']}")))
     check("avec utilisateurs.voir seul : profil d'un autre département refusé", no(cv.get(f"/utilisateurs/{U['target2']}")))
     check("avec utilisateurs.voir_tous : profil d'un autre département ouvert", ok(client("uvtous").get(f"/utilisateurs/{U['target2']}")))
+    cnd = client("uvnodept")
+    check("sans département + utilisateurs.voir : la fiche d'un compte listé (lui aussi sans département) s'ouvre",
+          ok(cnd.get(f"/utilisateurs/{U['targetnodept']}")))
+    check("sans département + utilisateurs.voir : la fiche d'un compte d'un département reste refusée",
+          no(cnd.get(f"/utilisateurs/{U['target1']}")))
 
     # ───────────────────────── D. admin_roles.modifier ─────────────────────────
     def post_role(tag, nom):

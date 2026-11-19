@@ -2,6 +2,12 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.8.4] - 2026-11-19
+
+### 🐞 Liste des utilisateurs : cliquer sur une personne ouvre bien sa fiche
+- Un compte **sans département** avec `utilisateurs.voir` (sans `utilisateurs.voir_tous`), par exemple un Gérant/e de point de vente, voyait dans la liste les comptes sans département mais, au clic, la fiche le renvoyait au tableau de bord (« vous n'avez pas de département »). La liste et la fiche appliquent maintenant la **même règle** : sans `voir_tous`, on ouvre les fiches des personnes du même département — « sans département » compte comme un groupe, comme dans la liste. Les fiches d'un département restent refusées.
+- Test ajouté dans `tests/permissions_enforcement_test.py` (73 vérifications).
+
 ## [2.8.3] - 2026-11-19
 
 ### 🎨 Fiche entreprise : bloc « À propos » repensé

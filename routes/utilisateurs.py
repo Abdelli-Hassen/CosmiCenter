@@ -297,12 +297,13 @@ def detail(id):
     utilisateur = Utilisateur.query.get_or_404(id)
     
     # Son propre profil : toujours. Celui d'un autre : permission utilisateurs.voir, et — sans utilisateurs.voir_tous —
-    # uniquement les personnes de son département.
+    # uniquement les personnes de son département. Même règle que la liste (« sans département » = les comptes sans
+    # département) : sinon la liste montre des personnes dont la fiche est ensuite refusée.
     if utilisateur.id != current_user.id:
         if not current_user.has_permission('utilisateurs.voir'):
             return deny_access("Vous n'avez pas la permission de consulter les profils.")
         if not current_user.has_permission('utilisateurs.voir_tous') and (
-                not current_user.departement_id or utilisateur.departement_id != current_user.departement_id):
+                utilisateur.departement_id != current_user.departement_id):
             return deny_access("Vous ne pouvez consulter que les profils de votre département.")
     
     # Statistiques
