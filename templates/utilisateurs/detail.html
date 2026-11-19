@@ -91,6 +91,7 @@
 
 /* ── Hero Profile Card ─────────────────────────────────────── */
 .user-hero-card {
+  --hero-accent: {{ utilisateur.role.couleur if utilisateur.role and utilisateur.role.couleur else 'var(--brand)' }};
   position: relative;
   background: var(--surface-1);
   border: 1px solid var(--border-subtle);
@@ -107,9 +108,10 @@
 
 .user-hero-banner {
   height: 96px;
+  /* Une seule teinte (celle du rôle) pour la bannière ET l'avatar : plus de mélange vert/rouge qui ternit */
   background: linear-gradient(135deg,
-    color-mix(in srgb, {{ utilisateur.role.couleur if utilisateur.role else 'var(--brand)' }} 16%, var(--surface-2)) 0%,
-    color-mix(in srgb, var(--brand) 10%, var(--surface-1)) 60%,
+    color-mix(in srgb, var(--hero-accent) 24%, var(--surface-1)) 0%,
+    color-mix(in srgb, var(--hero-accent) 10%, var(--surface-1)) 65%,
     var(--surface-1) 100%
   );
   border-bottom: 1px solid var(--border-subtle);
@@ -168,7 +170,7 @@
   font-size: 28px;
   font-weight: 800;
   color: #ffffff;
-  background: linear-gradient(135deg, {{ utilisateur.role.couleur if utilisateur.role else 'var(--brand)' }}, var(--brand));
+  background: linear-gradient(135deg, var(--hero-accent), color-mix(in srgb, var(--hero-accent) 72%, #000));
   user-select: none;
   position: relative;
   cursor: pointer;
@@ -360,6 +362,12 @@
   padding-top: 0;
   padding-bottom: 0;
   box-sizing: border-box;
+}
+
+@media (max-width: 1180px) {
+  /* Écrans moyens : les boutons passent sous le nom pour que celui-ci ne se coupe pas */
+  .user-hero-actions { grid-column: 2 / -1; grid-row: 3; margin-top: 16px; justify-content: flex-start; }
+  .user-badges-strip { grid-row: 4; }
 }
 
 @media (max-width: 760px) {
