@@ -350,6 +350,8 @@ def _groupe_dict(groupe, mine):
         'initials': (groupe.nom or '?')[:2].upper(),
         'is_admin': bool(mine.est_admin),
         'nb_membres': len(membres),
+        'createur': f"{groupe.createur.prenom} {groupe.createur.nom}" if groupe.createur else None,
+        'date_creation': (groupe.date_creation.isoformat() + 'Z') if groupe.date_creation else None,
         'membres': [{
             'id': m.utilisateur_id,
             'name': f"{m.utilisateur.prenom} {m.utilisateur.nom}",
