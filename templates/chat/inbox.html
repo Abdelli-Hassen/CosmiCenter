@@ -890,7 +890,8 @@
     if (!f) return '';
     const url = esc(f.url);
     if (f.est_image) {
-      return `<a href="${url}" target="_blank" rel="noopener"><img class="msg-img" src="${url}" alt="${esc(f.nom)}" loading="lazy"></a>`;
+      // Clic : visionneuse sur la même page (comme les pièces jointes des tickets), voir le gestionnaire plus bas
+      return `<a href="${url}" class="msg-img-link" data-lightbox data-name="${esc(f.nom)}" data-size="${esc(humanSize(f.taille))}" title="Agrandir"><img class="msg-img" src="${url}" alt="${esc(f.nom)}" loading="lazy"></a>`;
     }
     return `<a class="msg-file" href="${url}" download title="Télécharger ${esc(f.nom)}">
       <span class="msg-file-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg></span>
@@ -1302,6 +1303,14 @@
     if (!confirm('Supprimer définitivement ce groupe, ses messages et ses fichiers pour tous ses membres ?')) return;
     if (await groupAction('supprimer', {})) leaveToList();
   }
+
+  // Images des messages : même visionneuse que sur la fiche d'un ticket (static/js/attachments.js)
+  document.querySelector('.chat-messages').addEventListener('click', function (e) {
+    const link = e.target.closest('a[data-lightbox]');
+    if (!link || !window.openLightbox) return;   // sans le script : le lien s'ouvre normalement
+    e.preventDefault();
+    window.openLightbox(link.getAttribute('href'), link.dataset.name, link.dataset.size);
+  });
 
   // Initial load
   loadConversations();

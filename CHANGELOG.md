@@ -2,6 +2,11 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.10.1] - 2026-11-25
+
+### 🖼️ Messagerie : les images s'ouvrent comme dans les tickets
+- Cliquer sur une image d'un message (privé ou de groupe) ouvre la **même visionneuse que sur la fiche d'un ticket** — grande, sur la même page, avec le nom, la taille et le bouton **Télécharger** (Échap, clic à l'extérieur ou ✕ pour fermer) — au lieu d'un petit onglet à part. La visionneuse reste ouverte pendant le rafraîchissement automatique de la conversation.
+
 ## [2.10.0] - 2026-11-25
 
 ### 💬 Messagerie : groupes de discussion
