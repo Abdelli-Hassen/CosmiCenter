@@ -13,7 +13,7 @@ from flask_login import login_required, current_user
 
 from models import (db, Utilisateur, Departement, CategorieTicket, Ticket, Role, Permission,
                     PointDeVente, Entreprise, PlanActionTask, ConfigurationSysteme)
-from utils.permissions import can_assign_role, can_act_on_user, permission_required, is_super_admin, home_endpoint
+from utils.permissions import assignable_roles, can_assign_role, can_act_on_user, permission_required, is_super_admin, home_endpoint
 from utils.security import csv_safe, safe_color, parse_int
 import logging
 
@@ -41,7 +41,7 @@ def _parse_datetime(value):
 def _user_form_context():
     return dict(
         departements=Departement.query.filter_by(actif=True).order_by(Departement.nom).all(),
-        roles=Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all(),
+        roles=assignable_roles(current_user, Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all()),
         pdvs=PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all(),
         entreprises=Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all(),
     )
@@ -176,7 +176,7 @@ def utilisateurs():
     total_actifs = Utilisateur.query.filter_by(actif=True).count()
     total_inactifs = Utilisateur.query.filter_by(actif=False).count()
 
-    roles = Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all()
+    roles = assignable_roles(current_user, Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all())
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
 
     return render_template(

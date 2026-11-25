@@ -442,7 +442,8 @@
                oninput="clearTimeout(this._t);this._t=setTimeout(()=>this.form.submit(),400)">
       </div>
 
-      <!-- Role -->
+      <!-- Role (Super Administrateur uniquement) -->
+      {% if peut_filtrer_role %}
       <div class="select-wrap">
         <select name="role" class="users-select" onchange="this.form.submit()">
           <option value="">Tous les rôles</option>
@@ -451,6 +452,7 @@
           {% endfor %}
         </select>
       </div>
+      {% endif %}
 
       <!-- Entreprise Filter -->
       <div class="select-wrap">

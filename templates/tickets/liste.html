@@ -241,6 +241,7 @@
           {{ sort_th('Priorité', 'priorite', 'width: 110px;') }}
           {{ sort_th('Titre & Catégorie', 'titre', 'min-width: 300px;') }}
           {{ sort_th('Statut', 'statut', 'width: 140px;') }}
+          <th style="width: 170px;">Demandeur</th>
           <th style="width: 180px;">Assigné à</th>
           <th style="width: 160px;">Département</th>
           {{ sort_th('Créé le', 'date_creation', 'width: 120px;') }}
@@ -302,6 +303,12 @@
             {% endif %}
           </td>
           
+          <td class="tk-from">
+            {% if ticket.createur %}
+            <span style="font-size: 13px; font-weight: 500; color: var(--text-primary);" title="{{ ticket.createur.email }}">{{ ticket.createur.prenom }} {{ ticket.createur.nom }}</span>
+            {% else %}<span style="font-size: 13px; color: var(--text-muted);">—</span>{% endif %}
+          </td>
+
           <td class="tk-who">
             {{ assignation(ticket, 26) }}
           </td>

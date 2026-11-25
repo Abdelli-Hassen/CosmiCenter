@@ -6,8 +6,8 @@ import logging
 import re
 from datetime import datetime
 
-from utils.permissions import (can_assign_role, can_act_on_user, permission_required, deny_access, home_endpoint,
-                               user_visibility_filter, can_view_user)
+from utils.permissions import (assignable_roles, can_assign_role, can_act_on_user, permission_required, deny_access, home_endpoint,
+                               user_visibility_filter, can_view_user, is_super_admin)
 
 utilisateurs_bp = Blueprint('utilisateurs', __name__)
 logger = logging.getLogger(__name__)
@@ -76,7 +76,9 @@ def liste():
             )
         )
     
-    role_filter = request.args.get('role', '')
+    # Le filtre par rôle est réservé aux Super Administrateurs (ignoré pour les autres, même dans l'URL)
+    peut_filtrer_role = is_super_admin(current_user)
+    role_filter = request.args.get('role', '') if peut_filtrer_role else ''
     if role_filter:
         query = query.filter_by(role_id=role_filter)
     
@@ -188,6 +190,7 @@ def liste():
                          entreprises=entreprises,
                          search=search,
                          role_filter=role_filter,
+                         peut_filtrer_role=peut_filtrer_role,
                          dept_filter=dept_filter,
                          entreprise_filter=entreprise_filter,
                          pdv_filter=pdv_filter,
@@ -216,7 +219,7 @@ def nouveau():
 
         # Validation
         from models import Entreprise, PointDeVente
-        roles_all = Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all()
+        roles_all = assignable_roles(current_user, Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all())
         departements_all = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
         entreprises_all = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
         pdvs_all = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
@@ -281,7 +284,7 @@ def nouveau():
             flash('Erreur lors de la création de l\'utilisateur.', 'danger')
 
     from models import Entreprise, PointDeVente
-    roles = Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all()
+    roles = assignable_roles(current_user, Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all())
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
     entreprises = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
     pdvs = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
@@ -377,7 +380,7 @@ def modifier(id):
         
         # Validation
         from models import Entreprise, PointDeVente
-        roles_all = Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all()
+        roles_all = assignable_roles(current_user, Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all())
         departements_all = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
         entreprises_all = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
         pdvs_all = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()
@@ -451,7 +454,7 @@ def modifier(id):
             flash('Erreur lors de la modification.', 'danger')
     
     from models import Entreprise, PointDeVente
-    roles = Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all()
+    roles = assignable_roles(current_user, Role.query.filter_by(actif=True).order_by(Role.systeme.desc(), Role.nom).all())
     departements = Departement.query.filter_by(actif=True).order_by(Departement.nom).all()
     entreprises = Entreprise.query.filter_by(actif=True).order_by(Entreprise.nom).all()
     pdvs = PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all()

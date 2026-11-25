@@ -842,6 +842,13 @@ def _close_or_reopen(ticket_id, target_status, action_label, ok_message):
     return redirect(url_for('tickets.detail', ticket_id=ticket_id))
 
 
+@tickets_bp.route('/<ticket_id>/resoudre', methods=['POST'])
+@login_required
+def resoudre(ticket_id):
+    """Résoudre un ticket (bouton « Résoudre » de la fiche)"""
+    return _close_or_reopen(ticket_id, 'resolu', 'Résolution de ticket', 'Ticket résolu')
+
+
 @tickets_bp.route('/<ticket_id>/fermer', methods=['POST'])
 @login_required
 def fermer(ticket_id):

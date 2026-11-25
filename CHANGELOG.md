@@ -2,6 +2,36 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.9.6] - 2026-11-25
+
+### ✅ Fiche ticket : « Résoudre » (vert) remplace « Fermer »
+- Le bouton rouge de la fiche passe le ticket à **Résolu** (et non plus Fermé). Le bouton **Réouvrir** est maintenant proposé aussi sur un ticket résolu.
+
+### 🔒 Rôle Super Administrateur invisible pour les autres
+- Dans les formulaires *Nouvel utilisateur*, *Modifier l'utilisateur* (et leurs versions Administration), le rôle **Super Administrateur** n'apparaît plus que pour un Super Administrateur (le refus côté serveur existait déjà).
+
+### 👤 Liste des tickets : colonne « Demandeur »
+- Le tableau affiche qui a envoyé le ticket (survol = e-mail), aussi sur mobile.
+
+## [2.9.5] - 2026-11-20
+
+### 🪪 Barre du haut : le poste est affiché
+- En haut à droite, une pastille de profil cliquable (survol animé) : le **nom** en gras, dessous une petite capsule **grise à texte clair** avec le **poste** (ex. « RESPONSABLE IT »), bien lisible en thème sombre comme clair, et l'**avatar** à droite avec un anneau de couleur et un point vert. Le rôle n'est plus affiché ici (visible sur le profil) ; il ne sert de repli que si le poste n'est pas renseigné. Sur mobile seul l'avatar reste.
+
+## [2.9.4] - 2026-11-20
+
+### 🔔 Son « ticket reçu » quand l'onglet est en arrière-plan
+- La vérification des nouvelles notifications était suspendue dès que l'onglet n'était plus affiché : le son et la bannière n'arrivaient qu'au retour sur la page. Elle continue maintenant en arrière-plan (le navigateur peut ralentir la fréquence d'un onglet resté longtemps caché).
+
+### 🔊 Son bloqué par le navigateur : message clair
+- Les navigateurs interdisent tout son tant qu'on n'a pas cliqué sur la page (cas d'un écran qui reçoit sans être touché). Le son était alors perdu sans rien dire. Une bannière **« Son bloqué par le navigateur — Activer le son »** s'affiche maintenant ; un clic débloque les sons suivants et joue celui qui attendait (conservé 2 minutes au lieu de 20 secondes).
+
+### 👥 Utilisateurs : filtre par rôle réservé aux Super Administrateurs
+- Le menu **« Tous les rôles »** de la page *Utilisateurs* n'est affiché qu'aux Super Administrateurs ; pour les autres il disparaît et un paramètre `role` ajouté à la main dans l'adresse est ignoré.
+
+### 📎 Retirer une pièce jointe ne rouvre plus l'explorateur de fichiers
+- *Nouveau ticket* et *Modifier le ticket* : cliquer sur la croix d'un fichier le retire sans rouvrir la fenêtre « Choisir un fichier » (le clic ne remonte plus à la zone de dépôt).
+
 ## [2.9.3] - 2026-11-19
 
 ### 🎨 Boutons « Tout sélectionner » : même style que le compteur

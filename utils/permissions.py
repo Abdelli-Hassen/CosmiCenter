@@ -21,6 +21,11 @@ def can_assign_role(actor, role):
     return (not role.est_super_admin) or is_super_admin(actor)
 
 
+def assignable_roles(actor, roles):
+    """Rôles proposés dans les formulaires : le Super Administrateur n'est visible que pour un Super Administrateur."""
+    return [r for r in roles if can_assign_role(actor, r)]
+
+
 def can_act_on_user(actor, target):
     """Un compte Super Administrateur ne peut être modifié, désactivé ou supprimé que par un Super Administrateur
     (ou par lui-même pour ce qui le concerne)."""

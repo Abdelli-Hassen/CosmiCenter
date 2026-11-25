@@ -279,15 +279,15 @@
       {% endif %}
       
       {% if ticket.statut not in ['ferme','annule','resolu'] and can_ticket(current_user, 'cloturer', ticket) %}
-      <form method="POST" action="{{ url_for('tickets.fermer', ticket_id=ticket.id) }}" style="margin:0;">
-        <button type="submit" class="btn btn-fermer-ticket" style="border-radius:6px; padding:6px 14px; font-size:13px; font-weight:600; background:rgba(239,68,68,0.12); color:#dc2626 !important; border:1px solid rgba(239,68,68,0.3); display:inline-flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.15s ease;" onmouseover="this.style.background='#dc2626'; this.style.color='#ffffff'; this.style.borderColor='#dc2626';" onmouseout="this.style.background='rgba(239,68,68,0.12)'; this.style.color='#dc2626'; this.style.borderColor='rgba(239,68,68,0.3)';">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-          Fermer
+      <form method="POST" action="{{ url_for('tickets.resoudre', ticket_id=ticket.id) }}" style="margin:0;">
+        <button type="submit" class="btn btn-fermer-ticket" style="border-radius:6px; padding:6px 14px; font-size:13px; font-weight:600; background:rgba(22,163,74,0.12); color:#16a34a !important; border:1px solid rgba(22,163,74,0.3); display:inline-flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.15s ease;" onmouseover="this.style.background='#16a34a'; this.style.color='#ffffff'; this.style.borderColor='#16a34a';" onmouseout="this.style.background='rgba(22,163,74,0.12)'; this.style.color='#16a34a'; this.style.borderColor='rgba(22,163,74,0.3)';">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
+          Résoudre
         </button>
       </form>
       {% endif %}
       
-      {% if ticket.statut == 'ferme' and can_ticket(current_user, 'cloturer', ticket) %}
+      {% if ticket.statut in ['ferme', 'resolu'] and can_ticket(current_user, 'cloturer', ticket) %}
       <form method="POST" action="{{ url_for('tickets.reouvrir', ticket_id=ticket.id) }}" style="margin:0;">
         <button type="submit" class="btn btn-secondary" style="border-radius:6px; padding:6px 12px; font-size:13px; font-weight:600;">
           Reouvrir

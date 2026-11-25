@@ -383,7 +383,7 @@
     if (!(window.CHUB_CONFIG && window.CHUB_CONFIG.isAuthenticated)) return;
 
     var pollTimer = setInterval(function () {
-      if (document.hidden) return; // onglet en arrière-plan : on économise les requêtes
+      // On interroge aussi quand l'onglet est en arrière-plan : sinon le son « ticket reçu » ne part pas.
       fetch('/api/notifications/poll', { headers: { 'Accept': 'application/json' } })
         .then(res => {
           // Session expirée : le serveur redirige vers la page de connexion (HTML, pas du JSON) -> on arrête d'interroger.

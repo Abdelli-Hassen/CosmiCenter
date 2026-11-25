@@ -24,7 +24,7 @@
     received: '/static/new%20ticket.mp3'
   };
   var LEAD = 0.15;          // secondes de silence avant le son
-  var PENDING_MAX_AGE = 20000; // ms : au-delà, un son en attente n'a plus de sens
+  var PENDING_MAX_AGE = 120000; // ms : au-delà, un son en attente n'a plus de sens
 
   var AC = window.AudioContext || window.webkitAudioContext;
   var ctx = null, keepAlive = null;
@@ -97,6 +97,25 @@
 
   function queue(name) {
     pending.push({ name: name, at: Date.now() });
+    promptUnlock();
+  }
+
+  // Le navigateur refuse tout son tant qu'on n'a pas cliqué sur la page : on le dit, une seule fois,
+  // avec un bouton (le clic débloque le son pour la suite et joue celui qui attendait).
+  var prompted = false;
+  function promptUnlock() {
+    if (prompted) return;
+    prompted = true;
+    try {
+      if (window.CHUB && window.CHUB.toast) {
+        window.CHUB.toast.show({
+          title: 'Son bloqué par le navigateur',
+          message: 'Cliquez une fois sur la page pour activer les sons des notifications.',
+          type: 'warning', duration: 0,
+          action: { label: 'Activer le son', onClick: function () {} }
+        });
+      }
+    } catch (e) {}
   }
 
   function flushPending() {
