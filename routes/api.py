@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 from models import db, Ticket, Utilisateur, Departement, Notification, Message
 from utils.permissions import (visible_tickets_query, can_access_ticket, can_change_status, can_ticket, ticket_visibility_filter,
-                               unopened_tickets_count)
+                               unopened_tickets_count, unread_messages_count)
 from utils.security import like_escape
 from datetime import datetime, timedelta
 import logging
@@ -271,7 +271,7 @@ def marquer_notifications_lues():
 @login_required
 def poll_notifications():
     unread_notifs = Notification.query.filter_by(utilisateur_id=current_user.id, lue=False).count()
-    unread_msgs = Message.query.filter_by(receiver_id=current_user.id, is_read=False).count()
+    unread_msgs = unread_messages_count(current_user)  # privés + groupes
 
     recent_notifs = Notification.query.filter_by(
         utilisateur_id=current_user.id,
@@ -281,6 +281,7 @@ def poll_notifications():
     notifs_data = [{
         'id': n.id,
         'titre': n.titre,
+        'type': n.type_notification,
         'message': n.message,
         'lien': n.lien,
         'date': n.date_creation.strftime('%d/%m/%Y %H:%M')

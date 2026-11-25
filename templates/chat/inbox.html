@@ -411,6 +411,47 @@
   }
   .chat-send-btn:active { transform: scale(0.95); }
 
+  /* ── Groupes ── */
+  .grp-avatar { background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important; color: #fff; display: flex; align-items: center; justify-content: center; }
+  .msg-sender { font-size: 11px; font-weight: 700; margin: 0 0 3px 2px; }
+  .grp-new-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 14px; background: none; border: none; border-bottom: 1px solid var(--border-subtle); cursor: pointer; font-size: 13px; font-weight: 700; color: var(--text-primary); transition: background 0.15s ease; text-align: left; }
+  .grp-new-btn:hover { background: var(--surface-hover); }
+  .grp-new-btn span.grp-ic { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #fff; flex-shrink: 0; }
+
+  .grp-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.45); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+  .grp-overlay.show { display: flex; }
+  .grp-modal { background: var(--surface-base, #fff); border: 1px solid var(--border-subtle); border-radius: 18px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); width: 100%; max-width: 440px; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; animation: grp-pop 0.18s ease backwards; }
+  @keyframes grp-pop { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+  .grp-head { padding: 18px 20px 12px; display: flex; align-items: center; justify-content: space-between; }
+  .grp-head h3 { margin: 0; font-size: 17px; font-weight: 800; color: var(--text-primary); }
+  .grp-x { background: none; border: none; font-size: 22px; line-height: 1; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 8px; }
+  .grp-x:hover { background: var(--surface-hover); color: var(--text-primary); }
+  .grp-body { padding: 0 20px 8px; overflow-y: auto; }
+  .grp-input { width: 100%; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 10px; font-size: 14px; color: var(--text-primary); outline: none; margin-bottom: 10px; }
+  .grp-input:focus { border-color: var(--color-brand, #dc2626); }
+  .grp-label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 6px 0; display: flex; justify-content: space-between; }
+  .grp-list { border: 1px solid var(--border-subtle); border-radius: 12px; max-height: 280px; overflow-y: auto; margin-bottom: 8px; }
+  .grp-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--border-subtle); cursor: pointer; transition: background 0.15s ease; }
+  .grp-row:last-child { border-bottom: none; }
+  .grp-row:hover { background: var(--surface-hover); }
+  .grp-row .chat-item-avatar { width: 34px; height: 34px; font-size: 11px; margin: 0; overflow: hidden; flex-shrink: 0; background: linear-gradient(135deg, #64748b, #475569); }
+  .grp-row-name { font-size: 13px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .grp-row-sub { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .grp-row input[type=checkbox] { accent-color: var(--color-brand, #dc2626); width: 16px; height: 16px; flex-shrink: 0; }
+  .grp-badge { font-size: 10px; font-weight: 800; color: #6d28d9; background: rgba(139,92,246,0.12); border-radius: 6px; padding: 2px 6px; flex-shrink: 0; }
+  .grp-mini { background: none; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 4px 9px; font-size: 12px; font-weight: 600; color: var(--text-secondary); cursor: pointer; flex-shrink: 0; transition: all 0.15s ease; }
+  .grp-mini:hover { color: #dc2626; border-color: #dc2626; }
+  .grp-foot { padding: 12px 20px 18px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .grp-btn { border-radius: 10px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid var(--border-subtle); background: var(--surface-base); color: var(--text-primary); transition: all 0.15s ease; }
+  .grp-btn:hover { transform: translateY(-1px); border-color: var(--color-brand, #dc2626); }
+  .grp-btn.primary { background: var(--color-brand, #dc2626); color: #fff; border-color: var(--color-brand, #dc2626); }
+  .grp-btn.primary:hover { background: #b91c1c; }
+  .grp-btn.danger { color: #dc2626; border-color: rgba(220,38,38,0.35); }
+  .grp-btn.danger:hover { background: #dc2626; color: #fff; }
+  .grp-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
+  .grp-err { color: #dc2626; font-size: 12px; font-weight: 600; min-height: 16px; margin: 2px 0 6px; }
+  @media (prefers-reduced-motion: reduce) { .grp-modal { animation: none; } }
+
 </style>
 
 <div class="chat-layout">
@@ -426,6 +467,10 @@
           </button>
           <!-- Dropdown for New Chat -->
           <div id="newChatMenu" style="display: none; position: absolute; right: 0; top: 42px; background: var(--surface-base); border: 1px solid var(--border-subtle); border-radius: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.2); width: 280px; z-index: 100; overflow: hidden;">
+            <button type="button" class="grp-new-btn" onclick="openGroupCreate()">
+              <span class="grp-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+              Nouveau groupe
+            </button>
             <div style="padding: 12px 14px 8px; border-bottom: 1px solid var(--border-subtle);">
               <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">Nouvelle discussion</div>
               <div style="position: relative;">
@@ -475,7 +520,11 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
         </button>
         <div id="chatOptionsMenu" style="display: none; position: absolute; right: 0; top: 44px; background: var(--surface-base); border: 1px solid var(--border-subtle); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); width: max-content; min-width: 200px; z-index: 100; padding: 6px;">
-          <a href="#" onclick="viewUserProfile(); return false;" class="dropdown-item" style="color: var(--text-primary); font-size: 13px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; text-decoration: none; white-space: nowrap; transition: all 0.2s;" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='transparent'">
+          <a href="#" id="grpInfoItem" onclick="openGroupInfo(); return false;" class="dropdown-item" style="display:none; color: var(--text-primary); font-size: 13px; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; text-decoration: none; white-space: nowrap; transition: all 0.2s;" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='transparent'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Infos du groupe
+          </a>
+          <a href="#" id="viewProfileItem" onclick="viewUserProfile(); return false;" class="dropdown-item" style="color: var(--text-primary); font-size: 13px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; text-decoration: none; white-space: nowrap; transition: all 0.2s;" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='transparent'">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             Voir le profil
           </a>
@@ -525,8 +574,49 @@
   </div>
 </div>
 
+<!-- Créer un groupe / ajouter des membres -->
+<div class="grp-overlay" id="grpPicker" role="dialog" aria-modal="true" aria-labelledby="grpPickerTitle">
+  <div class="grp-modal">
+    <div class="grp-head"><h3 id="grpPickerTitle">Nouveau groupe</h3><button type="button" class="grp-x" aria-label="Fermer" onclick="closeOverlay('grpPicker')">×</button></div>
+    <div class="grp-body">
+      <input type="text" class="grp-input" id="grpName" maxlength="60" placeholder="Nom du groupe" aria-label="Nom du groupe">
+      <div class="grp-label"><span>Membres</span><span id="grpCount">0 choisi</span></div>
+      <input type="text" class="grp-input" id="grpSearch" placeholder="Chercher un collègue..." oninput="renderPicker()" aria-label="Chercher un collègue" style="margin-bottom:8px;">
+      <div class="grp-list" id="grpUsers"></div>
+      <div class="grp-err" id="grpPickerErr" role="alert"></div>
+    </div>
+    <div class="grp-foot">
+      <button type="button" class="grp-btn" onclick="closeOverlay('grpPicker')">Annuler</button>
+      <button type="button" class="grp-btn primary" id="grpPickerOk" onclick="submitPicker()">Créer le groupe</button>
+    </div>
+  </div>
+</div>
+
+<!-- Infos du groupe -->
+<div class="grp-overlay" id="grpInfo" role="dialog" aria-modal="true" aria-labelledby="grpInfoTitle">
+  <div class="grp-modal">
+    <div class="grp-head"><h3 id="grpInfoTitle">Infos du groupe</h3><button type="button" class="grp-x" aria-label="Fermer" onclick="closeOverlay('grpInfo')">×</button></div>
+    <div class="grp-body">
+      <div id="grpRenameBox" style="display:none; gap:8px; margin-bottom:6px;">
+        <input type="text" class="grp-input" id="grpRename" maxlength="60" aria-label="Nom du groupe" style="margin-bottom:0; flex:1;">
+        <button type="button" class="grp-btn" onclick="renameGroup()">Renommer</button>
+      </div>
+      <div class="grp-label"><span>Membres</span><span id="grpInfoCount"></span></div>
+      <div class="grp-list" id="grpMembers"></div>
+      <div class="grp-err" id="grpInfoErr" role="alert"></div>
+    </div>
+    <div class="grp-foot">
+      <button type="button" class="grp-btn" id="grpAddBtn" style="display:none;" onclick="openGroupAdd()">+ Ajouter des membres</button>
+      <button type="button" class="grp-btn danger" onclick="leaveGroup()">Quitter le groupe</button>
+      <button type="button" class="grp-btn danger" id="grpDeleteBtn" style="display:none;" onclick="deleteGroup()">Supprimer le groupe</button>
+    </div>
+  </div>
+</div>
+
 <script>
   let currentContactId = null;
+  let currentIsGroup = false;     // la conversation ouverte est un groupe ?
+  let currentGroup = null;        // détails du groupe ouvert (membres, droits)
   const currentUserId = "{{ current_user.id }}";
 
   let allConversations = [];
@@ -544,6 +634,15 @@
       : esc(initials);
   }
 
+  const GROUP_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+
+  // Couleur stable par expéditeur dans un groupe
+  function senderColor(id) {
+    let h = 0;
+    for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 360;
+    return `hsl(${h}, 60%, 42%)`;
+  }
+
   function renderConversations(convos) {
     const list = document.querySelector('.chat-list');
     list.innerHTML = '';
@@ -559,11 +658,11 @@
     convos.forEach(chat => {
       const isActive = chat.contact_id === currentContactId ? 'active' : '';
       const unreadBadge = chat.unread_count > 0 ? `<div class="unread-badge">${Number(chat.unread_count) || 0}</div>` : '';
-      const avatarHtml = avatarMarkup(chat.photo_profil, chat.contact_initials);
+      const avatarHtml = chat.is_group ? GROUP_ICON : avatarMarkup(chat.photo_profil, chat.contact_initials);
 
       list.innerHTML += `
-        <div class="chat-item ${isActive}" data-contact-id="${esc(chat.contact_id)}" onclick="loadMessages(this.dataset.contactId)">
-          <div class="chat-item-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb); overflow:hidden;">${avatarHtml}</div>
+        <div class="chat-item ${isActive}" data-contact-id="${esc(chat.contact_id)}" data-group="${chat.is_group ? '1' : '0'}" onclick="openConversation(this.dataset.contactId, this.dataset.group === '1')">
+          <div class="chat-item-avatar ${chat.is_group ? 'grp-avatar' : ''}" style="${chat.is_group ? '' : 'background: linear-gradient(135deg, #3b82f6, #2563eb);'} overflow:hidden;">${avatarHtml}</div>
           <div class="chat-item-info">
             <div class="chat-item-name" style="${chat.unread_count > 0 ? 'font-weight:700;' : ''}">${esc(chat.contact_name)}</div>
             <div class="chat-item-preview" style="${chat.unread_count > 0 ? 'color:var(--text-primary);font-weight:500;' : ''}">${chat.last_message ? esc(chat.last_message) : '<span style="color:var(--text-muted);font-style:italic;">Aucun message</span>'}</div>
@@ -613,23 +712,56 @@
     document.getElementById('chatEmptyState').style.display = 'flex';
   }
 
+  function openConversation(id, isGroup) {
+    currentIsGroup = !!isGroup;
+    currentGroup = null;
+    loadMessages(id);
+  }
+
+  function setGroupMode(on) {
+    document.getElementById('grpInfoItem').style.display = on ? 'flex' : 'none';
+    document.getElementById('viewProfileItem').style.display = on ? 'none' : 'flex';
+    const av = document.querySelector('.chat-active-header .chat-item-avatar');
+    av.classList.toggle('grp-avatar', on);
+  }
+
   function loadMessages(contactId) {
     currentContactId = contactId;
-    
+    const asGroup = currentIsGroup;
+
     document.getElementById('chatEmptyState').style.display = 'none';
     document.getElementById('chatInterface').style.display = 'flex';
-    
-    fetch(`/chat/api/messages/${contactId}`)
-      .then(res => res.json())
+
+    fetch(asGroup ? `/chat/api/groupe/${contactId}` : `/chat/api/messages/${contactId}`)
+      .then(res => {
+        if (!res.ok && asGroup) { // groupe supprimé ou on en a été retiré
+          if (currentContactId === contactId) { currentContactId = null; currentIsGroup = false; closeChatMobile(); }
+          loadConversations();
+          throw new Error('groupe indisponible');
+        }
+        return res.json();
+      })
       .then(data => {
+        if (currentContactId !== contactId || currentIsGroup !== asGroup) return;  // l'utilisateur a changé de conversation entre-temps
         // Update header
         const headerAvatar = document.querySelector('.chat-active-header .chat-item-avatar');
         headerAvatar.style.overflow = 'hidden';
-        headerAvatar.innerHTML = avatarMarkup(data.contact.photo_profil, data.contact.initials);
         const nameEl = document.querySelector('.chat-active-header .chat-header-user div div:first-child');
-        if(nameEl) nameEl.innerText = data.contact.name;
-        
         const statusEl = document.getElementById('chatActiveStatus');
+        setGroupMode(asGroup);
+        if (asGroup) {
+          currentGroup = data.groupe;
+          headerAvatar.innerHTML = GROUP_ICON;
+          headerAvatar.classList.remove('online');
+          if (nameEl) nameEl.innerText = data.groupe.name;
+          if (statusEl) {
+            statusEl.style.color = 'var(--text-muted)';
+            statusEl.textContent = data.groupe.nb_membres + ' membre' + (data.groupe.nb_membres > 1 ? 's' : '');
+          }
+        } else {
+        headerAvatar.innerHTML = avatarMarkup(data.contact.photo_profil, data.contact.initials);
+        if(nameEl) nameEl.innerText = data.contact.name;
+
         if(statusEl) {
             if(data.contact.is_online) {
                 statusEl.innerHTML = '<span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block;"></span>En ligne';
@@ -641,7 +773,8 @@
                 headerAvatar.classList.remove('online');
             }
         }
-        
+        }
+
         // Update messages
         const container = document.querySelector('.chat-messages');
         container.innerHTML = '';
@@ -650,9 +783,11 @@
           const wrapperClass = isSent ? 'sent' : 'received';
           const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
           
+          const who = (asGroup && !isSent)
+            ? `<div class="msg-sender" style="color:${senderColor(msg.sender_id)};">${esc(msg.sender_name)}</div>` : '';
           container.innerHTML += `
             <div class="msg-wrapper ${wrapperClass}">
-              <div class="msg-bubble">${msg.content ? esc(msg.content).replace(/\n/g, '<br>') : ''}${fileMarkup(msg.fichier)}</div>
+              <div class="msg-bubble">${who}${msg.content ? esc(msg.content).replace(/\n/g, '<br>') : ''}${fileMarkup(msg.fichier)}</div>
               <div class="msg-time">${time}</div>
             </div>
           `;
@@ -732,13 +867,14 @@
     let options;
     if (pendingFile) {
       const form = new FormData();
-      form.append('receiver_id', currentContactId);
+      form.append(currentIsGroup ? 'groupe_id' : 'receiver_id', currentContactId);
       form.append('content', content);
       form.append('file', pendingFile, pendingFile.name);
       options = { method: 'POST', body: form };
     } else {
       options = { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ receiver_id: currentContactId, content: content }) };
+                  body: JSON.stringify(currentIsGroup ? { groupe_id: currentContactId, content: content }
+                                                      : { receiver_id: currentContactId, content: content }) };
     }
 
     fetch("{{ url_for('chat.send_message') }}", options)
@@ -820,6 +956,9 @@
   function startNewChat(id, name, initials, photoProfil) {
     document.getElementById('newChatMenu').style.display = 'none';
     currentContactId = id;
+    currentIsGroup = false;
+    currentGroup = null;
+    setGroupMode(false);
     
     document.getElementById('chatEmptyState').style.display = 'none';
     document.getElementById('chatInterface').style.display = 'flex';
@@ -878,6 +1017,173 @@
     if (currentContactId) {
       window.location.href = '/utilisateurs/' + currentContactId;
     }
+  }
+
+  // ═══════════ Groupes de discussion ═══════════
+  let pickerMode = 'create';   // 'create' | 'add'
+  let pickerChosen = new Set();
+  let pickerExclude = new Set();
+
+  function closeOverlay(id) { document.getElementById(id).classList.remove('show'); }
+  document.querySelectorAll('.grp-overlay').forEach(o => o.addEventListener('mousedown', e => { if (e.target === o) o.classList.remove('show'); }));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.grp-overlay.show').forEach(o => o.classList.remove('show')); });
+
+  async function postJson(url, body) {
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+    let data = {};
+    try { data = await res.json(); } catch (e) {}
+    return { ok: res.ok, data };
+  }
+
+  function loadColleaguesThen(cb) {
+    fetch("{{ url_for('chat.get_users') }}").then(r => r.json()).then(d => { allColleagues = d || []; cb(); });
+  }
+
+  function openPicker(mode) {
+    pickerMode = mode;
+    pickerChosen = new Set();
+    document.getElementById('newChatMenu').style.display = 'none';
+    document.getElementById('grpName').style.display = mode === 'create' ? 'block' : 'none';
+    document.getElementById('grpName').value = '';
+    document.getElementById('grpSearch').value = '';
+    document.getElementById('grpPickerErr').textContent = '';
+    document.getElementById('grpPickerTitle').textContent = mode === 'create' ? 'Nouveau groupe' : 'Ajouter des membres';
+    document.getElementById('grpPickerOk').textContent = mode === 'create' ? 'Créer le groupe' : 'Ajouter';
+    document.getElementById('grpPickerOk').disabled = false;
+    document.getElementById('grpPicker').classList.add('show');
+    renderPicker();
+    loadColleaguesThen(renderPicker);
+    setTimeout(() => document.getElementById(mode === 'create' ? 'grpName' : 'grpSearch').focus(), 50);
+  }
+  function openGroupCreate() { pickerExclude = new Set(); openPicker('create'); }
+  function openGroupAdd() {
+    pickerExclude = new Set((currentGroup ? currentGroup.membres : []).map(m => m.id));
+    closeOverlay('grpInfo');
+    openPicker('add');
+  }
+
+  function renderPicker() {
+    const term = document.getElementById('grpSearch').value.toLowerCase().trim();
+    const box = document.getElementById('grpUsers');
+    const users = allColleagues.filter(u => !pickerExclude.has(u.id) &&
+      (!term || (u.name || '').toLowerCase().includes(term) || (u.poste || '').toLowerCase().includes(term) || (u.departement || '').toLowerCase().includes(term)));
+    box.innerHTML = users.length ? '' : '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px;">Aucun utilisateur trouvé</div>';
+    users.forEach(u => {
+      const row = document.createElement('label');
+      row.className = 'grp-row';
+      const sub = u.poste || u.departement || '';
+      row.innerHTML = `<input type="checkbox" ${pickerChosen.has(u.id) ? 'checked' : ''}>
+        <div class="chat-item-avatar">${avatarMarkup(u.photo_profil, u.initials)}</div>
+        <div style="min-width:0;flex:1;"><div class="grp-row-name">${esc(u.name)}</div>${sub ? `<div class="grp-row-sub">${esc(sub)}</div>` : ''}</div>`;
+      row.querySelector('input').addEventListener('change', e => {
+        if (e.target.checked) pickerChosen.add(u.id); else pickerChosen.delete(u.id);
+        updatePickerCount();
+      });
+      box.appendChild(row);
+    });
+    updatePickerCount();
+  }
+  function updatePickerCount() {
+    const n = pickerChosen.size;
+    document.getElementById('grpCount').textContent = n + (n > 1 ? ' choisis' : ' choisi');
+  }
+
+  async function submitPicker() {
+    const err = document.getElementById('grpPickerErr');
+    const ok = document.getElementById('grpPickerOk');
+    err.textContent = '';
+    ok.disabled = true;
+    try {
+      if (pickerMode === 'create') {
+        const { ok: good, data } = await postJson("{{ url_for('chat.creer_groupe') }}", { nom: document.getElementById('grpName').value, membres: [...pickerChosen] });
+        if (!good) { err.textContent = data.error || 'Création impossible.'; return; }
+        closeOverlay('grpPicker');
+        openConversation(data.id, true);
+      } else {
+        const { ok: good, data } = await postJson(`/chat/api/groupe/${currentContactId}/membres`, { membres: [...pickerChosen] });
+        if (!good) { err.textContent = data.error || 'Ajout impossible.'; return; }
+        closeOverlay('grpPicker');
+        loadMessages(currentContactId);
+      }
+    } catch (e) {
+      err.textContent = 'Erreur réseau.';
+    } finally {
+      ok.disabled = false;
+    }
+  }
+
+  // ── Infos du groupe ──
+  function openGroupInfo() {
+    document.getElementById('chatOptionsMenu').style.display = 'none';
+    if (!currentGroup) return;
+    renderGroupInfo();
+    document.getElementById('grpInfo').classList.add('show');
+  }
+  function renderGroupInfo() {
+    const g = currentGroup;
+    document.getElementById('grpInfoErr').textContent = '';
+    document.getElementById('grpInfoTitle').textContent = g.name;
+    document.getElementById('grpInfoCount').textContent = g.nb_membres + ' membre' + (g.nb_membres > 1 ? 's' : '');
+    document.getElementById('grpRenameBox').style.display = g.is_admin ? 'flex' : 'none';
+    document.getElementById('grpRename').value = g.name;
+    document.getElementById('grpAddBtn').style.display = g.is_admin ? 'inline-block' : 'none';
+    document.getElementById('grpDeleteBtn').style.display = g.is_admin ? 'inline-block' : 'none';
+    const box = document.getElementById('grpMembers');
+    box.innerHTML = '';
+    g.membres.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'grp-row';
+      row.style.cursor = 'default';
+      row.innerHTML = `<div class="chat-item-avatar">${avatarMarkup(m.photo_profil, m.initials)}</div>
+        <div style="min-width:0;flex:1;"><div class="grp-row-name">${esc(m.name)}${m.est_moi ? ' (vous)' : ''}</div></div>
+        ${m.est_admin ? '<span class="grp-badge">Admin</span>' : ''}`;
+      if (g.is_admin && !m.est_moi) {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'grp-mini'; b.textContent = 'Retirer';
+        b.addEventListener('click', () => removeMember(m.id, m.name));
+        row.appendChild(b);
+      }
+      box.appendChild(row);
+    });
+  }
+
+  async function groupAction(path, body) {
+    const err = document.getElementById('grpInfoErr');
+    err.textContent = '';
+    try {
+      const { ok, data } = await postJson(`/chat/api/groupe/${currentContactId}/${path}`, body);
+      if (!ok) { err.textContent = data.error || 'Action impossible.'; return false; }
+      return true;
+    } catch (e) { err.textContent = 'Erreur réseau.'; return false; }
+  }
+  async function renameGroup() {
+    if (await groupAction('renommer', { nom: document.getElementById('grpRename').value })) {
+      closeOverlay('grpInfo');
+      loadMessages(currentContactId);
+    }
+  }
+  async function removeMember(id, name) {
+    if (!confirm('Retirer ' + name + ' du groupe ?')) return;
+    if (await groupAction('retirer', { user_id: id })) {
+      currentGroup.membres = currentGroup.membres.filter(m => m.id !== id);
+      currentGroup.nb_membres = currentGroup.membres.length;
+      renderGroupInfo();
+      loadMessages(currentContactId);
+    }
+  }
+  function leaveToList() {
+    closeOverlay('grpInfo');
+    currentContactId = null; currentIsGroup = false; currentGroup = null;
+    closeChatMobile();
+    loadConversations();
+  }
+  async function leaveGroup() {
+    if (!confirm('Quitter ce groupe ? Vous ne verrez plus ses messages.')) return;
+    if (await groupAction('quitter', {})) leaveToList();
+  }
+  async function deleteGroup() {
+    if (!confirm('Supprimer définitivement ce groupe, ses messages et ses fichiers pour tous ses membres ?')) return;
+    if (await groupAction('supprimer', {})) leaveToList();
   }
 
   // Initial load

@@ -407,7 +407,7 @@
               if (notifs > previousNotifs && data.data.notifications.length > 0) {
                 const newest = data.data.notifications[0];
                 // Only show toast for non-chat notifications
-                if (newest.titre !== 'Nouveau message') {
+                if (newest.type !== 'chat') {
                   const t = ((newest.titre || '') + ' ' + (newest.message || '')).toLowerCase();
                   show({ title: newest.titre, message: newest.message, type: 'info',
                          sound: (t.includes('nouveau') && t.includes('ticket')) ? 'received' : undefined });

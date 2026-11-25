@@ -16,6 +16,10 @@ STATEMENTS = [
     "ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS pdv_extra_ids TEXT",
     "ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS sons_actifs BOOLEAN NOT NULL DEFAULT TRUE",
     "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS pdv_extra_ids TEXT",
+    # Messagerie : groupes de discussion (un message de groupe n'a pas de destinataire individuel)
+    "ALTER TABLE messages ALTER COLUMN receiver_id DROP NOT NULL",
+    "ALTER TABLE messages ADD COLUMN IF NOT EXISTS groupe_id VARCHAR(36) REFERENCES chat_groupes(id) ON DELETE CASCADE",
+    "CREATE INDEX IF NOT EXISTS ix_messages_groupe_id ON messages (groupe_id)",
     "ALTER TABLE pieces_jointes ADD COLUMN IF NOT EXISTS commentaire_id VARCHAR(36) "
     "REFERENCES commentaires(id) ON DELETE CASCADE",
     # Messagerie : fichier joint à un message (nom d'origine, nom stocké, type, taille)

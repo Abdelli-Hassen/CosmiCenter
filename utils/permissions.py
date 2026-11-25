@@ -5,7 +5,7 @@ Seule exception : le rôle « Super Administrateur » ne peut être attribué (n
 Super Administrateur."""
 from sqlalchemy import false, or_
 
-from models import db, Departement, HistoriqueTicket, Message, Ticket, Utilisateur
+from models import db, ChatGroupeMembre, Departement, HistoriqueTicket, Message, Ticket, Utilisateur
 
 
 def is_super_admin(user):
@@ -107,8 +107,12 @@ def unopened_tickets_count(user):
 
 
 def unread_messages_count(user):
-    """Messages privés reçus par `user` et pas encore lus."""
-    return Message.query.filter_by(receiver_id=user.id, is_read=False).count()
+    """Messages non lus de `user` : privés reçus + messages de groupe arrivés depuis la dernière ouverture du groupe."""
+    prives = Message.query.filter_by(receiver_id=user.id, is_read=False).count()
+    groupes = db.session.query(db.func.count(Message.id)).join(
+        ChatGroupeMembre, db.and_(ChatGroupeMembre.groupe_id == Message.groupe_id, ChatGroupeMembre.utilisateur_id == user.id)
+    ).filter(Message.sender_id != user.id, Message.timestamp > ChatGroupeMembre.dernier_lu).scalar()
+    return prives + (groupes or 0)
 
 
 def can_access_ticket(user, ticket):

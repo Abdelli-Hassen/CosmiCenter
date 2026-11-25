@@ -12,6 +12,7 @@ venv/bin/python tests/cat_test.py                (Linux / macOS)
 |---|---|
 | `nav_test.py` | navigation, badges, permissions, évaluation, rapports, messagerie |
 | `chat_test.py` | messagerie et pièces jointes |
+| `groups_test.py` | groupes de discussion (création, droits, membres, fichiers, suppression) |
 | `kb_views_test.py` | base de connaissances : lecteurs distincts et nombre de lectures par personne |
 | `pdv_ref_test.py` | catégories et thèmes des points de vente (base + cache) |
 | `ticket_pdv_test.py` | ticket adressé à un point de vente : choix, notifications, visibilité |

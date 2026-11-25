@@ -146,7 +146,7 @@ La commande `init-db` est **historique** : elle crée les tables, une vingtaine 
 | Accès | `utilisateurs`, `roles`, `permissions`, `roles_permissions` |
 | Organisation | `departements`, `points_de_vente`, `equipements`, `entreprises` |
 | Tickets | `tickets`, `categories_tickets`, `taches` (sous-tâches), `commentaires`, `pieces_jointes`, `historique_tickets`, `ticket_collaborateurs`, `ticket_departements_collab`, `modeles_reponses` |
-| Communication | `messages` (messagerie), `notifications`, `suggestions` (boîte à idées) |
+| Communication | `messages` (messagerie, privée ou de groupe), `chat_groupes`, `chat_groupe_membres`, `notifications`, `suggestions` (boîte à idées) |
 | Connaissance | `categories_connaissance`, `articles_connaissance`, `articles_connaissance_vues` |
 | Pilotage | `statistiques`, `plan_action_tasks`, `configurations_systeme` (réglages clé/valeur en JSON) |
 
@@ -237,7 +237,7 @@ python3 -c "import secrets; print(secrets.token_hex(32))"      # ou : openssl ra
 - **Points de vente** : KPI, effectifs, équipements, **thème couleur propre**, catégories et palette modifiables depuis *Points de vente → Catégories & thèmes*.
 
 ### Communication
-- **Messagerie** privée entre utilisateurs avec fichiers joints (25 Mo, tout type), badge de messages non lus ; les fichiers sont stockés hors de `static/`.
+- **Messagerie** privée entre utilisateurs **et groupes de discussion** (création, ajout/retrait de membres par l'administrateur du groupe, quitter, supprimer) avec fichiers joints (25 Mo, tout type), badge de messages non lus ; les fichiers sont stockés hors de `static/`.
 - **Notifications** (centre de notifications, sons « ticket envoyé / reçu », badges dans la barre latérale, interrogation toutes les 2,5 s).
 - **Boîte à idées** : proposer une idée, une amélioration ou un bug ; statut (lue, acceptée, refusée, en cours, terminée) ; alerte e-mail aux personnes dont le rôle peut voir toutes les idées.
 - **Base de connaissances** : catégories, articles, nombre de lecteurs distincts et, pour ceux qui peuvent créer des articles, la liste des lecteurs.

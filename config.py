@@ -79,7 +79,7 @@ class Config:
 
     # Application
     APP_NAME = 'CosmiCenter'
-    APP_VERSION = '2.9.6'
+    APP_VERSION = '2.10.0'
     SUPPORT_EMAIL = os.getenv('SUPPORT_EMAIL', 'support@example.com')
 
     # Langues disponibles

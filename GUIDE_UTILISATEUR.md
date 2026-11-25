@@ -310,3 +310,5 @@ Pour toute question ou signalement d'anomalie sur la plateforme elle-même, cont
 
 ## Utiliser CosmiCenter sur téléphone
 Ouvrez l'adresse du serveur (par exemple `http://<ip-du-poste>:8080`) dans le navigateur du téléphone, connecté au même réseau. Appuyez sur **☰** (en haut à gauche) pour ouvrir le menu, touchez en dehors pour le fermer. Les tableaux se font défiler de gauche à droite ; dans la messagerie, la flèche **‹** ramène à la liste des conversations.
+
+**Groupes de discussion :** dans *Messagerie*, cliquez sur **+** puis **Nouveau groupe**, donnez un nom et cochez les personnes. Dans un groupe, le menu **⋮ → Infos du groupe** permet de voir les membres, de quitter le groupe et, pour l'administrateur du groupe (son créateur), de le renommer, d'ajouter ou retirer des membres, ou de le supprimer.

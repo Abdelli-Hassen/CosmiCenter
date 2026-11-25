@@ -628,13 +628,43 @@ class ModeleReponse(db.Model):
         return f'<ModeleReponse {self.titre}>'
 
 
+class ChatGroupe(db.Model):
+    """Groupe de discussion de la messagerie (plusieurs membres, un administrateur = le créateur au départ)"""
+    __tablename__ = 'chat_groupes'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    nom = db.Column(db.String(60), nullable=False)
+    createur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), index=True)
+    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+
+    createur = db.relationship('Utilisateur', foreign_keys=[createur_id])
+    membres = db.relationship('ChatGroupeMembre', backref='groupe', cascade='all, delete-orphan')
+    messages = db.relationship('Message', backref='groupe', cascade='all, delete-orphan')
+
+
+class ChatGroupeMembre(db.Model):
+    """Appartenance à un groupe ; `dernier_lu` sert à compter les messages non lus du groupe."""
+    __tablename__ = 'chat_groupe_membres'
+    __table_args__ = (db.UniqueConstraint('groupe_id', 'utilisateur_id', name='uq_chat_groupe_membre'),)
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    groupe_id = db.Column(db.String(36), db.ForeignKey('chat_groupes.id', ondelete='CASCADE'), nullable=False, index=True)
+    utilisateur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), nullable=False, index=True)
+    est_admin = db.Column(db.Boolean, default=False, nullable=False)
+    date_ajout = db.Column(db.DateTime, default=datetime.utcnow)
+    dernier_lu = db.Column(db.DateTime, default=datetime.utcnow)
+
+    utilisateur = db.relationship('Utilisateur', foreign_keys=[utilisateur_id])
+
+
 class Message(db.Model):
-    """Messages du chat interne"""
+    """Messages du chat interne : en privé (`receiver_id`) ou dans un groupe (`groupe_id`, sans destinataire)"""
     __tablename__ = 'messages'
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     sender_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), nullable=False, index=True)
-    receiver_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), nullable=False, index=True)
+    receiver_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='CASCADE'), nullable=True, index=True)
+    groupe_id = db.Column(db.String(36), db.ForeignKey('chat_groupes.id', ondelete='CASCADE'), nullable=True, index=True)
     content = db.Column(db.Text, nullable=False, default='')  # vide si le message ne contient qu'un fichier
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     is_read = db.Column(db.Boolean, default=False)
@@ -661,6 +691,8 @@ class Message(db.Model):
             'id': self.id,
             'sender_id': self.sender_id,
             'receiver_id': self.receiver_id,
+            'groupe_id': self.groupe_id,
+            'sender_name': f"{self.sender.prenom} {self.sender.nom}" if self.sender else '',
             'content': self.content,
             'timestamp': self.timestamp.isoformat() + 'Z',
             'is_read': self.is_read,

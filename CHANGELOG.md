@@ -2,6 +2,16 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.10.0] - 2026-11-25
+
+### 💬 Messagerie : groupes de discussion
+- Le bouton **+** de la messagerie propose maintenant **« Nouveau groupe »** : on donne un nom, on coche les collègues, et tout le monde discute dans le même fil (comme dans n'importe quelle appli de messagerie). Les groupes apparaissent dans la liste avec une icône violette, le dernier message (« Prénom : texte ») et le nombre de non lus.
+- Dans un groupe, le **nom de l'expéditeur** s'affiche (couleur propre à chacun) au-dessus de ses messages ; texte, images et fichiers (25 Mo) fonctionnent comme en privé et ne sont servis qu'aux membres.
+- Menu **⋮ → Infos du groupe** : liste des membres ; l'**administrateur** (le créateur) peut **renommer**, **ajouter** ou **retirer** des membres et **supprimer** le groupe (messages et fichiers compris). Chacun peut **quitter** le groupe ; s'il n'y a plus d'administrateur, le plus ancien membre le devient, et un groupe vide est supprimé.
+- Les membres reçoivent une notification à l'ajout et à chaque nouveau message (hors expéditeur). Un membre retiré ne voit plus le groupe ni son historique.
+- Le **badge de la Messagerie** (menu latéral) compte aussi les messages de groupe non lus, au chargement de la page comme en direct ; les notifications de messagerie (privées ou de groupe) n'affichent pas de bulle, comme avant pour les messages privés. Un groupe resté sans administrateur (compte supprimé) en retrouve un à l'ouverture.
+- Aucune nouvelle permission : tout utilisateur qui a `messagerie.voir` peut créer un groupe. Base : nouvelles tables `chat_groupes` et `chat_groupe_membres`, `messages.groupe_id` (et `receiver_id` devient facultatif) — appliqué automatiquement au démarrage.
+
 ## [2.9.6] - 2026-11-25
 
 ### ✅ Fiche ticket : « Résoudre » (vert) remplace « Fermer »
