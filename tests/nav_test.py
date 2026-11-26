@@ -49,6 +49,12 @@ try:
     check("search by ticket number (#N) works", "NAV-Bulk-0" in html.split("<tbody>")[1].split("</tbody>")[0] and "NAV-Bulk-1" not in html.split("<tbody>")[1].split("</tbody>")[0])
     page = ca.get("/tickets/liste").get_data(as_text=True)
     check("list has Fermé / Annulé filters and the search box", "statut=ferme" in page and "statut=annule" in page and 'name="q"' in page)
+    # tri depuis « Mes tickets » : les liens restent sur la même page et gardent la recherche
+    for path, other in (("/tickets/mes-tickets", "/tickets/liste"), ("/tickets/liste", "/tickets/mes-tickets")):
+        head = ca.get(path + "?q=NAV-Bulk&priorite=haute").get_data(as_text=True).split("<thead>")[1].split("</thead>")[0]
+        links = re.findall(r'href="([^"]+)"', head)
+        check(f"sort links stay on {path} and keep search + filter",
+              len(links) == 5 and all(l.startswith(path + "?") and "q=NAV-Bulk" in l and "priorite=haute" in l for l in links), links[:1])
     # actions groupées
     r = ca.post("/tickets/bulk", json={"ids": ticket_ids, "action": "statut", "value": "en_cours"}, headers={"X-CSRFToken": ca.tok("/tickets/liste")})
     with app.app_context(): st = [db.session.get(Ticket, i).statut for i in ticket_ids]

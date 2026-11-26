@@ -2,6 +2,12 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.10.5] - 2026-11-26
+
+### 🔧 « Mes tickets » : le tri reste sur la page
+- Trier une colonne ou changer de page depuis **Mes tickets** ne renvoie plus vers **Tous les tickets**.
+- La recherche est conservée en changeant de page.
+
 ## [2.10.4] - 2026-11-26
 
 ### ☰ 1024 × 768 : menu derrière un bouton, page en pleine largeur

@@ -215,7 +215,7 @@
           {% set current_order = request.args.get('order', 'desc') %}
           {% macro sort_th(title, column, width="") %}
           <th style="{{ width }}">
-            <a href="{{ url_for('tickets.liste', statut=request.args.get('statut',''), priorite=request.args.get('priorite',''), departement_id=request.args.get('departement_id',''), q=q or '', page=1, sort_by=column, order='asc' if current_sort == column and current_order == 'desc' else 'desc') }}" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='inherit'">
+            <a href="{{ url_for(request.endpoint, statut=request.args.get('statut',''), priorite=request.args.get('priorite',''), departement_id=request.args.get('departement_id',''), q=q or '', page=1, sort_by=column, order='asc' if current_sort == column and current_order == 'desc' else 'desc') }}" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='inherit'">
               {{ title }}
               {% if current_sort == column %}
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
@@ -354,7 +354,7 @@
     <div style="display: inline-flex; border-radius: 8px; border: 1px solid var(--border-subtle); overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
       
       {% if tickets.has_prev %}
-      <a href="{{ url_for('tickets.liste', page=tickets.prev_num, statut=request.args.get('statut',''), priorite=request.args.get('priorite',''), departement_id=request.args.get('departement_id',''), sort_by=request.args.get('sort_by', 'date_creation'), order=request.args.get('order', 'desc')) }}" style="padding: 8px 12px; background: var(--surface-base); color: var(--text-secondary); border-right: 1px solid var(--border-subtle); text-decoration: none; display: flex; align-items: center;">
+      <a href="{{ url_for(request.endpoint, page=tickets.prev_num, q=q or none, statut=request.args.get('statut',''), priorite=request.args.get('priorite',''), departement_id=request.args.get('departement_id',''), sort_by=request.args.get('sort_by', 'date_creation'), order=request.args.get('order', 'desc')) }}" style="padding: 8px 12px; background: var(--surface-base); color: var(--text-secondary); border-right: 1px solid var(--border-subtle); text-decoration: none; display: flex; align-items: center;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </a>
       {% else %}
@@ -367,14 +367,14 @@
         {% if p == tickets.page %}
           <span style="padding: 8px 16px; background: rgba(220, 38, 38, 0.05); color: var(--color-brand, #dc2626); font-weight: 600; border-right: 1px solid var(--border-subtle);">{{ p }}</span>
         {% elif p == 1 or p == tickets.pages or (p >= tickets.page - 2 and p <= tickets.page + 2) %}
-          <a href="{{ url_for('tickets.liste', page=p, statut=request.args.get('statut',''), priorite=request.args.get('priorite',''), departement_id=request.args.get('departement_id',''), sort_by=request.args.get('sort_by', 'date_creation'), order=request.args.get('order', 'desc')) }}" style="padding: 8px 16px; background: var(--surface-base); color: var(--text-secondary); text-decoration: none; border-right: 1px solid var(--border-subtle); font-weight: 500;">{{ p }}</a>
+          <a href="{{ url_for(request.endpoint, page=p, q=q or none, statut=request.args.get('statut',''), priorite=request.args.get('priorite',''), departement_id=request.args.get('departement_id',''), sort_by=request.args.get('sort_by', 'date_creation'), order=request.args.get('order', 'desc')) }}" style="padding: 8px 16px; background: var(--surface-base); color: var(--text-secondary); text-decoration: none; border-right: 1px solid var(--border-subtle); font-weight: 500;">{{ p }}</a>
         {% elif p == tickets.page - 3 or p == tickets.page + 3 %}
           <span style="padding: 8px 16px; background: var(--surface-base); color: var(--text-muted); border-right: 1px solid var(--border-subtle);">…</span>
         {% endif %}
       {% endfor %}
 
       {% if tickets.has_next %}
-      <a href="{{ url_for('tickets.liste', page=tickets.next_num, statut=request.args.get('statut',''), priorite=request.args.get('priorite',''), departement_id=request.args.get('departement_id',''), sort_by=request.args.get('sort_by', 'date_creation'), order=request.args.get('order', 'desc')) }}" style="padding: 8px 12px; background: var(--surface-base); color: var(--text-secondary); text-decoration: none; display: flex; align-items: center;">
+      <a href="{{ url_for(request.endpoint, page=tickets.next_num, q=q or none, statut=request.args.get('statut',''), priorite=request.args.get('priorite',''), departement_id=request.args.get('departement_id',''), sort_by=request.args.get('sort_by', 'date_creation'), order=request.args.get('order', 'desc')) }}" style="padding: 8px 12px; background: var(--surface-base); color: var(--text-secondary); text-decoration: none; display: flex; align-items: center;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </a>
       {% else %}
