@@ -2,6 +2,12 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.10.2] - 2026-11-26
+
+### 👁️ Mots de passe : un œil partout, et un seul
+- Sous **Microsoft Edge**, la page de connexion affichait deux boutons « œil » (celui du navigateur et celui de CosmiCenter). Celui d'Edge est désormais masqué.
+- **Tous les autres champs mot de passe** (changement de mot de passe, création et modification d'utilisateur, mot de passe SMTP) ont maintenant le bouton « œil » pour afficher ou masquer la saisie, identique sur tous les navigateurs. Le champ est remasqué à l'envoi du formulaire.
+
 ## [2.10.1] - 2026-11-25
 
 ### 🖼️ Messagerie : les images s'ouvrent comme dans les tickets

@@ -180,6 +180,9 @@
     box-shadow: 0 0 0 3px rgba(220,38,38,.15);
   }
 
+  /* Edge ajoute son propre œil aux champs mot de passe : on le masque, la page a déjà le sien */
+  .auth-input-wrap input::-ms-reveal { display: none; }
+
   .auth-input-action {
     position: absolute;
     right: 10px;

@@ -1793,3 +1793,17 @@ tr.ticket-row-unread:hover, a.ticket-row-unread:hover { background: var(--brand-
 .ticket-row-unread .tk-id a, .ticket-row-unread .tk-id span:not(.unread-dot) { color: var(--text-primary) !important; font-weight: 800 !important; }
 @media (prefers-reduced-motion: reduce) { .unread-dot { animation: none; } }
 td.tk-id, .ut-num { white-space: nowrap; }
+
+/* ─── Œil des champs mot de passe (static/js/password-eye.js) ─── */
+.pw-wrap { position: relative; display: block; width: 100%; }
+.pw-wrap > input { width: 100%; padding-right: 46px !important; }
+.pw-wrap > input::-ms-reveal { display: none; } /* œil d'Edge : on garde le nôtre */
+.pw-eye {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+.pw-eye:hover { color: var(--text-primary); background: var(--surface-3); }
+.pw-eye:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
