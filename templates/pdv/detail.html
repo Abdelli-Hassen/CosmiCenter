@@ -521,6 +521,11 @@
   border-color: #3b82f6;
 }
 
+/* La classe .ticket-row existe aussi en « grille » dans tickets.css : ici ce sont de vraies lignes de tableau */
+@media (min-width: 769px) {
+  #ticketsTable tr.ticket-row { display: table-row; height: auto; padding: 0; }
+}
+
 /* Premium Tickets Table (Matching tickets/liste.html exactly) */
 .premium-table-wrapper {
   overflow-x: auto;

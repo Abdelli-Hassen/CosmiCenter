@@ -22,7 +22,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-4);
 }
-@media (max-width: 1024px) { .dashboard-grid-3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 959px) { .dashboard-grid-3 { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 640px)  { .dashboard-grid-3 { grid-template-columns: 1fr; } }
 
 .dashboard-grid-2-1 {
@@ -30,14 +30,14 @@
   grid-template-columns: 2fr 1fr;
   gap: var(--space-4);
 }
-@media (max-width: 1024px) { .dashboard-grid-2-1 { grid-template-columns: 1fr; } }
+@media (max-width: 959px) { .dashboard-grid-2-1 { grid-template-columns: 1fr; } }
 
 .dashboard-grid-1-2 {
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: var(--space-4);
 }
-@media (max-width: 1024px) { .dashboard-grid-1-2 { grid-template-columns: 1fr; } }
+@media (max-width: 959px) { .dashboard-grid-1-2 { grid-template-columns: 1fr; } }
 
 /* ─── Welcome strip ───────────────────────────────────────── */
 .welcome-strip {

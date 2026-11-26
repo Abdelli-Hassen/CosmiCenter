@@ -2,7 +2,7 @@
    CosmiCenter — affichage téléphone / tablette
    Chargé APRÈS les styles de page (base.html) : les règles de page
    qui n'ont pas de version mobile sont corrigées ici avec !important.
-   Seuils : 1024px (tablette : menu en tiroir), 768px (téléphone), 480px (petit téléphone).
+   Seuils : 959px (tablette : menu en tiroir ; un écran 1024×768 garde l’affichage ordinateur), 768px (téléphone), 480px (petit téléphone).
    ════════════════════════════════════════════════════════════ */
 
 /* Bouton « menu » : caché sur ordinateur */
@@ -24,7 +24,7 @@
 .mobile-nav-btn:focus-visible { outline: 2px solid var(--border-focus); }
 
 /* ─── Tablette et moins : menu en tiroir ──────────────────── */
-@media (max-width: 1024px) {
+@media (max-width: 959px) {
   .mobile-nav-btn { display: inline-flex; }
 
   /* 100dvh : suit la barre d'adresse mobile (100vh la déborde) */
@@ -1006,4 +1006,53 @@
   .am-id { font-family: var(--font-mono, ui-monospace, monospace); font-size: 22px; font-weight: 800; letter-spacing: 1px; color: var(--text-primary); overflow-wrap: anywhere; }
   .am-go { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; margin-top: 4px; border-radius: 12px; background: var(--c); color: #fff; font-size: 14px; font-weight: 700; text-decoration: none; }
   .am-go:active { filter: brightness(.92); }
+}
+
+/* ════════════════════════════════════════════════════════════
+   Petit écran d'ordinateur (1024×768, 1280×720, 1366×768…)
+   Même design que sur grand écran : seul l'espace est resserré.
+   Rien ici ne s'applique à partir de 1600px.
+   ════════════════════════════════════════════════════════════ */
+@media (min-width: 960px) and (max-width: 1599px) {
+  /* Racine de chaque page : jamais plus large que la place disponible (sinon la droite est coupée) */
+  .content-canvas > * { width: 100%; min-width: 0; box-sizing: border-box; }
+
+  /* Tableaux : toutes les colonnes restent visibles (cellules resserrées, texte qui passe à la ligne) */
+  .content-canvas table { min-width: 0 !important; }
+  .content-canvas table th, .content-canvas table td {
+    padding-left: 8px !important; padding-right: 8px !important;
+    min-width: 0 !important; white-space: normal !important;
+  }
+  .content-canvas table th:first-child, .content-canvas table td:first-child { padding-left: 12px !important; }
+  .content-canvas table th *, .content-canvas table td * { white-space: normal !important; }
+  .content-canvas table td a[href^="mailto:"] { overflow-wrap: anywhere; }
+
+  /* Entreprises : les 4 chiffres sur une ligne */
+  .comp-stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .comp-stat-card { padding: 14px 12px; gap: 10px; min-width: 0; }
+}
+
+/* Les plus étroits (jusqu'à 1365px) : menu et texte des tableaux un peu plus petits */
+@media (min-width: 960px) and (max-width: 1365px) {
+  :root { --sidebar-width: 212px; }
+
+  .content-canvas table th, .content-canvas table td { padding-left: 6px !important; padding-right: 6px !important; }
+  .content-canvas table th { font-size: 10px !important; }
+  .content-canvas table th, .content-canvas table th * { letter-spacing: 0 !important; }
+  .content-canvas table td, .content-canvas table td * { font-size: 11.5px; letter-spacing: 0; }
+  .content-canvas table td .status-badge, .content-canvas table td .badge-premium { padding-left: 6px; padding-right: 6px; font-size: 9.5px; text-align: center; }
+
+  /* Tableau de bord : le panneau « Urgences » reste à droite */
+  .dash-main-grid { grid-template-columns: minmax(0, 2.4fr) minmax(200px, 1fr) !important; gap: 14px !important; }
+}
+
+/* Autour de 1024px : encore un peu moins d'espace entre les colonnes */
+@media (min-width: 960px) and (max-width: 1100px) {
+  .content-canvas table th, .content-canvas table td { padding-left: 4px !important; padding-right: 4px !important; }
+  .content-canvas table th:first-child, .content-canvas table td:first-child { padding-left: 8px !important; }
+}
+
+/* Accès à distance, tous écrans d'ordinateur : les boutons passent à la ligne au lieu d'être coupés */
+@media (min-width: 960px) {
+  .access-actions { flex-wrap: wrap; }
 }

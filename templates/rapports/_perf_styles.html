@@ -81,6 +81,7 @@
 .podium-stats { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; padding-top:14px; border-top:1px solid var(--border-subtle); }
 .podium-val { font-size:24px; font-weight:900; color:var(--text-primary); letter-spacing:-0.02em; line-height:1.1; }
 .podium-lbl { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-top:2px; }
+@media (min-width:960px) and (max-width:1365px) { .podium-card { padding:16px 14px; } .podium-stats { grid-template-columns:repeat(3, auto); justify-content:space-between; gap:6px; } .podium-val { font-size:18px; white-space:nowrap; } .podium-lbl { font-size:9.5px; letter-spacing:0; } }
 /* ── Animations (entrées + survols) ─────────────────────────── */
 @keyframes slide-up { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
 @keyframes fade-in-up { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }

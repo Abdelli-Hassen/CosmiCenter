@@ -150,7 +150,8 @@ When updating a new page (e.g., `inbox.html` or the admin dashboard):
 
 ## Mise à jour 2.7.0 — affichage téléphone / tablette
 - `static/css/mobile.css` est chargé **en dernier** (après `{% block extra_head %}`) : il corrige les pages qui n'ont pas de version mobile, avec `!important` quand une règle de page l'emporterait.
-- Seuils : 1024 px (menu latéral en tiroir, bouton `#mobile-nav-toggle`), 768 px (téléphone), 480 px (petit téléphone).
+- Seuils : sous 960 px (menu latéral en tiroir, bouton `#mobile-nav-toggle` ; un écran 1024 × 768 garde le design ordinateur), 768 px (téléphone), 480 px (petit téléphone).
+- Petits écrans d'ordinateur (fin de `mobile.css`) : de 960 à 1599 px, pages limitées à la largeur disponible et tableaux resserrés ; de 960 à 1365 px, menu de 212 px et texte des tableaux réduit. Tout nouveau tableau ou barre de filtres doit être vérifié à 1024 px.
 - Le tiroir cible `#sidebar` (et non `.sidebar` : la page Ticket réutilise cette classe pour son panneau de droite).
 - Tableaux : sur téléphone, chaque ligne devient une carte « libellé : valeur » (`static/js/mobile.js` pose `data-label` depuis le `<thead>`). Classe `no-cards` pour exclure un tableau ; les tableaux sans `<thead>` défilent horizontalement (`no-scroll` pour l'en exclure).
 - Champs de formulaire à 16 px sur téléphone (évite le zoom automatique d'iOS).

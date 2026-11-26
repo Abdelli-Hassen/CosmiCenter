@@ -2,6 +2,14 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.10.3] - 2026-11-26
+
+### 🖥️ Petits écrans d'ordinateur (1024 × 768, 1280, 1366…)
+- Un écran **1024 × 768** affiche maintenant le **design ordinateur** (menu fixe à gauche) au lieu du design tablette. Le menu en tiroir commence sous **960 px**.
+- De **960 à 1599 px**, plus aucune page n'est coupée à droite (listes de tickets, entreprises, point de vente, rapports, performance des agents, permissions, utilisateurs) : les barres de filtres passent à la ligne et les colonnes des tableaux se resserrent. Sous 1366 px, le menu et le texte des tableaux sont un peu plus petits. À partir de 1600 px, la mise en page ne change pas.
+- **Point de vente** : correction des lignes du tableau « Tickets Soumis » qui se chevauchaient, sur tous les écrans d'ordinateur.
+- **Accès à distance** : les boutons de connexion ne sont plus coupés.
+
 ## [2.10.2] - 2026-11-26
 
 ### 👁️ Mots de passe : un œil partout, et un seul
