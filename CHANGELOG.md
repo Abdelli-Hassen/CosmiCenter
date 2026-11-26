@@ -2,6 +2,11 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.10.4] - 2026-11-26
+
+### ☰ 1024 × 768 : menu derrière un bouton, page en pleine largeur
+- Jusqu’à **1100 px** de large, le menu latéral est caché et s’ouvre avec le bouton **☰** (fermeture : Échap, clic à côté ou choix d’une page). Les pages gardent le design ordinateur et profitent de toute la largeur, avec un texte de tableau plus lisible. Au-delà de 1100 px, le menu reste fixe.
+
 ## [2.10.3] - 2026-11-26
 
 ### 🖥️ Petits écrans d'ordinateur (1024 × 768, 1280, 1366…)
