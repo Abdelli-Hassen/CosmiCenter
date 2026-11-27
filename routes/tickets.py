@@ -84,6 +84,7 @@ def _apply_status(ticket, new_status):
     now = datetime.utcnow()
     ticket.statut = new_status
     if new_status == 'resolu':
+        ticket.resolu_par_id = current_user.id
         if not ticket.date_resolution:
             ticket.date_resolution = now
         if ticket.date_creation:
@@ -92,8 +93,13 @@ def _apply_status(ticket, new_status):
             ticket.sla_respecte = ticket.date_resolution <= ticket.date_echeance
     elif new_status == 'ferme':
         ticket.date_fermeture = now
+        if not ticket.resolu_par_id:  # fermé sans passer par « Résolu » : crédit à la personne qui ferme
+            ticket.resolu_par_id = current_user.id
+    elif new_status == 'annule':
+        ticket.resolu_par_id = None
     elif new_status in ('nouveau', 'ouvert', 'en_cours', 'en_attente'):
         ticket.date_fermeture = None
+        ticket.resolu_par_id = None
         if new_status != 'en_attente':
             ticket.date_resolution = None
             ticket.temps_resolution_minutes = None

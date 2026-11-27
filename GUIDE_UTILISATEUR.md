@@ -252,6 +252,8 @@ La section **Rapports** permet d'analyser les performances et l'activité de la 
 #### Performance des Agents (Nouveau Dashboard)
 
 La section **Performance des Agents** offre un espace dédié au suivi et à la gamification des équipes :
+
+> **Qui a le crédit ?** Un ticket résolu compte pour la personne qui l’a **résolu** (affichée dans « Résolu par » sur la fiche du ticket), même s’il n’était assigné à personne. Les tickets en cours comptent pour l’agent assigné.
 - **Le Podium (Top 3)** : mise en valeur visuelle immédiate des 3 meilleurs agents du mois (ou de la période).
 - **Tableau Global et Classement** : liste de tous les agents avec leur **Rang (Classement Général)**, taux de résolution, temps moyen et score CSAT.
 - **Filtres & Tri en temps réel** : barre de recherche dynamique et possibilité de cliquer sur chaque en-tête de colonne pour trier.

@@ -4,6 +4,7 @@ from datetime import datetime
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, make_response
 from flask_login import login_required, current_user, login_user
+from services.reporting import count_resolved_by
 from models import db, Utilisateur, Notification
 from utils.security import safe_color
 from utils.uploads import save_upload, remove_upload, UploadError, IMAGE_EXTENSIONS, MAX_IMAGE_BYTES
@@ -19,7 +20,7 @@ def _stats():
     return {
         'tickets_crees': len(current_user.tickets_crees),
         'tickets_assignes': len([t for t in current_user.tickets_assignes if t.statut not in ['resolu', 'ferme']]),
-        'tickets_resolus': len([t for t in current_user.tickets_assignes if t.statut == 'resolu']),
+        'tickets_resolus': count_resolved_by(current_user.id),
     }
 
 

@@ -2,6 +2,13 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.11.0] - 2026-11-27
+
+### ✅ « Résolu par » : le crédit va à la personne qui résout
+- Chaque ticket enregistre **qui l’a résolu**. La **Performance des agents**, la fiche agent, le rapport global (agents, filtre par agent) et le compteur « tickets résolus » du profil comptent pour cette personne, même si le ticket n’était assigné à personne.
+- La fiche du ticket affiche **Résolu par** ; l’export CSV a une colonne **Résolu par**.
+- Les tickets déjà résolus sont complétés automatiquement à partir de leur historique. Rouvrir un ticket efface la mention.
+
 ## [2.10.5] - 2026-11-26
 
 ### 🔧 « Mes tickets » : le tri reste sur la page

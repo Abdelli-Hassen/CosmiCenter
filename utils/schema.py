@@ -16,6 +16,18 @@ STATEMENTS = [
     "ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS pdv_extra_ids TEXT",
     "ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS sons_actifs BOOLEAN NOT NULL DEFAULT TRUE",
     "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS pdv_extra_ids TEXT",
+    # Qui a résolu le ticket (crédit dans les rapports)
+    "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS resolu_par_id VARCHAR(36) REFERENCES utilisateurs(id) ON DELETE SET NULL",
+    "CREATE INDEX IF NOT EXISTS ix_tickets_resolu_par_id ON tickets (resolu_par_id)",
+    # Tickets déjà résolus : retrouvés dans l'historique (dernier passage à « résolu », sinon « fermé », sans réouverture
+    # ensuite). Ne remplit que les cases vides : sans effet quand on le rejoue.
+    """UPDATE tickets SET resolu_par_id = (
+        SELECT h.utilisateur_id FROM historique_tickets h
+        WHERE h.ticket_id = tickets.id AND h.champ_modifie = 'Statut' AND h.nouvelle_valeur IN ('resolu', 'ferme')
+          AND NOT EXISTS (SELECT 1 FROM historique_tickets r WHERE r.ticket_id = h.ticket_id AND r.champ_modifie = 'Statut'
+                          AND r.nouvelle_valeur NOT IN ('resolu', 'ferme') AND r.date_creation > h.date_creation)
+        ORDER BY (h.nouvelle_valeur = 'resolu') DESC, h.date_creation DESC LIMIT 1)
+      WHERE resolu_par_id IS NULL AND statut IN ('resolu', 'ferme')""",
     # Messagerie : groupes de discussion (un message de groupe n'a pas de destinataire individuel)
     "ALTER TABLE messages ALTER COLUMN receiver_id DROP NOT NULL",
     "ALTER TABLE messages ADD COLUMN IF NOT EXISTS groupe_id VARCHAR(36) REFERENCES chat_groupes(id) ON DELETE CASCADE",

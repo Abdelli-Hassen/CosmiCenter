@@ -380,6 +380,10 @@ class Ticket(db.Model):
     createur_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='RESTRICT'), nullable=False, index=True)
     assigne_a_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), index=True)
 
+    # Personne qui a résolu (ou fermé) le ticket : c'est elle qui en a le crédit dans les rapports
+    resolu_par_id = db.Column(db.String(36), db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), index=True)
+    resolu_par = db.relationship('Utilisateur', foreign_keys=[resolu_par_id])
+
     # Catégorie & Routage direct
     categorie_id = db.Column(db.String(36), db.ForeignKey('categories_tickets.id', ondelete='SET NULL'), index=True)
     departement_id = db.Column(db.String(36), db.ForeignKey('departements.id', ondelete='SET NULL'), index=True)

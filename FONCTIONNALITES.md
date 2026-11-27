@@ -366,6 +366,8 @@ Route : `GET /rapports/`
 
 ### 7.2 Performance des agents
 
+Un ticket terminé est compté pour la personne qui l’a **résolu** (« Résolu par »), à défaut pour l’agent assigné ; un ticket en cours pour l’agent assigné.
+
 Route : `GET /rapports/performance-agents`
 
 Par agent : tickets totaux, résolus, en cours, temps moyen de résolution, taux de résolution (%), satisfaction moyenne.

@@ -497,6 +497,13 @@
             </div>
           </div>
 
+          {% if ticket.statut in ['resolu', 'ferme'] and ticket.resolu_par %}
+          <div class="prop-row">
+            <div class="prop-label">Résolu par</div>
+            <div class="prop-val" id="resolvedBy" style="font-size: 13px; font-weight: 600; color: var(--text-primary);">{{ ticket.resolu_par.nom_complet }}</div>
+          </div>
+          {% endif %}
+
           <!-- Save / Cancel button bar for property updates -->
           <div id="propSaveBar" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-subtle); display: none; align-items: center; justify-content: flex-end; gap: 8px;">
             <button type="button" class="btn btn-ghost btn-sm" onclick="cancelAssigneeChange()" style="font-size: 11.5px; padding: 4px 8px; color: var(--text-muted);">Annuler</button>

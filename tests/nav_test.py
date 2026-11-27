@@ -88,6 +88,34 @@ try:
     html = ca.get("/rapports/").get_data(as_text=True)
     check("report shows 1.5h (not 90h) for a 90-minute resolution", "1,5 h" in html and "90,0 h" not in html)
     check("report shows the satisfaction average", "4,0 / 5" in html)
+    # qui a résolu : le ticket n'est assigné à personne, le crédit va à la personne qui le résout
+    third = ticket_ids[2]
+    def solver():
+        with app.app_context():
+            x = db.session.get(Ticket, third); return x.assigne_a_id, x.resolu_par_id
+    def row_resolved():
+        from services import reporting
+        with app.app_context():
+            a = db.session.get(Utilisateur, admid)
+            rows, _ = reporting.agents_overview(reporting.parse_filters({}), [a])
+            return rows[0]['resolved'], len(reporting.agent_detail(reporting.parse_filters({}), a)[3]), reporting.count_resolved_by(admid)
+    before = row_resolved()
+    ca.post(f"/tickets/{third}/resoudre", data={"csrf_token": ca.tok(f"/tickets/{third}")})
+    check("resolving an unassigned ticket records the solver", solver() == (None, admid), solver())
+    after = row_resolved()
+    check("agent performance, agent page and profile count it for the solver", [b - a for a, b in zip(before, after)] == [1, 1, 1], (before, after))
+    page = ca.get(f"/tickets/{third}").get_data(as_text=True)
+    check("ticket page shows « Résolu par » with the solver", "Résolu par" in page and 'id="resolvedBy"' in page)
+    check("CSV export has the « Résolu par » column", "Résolu par" in ca.get("/rapports/export/csv").get_data(as_text=True))
+    ca.post(f"/tickets/{third}/fermer", data={"csrf_token": ca.tok(f"/tickets/{third}")})
+    check("closing a resolved ticket keeps the solver", solver()[1] == admid)
+    with app.app_context():
+        db.session.execute(db.text("update tickets set resolu_par_id = null where id = :i"), {"i": third}); db.session.commit()
+        from utils.schema import ensure_schema
+        ensure_schema(db)
+    check("old resolved tickets get their solver back from the history", solver()[1] == admid, solver())
+    ca.post(f"/tickets/{third}/reouvrir", data={"csrf_token": ca.tok(f"/tickets/{third}")})
+    check("reopening clears the solver", solver()[1] is None and row_resolved() == before, (solver(), row_resolved()))
     # messagerie
     r = ca.get("/tickets/chat"); check("/tickets/chat redirects to /chat/", r.status_code == 302 and r.headers["Location"].endswith("/chat/"), r.headers.get("Location"))
     html = ca.get("/chat/").get_data(as_text=True)

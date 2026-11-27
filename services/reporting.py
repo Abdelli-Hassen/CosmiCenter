@@ -12,7 +12,7 @@ from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from statistics import median
 
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlalchemy.orm import aliased
 
 from models import db, Ticket, Utilisateur, Departement, PointDeVente, CategorieTicket, HistoriqueTicket
@@ -23,6 +23,16 @@ PRIORITES = ['critique', 'urgente', 'haute', 'moyenne', 'basse']
 TYPES = ['incident', 'demande', 'besoin', 'plainte', 'tache']
 PERIODES = {'7j': 7, '30j': 30, '90j': 90, '1a': 365}
 JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+
+
+def credit_expr():
+    """Personne créditée d'un ticket terminé : celle qui l'a résolu, à défaut l'agent assigné."""
+    return func.coalesce(Ticket.resolu_par_id, Ticket.assigne_a_id)
+
+
+def count_resolved_by(user_id):
+    """Nombre de tickets terminés au crédit d'une personne (profil, fiche utilisateur)."""
+    return Ticket.query.filter(Ticket.statut.in_(STATUTS_RESOLUS), credit_expr() == user_id).count()
 
 
 # ─── Utilitaires ────────────────────────────────────────────────────────────
@@ -131,6 +141,7 @@ def _base(f):
     q = (db.session.query(
         Ticket.id, Ticket.numero, Ticket.titre, Ticket.type_ticket, Ticket.priorite, Ticket.statut,
         Ticket.departement_id, Ticket.categorie_id, Ticket.assigne_a_id, Ticket.createur_id,
+        credit_expr().label('credit_id'), Ticket.resolu_par_id,
         Ticket.date_creation, Ticket.date_echeance, Ticket.sla_respecte,
         Ticket.temps_premiere_reponse_minutes.label('t_reponse'),
         Ticket.temps_resolution_minutes.label('t_resolution'),
@@ -146,7 +157,8 @@ def _base(f):
     if f['priorite']:
         q = q.filter(Ticket.priorite == f['priorite'])
     if f['agent_id']:
-        q = q.filter(Ticket.assigne_a_id == f['agent_id'])
+        # Ticket terminé : à la personne qui l'a résolu ; ticket en cours : à l'agent assigné
+        q = q.filter(case((Ticket.statut.in_(STATUTS_RESOLUS), credit_expr()), else_=Ticket.assigne_a_id) == f['agent_id'])
     return q, resolution_date
 
 
@@ -173,6 +185,7 @@ def export_rows(f):
     return [{
         'numero': t.numero, 'titre': t.titre, 'type': t.type_ticket, 'priorite': t.priorite, 'statut': t.statut,
         'createur': users.get(t.createur_id, ''), 'assigne': users.get(t.assigne_a_id, ''),
+        'resolu_par': users.get(t.resolu_par_id, '') if t.statut in STATUTS_RESOLUS else '',
         'departement': depts.get(t.departement_id, ''), 'categorie': cats.get(t.categorie_id, ''),
         'pdv': pdvs.get(t.pdv, ''), 'creation': t.date_creation, 'echeance': t.date_echeance,
         'resolution': t.date_resol, 't_reponse': t.t_reponse, 't_resolution': t.t_resolution,
@@ -214,7 +227,7 @@ def agents_overview(f, agents):
     opened = fetch_open(f)
     rows = []
     for a in agents:
-        r = [t for t in resolved if t.assigne_a_id == a.id]
+        r = [t for t in resolved if t.credit_id == a.id]
         o = [t for t in opened if t.assigne_a_id == a.id]
         rows.append({'agent': a, **_agent_numbers(r, o, now)})
     rows.sort(key=lambda x: (-x['resolved'], -x['open'], (x['agent'].nom_complet or '').upper()))
@@ -411,9 +424,9 @@ def build_report(f):
 
     # ── Agents ──
     agent_rows = []
-    for aid in {t.assigne_a_id for t in created + resolved + opened if t.assigne_a_id}:
+    for aid in ({t.assigne_a_id for t in created + opened} | {t.credit_id for t in resolved}) - {None}:
         c = [t for t in created if t.assigne_a_id == aid]
-        r = [t for t in resolved if t.assigne_a_id == aid]
+        r = [t for t in resolved if t.credit_id == aid]
         o = [t for t in opened if t.assigne_a_id == aid]
         u = users.get(aid)
         agent_rows.append({

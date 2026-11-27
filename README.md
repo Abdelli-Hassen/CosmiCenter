@@ -245,6 +245,7 @@ python3 -c "import secrets; print(secrets.token_hex(32))"      # ou : openssl ra
 ### Rapports et pilotage
 - **Rapport global** : 10 indicateurs comparés à la période précédente, courbes, répartitions, carte de chaleur jour × heure, performance par département, catégories et PDV les plus actifs, tickets en retard, satisfaction. Filtres : période, département, PDV, type, priorité, agent. Export **CSV** filtré (séparateur `;`) et impression / PDF.
 - **Performance des agents** : podium, classement (résolus, en cours, en retard, délai moyen, SLA, satisfaction, situation) et fiche détaillée par agent comparée à l'équipe. Mêmes chiffres que le rapport global (`services/reporting.py`).
+- **Crédit de résolution** : un ticket terminé compte pour la personne qui l’a **résolu** (« Résolu par » sur la fiche et dans l’export CSV), même s’il ne lui était pas assigné ; les tickets en cours comptent pour l’agent assigné.
 - **Plan d'action** : suivi des tâches sous forme de calendrier, avec **export Excel**. Il est **personnel** : chacun ne voit, ne modifie, ne termine, ne supprime et n'exporte que **ses propres tâches** (même un Super Administrateur), aucune donnée partagée.
 
 ### Administration

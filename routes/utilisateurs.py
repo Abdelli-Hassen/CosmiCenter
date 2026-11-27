@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
+from services.reporting import count_resolved_by
 from models import db, Utilisateur, Role, Departement, Entreprise, PointDeVente
 from functools import wraps
 import logging
@@ -314,7 +315,7 @@ def detail(id):
         'tickets_crees': len(utilisateur.tickets_crees),
         'tickets_assignes': len([t for t in utilisateur.tickets_assignes if t.statut not in ['resolu', 'ferme']]),
         'total_assignes': len(utilisateur.tickets_assignes),
-        'tickets_resolus': len([t for t in utilisateur.tickets_assignes if t.statut == 'resolu']),
+        'tickets_resolus': count_resolved_by(utilisateur.id),
         'commentaires': len(utilisateur.commentaires),
     }
     

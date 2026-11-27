@@ -57,8 +57,9 @@ def tableau_bord():
 
 
 def _agents_list():
-    """Agents = utilisateurs actifs autorisés à traiter des tickets, ou à qui des tickets ont été assignés."""
-    assigned = {row[0] for row in db.session.query(Ticket.assigne_a_id).filter(Ticket.assigne_a_id.isnot(None)).distinct()}
+    """Agents = utilisateurs actifs autorisés à traiter des tickets, ou à qui des tickets ont été assignés, ou qui en ont résolu."""
+    assigned = {i for column in (Ticket.assigne_a_id, Ticket.resolu_par_id)
+                for (i,) in db.session.query(column).filter(column.isnot(None)).distinct()}
     return [u for u in Utilisateur.query.filter_by(actif=True).all()
             if u.id in assigned or any(u.has_permission(c) for c in ('tickets.modifier', 'tickets.cloturer', 'tickets.modifier_mes', 'tickets.cloturer_mes'))]
 
@@ -116,12 +117,12 @@ def export_csv():
 
     output = io.StringIO()
     writer = csv.writer(output, delimiter=';')
-    writer.writerow(['Numéro', 'Titre', 'Type', 'Priorité', 'Statut', 'Créateur', 'Assigné à', 'Département',
+    writer.writerow(['Numéro', 'Titre', 'Type', 'Priorité', 'Statut', 'Créateur', 'Assigné à', 'Résolu par', 'Département',
                      'Catégorie', 'Point de vente', 'Date création', 'Échéance SLA', 'Date résolution',
                      '1ère réponse (min)', 'Résolution (min)', 'SLA respecté', 'Satisfaction'])
     for t in rows:
         writer.writerow([csv_safe(v) for v in [
-            t['numero'], t['titre'], t['type'], t['priorite'], t['statut'], t['createur'], t['assigne'],
+            t['numero'], t['titre'], t['type'], t['priorite'], t['statut'], t['createur'], t['assigne'], t['resolu_par'],
             t['departement'], t['categorie'], t['pdv'], d(t['creation']), d(t['echeance']), d(t['resolution']),
             t['t_reponse'] if t['t_reponse'] is not None else '', t['t_resolution'] if t['t_resolution'] is not None else '',
             '' if t['sla'] is None else ('oui' if t['sla'] else 'non'), t['satisfaction'] or '']])
