@@ -35,7 +35,7 @@ with app.app_context():
         if statut in ("resolu", "ferme"):
             res = created + timedelta(hours=random.uniform(1, 60))
             t.date_resolution = res; t.date_fermeture = res; t.temps_resolution_minutes = int((res - created).total_seconds() / 60)
-            t.sla_respecte = res <= due; t.satisfaction = random.choice([None, 4, 5, 2])
+            t.sla_respecte = res <= due
         db.session.add(t)
     db.session.commit()
     since = now - timedelta(days=30)
@@ -75,7 +75,6 @@ try:
     for p in ("7j", "90j", "1a", "xx"):
         check(f"agent page period {p} ok", c.get(f"/rapports/performance-agents/{ag_ids[0]}/tickets?periode={p}").status_code == 200)
     check("unknown agent -> 404", c.get("/rapports/performance-agents/does-not-exist/tickets").status_code == 404)
-    check("old satisfaction page still redirects", c.get("/rapports/satisfaction-client").status_code == 302)
     cl = client(LOW)
     check("no permission: list refused", cl.get("/rapports/performance-agents").status_code == 302)
     check("no permission: agent page refused", cl.get(f"/rapports/performance-agents/{ag_ids[0]}/tickets").status_code == 302)

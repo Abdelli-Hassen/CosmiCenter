@@ -991,33 +991,6 @@ def bulk_update():
     return jsonify({'success': True, 'updated': updated, 'skipped': skipped})
 
 
-@tickets_bp.route('/<ticket_id>/evaluer', methods=['POST'])
-@login_required
-def evaluer(ticket_id):
-    """Note de satisfaction (1 à 5) donnée par le créateur d'un ticket résolu ou fermé."""
-    ticket = Ticket.query.get_or_404(ticket_id)
-    if ticket.createur_id != current_user.id:
-        flash("Seul le créateur du ticket peut l'évaluer.", 'danger')
-        return redirect(url_for('tickets.detail', ticket_id=ticket_id))
-    if ticket.statut not in ('resolu', 'ferme'):
-        flash("Le ticket doit être résolu ou fermé pour être évalué.", 'warning')
-        return redirect(url_for('tickets.detail', ticket_id=ticket_id))
-    try:
-        note = int(request.form.get('satisfaction', ''))
-    except ValueError:
-        note = 0
-    if note < 1 or note > 5:
-        flash("Choisissez une note entre 1 et 5.", 'danger')
-        return redirect(url_for('tickets.detail', ticket_id=ticket_id))
-    ticket.satisfaction = note
-    ticket.commentaire_satisfaction = (request.form.get('commentaire') or '').strip()[:1000] or None
-    db.session.add(HistoriqueTicket(ticket_id=ticket.id, utilisateur_id=current_user.id, action='Évaluation',
-                                    champ_modifie='Satisfaction', nouvelle_valeur=str(note)))
-    db.session.commit()
-    flash('Merci pour votre évaluation !', 'success')
-    return redirect(url_for('tickets.detail', ticket_id=ticket_id))
-
-
 @tickets_bp.route('/chat')
 @login_required
 def chat_inbox():

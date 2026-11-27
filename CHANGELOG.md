@@ -2,6 +2,12 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.12.0] - 2026-11-27
+
+### 🧹 Notation et satisfaction retirées
+- Plus de **note** ni de **satisfaction** : le formulaire d’évaluation de la fiche ticket, les colonnes et tuiles de la Performance des agents et de la fiche agent, l’indicateur, les colonnes et la section Satisfaction (avec les commentaires) du rapport global, ainsi que la colonne de l’export CSV.
+- Les notes déjà saisies restent enregistrées dans la base (non affichées).
+
 ## [2.11.0] - 2026-11-27
 
 ### ✅ « Résolu par » : le crédit va à la personne qui résout

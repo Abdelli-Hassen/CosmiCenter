@@ -757,7 +757,7 @@
   .podium-lbl { font-size: 10px !important; }
 
   /* Tuiles : 2 colonnes, compactes */
-  .tiles, .tiles.six, .tiles.three { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; margin-bottom: 16px !important; }
+  .tiles, .tiles.six, .tiles.five { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; margin-bottom: 16px !important; }
   .tile, .tiles.six .tile { padding: 12px !important; border-radius: 14px !important; min-width: 0; }
   .tile-label { font-size: 12px !important; }
   .tile-value, .tiles.six .tile-value { font-size: 22px !important; overflow-wrap: anywhere; }
@@ -775,16 +775,16 @@
   .ptable.no-cards tbody tr { animation: none !important; transform: none !important; box-shadow: none !important; }
   .ptable.no-cards td { display: block; border: 0 !important; padding: 0 !important; min-width: 0; }
   .ptable.no-cards td[data-l]::after { content: attr(data-l); display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin-top: 2px; }
-  .ptable.pr-table tbody tr { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-areas: "agent agent agent sit" "res open late avg" "sla sla csat csat"; gap: 12px 8px; align-items: start; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); }
+  .ptable.pr-table tbody tr { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-areas: "agent agent agent sit" "res open late avg" "sla sla sla sla"; gap: 12px 8px; align-items: start; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); }
   .ptable.pr-table tbody tr:last-child { border-bottom: 0; }
   .pr-table .pr-rank, .pr-table .pr-go { display: none !important; }
   .pr-table .rank-inline { display: inline-block; font-weight: 900; color: var(--text-muted); font-size: 16px; min-width: 26px; text-align: center; }
   .pr-table .pr-agent { grid-area: agent; }
   .pr-table .pr-sit { grid-area: sit; justify-self: end; }
   .pr-table .pr-res { grid-area: res; } .pr-table .pr-open { grid-area: open; } .pr-table .pr-late { grid-area: late; }
-  .pr-table .pr-avg { grid-area: avg; } .pr-table .pr-sla { grid-area: sla; } .pr-table .pr-csat { grid-area: csat; }
+  .pr-table .pr-avg { grid-area: avg; } .pr-table .pr-sla { grid-area: sla; }
   .pr-table td.num { text-align: left !important; font-size: 17px; font-weight: 800; color: var(--text-primary); }
-  .pr-table .pr-avg, .pr-table .pr-csat, .pr-table .pr-sla { font-size: 14px !important; }
+  .pr-table .pr-avg, .pr-table .pr-sla { font-size: 14px !important; }
   .pr-table .pr-sit .pill { font-size: 10.5px; padding: 3px 7px; }
   .pr-table .who { gap: 10px; }
   .pr-table .who-name { overflow-wrap: anywhere; }
@@ -799,10 +799,9 @@
   .at-table .at-due { grid-area: due; }
   .at-table td[data-l="Échéance"]::after { display: none; }
   .at-table td.at-due::before { content: "Échéance : "; color: var(--text-muted); font-size: 12px; }
-  .ptable.at-done tbody tr { grid-template-areas: "num sla sla" "title title title" "date dur note"; grid-template-columns: repeat(3, minmax(0, auto)); justify-content: space-between; }
+  .ptable.at-done tbody tr { grid-template-areas: "num sla sla" "title title title" "date date dur"; grid-template-columns: repeat(3, minmax(0, auto)); justify-content: space-between; }
   .at-done .at-sla { grid-area: sla; justify-self: end; }
-  .at-done .at-date { grid-area: date; font-size: 12px; } .at-done .at-dur { grid-area: dur; text-align: center !important; font-size: 12px !important; font-weight: 700 !important; }
-  .at-done .at-note { grid-area: note; text-align: right !important; font-size: 12px !important; font-weight: 700 !important; }
+  .at-done .at-date { grid-area: date; font-size: 12px; } .at-done .at-dur { grid-area: dur; text-align: right !important; font-size: 12px !important; font-weight: 700 !important; }
   .at-done td[data-l]::after { margin-top: 1px; }
 }
 @media (max-width: 768px) {

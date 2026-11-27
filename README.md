@@ -226,7 +226,6 @@ python3 -c "import secrets; print(secrets.token_hex(32))"      # ou : openssl ra
 - Modification = même page que « Nouveau ticket », pré-remplie ; historique d'audit de chaque changement.
 - Liste avec recherche (numéro `#12`, titre, description), filtres, **actions groupées** (statut, assignation) et colonne « Assigné à » (Tous + département, ou noms des agents). **Les tickets jamais ouverts sont mis en évidence** (pastille rouge, fond teinté, gras).
 - SLA par département (réponse 4 h, résolution 24 h par défaut) : l'échéance d'un ticket vient du SLA de son département ; suivi du retard, de la première réponse et de « SLA respecté / dépassé ».
-- Évaluation de satisfaction (1–5 étoiles et commentaire) par le créateur une fois le ticket résolu ou fermé.
 - Numéros séquentiels atomiques (`#42`) ; les tickets se créent uniquement depuis la plateforme (pas de création par e-mail).
 
 ### Utilisateurs, départements, entreprises, points de vente
@@ -243,8 +242,8 @@ python3 -c "import secrets; print(secrets.token_hex(32))"      # ou : openssl ra
 - **Base de connaissances** : catégories, articles, nombre de lecteurs distincts et, pour ceux qui peuvent créer des articles, la liste des lecteurs.
 
 ### Rapports et pilotage
-- **Rapport global** : 10 indicateurs comparés à la période précédente, courbes, répartitions, carte de chaleur jour × heure, performance par département, catégories et PDV les plus actifs, tickets en retard, satisfaction. Filtres : période, département, PDV, type, priorité, agent. Export **CSV** filtré (séparateur `;`) et impression / PDF.
-- **Performance des agents** : podium, classement (résolus, en cours, en retard, délai moyen, SLA, satisfaction, situation) et fiche détaillée par agent comparée à l'équipe. Mêmes chiffres que le rapport global (`services/reporting.py`).
+- **Rapport global** : 10 indicateurs comparés à la période précédente, courbes, répartitions, carte de chaleur jour × heure, performance par département, catégories et PDV les plus actifs, tickets en retard. Filtres : période, département, PDV, type, priorité, agent. Export **CSV** filtré (séparateur `;`) et impression / PDF.
+- **Performance des agents** : podium, classement (résolus, en cours, en retard, délai moyen, SLA, situation) et fiche détaillée par agent comparée à l'équipe. Mêmes chiffres que le rapport global (`services/reporting.py`).
 - **Crédit de résolution** : un ticket terminé compte pour la personne qui l’a **résolu** (« Résolu par » sur la fiche et dans l’export CSV), même s’il ne lui était pas assigné ; les tickets en cours comptent pour l’agent assigné.
 - **Plan d'action** : suivi des tâches sous forme de calendrier, avec **export Excel**. Il est **personnel** : chacun ne voit, ne modifie, ne termine, ne supprime et n'exporte que **ses propres tâches** (même un Super Administrateur), aucune donnée partagée.
 

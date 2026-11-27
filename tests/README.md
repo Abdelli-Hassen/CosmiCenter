@@ -10,7 +10,7 @@ venv/bin/python tests/cat_test.py                (Linux / macOS)
 
 | Script | Vérifie |
 |---|---|
-| `nav_test.py` | navigation, badges, permissions, évaluation, rapports, messagerie |
+| `nav_test.py` | navigation, badges, permissions, rapports, messagerie |
 | `chat_test.py` | messagerie et pièces jointes |
 | `groups_test.py` | groupes de discussion (création, droits, membres, fichiers, suppression) |
 | `kb_views_test.py` | base de connaissances : lecteurs distincts et nombre de lectures par personne |

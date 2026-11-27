@@ -145,7 +145,6 @@ def _base(f):
         Ticket.date_creation, Ticket.date_echeance, Ticket.sla_respecte,
         Ticket.temps_premiere_reponse_minutes.label('t_reponse'),
         Ticket.temps_resolution_minutes.label('t_resolution'),
-        Ticket.satisfaction, Ticket.commentaire_satisfaction,
         pdv_expr.label('pdv'), resolution_date.label('date_resol'))
         .select_from(Ticket).outerjoin(creator, creator.id == Ticket.createur_id))
     if f['departement_id']:
@@ -189,13 +188,13 @@ def export_rows(f):
         'departement': depts.get(t.departement_id, ''), 'categorie': cats.get(t.categorie_id, ''),
         'pdv': pdvs.get(t.pdv, ''), 'creation': t.date_creation, 'echeance': t.date_echeance,
         'resolution': t.date_resol, 't_reponse': t.t_reponse, 't_resolution': t.t_resolution,
-        'sla': t.sla_respecte, 'satisfaction': t.satisfaction,
+        'sla': t.sla_respecte,
     } for t in sorted(created, key=lambda r: r.date_creation, reverse=True)]
 
 
 # ─── Performance des agents ─────────────────────────────────────────────────
 def _agent_numbers(resolved, opened, now):
-    """Chiffres simples d'un agent : résolus, en cours, en retard, délai moyen, respect du SLA, satisfaction."""
+    """Chiffres simples d'un agent : résolus, en cours, en retard, délai moyen, respect du SLA."""
     sla_set = [t for t in resolved if t.sla_respecte is not None]
     overdue = sum(1 for t in opened if t.date_echeance and t.date_echeance < now)
     n = {
@@ -204,7 +203,6 @@ def _agent_numbers(resolved, opened, now):
         'overdue': overdue,
         'res_avg_min': _avg([t.t_resolution for t in resolved]),
         'sla': _pct(sum(1 for t in sla_set if t.sla_respecte), len(sla_set)),
-        'csat': _avg([t.satisfaction for t in resolved if t.satisfaction is not None]),
     }
     n['res_avg'] = fmt_minutes(n['res_avg_min'])
     # « Situation » : règle volontairement simple, expliquée sur la page
@@ -259,7 +257,7 @@ def agent_detail(f, agent):
             'id': t.id, 'numero': t.numero, 'titre': t.titre, 'priorite': t.priorite, 'statut': t.statut,
             'departement': depts.get(t.departement_id, '—'),
             'created': t.date_creation, 'due': t.date_echeance, 'resolved_at': t.date_resol,
-            'duree': fmt_minutes(t.t_resolution), 'sla': t.sla_respecte, 'note': t.satisfaction,
+            'duree': fmt_minutes(t.t_resolution), 'sla': t.sla_respecte,
             'late': late,
             'late_by': fmt_minutes((now - t.date_echeance).total_seconds() / 60) if late else None,
         }
@@ -272,7 +270,6 @@ def agent_detail(f, agent):
 def _summary(created, resolved, opened, now):
     res_times = [t.t_resolution for t in resolved if t.t_resolution is not None]
     sla_set = [t for t in resolved if t.sla_respecte is not None]
-    rated = [t.satisfaction for t in resolved if t.satisfaction is not None]
     done_from_created = [t for t in created if t.statut in STATUTS_RESOLUS]
     return {
         'created': len(created),
@@ -286,8 +283,6 @@ def _summary(created, resolved, opened, now):
         'resolution_median': median(res_times) if res_times else None,
         'sla': _pct(sum(1 for t in sla_set if t.sla_respecte), len(sla_set)),
         'sla_n': len(sla_set),
-        'csat': _avg(rated),
-        'csat_n': len(rated),
     }
 
 
@@ -337,9 +332,6 @@ def build_report(f):
         {'key': 'resolution', 'label': 'Résolution (moy.)', 'value': fmt_minutes(cur['resolution_avg']), 'color': '#f59e0b', 'icon': 'clock',
          'sub': f"médiane : {fmt_minutes(cur['resolution_median'])}",
          'delta': _delta(cur['resolution_avg'], prev['resolution_avg'], higher_is_better=False)},
-        {'key': 'csat', 'label': 'Satisfaction',
-         'value': f"{cur['csat']:.1f} / 5".replace('.', ',') if cur['csat'] is not None else '—', 'color': '#ec4899', 'icon': 'star',
-         'sub': f"{cur['csat_n']} évaluation(s)", 'delta': _delta(cur['csat'], prev['csat'], points=True)},
         {'key': 'reopened', 'label': 'Réouvertures', 'value': str(reopened or 0), 'color': '#64748b', 'icon': 'redo',
          'sub': 'tickets rouverts sur la période', 'delta': None, 'bad_if_positive': True},
     ]
@@ -385,7 +377,6 @@ def build_report(f):
         r = [t for t in resolved if t.departement_id == did]
         o = [t for t in opened if t.departement_id == did]
         sla_set = [t for t in r if t.sla_respecte is not None]
-        rated = [t.satisfaction for t in r if t.satisfaction is not None]
         dept_rows.append({
             'nom': depts[did].nom if did in depts else 'Sans département',
             'couleur': getattr(depts.get(did), 'couleur', None) or '#64748b',
@@ -393,7 +384,6 @@ def build_report(f):
             'overdue': sum(1 for t in o if t.date_echeance and t.date_echeance < now),
             'res_avg': fmt_minutes(_avg([t.t_resolution for t in r])),
             'sla': _pct(sum(1 for t in sla_set if t.sla_respecte), len(sla_set)),
-            'csat': _avg(rated),
         })
     dept_rows.sort(key=lambda x: (-x['created'], -x['open'], x['nom']))
 
@@ -432,7 +422,6 @@ def build_report(f):
         agent_rows.append({
             'nom': u.nom_complet if u else '—', 'assigned': len(c), 'resolved': len(r), 'open': len(o),
             'res_avg': fmt_minutes(_avg([t.t_resolution for t in r])),
-            'csat': _avg([t.satisfaction for t in r if t.satisfaction is not None]),
         })
     agent_rows.sort(key=lambda x: (-x['resolved'], -x['assigned'], x['nom']))
 
@@ -451,13 +440,6 @@ def build_report(f):
         'retard': fmt_minutes((now - t.date_echeance).total_seconds() / 60),
     } for t in overdue]
 
-    # ── Satisfaction ──
-    rated = [t for t in resolved if t.satisfaction is not None]
-    dist = Counter(t.satisfaction for t in rated)
-    comment = lambda t: {'id': t.id, 'numero': t.numero, 'titre': t.titre, 'note': t.satisfaction, 'texte': t.commentaire_satisfaction}
-    good_comments = [comment(t) for t in rated if t.satisfaction >= 4 and t.commentaire_satisfaction][:5]
-    bad_comments = [comment(t) for t in rated if t.satisfaction <= 2 and t.commentaire_satisfaction][:5]
-
     return {
         'kpis': kpis, 'summary': cur, 'previous': prev, 'series': series,
         'by_status': dict(by_status), 'by_type': dict(by_type), 'by_prio': dict(by_prio),
@@ -467,7 +449,5 @@ def build_report(f):
         'agents': agent_rows[:10], 'agents_total': len(agent_rows),
         'heat': heat, 'heat_max': heat_max, 'jours': JOURS,
         'overdue_rows': overdue_rows,
-        'satisfaction': {'dist': {i: dist.get(i, 0) for i in range(1, 6)}, 'n': len(rated), 'avg': cur['csat'],
-                         'good': good_comments, 'bad': bad_comments},
         'days': days,
     }

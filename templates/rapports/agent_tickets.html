@@ -40,7 +40,7 @@
   </div>
 
   <!-- Chiffres clés, comparés à l'équipe -->
-  <div class="tiles three">
+  <div class="tiles five">
     <div class="tile"><div class="tile-label">Résolus</div><div class="tile-value">{{ n.resolved }}</div><div class="tile-note">sur la période</div></div>
     <div class="tile"><div class="tile-label">En cours</div><div class="tile-value">{{ n.open }}</div><div class="tile-note">à traiter aujourd'hui</div></div>
     <div class="tile {{ 'is-hot' if n.overdue }}"><div class="tile-label">En retard</div><div class="tile-value">{{ n.overdue }}</div><div class="tile-note">délai SLA dépassé</div></div>
@@ -55,7 +55,6 @@
       <div class="tile-label">Respect du SLA</div><div class="tile-value">{% if n.sla is not none %}{{ fmt1(n.sla) }} %{% else %}—{% endif %}</div>
       <div class="tile-note">équipe : {% if team.sla is not none %}{{ fmt1(team.sla) }} %{% else %}—{% endif %} · objectif 90 %</div>
     </div>
-    <div class="tile"><div class="tile-label">Satisfaction</div><div class="tile-value">{% if n.csat is not none %}{{ fmt1(n.csat) }} / 5{% else %}—{% endif %}</div><div class="tile-note">notes données par les demandeurs</div></div>
   </div>
 
   <!-- À traiter maintenant -->
@@ -87,7 +86,7 @@
     <div class="scroll">
     {% if done %}
     <table class="ptable no-cards at-table at-done">
-      <thead><tr><th>N°</th><th>Ticket</th><th>Résolu le</th><th class="num">Délai</th><th>SLA</th><th class="num">Note</th></tr></thead>
+      <thead><tr><th>N°</th><th>Ticket</th><th>Résolu le</th><th class="num">Délai</th><th>SLA</th></tr></thead>
       <tbody>
       {% for t in done %}
       <tr class="click" onclick="window.location.href='{{ url_for('tickets.detail', ticket_id=t.id) }}'">
@@ -96,7 +95,6 @@
         <td class="at-date" data-l="Résolu le">{{ t.resolved_at.strftime('%d/%m/%Y %H:%M') if t.resolved_at else '—' }}</td>
         <td class="num at-dur" data-l="Délai">{{ t.duree }}</td>
         <td class="at-sla">{% if t.sla is none %}<span class="pill muted">—</span>{% elif t.sla %}<span class="pill good">Dans les temps</span>{% else %}<span class="pill bad">Hors délai</span>{% endif %}</td>
-        <td class="num at-note" data-l="Note">{{ (t.note ~ ' ★') if t.note else '—' }}</td>
       </tr>
       {% endfor %}
       </tbody>

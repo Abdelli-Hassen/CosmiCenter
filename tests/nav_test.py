@@ -68,26 +68,17 @@ try:
     check("bulk assign refused without the tickets.assigner permission (403)", r.status_code == 403, r.status_code)
     r = ca.post("/tickets/bulk", json={"ids": "x"}, headers={"X-CSRFToken": ca.tok("/tickets/liste")})
     check("bulk with a malformed payload refused (400)", r.status_code == 400)
-    # satisfaction
     tid = ticket_ids[0]
-    page = cu.get(f"/tickets/{tid}").get_data(as_text=True)
-    check("no rating form while the ticket is not resolved", "Envoyer mon évaluation" not in page)
     with app.app_context():
         tk = db.session.get(Ticket, tid); tk.date_creation = datetime.utcnow() - timedelta(minutes=90); db.session.commit()
     ca.post(f"/tickets/{tid}/statut", data={"statut": "resolu", "csrf_token": ca.tok(f"/tickets/{tid}")})
+    # la notation (satisfaction) a été retirée
     page = cu.get(f"/tickets/{tid}").get_data(as_text=True)
-    check("rating form appears for the creator once resolved", "Envoyer mon évaluation" in page)
-    check("other users do not get the rating form", "Envoyer mon évaluation" not in ca.get(f"/tickets/{tid}").get_data(as_text=True))
-    r = ca.post(f"/tickets/{tid}/evaluer", data={"satisfaction": "5", "csrf_token": ca.tok(f"/tickets/{tid}")})
-    with app.app_context(): check("non-creator cannot rate", db.session.get(Ticket, tid).satisfaction is None)
-    cu.post(f"/tickets/{tid}/evaluer", data={"satisfaction": "9", "csrf_token": cu.tok(f"/tickets/{tid}")})
-    with app.app_context(): check("rating outside 1..5 refused", db.session.get(Ticket, tid).satisfaction is None)
-    cu.post(f"/tickets/{tid}/evaluer", data={"satisfaction": "4", "commentaire": "ok", "csrf_token": cu.tok(f"/tickets/{tid}")})
-    with app.app_context(): tk = db.session.get(Ticket, tid); check("creator rating saved", tk.satisfaction == 4 and tk.commentaire_satisfaction == "ok")
-    # rapports : heures et satisfaction
+    check("no rating form on a resolved ticket", "Envoyer mon évaluation" not in page and "Satisfaction" not in page)
+    check("rating address removed (404)", cu.post(f"/tickets/{tid}/evaluer", data={"satisfaction": "4", "csrf_token": cu.tok("/parametres/profil")}).status_code == 404)
+    # rapports : heures
     html = ca.get("/rapports/").get_data(as_text=True)
     check("report shows 1.5h (not 90h) for a 90-minute resolution", "1,5 h" in html and "90,0 h" not in html)
-    check("report shows the satisfaction average", "4,0 / 5" in html)
     # qui a résolu : le ticket n'est assigné à personne, le crédit va à la personne qui le résout
     third = ticket_ids[2]
     def solver():
@@ -116,6 +107,10 @@ try:
     check("old resolved tickets get their solver back from the history", solver()[1] == admid, solver())
     ca.post(f"/tickets/{third}/reouvrir", data={"csrf_token": ca.tok(f"/tickets/{third}")})
     check("reopening clears the solver", solver()[1] is None and row_resolved() == before, (solver(), row_resolved()))
+    agent_pages = ca.get("/rapports/performance-agents").get_data(as_text=True) + ca.get(f"/rapports/performance-agents/{admid}/tickets").get_data(as_text=True)
+    report_page = ca.get("/rapports/").get_data(as_text=True)
+    check("no satisfaction or rating left in the reports and the CSV",
+          not any("Satisfaction" in h for h in (agent_pages, report_page, ca.get("/rapports/export/csv").get_data(as_text=True))) and 'data-l="Note"' not in agent_pages)
     # messagerie
     r = ca.get("/tickets/chat"); check("/tickets/chat redirects to /chat/", r.status_code == 302 and r.headers["Location"].endswith("/chat/"), r.headers.get("Location"))
     html = ca.get("/chat/").get_data(as_text=True)

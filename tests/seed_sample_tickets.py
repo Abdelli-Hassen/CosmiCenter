@@ -39,8 +39,5 @@ with app.app_context():
             t.date_resolution = res; t.date_fermeture = res
             t.temps_resolution_minutes = int((res - created).total_seconds() / 60)
             t.sla_respecte = res <= due
-            if random.random() > 0.4:
-                t.satisfaction = random.choice([1, 2, 4, 5, 5, 4, 3])
-                t.commentaire_satisfaction = random.choice(["Rapide et efficace", "Trop long à résoudre", "Très bon suivi"]) if random.random() > 0.5 else None
         db.session.add(t)
     db.session.commit(); print("seeded; total", Ticket.query.count())

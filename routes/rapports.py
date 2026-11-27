@@ -38,7 +38,7 @@ def _parse_iso(value):
 @login_required
 @permission_required('rapports_globaux.voir')
 def tableau_bord():
-    """Rapport global : indicateurs, évolution, répartitions, SLA, backlog, agents, PDV, satisfaction"""
+    """Rapport global : indicateurs, évolution, répartitions, SLA, backlog, agents, PDV"""
     f = reporting.parse_filters(request.args)
     rapport = reporting.build_report(f)
     return render_template('rapports/tableau_bord.html',
@@ -89,14 +89,6 @@ def agent_tickets(agent_id):
                            to_handle=to_handle, done=done, periodes=PERIODES_AGENTS)
 
 
-@rapports_bp.route('/satisfaction-client')
-@login_required
-@permission_required('rapports_globaux.voir')
-def satisfaction_client():
-    """La satisfaction est désormais intégrée au rapport global."""
-    return redirect(url_for('rapports.tableau_bord', **request.args) + '#satisfaction')
-
-
 @rapports_bp.route('/export/csv')
 @login_required
 @permission_required('rapports_globaux.voir')
@@ -119,13 +111,13 @@ def export_csv():
     writer = csv.writer(output, delimiter=';')
     writer.writerow(['Numéro', 'Titre', 'Type', 'Priorité', 'Statut', 'Créateur', 'Assigné à', 'Résolu par', 'Département',
                      'Catégorie', 'Point de vente', 'Date création', 'Échéance SLA', 'Date résolution',
-                     '1ère réponse (min)', 'Résolution (min)', 'SLA respecté', 'Satisfaction'])
+                     '1ère réponse (min)', 'Résolution (min)', 'SLA respecté'])
     for t in rows:
         writer.writerow([csv_safe(v) for v in [
             t['numero'], t['titre'], t['type'], t['priorite'], t['statut'], t['createur'], t['assigne'], t['resolu_par'],
             t['departement'], t['categorie'], t['pdv'], d(t['creation']), d(t['echeance']), d(t['resolution']),
             t['t_reponse'] if t['t_reponse'] is not None else '', t['t_resolution'] if t['t_resolution'] is not None else '',
-            '' if t['sla'] is None else ('oui' if t['sla'] else 'non'), t['satisfaction'] or '']])
+            '' if t['sla'] is None else ('oui' if t['sla'] else 'non')]])
 
     return send_file(
         io.BytesIO(output.getvalue().encode('utf-8-sig')),

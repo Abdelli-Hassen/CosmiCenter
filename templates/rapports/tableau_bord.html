@@ -96,10 +96,6 @@
 .heat-h { text-align:center; font-size:9px; }
 .heat-d { display:flex; align-items:center; font-weight:700; }
 
-/* Commentaires */
-.comment { padding:10px 12px; border-radius:10px; background:var(--surface-2); margin-bottom:8px; font-size:12.5px; color:var(--text-secondary); }
-.comment a { color:var(--text-primary); font-weight:700; text-decoration:none; }
-
 /* ── Animations (entrées + survols) ── */
 @keyframes slide-up { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
 @keyframes fade-in-up { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
@@ -122,8 +118,6 @@
 .rtable tbody tr:hover { transform:translateX(3px); }
 .rbtn { transition: all .25s cubic-bezier(.34,1.56,.64,1); }
 .rbtn:hover { transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,.18); }
-.comment { transition: transform .2s ease; }
-.comment:hover { transform:translateX(4px); }
 @media (prefers-reduced-motion: reduce) {
   .reports-hero, .filter-bar, .kpi-card, .dash-card, .bar-fill { animation:none !important; }
   .kpi-card:hover, .rbtn:hover, .rtable tbody tr:hover { transform:none; }
@@ -147,7 +141,6 @@
   {%- elif name == 'target' -%}<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
   {%- elif name == 'shield' -%}<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
   {%- elif name == 'clock' -%}<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-  {%- elif name == 'star' -%}<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
   {%- else -%}<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
   {%- endif -%}
 {%- endmacro %}
@@ -382,14 +375,13 @@
     <div class="table-scroll">
       {% if r.departements %}
       <table class="rtable">
-        <thead><tr><th>Département</th><th class="num">Créés</th><th class="num">Résolus</th><th class="num">En attente</th><th class="num">En retard</th><th class="num">Résolution moy.</th><th class="num">SLA</th><th class="num">Satisfaction</th></tr></thead>
+        <thead><tr><th>Département</th><th class="num">Créés</th><th class="num">Résolus</th><th class="num">En attente</th><th class="num">En retard</th><th class="num">Résolution moy.</th><th class="num">SLA</th></tr></thead>
         <tbody>
         {% for d in r.departements %}
         <tr><td class="strong"><span class="bar-dot" style="display:inline-block;background:{{ d.couleur }};margin-right:8px;"></span>{{ d.nom }}</td>
           <td class="num">{{ d.created }}</td><td class="num">{{ d.resolved }}</td><td class="num">{{ d.open }}</td>
           <td class="num">{% if d.overdue %}<span class="pill bad">{{ d.overdue }}</span>{% else %}0{% endif %}</td>
-          <td class="num">{{ d.res_avg }}</td><td class="num">{{ sla_pill(d.sla) }}</td>
-          <td class="num">{% if d.csat is not none %}{{ fmt1(d.csat) }} / 5{% else %}—{% endif %}</td></tr>
+          <td class="num">{{ d.res_avg }}</td><td class="num">{{ sla_pill(d.sla) }}</td></tr>
         {% endfor %}
         </tbody>
       </table>
@@ -433,16 +425,16 @@
   <!-- Agents -->
   <div class="dash-card full">
     <div class="dash-card-header">
-      <div><h2 class="dash-card-title">Agents</h2><div class="dash-card-subtitle">Top {{ r.agents|length }} sur {{ r.agents_total }} agent(s) ayant des tickets assignés · {{ r.summary.unassigned }} ticket(s) ouvert(s) sans agent</div></div>
+      <div><h2 class="dash-card-title">Agents</h2><div class="dash-card-subtitle">Top {{ r.agents|length }} sur {{ r.agents_total }} agent(s) ayant des tickets · {{ r.summary.unassigned }} ticket(s) ouvert(s) sans agent</div></div>
       {% if current_user.has_permission('rapports_performance.voir') %}<a class="rbtn no-print" href="{{ url_for('rapports.performance_agents') }}">Détail par agent</a>{% endif %}
     </div>
     <div class="table-scroll">
     {% if r.agents %}
     <table class="rtable">
-      <thead><tr><th>#</th><th>Agent</th><th class="num">Assignés</th><th class="num">Résolus</th><th class="num">En cours</th><th class="num">Résolution moy.</th><th class="num">Satisfaction</th></tr></thead>
+      <thead><tr><th>#</th><th>Agent</th><th class="num">Assignés</th><th class="num">Résolus</th><th class="num">En cours</th><th class="num">Résolution moy.</th></tr></thead>
       <tbody>{% for a in r.agents %}
         <tr><td>{{ loop.index }}</td><td class="strong">{{ a.nom }}</td><td class="num">{{ a.assigned }}</td><td class="num">{{ a.resolved }}</td><td class="num">{{ a.open }}</td>
-          <td class="num">{{ a.res_avg }}</td><td class="num">{% if a.csat is not none %}{{ fmt1(a.csat) }} / 5{% else %}—{% endif %}</td></tr>
+          <td class="num">{{ a.res_avg }}</td></tr>
       {% endfor %}</tbody>
     </table>
     {% else %}<div class="empty">Aucun ticket assigné sur cette période.</div>{% endif %}
@@ -464,32 +456,6 @@
       {% endfor %}</tbody>
     </table>
     {% else %}<div class="empty">Aucun ticket en retard 🎉</div>{% endif %}
-    </div>
-  </div>
-
-  <!-- Satisfaction -->
-  <div class="grid-2" id="satisfaction">
-    <div class="dash-card">
-      <div class="dash-card-header"><div><h2 class="dash-card-title">Satisfaction</h2><div class="dash-card-subtitle">{{ r.satisfaction.n }} évaluation(s) · moyenne {% if r.satisfaction.avg is not none %}{{ fmt1(r.satisfaction.avg) }} / 5{% else %}—{% endif %}</div></div></div>
-      <div class="dash-card-body">
-        {% if r.satisfaction.n %}
-        {% set mx = r.satisfaction.dist.values()|max %}
-        {% for note in [5, 4, 3, 2, 1] %}
-        <div class="bar-row"><div class="bar-label" style="width:60px;">{{ note }} ★</div>
-          <div class="bar-track"><div class="bar-fill" style="width:{{ (r.satisfaction.dist[note] / mx * 100)|round(1) }}%;background:{{ '#10b981' if note >= 4 else '#f59e0b' if note == 3 else '#ef4444' }};"></div></div>
-          <div class="bar-val">{{ r.satisfaction.dist[note] }}</div></div>
-        {% endfor %}
-        {% else %}<div class="empty">Aucune évaluation sur cette période. Le créateur d'un ticket peut le noter une fois résolu.</div>{% endif %}
-      </div>
-    </div>
-    <div class="dash-card">
-      <div class="dash-card-header"><div><h2 class="dash-card-title">Commentaires récents</h2><div class="dash-card-subtitle">Retours positifs (4–5) et négatifs (1–2)</div></div></div>
-      <div class="dash-card-body">
-        {% if r.satisfaction.bad or r.satisfaction.good %}
-          {% for c in r.satisfaction.bad %}<div class="comment" style="border-left:3px solid #ef4444;"><a href="{{ url_for('tickets.detail', ticket_id=c.id) }}">#{{ c.numero }} · {{ c.note }} ★</a> — {{ c.texte }}</div>{% endfor %}
-          {% for c in r.satisfaction.good %}<div class="comment" style="border-left:3px solid #10b981;"><a href="{{ url_for('tickets.detail', ticket_id=c.id) }}">#{{ c.numero }} · {{ c.note }} ★</a> — {{ c.texte }}</div>{% endfor %}
-        {% else %}<div class="empty">Aucun commentaire.</div>{% endif %}
-      </div>
     </div>
   </div>
 

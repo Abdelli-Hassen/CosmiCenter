@@ -135,12 +135,7 @@ Route : `POST /tickets/<id>/fermer`
 - Indicateur de respect du SLA (`sla_respecte`)
 - Temps calculés en minutes pour les rapports
 
-### 3.8 Évaluation de satisfaction
-
-- Note de 1 à 5 étoiles
-- Commentaire libre associé
-
-### 3.9 Historique des modifications
+### 3.8 Historique des modifications
 
 Chaque modification d'un ticket crée une entrée d'audit :
 - Champ modifié, ancienne valeur, nouvelle valeur
@@ -351,7 +346,6 @@ Route : `GET /rapports/`
 - Utilisateurs et départements actifs
 - Temps moyen de première réponse (minutes)
 - Temps moyen de résolution (minutes)
-- Note de satisfaction moyenne
 - Taux de respect des SLA (%)
 
 **Distributions**
@@ -370,27 +364,17 @@ Un ticket terminé est compté pour la personne qui l’a **résolu** (« Résol
 
 Route : `GET /rapports/performance-agents`
 
-Par agent : tickets totaux, résolus, en cours, temps moyen de résolution, taux de résolution (%), satisfaction moyenne.
+Par agent : tickets totaux, résolus, en cours, temps moyen de résolution, taux de résolution (%).
 
-### 7.3 Satisfaction client
-
-Route : `GET /rapports/satisfaction-client`
-
-- Filtres de période
-- Distribution des notes 1–5 étoiles
-- Satisfaction moyenne globale
-- Satisfaction par département
-- Liste des derniers commentaires positifs et négatifs
-
-### 7.4 Export CSV
+### 7.3 Export CSV
 
 Route : `GET /rapports/export/csv`
 
 Export de tous les tickets avec filtres de dates.
 
-**Colonnes exportées** : numéro, titre, type, priorité, statut, créateur, assigné, département, catégorie, date création, date résolution, satisfaction.
+**Colonnes exportées** : numéro, titre, type, priorité, statut, créateur, assigné, département, catégorie, date création, date résolution.
 
-### 7.5 API stats (JSON)
+### 7.4 API stats (JSON)
 
 Route : `GET /rapports/api/stats`
 
@@ -467,7 +451,7 @@ Toutes les routes API requièrent `@login_required`.
 | `Permission` | Permissions granulaires par code (ex. `tickets.modifier`) |
 | `Departement` | Unités organisationnelles avec SLA et responsable |
 | `CategorieTicket` | Catégories de tickets par type et département |
-| `Ticket` | Tickets avec statut, priorité, SLA, satisfaction, historique |
+| `Ticket` | Tickets avec statut, priorité, SLA, historique |
 | `Tache` | Sous-tâches rattachées à un ticket |
 | `Commentaire` | Commentaires publics et notes internes sur les tickets |
 | `PieceJointe` | Fichiers joints à un ticket |

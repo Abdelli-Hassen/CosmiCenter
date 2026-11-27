@@ -69,7 +69,6 @@
         <th class="num">En retard{{ info_tip("Tickets en cours dont l'échéance (SLA) est déjà dépassée.") }}</th>
         <th class="num">Délai moyen{{ info_tip("Temps moyen entre la création d'un ticket et sa résolution.") }}</th>
         <th class="num">Respect SLA{{ info_tip("Part des tickets résolus avant leur échéance. Objectif : 90 %.") }}</th>
-        <th class="num">Satisfaction{{ info_tip("Note moyenne sur 5 donnée par les demandeurs une fois le ticket résolu.") }}</th>
         <th>Situation{{ info_tip("Au point : aucun retard. À surveiller : 1 ou 2 retards, ou SLA sous 80 %. Attention : 3 retards ou plus, ou SLA sous 60 %.") }}</th><th style="width:30px;"></th>
       </tr></thead>
       <tbody>
@@ -88,7 +87,6 @@
         <td class="num pr-late" data-l="En retard">{% if r.overdue %}<span class="pill bad">{{ r.overdue }}</span>{% else %}0{% endif %}</td>
         <td class="num pr-avg" data-l="Délai moyen">{{ r.res_avg }}</td>
         <td class="num pr-sla" data-l="Respect SLA">{{ sla_pill(r.sla) }}</td>
-        <td class="num pr-csat" data-l="Satisfaction">{% if r.csat is not none %}{{ fmt1(r.csat) }} / 5{% else %}—{% endif %}</td>
         <td class="pr-sit"><span class="pill {{ sit[r.situation][0] }}">{{ sit[r.situation][1] }}</span></td>
         <td class="go pr-go">›</td>
       </tr>

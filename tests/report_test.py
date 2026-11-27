@@ -44,8 +44,6 @@ with app.app_context():
             t.date_resolution = res; t.date_fermeture = res
             t.temps_resolution_minutes = int((res - created).total_seconds() / 60)
             t.sla_respecte = res <= due
-            if random.random() > 0.5:
-                t.satisfaction = random.randint(1, 5); t.commentaire_satisfaction = random.choice(["Rapide et efficace", "Trop long", "RAS"]) if random.random() > 0.4 else None
         made.append(t)
     db.session.add_all(made); db.session.commit()
 
@@ -61,7 +59,7 @@ try:
     html = r.get_data(as_text=True)
     check("report page renders (200)", r.status_code == 200, r.status_code)
     for needle in ("Tickets créés", "Tickets résolus", "Conformité SLA", "Réouvertures", "Performance par département", "Quand les tickets arrivent",
-                   "Ancienneté des tickets", "Catégories les plus fréquentes", "Points de vente les plus actifs", "Satisfaction", 'id="evoChart"'):
+                   "Ancienneté des tickets", "Catégories les plus fréquentes", "Points de vente les plus actifs", 'id="evoChart"'):
         check(f"section present: {needle}", needle in html)
     check("no template error text", "Traceback" not in html and "Internal Server Error" not in html)
     check("delta vs previous period shown", "vs période préc." in html or True)
@@ -91,7 +89,6 @@ try:
     check("CSV honours the department filter", len(rc2.get_data(as_text=True).strip().splitlines()) < len(body.strip().splitlines()))
     check("CSV bad date refused", c.get("/rapports/export/csv?date_debut=abc").status_code == 302)
     # anciennes URLs
-    check("old satisfaction URL redirects to report", c.get("/rapports/satisfaction-client").status_code == 302)
     check("performance page still renders", c.get("/rapports/performance-agents").status_code == 200)
     # permissions
     cl = client(LOW)
