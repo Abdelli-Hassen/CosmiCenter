@@ -34,6 +34,9 @@ def can_act_on_user(actor, target):
     return (not is_super_admin(target)) or is_super_admin(actor)
 
 
+MESSAGE_SUPER_ADMIN = "Seul un Super Administrateur peut agir sur un compte Super Administrateur."
+
+
 def user_visibility_filter(user):
     """Critère SQLAlchemy des comptes visibles par `user` (hors permission utilisateurs.voir_tous) : lui-même, les
     personnes de son département, et celles qui partagent au moins un de ses points de vente (principal ou

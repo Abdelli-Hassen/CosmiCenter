@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
+from utils.permissions import MESSAGE_SUPER_ADMIN, can_act_on_user
 from models import db, Entreprise, Utilisateur, Ticket
 from datetime import datetime
 from utils.permissions import home_endpoint
@@ -333,6 +334,9 @@ def assigner_employe(id):
     ent = Entreprise.query.get_or_404(id)
     user_id = request.form.get('utilisateur_id')
     user = Utilisateur.query.get_or_404(user_id)
+    if not can_act_on_user(current_user, user):
+        flash(MESSAGE_SUPER_ADMIN, "danger")
+        return redirect(url_for('companies.detail', id=id))
     user.entreprise_id = ent.id
     db.session.commit()
     flash(f"{user.nom_complet} est maintenant rattaché à {ent.nom}.", "success")
@@ -348,6 +352,9 @@ def retirer_employe(user_id):
         return redirect(url_for('companies.liste'))
 
     user = Utilisateur.query.get_or_404(user_id)
+    if not can_act_on_user(current_user, user):
+        flash(MESSAGE_SUPER_ADMIN, "danger")
+        return redirect(url_for('companies.liste'))
     old_ent_id = user.entreprise_id
     user.entreprise_id = None
     db.session.commit()

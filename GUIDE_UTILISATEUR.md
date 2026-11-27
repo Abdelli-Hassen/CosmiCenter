@@ -146,6 +146,8 @@ La section **Utilisateurs** liste tous les comptes de la plateforme.
 
 **Personnes sans rattachement :** dans la liste « Tous les rattachements », choisissez **Sans département ni PDV** pour voir les comptes qui n’ont ni département ni point de vente (le nombre est indiqué entre parenthèses). Ouvrez ensuite chaque fiche avec **Modifier** pour les rattacher.
 
+> Les comptes **Super Administrateur** sont protégés : seul un Super Administrateur voit les boutons pour les modifier, les désactiver ou les supprimer.
+
 #### Créer un nouvel utilisateur
 
 ![Nouvel utilisateur](static/images/guide/07-nouvel-utilisateur.png)

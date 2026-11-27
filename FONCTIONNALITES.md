@@ -470,7 +470,7 @@ Toutes les routes API requièrent `@login_required`.
 
 | Rôle | Niveau | Accès |
 |------|--------|-------|
-| Super Administrateur | 100 | Accès complet, y compris configuration système |
+| Super Administrateur | 100 | Accès complet, y compris configuration système. Ses comptes sont intouchables pour tous les autres rôles |
 | Administrateur | 90 | Gestion utilisateurs, départements, tickets, rapports |
 | Manager | 70 | Supervision de son département, assignation, rapports |
 | Agent | 50 | Traitement des tickets assignés, commentaires |

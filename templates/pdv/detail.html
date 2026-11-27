@@ -1145,11 +1145,13 @@ dialog::backdrop {
               </div>
             </div>
             {% if current_user.has_permission('pdv.gerer_employes') and current_user.peut_gerer_pdv(pdv.id) %}
+            {% if can_act_on_user(current_user, emp) %}
             <form action="{{ url_for('pdv.retirer_employe', id=pdv.id, user_id=emp.id) }}" method="POST">
               <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--text-muted); padding:6px;" title="Retirer cet employé" data-confirm="Retirer cet employé du point de vente ?">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </form>
+            {% endif %}
             {% endif %}
           </div>
           {% endfor %}

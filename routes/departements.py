@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
+from utils.permissions import MESSAGE_SUPER_ADMIN, can_act_on_user
 from models import db, Departement, Utilisateur, CategorieTicket, Ticket
 from functools import wraps
 from sqlalchemy import func
@@ -345,6 +346,9 @@ def assigner_membre(id):
 
     dept = Departement.query.get_or_404(id)
     user = db.session.get(Utilisateur, request.form.get('utilisateur_id') or '')
+    if not can_act_on_user(current_user, user):
+        flash(MESSAGE_SUPER_ADMIN, "danger")
+        return redirect(url_for('departements.detail', id=id))
     if user:
         user.departement_id = dept.id
         db.session.commit()
@@ -363,6 +367,9 @@ def retirer_membre(id, user_id):
         return redirect(url_for('departements.detail', id=id))
 
     user = db.session.get(Utilisateur, user_id)
+    if not can_act_on_user(current_user, user):
+        flash(MESSAGE_SUPER_ADMIN, "danger")
+        return redirect(url_for('departements.detail', id=id))
     if user and user.departement_id == id:
         user.departement_id = None
         db.session.commit()

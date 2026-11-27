@@ -2,6 +2,13 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.13.1] - 2026-11-27
+
+### 🔒 Comptes Super Administrateur intouchables
+- Pour toute personne qui n’est pas Super Administrateur : plus aucun bouton **Modifier / Désactiver / Réactiver / Supprimer** sur un compte Super Administrateur (annuaire, fiche, accès à distance).
+- Le serveur refuse aussi de le **rattacher ou retirer** d’un département, d’un point de vente ou d’une entreprise (boutons « Retirer » masqués), et ses mots de passe AnyDesk / TeamViewer ne sont plus affichés sur sa fiche.
+- Le rôle **Super Administrateur** ne peut plus être renommé, désactivé ni supprimé.
+
 ## [2.13.0] - 2026-11-27
 
 ### 🔎 Utilisateurs : filtre « Sans département ni PDV »

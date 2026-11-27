@@ -22,6 +22,7 @@ venv/bin/python tests/cat_test.py                (Linux / macOS)
 | `cat_test.py` | gestion des catégories de tickets (créer, modifier, archiver, supprimer, permission) |
 | `report_test.py` | rapport global, filtres, export CSV |
 | `agents_test.py` | performance des agents et fiche agent |
+| `super_admin_test.py` | un compte avec toutes les permissions (sans être Super Administrateur) ne peut rien faire sur un Super Administrateur ni sur son rôle |
 | `portability_test.py` | **aucun chemin absolu** (C:\, /Users/, /home/nom/…) dans le code, les gabarits, les scripts, les docs, le `.env` ni les données de la base ; fichiers référencés présents dans le dossier du projet |
 | `ticket_scope_test.py` | portée des actions tickets : `tickets.<action>` (tous) vs `tickets.<action>_mes` (mes tickets), sans base |
 | `ticket_scope_http_test.py` | page Rôles (cases rangées sous « Mes tickets » / « Tous les tickets ») et commentaires réellement limités à la portée du droit ; rôles/utilisateurs/tickets de test supprimés |

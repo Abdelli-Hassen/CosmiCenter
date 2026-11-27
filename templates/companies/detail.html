@@ -340,11 +340,13 @@
               </td>
               {% if current_user.has_permission('entreprises.gerer_collaborateurs') %}
               <td class="cu-act" style="text-align:right;">
+                {% if can_act_on_user(current_user, u) %}
                 <form method="POST" action="{{ url_for('companies.retirer_employe', user_id=u.id) }}" data-confirm="{{ ('Détacher ce collaborateur de ' ~ entreprise.nom ~ ' ?')|forceescape }}" style="display:inline;">
                   <button type="submit" class="btn-action" style="padding:4px 8px; font-size:11px; color:#ef4444; border-color:rgba(239,68,68,0.2);">
                     Détacher
                   </button>
                 </form>
+                {% endif %}
               </td>
               {% endif %}
             </tr>

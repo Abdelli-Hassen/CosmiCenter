@@ -516,7 +516,7 @@ def creer_role():
 @permission_required('admin_roles.modifier')
 def modifier_role(role_id):
     role = Role.query.get_or_404(role_id)
-    if role.systeme:
+    if role.systeme or role.est_super_admin:
         flash('Les rôles système ne peuvent pas être modifiés.', 'warning')
         return redirect(url_for('admin.roles'))
     nom = request.form.get('nom', role.nom).strip()
@@ -540,7 +540,7 @@ def modifier_role(role_id):
 @permission_required('admin_roles.modifier')
 def supprimer_role(role_id):
     role = Role.query.get_or_404(role_id)
-    if role.systeme:
+    if role.systeme or role.est_super_admin:
         flash('Les rôles système ne peuvent pas être supprimés.', 'warning')
         return redirect(url_for('admin.roles'))
 
@@ -560,7 +560,7 @@ def supprimer_role(role_id):
 @permission_required('admin_roles.modifier')
 def toggle_role_actif(role_id):
     role = Role.query.get_or_404(role_id)
-    if role.systeme:
+    if role.systeme or role.est_super_admin:
         flash('Les rôles système ne peuvent pas être désactivés.', 'warning')
         return redirect(url_for('admin.roles'))
 

@@ -6,6 +6,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 
+from utils.permissions import MESSAGE_SUPER_ADMIN, can_act_on_user
 from models import db, PointDeVente, Equipement, Utilisateur, Ticket
 from services import referentiels
 from utils.permissions import home_endpoint
@@ -302,6 +303,9 @@ def ajouter_employe(id):
     pdv = PointDeVente.query.get_or_404(id)
     user = db.session.get(Utilisateur, request.form.get('utilisateur_id') or '')
 
+    if not can_act_on_user(current_user, user):
+        flash(MESSAGE_SUPER_ADMIN, "danger")
+        return redirect(url_for('pdv.detail', id=id))
     if user:
         user.pdv_id = pdv.id
         if user.departement and user.departement.code in ['OP', 'Opérationnel']:
@@ -324,6 +328,9 @@ def retirer_employe(id, user_id):
         return _not_yours(id)
 
     user = db.session.get(Utilisateur, user_id)
+    if not can_act_on_user(current_user, user):
+        flash(MESSAGE_SUPER_ADMIN, "danger")
+        return redirect(url_for('pdv.detail', id=id))
     if user and any(p.id == id for p in user.tous_pdvs):
         user.set_pdvs([p.id for p in user.tous_pdvs if p.id != id])
         db.session.commit()

@@ -188,7 +188,8 @@ def create_app(config_name='default'):
             'notifications': user_notifications
         }
 
-    from utils.permissions import ticket_is_unread, can_ticket
+    from utils.permissions import ticket_is_unread, can_ticket, can_act_on_user
+    app.jinja_env.globals['can_act_on_user'] = can_act_on_user
     app.jinja_env.globals['ticket_is_unread'] = ticket_is_unread
     app.jinja_env.globals['can_ticket'] = can_ticket
 

@@ -339,8 +339,8 @@ def detail(id):
     
     # Les mots de passe AnyDesk / TeamViewer ne sont visibles que par l'intéressé et les administrateurs d'accès distant
     can_see_remote_secrets = (current_user.id == utilisateur.id
-                              or current_user.has_permission('admin_acces.voir')
-                              )
+                              or (current_user.has_permission('admin_acces.voir')
+                                  and can_act_on_user(current_user, utilisateur)))
 
     return render_template('utilisateurs/detail.html',
                          utilisateur=utilisateur,

@@ -268,7 +268,7 @@ Au total : **13 modules (blueprints)** et **135 routes**.
 
 | Rôle (exemples) | Remarque |
 |---|---|
-| Super Administrateur | Rôle système. Seul un Super Administrateur peut attribuer ce rôle ou modifier / désactiver / supprimer un compte qui le porte. Il ne peut pas perdre `admin_roles.voir` / `admin_roles.modifier` (anti-verrouillage). |
+| Super Administrateur | Rôle système. Seul un Super Administrateur peut attribuer ce rôle ou agir sur un compte qui le porte (modifier, désactiver, supprimer, rattacher ou retirer d’un département, d’un PDV ou d’une entreprise, voir ses mots de passe AnyDesk / TeamViewer sur sa fiche) : les autres n’ont aucun bouton et le serveur refuse. Le rôle ne peut être ni renommé, ni désactivé, ni supprimé. Il ne peut pas perdre `admin_roles.voir` / `admin_roles.modifier` (anti-verrouillage). |
 | Directrice Réseau, Responsable Département, Agent, Responsable Point de Vente, Personnel Point de Vente… | Ce que permettent leurs cases, ni plus ni moins. |
 
 - **67 permissions** en 4 catégories : Espace de travail, Opérations, Intelligence, Administration. Chaque page a toutes ses cases (voir, créer, modifier, supprimer, exporter…), rangées sous la case « voir » de la page.
