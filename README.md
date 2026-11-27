@@ -229,7 +229,7 @@ python3 -c "import secrets; print(secrets.token_hex(32))"      # ou : openssl ra
 - Numéros séquentiels atomiques (`#42`) ; les tickets se créent uniquement depuis la plateforme (pas de création par e-mail).
 
 ### Utilisateurs, départements, entreprises, points de vente
-- **Utilisateurs** : annuaire avec tri et filtres (rôle, département, point de vente, statut), profil complet (poste, département / PDV, entreprise, photo), activation / désactivation, statistiques par personne.
+- **Utilisateurs** : annuaire avec tri et filtres (rôle, département, point de vente, sans département ni PDV, statut), profil complet (poste, département / PDV, entreprise, photo), activation / désactivation, statistiques par personne.
 - **Accès à distance** (Administration) : ID AnyDesk et TeamViewer par collaborateur, avec boutons « Connecter » et « Copier » pour chaque outil (mots de passe chiffrés).
 - **Départements** : code, couleur, icône, responsable, SLA, horaires, membres.
 - **Entreprises** (filiales) avec code couleur, archivage et rattachement de collaborateurs.

@@ -96,6 +96,14 @@ def liste():
         query = query.filter(db.or_(Utilisateur.pdv_id == pdv_filter,
                                     Utilisateur.pdv_extra_ids.contains(pdv_filter, autoescape=True)))
     
+    # Personnes rattachées nulle part : ni département, ni point de vente (principal ou supplémentaire)
+    sans_affectation = db.and_(Utilisateur.departement_id.is_(None), Utilisateur.pdv_id.is_(None),
+                               db.func.coalesce(Utilisateur.pdv_extra_ids, '') == '')
+    total_sans_affectation = base_query.filter(sans_affectation).count()
+    affectation_filter = 'aucune' if request.args.get('affectation') == 'aucune' else ''
+    if affectation_filter:
+        query = query.filter(sans_affectation)
+
     actif_filter = request.args.get('actif', '')
     if actif_filter == '1':
         query = query.filter_by(actif=True)
@@ -197,6 +205,8 @@ def liste():
                          pdv_filter=pdv_filter,
                          pdvs_filtre=PointDeVente.query.filter_by(actif=True).order_by(PointDeVente.nom).all(),
                          actif_filter=actif_filter,
+                         affectation_filter=affectation_filter,
+                         total_sans_affectation=total_sans_affectation,
                          sort_by=sort_by,
                          order=order,
                          total_actifs=total_actifs,

@@ -2,6 +2,12 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [2.13.0] - 2026-11-27
+
+### 🔎 Utilisateurs : filtre « Sans département ni PDV »
+- Nouveau filtre dans l’annuaire pour retrouver les personnes **rattachées nulle part** (ni département, ni point de vente), avec leur nombre.
+- Correction : le tri des colonnes et le changement de page conservent désormais le filtre **point de vente** ; le bouton **Effacer** apparaît aussi quand seul ce filtre est actif.
+
 ## [2.12.0] - 2026-11-27
 
 ### 🧹 Notation et satisfaction retirées

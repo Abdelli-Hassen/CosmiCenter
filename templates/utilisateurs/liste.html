@@ -484,6 +484,14 @@
         </select>
       </div>
 
+      <!-- Sans rattachement -->
+      <div class="select-wrap">
+        <select name="affectation" class="users-select" onchange="this.form.submit()" aria-label="Filtrer par rattachement">
+          <option value="">Tous les rattachements</option>
+          <option value="aucune" {% if affectation_filter == 'aucune' %}selected{% endif %}>Sans département ni PDV ({{ total_sans_affectation }})</option>
+        </select>
+      </div>
+
       <!-- Status -->
       <div class="select-wrap">
         <select name="actif" class="users-select" onchange="this.form.submit()">
@@ -498,7 +506,7 @@
       <input type="hidden" name="order" value="{{ order }}">
       {% endif %}
 
-      {% if search or role_filter or dept_filter or entreprise_filter or actif_filter or sort_by %}
+      {% if search or role_filter or dept_filter or entreprise_filter or pdv_filter or affectation_filter or actif_filter or sort_by %}
       <a href="{{ url_for('utilisateurs.liste') }}" class="btn btn-ghost btn-sm" style="color:var(--text-muted);">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         Effacer
@@ -514,7 +522,7 @@
     <div class="users-table-header">
       <div class="users-table-title">
         Annuaire
-        <span class="users-stat-pill total">{{ utilisateurs.total }} total{% if search or role_filter or dept_filter or entreprise_filter or actif_filter %} filtré{{ 's' if utilisateurs.total != 1 else '' }}{% endif %}</span>
+        <span class="users-stat-pill total">{{ utilisateurs.total }} total{% if search or role_filter or dept_filter or entreprise_filter or pdv_filter or affectation_filter or actif_filter %} filtré{{ 's' if utilisateurs.total != 1 else '' }}{% endif %}</span>
         <span class="users-stat-pill actif">{{ total_actifs }} actif{{ 's' if total_actifs != 1 else '' }}</span>
         {% if total_inactifs > 0 %}
         <span class="users-stat-pill inactif">{{ total_inactifs }} inactif{{ 's' if total_inactifs != 1 else '' }}</span>
@@ -530,7 +538,7 @@
       {% set is_active = (cur_sort == col_key) %}
       {% set next_order = 'desc' if is_active and cur_order == 'asc' else 'asc' %}
       <span style="{{ style }}">
-        <a href="{{ url_for('utilisateurs.liste', page=1, search=search or '', role=role_filter or '', entreprise=entreprise_filter or '', departement=dept_filter or '', actif=actif_filter or '', sort_by=col_key, order=next_order) }}"
+        <a href="{{ url_for('utilisateurs.liste', page=1, search=search or '', role=role_filter or '', entreprise=entreprise_filter or '', departement=dept_filter or '', actif=actif_filter or '', pdv=pdv_filter or none, affectation=affectation_filter or none, sort_by=col_key, order=next_order) }}"
            class="sort-link {% if is_active %}active{% endif %}"
            title="Trier par {{ label }}">
           <span>{{ label }}</span>
@@ -698,7 +706,7 @@
     <div class="users-pagination">
       <div class="pagination">
         {% if utilisateurs.has_prev %}
-        <a href="{{ url_for('utilisateurs.liste', page=utilisateurs.prev_num, search=search or '', role=role_filter or '', entreprise=entreprise_filter or '', departement=dept_filter or '', actif=actif_filter or '', sort_by=sort_by or '', order=order or '') }}" class="page-btn">
+        <a href="{{ url_for('utilisateurs.liste', page=utilisateurs.prev_num, search=search or '', role=role_filter or '', entreprise=entreprise_filter or '', departement=dept_filter or '', actif=actif_filter or '', pdv=pdv_filter or none, affectation=affectation_filter or none, sort_by=sort_by or '', order=order or '') }}" class="page-btn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
         </a>
         {% else %}
@@ -707,12 +715,12 @@
         {% for p in range(1, utilisateurs.pages + 1) %}
           {% if p == utilisateurs.page %}<span class="page-btn page-btn-active">{{ p }}</span>
           {% elif p == 1 or p == utilisateurs.pages or (p >= utilisateurs.page - 2 and p <= utilisateurs.page + 2) %}
-            <a href="{{ url_for('utilisateurs.liste', page=p, search=search or '', role=role_filter or '', entreprise=entreprise_filter or '', departement=dept_filter or '', actif=actif_filter or '', sort_by=sort_by or '', order=order or '') }}" class="page-btn">{{ p }}</a>
+            <a href="{{ url_for('utilisateurs.liste', page=p, search=search or '', role=role_filter or '', entreprise=entreprise_filter or '', departement=dept_filter or '', actif=actif_filter or '', pdv=pdv_filter or none, affectation=affectation_filter or none, sort_by=sort_by or '', order=order or '') }}" class="page-btn">{{ p }}</a>
           {% elif p == utilisateurs.page - 3 or p == utilisateurs.page + 3 %}<span class="page-btn page-btn-ellipsis">…</span>
           {% endif %}
         {% endfor %}
         {% if utilisateurs.has_next %}
-        <a href="{{ url_for('utilisateurs.liste', page=utilisateurs.next_num, search=search or '', role=role_filter or '', entreprise=entreprise_filter or '', departement=dept_filter or '', actif=actif_filter or '', sort_by=sort_by or '', order=order or '') }}" class="page-btn">
+        <a href="{{ url_for('utilisateurs.liste', page=utilisateurs.next_num, search=search or '', role=role_filter or '', entreprise=entreprise_filter or '', departement=dept_filter or '', actif=actif_filter or '', pdv=pdv_filter or none, affectation=affectation_filter or none, sort_by=sort_by or '', order=order or '') }}" class="page-btn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </a>
         {% else %}

@@ -148,7 +148,7 @@ Chaque modification d'un ticket crée une entrée d'audit :
 Route : `GET /utilisateurs/`
 
 - Liste de tous les utilisateurs (pagination 50 par page)
-- Filtres : recherche instantanée (nom, prénom, e-mail), rôle, département, point de vente (PDV), statut actif/inactif
+- Filtres : recherche instantanée (nom, prénom, e-mail), rôle, département, point de vente (PDV), **sans département ni PDV** (personnes rattachées nulle part, avec leur nombre), statut actif/inactif ; les filtres sont conservés au tri et au changement de page
 - Tri dynamique par clic sur les colonnes (Nom, E-mail, Rôle, Département)
 - Vue en liste avec surbrillance au survol, avatars colorés, nom, poste, e-mail, rôle, département / PDV (avec distinction visuelle ambrée pour les équipes en point de vente), statut
 - Rattachement d'entreprise avec badge coloré
